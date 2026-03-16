@@ -14,7 +14,7 @@ export default function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-screen flex flex-col justify-end pb-20 pt-32 px-6 overflow-hidden bg-[#0a0a0a]">
+      <section className="relative min-h-[50vh] flex flex-col justify-end pb-10 pt-20 px-6 overflow-hidden bg-[#0a0a0a]">
         {/* Grid pattern */}
         <div className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -29,7 +29,48 @@ export default function HomePage() {
           </span>
         </div>
 
+        {/* ── Animated Logo – right side on desktop ── */}
+        <div className="absolute right-10 xl:right-20 top-1/2 -translate-y-[55%] hidden lg:flex items-center justify-center pointer-events-none">
+          <div className="animate-logo-reveal">
+            <div className="animate-float">
+              <div className="relative">
+                {/* Outer glow halo */}
+                <div className="absolute inset-0 rounded-full bg-[#f5f5f0]/[0.06] blur-3xl scale-[1.9]" />
+                {/* Slow-spinning decorative ring */}
+                <div className="absolute inset-[-6px] rounded-full border border-[#f5f5f0]/10 animate-spin-slow" />
+                <div className="absolute inset-[-14px] rounded-full border border-dashed border-[#f5f5f0]/[0.06] animate-spin-slow" style={{ animationDirection: 'reverse', animationDuration: '30s' }} />
+                {/* Logo without background */}
+                <div className="relative w-32 h-32 xl:w-40 xl:h-40 animate-glow-pulse">
+                  <img
+                    src="/SV_Holm_Seppensen_Logo.svg"
+                    alt="SV Holm-Seppensen Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="relative max-w-7xl mx-auto w-full">
+
+          {/* ── Animated Logo – mobile (above heading) ── */}
+          <div className="lg:hidden flex justify-center mb-10 animate-logo-reveal">
+            <div className="animate-float">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-[#f5f5f0]/[0.06] blur-2xl scale-[1.7]" />
+                <div className="absolute inset-[-4px] rounded-full border border-[#f5f5f0]/10 animate-spin-slow" />
+                <div className="relative w-32 h-32 animate-glow-pulse">
+                  <img
+                    src="/SV_Holm_Seppensen_Logo.svg"
+                    alt="SV Holm-Seppensen Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="animate-fade-up stagger-1">
             <span className="inline-block text-[11px] tracking-[0.3em] uppercase text-[#6b6b6b] mb-8 border border-[#f5f5f0]/20 px-4 py-2 rounded-full">
               SV Holm-Seppensen e.V. — Gegründet in der Lüneburger Heide

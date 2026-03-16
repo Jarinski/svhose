@@ -21,9 +21,15 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#f5f5f0]/90 backdrop-blur-md border-b border-[#0a0a0a]/10">
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 bg-[#0a0a0a] rounded-full flex items-center justify-center">
-            <span className="text-[#f5f5f0] text-xs font-display tracking-wider">SV</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative w-10 h-10 shrink-0">
+            {/* Subtle glow ring on hover */}
+            <div className="absolute inset-0 rounded-full bg-[#0a0a0a]/0 group-hover:bg-[#0a0a0a]/5 transition-all duration-300 scale-110" />
+            <img
+              src="/SV_Holm_Seppensen_Logo.svg"
+              alt="SV Holm-Seppensen Logo"
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
+            />
           </div>
           <div className="leading-tight">
             <div className="font-display text-sm tracking-[0.12em] text-[#0a0a0a]">HOLM-SEPPENSEN</div>

@@ -1,16 +1,278 @@
 [
-  { "slug": "akrobatik", "name": "Akrobatik", "icon": "🤸", "beschreibung": "Kreative Bewegungskunst für Kinder und Jugendliche – Kraft, Koordination und Teamwork in einer besonderen Sparte." },
-  { "slug": "badminton", "name": "Badminton", "icon": "🏸", "beschreibung": "Schnelles Racketspiel für alle Altersgruppen. Training und Freizeitspiel in geselliger Runde." },
-  { "slug": "bogenschiessen", "name": "Bogenschießen", "icon": "🏹", "beschreibung": "Konzentration und Präzision im Fokus – Bogenschießen für Einsteiger und Fortgeschrittene." },
-  { "slug": "boule", "name": "Boule", "icon": "⚪", "beschreibung": "Entspannte Geselligkeit und sportlicher Wettkampf zugleich – Boule für alle Generationen." },
-  { "slug": "dart", "name": "Dart", "icon": "🎯", "beschreibung": "Präzision trifft Leidenschaft – unsere Dartabteilung nimmt auch an Ligen teil." },
-  { "slug": "fitness", "name": "Fitness", "icon": "💪", "beschreibung": "Kraft, Ausdauer und Wohlbefinden – Fitnesstraining für alle, die aktiv bleiben wollen." },
-  { "slug": "fussball", "name": "Fußball", "icon": "⚽", "beschreibung": "Das Herzstück unseres Vereins. Von der Jugend bis zu den Herren – Fußball verbindet." },
-  { "slug": "judo", "name": "Judo", "icon": "🥋", "beschreibung": "Mehr als ein Kampfsport – Judo fördert Disziplin, Respekt und Stärke bei Kindern und Erwachsenen." },
-  { "slug": "kinderturnen", "name": "Kinderturnen", "icon": "🌟", "beschreibung": "Motorik, Spaß und erste sportliche Erfahrungen für unsere jüngsten Vereinsmitglieder." },
-  { "slug": "nordic-walking", "name": "Nordic-Walking", "icon": "🚶", "beschreibung": "Gemeinsam in der Lüneburger Heide unterwegs – Nordic-Walking für Gesundheit und Natur." },
-  { "slug": "sportabzeichen", "name": "Sportabzeichen", "icon": "🏅", "beschreibung": "Wir unterstützen beim Erwerb des Deutschen Sportabzeichens – für Jung und Alt." },
-  { "slug": "tischtennis", "name": "Tischtennis", "icon": "🏓", "beschreibung": "Schnelle Reflexe und Spielfreude – Tischtennis in geselliger Atmosphäre." },
-  { "slug": "volleyball", "name": "Volleyball", "icon": "🏐", "beschreibung": "Teamgeist und Dynamik – Volleyball für Erwachsene mit und ohne Wettkampferfahrung." },
-  { "slug": "yoga", "name": "Yoga", "icon": "🧘", "beschreibung": "Ruhe, Kraft und Balance – Yoga-Kurse für alle Niveaus in entspannter Vereinsatmosphäre." }
+  {
+    "slug": "akrobatik",
+    "name": "Akrobatik",
+    "icon": "🤸",
+    "farbe": "#9333ea",
+    "beschreibung": "Kreative Bewegungskunst für Kinder und Jugendliche – Kraft, Koordination und Teamwork in einer besonderen Sparte.",
+    "langbeschreibung": "In der Akrobatiksparte des SV Holm-Seppensen erleben Kinder und Jugendliche die Freude an kreativer Bewegung. Ob Anfänger, die ihre ersten Stände und Verbindungen lernen, oder fortgeschrittene Sportakrobaten – bei uns ist für jedes Level ein Platz. Unsere engagierten Trainerinnen begleiten jeden Schritt auf dem Weg zu mehr Kraft, Koordination und Teamgeist.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Akrobatik"],
+    "mannschaften": [
+      { "name": "Anfänger", "beschreibung": "Einsteiger herzlich willkommen – erste Schritte in die Welt der Akrobatik. Hier lernt man Grundlagen, Gleichgewicht und erste Figuren in einer entspannten Atmosphäre.", "foto": null },
+      { "name": "Girls", "beschreibung": "Unsere Girls-Gruppe trainiert wöchentlich Akrobatik, Koordination und kreative Bewegungskombinationen. Spaß und Teamgeist stehen dabei immer im Vordergrund.", "foto": null },
+      { "name": "Friends", "beschreibung": "Gemischte Gruppe für Fortgeschrittene – hier werden anspruchsvollere Figuren und Kombinationen erarbeitet.", "foto": null },
+      { "name": "Sportakrobatik", "beschreibung": "Leistungsorientiertes Training für ambitionierte Sportakrobaten. Mit Ehrgeiz und Disziplin werden komplexe Pyramiden und Verbindungen eingeübt.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Susan Eisenberg", "rolle": "Trainerin (Anfänger)", "email": "susan.eisenberg@sv-holm-seppensen.de", "telefon": "", "whatsapp": "", "foto": null },
+      { "name": "Carola Winkler", "rolle": "Trainerin & Ansprechpartnerin", "email": "carola.winkler@sv-holm-seppensen.de", "telefon": "04187-7121", "whatsapp": "", "foto": null },
+      { "name": "Maja Brandt", "rolle": "Trainerin (Sportakrobatik)", "email": "maja@family-brandt.de", "telefon": "0152-33509151", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "badminton",
+    "name": "Badminton",
+    "icon": "🏸",
+    "farbe": "#2563eb",
+    "beschreibung": "Schnelles Racketspiel für alle Altersgruppen. Training und Freizeitspiel in geselliger Runde.",
+    "langbeschreibung": "Schnelle Reflexe, Spieltaktik und gesellige Runden – das bietet unsere Badmintonabteilung. Wir trainieren wöchentlich in der Turnhalle Mühlenschule und freuen uns über neue Spielerinnen und Spieler jeden Alters. Ob Einsteiger oder erfahrener Spieler – hier findet jeder seinen Platz.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Badminton"],
+    "mannschaften": [
+      { "name": "Erwachsene (Hobby)", "beschreibung": "Wöchentliches Hobby-Training für Erwachsene aller Spielstärken. Im Vordergrund stehen Spaß am Spiel und gute Gesellschaft.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Stephan Weiland", "rolle": "Ansprechpartner & Trainer", "email": "s.weiland@gmx.de", "telefon": "0151-15687342", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "bogenschiessen",
+    "name": "Bogenschießen",
+    "icon": "🏹",
+    "farbe": "#16a34a",
+    "beschreibung": "Konzentration und Präzision im Fokus – Bogenschießen für Einsteiger und Fortgeschrittene.",
+    "langbeschreibung": "Ruhe, Konzentration und Präzision – Bogenschießen ist weit mehr als reines Zielen. Unsere Gruppe trifft sich wöchentlich auf der Sportanlage Tostedter Weg und trainiert gemeinsam Technik, mentale Stärke und den Umgang mit dem Bogen. Einsteiger sind herzlich willkommen.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Bogenschießen"],
+    "mannschaften": [
+      { "name": "Jedermann", "beschreibung": "Offen für alle – Bogenschießen für Einsteiger und Fortgeschrittene. Ausrüstung und Einführung für Neueinsteiger werden bereitgestellt.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Alexandra de Jong", "rolle": "Ansprechpartnerin & Trainerin", "email": "alexandra.dejong@freenet.de", "telefon": "0178-4051328", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "boule",
+    "name": "Boule",
+    "icon": "⚪",
+    "farbe": "#0891b2",
+    "beschreibung": "Entspannte Geselligkeit und sportlicher Wettkampf zugleich – Boule für alle Generationen.",
+    "langbeschreibung": "Unsere Boulesparte verbindet entspannte Geselligkeit mit sportlichem Wettkampf. Das Pétanque-Spiel begeistert Menschen aller Generationen und macht draußen besonders viel Spaß. Wer mitmachen möchte, schaut am besten einfach vorbei.",
+    "foto": null,
+    "trainingszeiten_spartes": [],
+    "mannschaften": [],
+    "ansprechpartner": []
+  },
+  {
+    "slug": "dart",
+    "name": "Dart",
+    "icon": "🎯",
+    "farbe": "#dc2626",
+    "beschreibung": "Präzision trifft Leidenschaft – unsere Dartabteilung nimmt auch an Ligen teil.",
+    "langbeschreibung": "Präzision trifft Leidenschaft: Unsere Dartabteilung bietet regelmäßiges Training und Ligabetrieb. Wöchentlich treffen sich Gleichgesinnte auf der Sportanlage Tostedter Weg für Spaß am Spiel und sportlichen Ehrgeiz. Einsteiger und erfahrene Spieler sind gleichermaßen willkommen.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Dart"],
+    "mannschaften": [
+      { "name": "Jedermann", "beschreibung": "Wöchentliches Dart-Training für alle – vom Gelegenheitsspieler bis zum ambitionierten Ligaspieler.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Jürgen Vogt", "rolle": "Ansprechpartner & Abteilungsleiter", "email": "dart@sv-holm-seppensen.de", "telefon": "0152-04918744", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "fitness",
+    "name": "Fitness",
+    "icon": "💪",
+    "farbe": "#db2777",
+    "beschreibung": "Kraft, Ausdauer und Wohlbefinden – Fitnesstraining für alle, die aktiv bleiben wollen.",
+    "langbeschreibung": "Unsere Fitnessabteilung bietet für jedes Alter und jedes Level das Richtige – von der entspannten Sitzgymnastik für Senioren über Fit am Nachmittag bis hin zum dynamischen Step-Aerobic. Bewegung, Gesundheit und Wohlbefinden stehen dabei immer im Mittelpunkt.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Fitness"],
+    "mannschaften": [
+      { "name": "Sitzgymnastik für Senioren", "beschreibung": "Sanfte Bewegungseinheiten speziell für Senioren – zur Förderung von Beweglichkeit, Kraft und Wohlbefinden im Sitzen.", "foto": null },
+      { "name": "Fit am Nachmittag (Erwachsene)", "beschreibung": "Ganzheitliches Fitness-Training am Nachmittag für Erwachsene aller Altersgruppen und Fitnessstufen.", "foto": null },
+      { "name": "Step-Aerobic (Erwachsene)", "beschreibung": "Dynamisches Aerobic-Training mit Step-Einsatz – für Ausdauer, Koordination und Spaß bei der Bewegung.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Brigitte Wiehe", "rolle": "Trainerin (Sitzgymnastik & Fit am Nachmittag)", "email": "brigitte.wiehe@sv-holm-seppensen.de", "telefon": "04188-7166", "whatsapp": "", "foto": null },
+      { "name": "Britta Lühmann", "rolle": "Trainerin (Step-Aerobic)", "email": "britta-luehmann@t-online.de", "telefon": "0172-1546282", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "fussball",
+    "name": "Fußball",
+    "icon": "⚽",
+    "farbe": "#059669",
+    "beschreibung": "Das Herzstück unseres Vereins. Von der Jugend bis zu den Herren – Fußball verbindet.",
+    "langbeschreibung": "Fußball ist das Herzstück des SV Holm-Seppensen. Mit einer der größten Jugendabteilungen der Region sowie aktiven Herren- und Damenmannschaften bieten wir für alle Altersgruppen ein sportliches Zuhause. Von den Minikickern der jüngsten Jahrgänge über alle Junioren-Altersklassen bis zu den erfahrenen Aktiven – bei uns findet jeder seinen Platz auf dem Platz.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Fußball Herren", "Fußball Damen", "Fußball Junioren", "Fußball Juniorinnen", "Fußball Freizeit"],
+    "mannschaften": [
+      { "name": "Herren", "beschreibung": "Unsere erste Herrenmannschaft spielt im aktiven Ligabetrieb und trainiert zweimal wöchentlich.", "foto": null },
+      { "name": "Damen", "beschreibung": "Die Damenmannschaft des SV Holm-Seppensen ist ein festes Team mit regelmäßigem Training und Ligabetrieb.", "foto": null },
+      { "name": "E-Juniorinnen / E-Mädchen (Jg. 2013–2016)", "beschreibung": "Mädchenfußball ab der E-Jugend – Spaß am Sport und erste Wettkampferfahrungen.", "foto": null },
+      { "name": "U17 (Jg. 2009/10)", "beschreibung": "Unsere B-Jugend trainiert leistungsorientiert mit erfahrenen Trainern.", "foto": null },
+      { "name": "U15 (Jg. 2011)", "beschreibung": "Die C-Jugend – ein starkes Team mit hoher Trainingsbeteiligung.", "foto": null },
+      { "name": "U14 (Jg. 2012)", "beschreibung": "Nachwuchskicker der C-Jugend mit viel Begeisterung für den Sport.", "foto": null },
+      { "name": "U13 (Jg. 2013)", "beschreibung": "Die D-Jugend freut sich über neue Kicker – Training zweimal pro Woche.", "foto": null },
+      { "name": "U12 (Jg. 2014)", "beschreibung": "Engagierte Nachwuchsspieler in der D-Jugend des SV Holm-Seppensen.", "foto": null },
+      { "name": "U11 (Jg. 2015)", "beschreibung": "Erste Schritte im organisierten Jugendfußball – mit viel Spaß und guter Betreuung.", "foto": null },
+      { "name": "U10 (Jg. 2016)", "beschreibung": "Die F-Jugend – Fußball lernen und Freundschaften schließen.", "foto": null },
+      { "name": "U09 (Jg. 2017)", "beschreibung": "Bambini-Fußball für die jüngsten Kicker ab dem Jahrgang 2017.", "foto": null },
+      { "name": "U08 (Jg. 2018)", "beschreibung": "Unsere Bambinis trainieren spielerisch die Grundlagen des Fußballs.", "foto": null },
+      { "name": "U07 (Jg. 2019)", "beschreibung": "Die Allerjüngsten machen ihre ersten Schritte mit dem Ball.", "foto": null },
+      { "name": "Minikicker (Jg. 2020 und jünger)", "beschreibung": "Ab 3 Jahren spielerisch in die Welt des Fußballs – Spaß und Bewegung für die Kleinsten.", "foto": null },
+      { "name": "Just4Fun (Hobbymannschaft)", "beschreibung": "Erwachsenes Hobby-Kicken ohne Wettkampfdruck – für alle, die einfach gemeinsam spielen möchten.", "foto": null },
+      { "name": "HoSeUnited (Hobbymannschaft)", "beschreibung": "Unsere zweite Hobbymannschaft – geselliges Fußball-Sonntag für Erwachsene.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Patrick Müller", "rolle": "Trainer Herren", "email": "Patrick.Mueller@sv-holm-seppensen.de", "telefon": "0160-7425711", "whatsapp": "", "foto": null },
+      { "name": "Marcel Hoeft", "rolle": "Trainer Herren & U13", "email": "Marcel.Hoeft@sv-holm-seppensen.de", "telefon": "0173-3750117", "whatsapp": "", "foto": null },
+      { "name": "Bernd Kipping", "rolle": "Trainer Damen", "email": "Damen@sv-holm-seppensen.de", "telefon": "0170-9288644", "whatsapp": "", "foto": null },
+      { "name": "Daniela Winkler", "rolle": "Trainerin Damen", "email": "Damen@sv-holm-seppensen.de", "telefon": "0171-9503241", "whatsapp": "", "foto": null },
+      { "name": "Jari Gonzales", "rolle": "Trainer E-Juniorinnen / E-Mädchen", "email": "Juniorinnen@sv-holm-seppensen.de", "telefon": "0179-3729097", "whatsapp": "", "foto": null },
+      { "name": "Olaf Schubert", "rolle": "Trainer U17", "email": "Olaf.Schubert@sv-holm-seppensen.de", "telefon": "0176-42859980", "whatsapp": "", "foto": null },
+      { "name": "Markus Jordan", "rolle": "Trainer U15", "email": "Markus.Jordan@sv-holm-seppensen.de", "telefon": "0171-1085012", "whatsapp": "", "foto": null },
+      { "name": "Thorsten Knopp", "rolle": "Trainer U14", "email": "Thorsten.Knopp@sv-holm-seppensen.de", "telefon": "0151-20407393", "whatsapp": "", "foto": null },
+      { "name": "Philipp Noack", "rolle": "Trainer U12", "email": "Philipp.Noack@sv-holm-seppensen.de", "telefon": "01512-4136317", "whatsapp": "", "foto": null },
+      { "name": "Saad Fidaoui", "rolle": "Trainer U11", "email": "Saad.Fidaoui@sv-holm-seppensen.de", "telefon": "0176-55266265", "whatsapp": "", "foto": null },
+      { "name": "Christian Krause", "rolle": "Trainer U10 & Just4Fun", "email": "Christian.Krause@sv-holm-seppensen.de", "telefon": "0163-7117739", "whatsapp": "", "foto": null },
+      { "name": "Paul Fahs", "rolle": "Trainer U09", "email": "Paul.Fahs@sv-holm-seppensen.de", "telefon": "0175-5694998", "whatsapp": "", "foto": null },
+      { "name": "Bjarne Adam", "rolle": "Trainer U08", "email": "Bjarne.Adam@sv-holm-seppensen.de", "telefon": "0172-4195210", "whatsapp": "", "foto": null },
+      { "name": "Björn Deisting", "rolle": "Trainer U07", "email": "Bjoern.Deisting@sv-holm-seppensen.de", "telefon": "0177-2516491", "whatsapp": "", "foto": null },
+      { "name": "Martin Klawitter", "rolle": "Trainer Minikicker", "email": "", "telefon": "0176-20344719", "whatsapp": "", "foto": null },
+      { "name": "Olaf Steinitz", "rolle": "Ansprechpartner Just4Fun", "email": "Olaf.Steinitz@sv-holm-seppensen.de", "telefon": "0152-23630552", "whatsapp": "", "foto": null },
+      { "name": "Henrik Behrndt", "rolle": "Ansprechpartner HoSeUnited", "email": "Henrik.Behrndt@sv-holm-seppensen.de", "telefon": "0172-2970187", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "judo",
+    "name": "Judo",
+    "icon": "🥋",
+    "farbe": "#b91c1c",
+    "beschreibung": "Mehr als ein Kampfsport – Judo fördert Disziplin, Respekt und Stärke bei Kindern und Erwachsenen.",
+    "langbeschreibung": "Judo fördert weit mehr als nur körperliche Stärke – Respekt, Disziplin und Gemeinschaft stehen im Mittelpunkt unseres Trainings. Bei uns trainieren Kinder ab 5 Jahren und Erwachsene gemeinsam in der Turnhalle Mühlenschule. Unsere erfahrenen Trainer begleiten jeden Schritt auf dem persönlichen Weg zu mehr Stärke und Selbstbewusstsein.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Judo"],
+    "mannschaften": [
+      { "name": "Kinder / Anfänger (5–7 Jahre)", "beschreibung": "Spielerischer Einstieg in die Judowelt für die Kleinsten – mit viel Bewegung und ersten Wurftechniken.", "foto": null },
+      { "name": "Kinder / Fortgeschrittene (bis 9 Jahre)", "beschreibung": "Aufbautraining für Kinder, die die Grundtechniken bereits kennen und vertiefen möchten.", "foto": null },
+      { "name": "Kinder / Fortgeschrittene (ab 9 Jahre)", "beschreibung": "Anspruchsvolleres Training für ältere Kinder mit Grundkenntnissen im Judo.", "foto": null },
+      { "name": "Erwachsene / Fortgeschrittene", "beschreibung": "Judo für Erwachsene – Technik, Kraft und mentale Stärke in geselliger Runde.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Friedhelm Iske", "rolle": "Trainer & Ansprechpartner", "email": "friedhelm.iske@speira.com", "telefon": "04187-900488", "whatsapp": "", "foto": null },
+      { "name": "Nils Hausmann", "rolle": "Trainer", "email": "friedhelm.iske@speira.com", "telefon": "04187-900488", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "kinderturnen",
+    "name": "Kinderturnen",
+    "icon": "🌟",
+    "farbe": "#ea580c",
+    "beschreibung": "Motorik, Spaß und erste sportliche Erfahrungen für unsere jüngsten Vereinsmitglieder.",
+    "langbeschreibung": "Unsere Kinderturngruppe gibt den Kleinsten einen perfekten Einstieg in die Sportwelt. In altersgerechten Einheiten lernen Kinder spielerisch Bewegung, Koordination und soziales Miteinander – immer mit viel Spaß dabei. Das Kinderturnen legt den Grundstein für eine lebenslange Freude an Sport und Bewegung.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Kinderturnen"],
+    "mannschaften": [
+      { "name": "Kinder", "beschreibung": "Turnen für Kinder aller Altersgruppen – kreative Bewegungsübungen, Geräteturnen und viel Spaß in der Gruppe.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Sabrina Müller", "rolle": "Trainerin & Ansprechpartnerin", "email": "sabrina.mueller1986@outlook.de", "telefon": "0172-9820462", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "mutter-kind-turnen",
+    "name": "Mutter-Kind Turnen",
+    "icon": "👶",
+    "farbe": "#be185d",
+    "beschreibung": "Gemeinsam aktiv von Anfang an – Bewegung für Eltern und ihre Kleinkinder von 0 bis 4 Jahren.",
+    "langbeschreibung": "Gemeinsam aktiv von Anfang an: Unser Mutter-Kind-Turnen begleitet Kinder von 0 bis 4 Jahren und ihre Eltern durch erste Bewegungserfahrungen. Unter fachkundiger Anleitung entdecken die Kleinen spielerisch ihren Körper und entwickeln motorische Grundfertigkeiten – und die Eltern können sich dabei ebenfalls bewegen.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Mutter-Kind Turnen"],
+    "mannschaften": [
+      { "name": "Kinder (0–2 Jahre)", "beschreibung": "Erste Bewegungserfahrungen für die Allerkleinsten – spielerisches Turnen mit Mama oder Papa.", "foto": null },
+      { "name": "Kinder (2–4 Jahre)", "beschreibung": "Für Kinder im Krabbel- und Laufalter – Koordination, Balance und Spaß in Bewegung.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Petra Itzen", "rolle": "Trainerin & Ansprechpartnerin", "email": "petra.itzen@sv-holm-seppensen.de", "telefon": "04186-895930", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "nordic-walking",
+    "name": "Nordic-Walking",
+    "icon": "🚶",
+    "farbe": "#15803d",
+    "beschreibung": "Gemeinsam in der Lüneburger Heide unterwegs – Nordic-Walking für Gesundheit und Natur.",
+    "langbeschreibung": "Unsere Nordic-Walking-Gruppe ist die ideale Möglichkeit, gemeinsam die Natur rund um Holm-Seppensen zu erleben. Wöchentliche Treffen am Bolzplatz Tostedter Weg – für Gesundheit, Ausdauer und Geselligkeit. Anfänger sind ebenso willkommen wie erfahrene Walker.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Nordic Walking"],
+    "mannschaften": [
+      { "name": "Für jedermann", "beschreibung": "Offen für alle Alters- und Fitnessstufen – gemeinsam durch die schöne Heideregion rund um Holm-Seppensen.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Dierk Ulber", "rolle": "Ansprechpartner & Gruppenleiter", "email": "dirk.ulber@sv-holm-seppensen.de", "telefon": "0151-70001967", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "sportabzeichen",
+    "name": "Sportabzeichen",
+    "icon": "🏅",
+    "farbe": "#ca8a04",
+    "beschreibung": "Wir unterstützen beim Erwerb des Deutschen Sportabzeichens – für Jung und Alt.",
+    "langbeschreibung": "Das Deutsche Sportabzeichen ist Deutschlands älteste Breitensportauszeichnung. Unser Team unterstützt Jung und Alt dabei, diese Leistungsauszeichnung zu erwerben – im Sommer auf dem Sportplatz Mühlenschule, im Winter in der Turnhalle. Es werden alle vier Leistungsbereiche abgenommen: Ausdauer, Kraft, Schnelligkeit und Koordination.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Sportabzeichen"],
+    "mannschaften": [
+      { "name": "Jedermann", "beschreibung": "Offen für alle, die das Deutsche Sportabzeichen erwerben oder ihr persönliches Level steigern möchten.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Dierk Ulber", "rolle": "Ansprechpartner & Prüfer", "email": "dirk.ulber@sv-holm-seppensen.de", "telefon": "04187-1268", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "tischtennis",
+    "name": "Tischtennis",
+    "icon": "🏓",
+    "farbe": "#0284c7",
+    "beschreibung": "Schnelle Reflexe und Spielfreude – Tischtennis in geselliger Atmosphäre.",
+    "langbeschreibung": "Tischtennis bei SV Holm-Seppensen: Zweimal wöchentliches Training für Kinder und Erwachsene in geselliger Atmosphäre. Die Abteilung ist offen für alle, die Spaß am schnellen Ballspiel haben und gerne neue Leute kennenlernen möchten.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Tischtennis"],
+    "mannschaften": [
+      { "name": "Kinder und Erwachsene", "beschreibung": "Gemischtes Training für alle Altersgruppen – von Anfängern bis hin zu ambitionierten Spielern.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Nina Fenz", "rolle": "Ansprechpartnerin & Trainerin", "email": "nina.fenz@sv-holm-seppensen.de", "telefon": "0172-4421210", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "volleyball",
+    "name": "Volleyball",
+    "icon": "🏐",
+    "farbe": "#7c3aed",
+    "beschreibung": "Teamgeist und Dynamik – Volleyball für Erwachsene mit und ohne Wettkampferfahrung.",
+    "langbeschreibung": "Teamgeist, Dynamik und Spielfreude – das zeichnet unsere Volleyballabteilung aus. Jeden Montag trainieren Erwachsene aller Erfahrungsstufen in der Turnhalle Mühlenschule. Neue Mitspielerinnen und Mitspieler sind jederzeit herzlich willkommen.",
+    "foto": null,
+    "trainingszeiten_spartes": ["Volleyball"],
+    "mannschaften": [
+      { "name": "Erwachsene (Hobby)", "beschreibung": "Wöchentliches Volleyball-Training für Erwachsene – Spaß, Sport und Teamgeist stehen im Mittelpunkt.", "foto": null }
+    ],
+    "ansprechpartner": [
+      { "name": "Lioba Te Nyenhuis", "rolle": "Ansprechpartnerin & Trainerin", "email": "lioba.te.nyenhuis@sv-holm-seppensen.de", "telefon": "04187-3419", "whatsapp": "", "foto": null }
+    ]
+  },
+  {
+    "slug": "yoga",
+    "name": "Yoga",
+    "icon": "🧘",
+    "farbe": "#0891b2",
+    "beschreibung": "Ruhe, Kraft und Balance – Yoga-Kurse für alle Niveaus in entspannter Vereinsatmosphäre.",
+    "langbeschreibung": "Ruhe, Kraft und Balance: Unsere Yogakurse bieten die ideale Ergänzung zum sportlichen Vereinsleben. In entspannter Atmosphäre lernen Teilnehmer aller Niveaus, Körper und Geist in Einklang zu bringen. Für weitere Informationen zu Kurszeiten nimm gerne Kontakt mit uns auf.",
+    "foto": null,
+    "trainingszeiten_spartes": [],
+    "mannschaften": [],
+    "ansprechpartner": []
+  }
 ]

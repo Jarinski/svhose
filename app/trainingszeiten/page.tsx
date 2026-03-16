@@ -1,46 +1,48 @@
 import { getTrainingszeiten } from '@/lib/content'
-import { Clock, MapPin } from 'lucide-react'
+import TrainingszeitenClient from './TrainingszeitenClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Trainingszeiten' }
 
 export default function TrainingszeitenPage() {
-  const zeiten = getTrainingszeiten()
-
-  const wochentage = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+  const data = getTrainingszeiten()
 
   return (
-    <div className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
+    <div className="pt-32 pb-24 px-6 max-w-6xl mx-auto">
+
+      {/* Hero */}
       <div className="mb-16">
-        <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Wann wir trainieren</div>
-        <h1 className="font-display text-6xl md:text-8xl tracking-tight">TRAINING</h1>
+        <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">
+          Wann wir trainieren
+        </div>
+        <h1 className="font-display text-6xl md:text-8xl tracking-tight">TRAININGSZEITEN</h1>
+        <div className="mt-5 flex flex-wrap items-center gap-6">
+          <p className="text-sm text-[#6b6b6b]">
+            Gültig ab <span className="font-medium text-[#0a0a0a]">01.12.2025</span>
+          </p>
+          <div className="h-3 w-px bg-[#0a0a0a]/20 hidden sm:block" />
+          <p className="text-sm text-[#6b6b6b]">
+            <span className="font-medium text-[#0a0a0a]">{data.length}</span> Trainingseinheiten in{' '}
+            <span className="font-medium text-[#0a0a0a]">
+              {Array.from(new Set(data.map((e: any) => e.sparte))).length}
+            </span>{' '}
+            Sparten
+          </p>
+        </div>
       </div>
 
-      {/* Nach Sparte */}
-      <div className="space-y-8">
-        {zeiten.map((z: any) => (
-          <div key={z.sparte}>
-            <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3 pb-2 border-b border-[#0a0a0a]/10">
-              {z.sparte}
-            </div>
-            <div className="space-y-px bg-[#0a0a0a]/10">
-              {z.gruppen.map((g: any, i: number) => (
-                <div key={i} className="bg-[#f5f5f0] px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-                  <div className="font-medium sm:w-32 shrink-0">{g.name}</div>
-                  <div className="flex flex-wrap gap-4 text-sm text-[#6b6b6b]">
-                    <span className="flex items-center gap-1"><Clock size={12} /> {g.tag}, {g.uhrzeit}</span>
-                    <span className="flex items-center gap-1"><MapPin size={12} /> {g.ort}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Separator */}
+      <div className="h-px bg-[#0a0a0a]/10 mb-12" />
 
-      <div className="mt-16 border border-[#0a0a0a]/10 p-6">
+      {/* Interactive filter + list */}
+      <TrainingszeitenClient data={data} />
+
+      {/* Footer note */}
+      <div className="mt-16 border border-[#0a0a0a]/10 p-6 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="w-1 h-8 bg-[#0a0a0a]/10 shrink-0 hidden sm:block" />
         <p className="text-sm text-[#6b6b6b]">
           Änderungen und Ausfälle werden kurzfristig über unsere Social-Media-Kanäle bekannt gegeben.
+          Bei Fragen wende dich direkt an den jeweiligen Trainer.
         </p>
       </div>
     </div>
