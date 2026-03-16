@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import CookieSettingsButton from '@/components/CookieSettingsButton'
 
 export default function Footer() {
   return (
@@ -55,6 +56,7 @@ export default function Footer() {
           <div className="flex gap-6">
             <Link href="/impressum" className="hover:text-[#f5f5f0] transition-colors">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[#f5f5f0] transition-colors">Datenschutz</Link>
+            <CookieSettingsButton />
           </div>
         </div>
       </div>
