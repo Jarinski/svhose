@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "titel": "Aufnahmeantrag",
+    "beschreibung": "Antrag zur Aufnahme in den SV Holm-Seppensen e.V.",
+    "datei": "/pdfs/Aufnahmeantrag_2024.pdf",
+    "kategorie": "Mitgliedschaft",
+    "datum": "2024-05-01"
+  },
+  {
+    "id": "2",
+    "titel": "Beitragstabelle 2025",
+    "beschreibung": "Aktuelle Beitragsordnung des Vereins.",
+    "datei": "/pdfs/Beitragsordnung-2025.pdf",
+    "kategorie": "Mitgliedschaft",
+    "datum": "2025-08-01"
+  },
+  {
+    "id": "3",
+    "titel": "Satzung",
+    "beschreibung": "Die aktuelle Vereinssatzung des SV Holm-Seppensen.",
+    "datei": "/pdfs/Satzung.pdf",
+    "kategorie": "Verein",
+    "datum": "2025-05-06"
+  },
+  {
+    "id": "4",
+    "titel": "Einwilligungserklärung Film & Foto",
+    "beschreibung": "Einwilligungserklärung für die Verwendung von Film- und Fotoaufnahmen.",
+    "datei": "/pdfs/Einwilligungserklaerung_foto_film.pdf",
+    "kategorie": "Formulare",
+    "datum": "2024-05-01"
+  },
+  {
+    "id": "5",
+    "titel": "Selbstverpflichtungserklärung Kinderschutz",
+    "beschreibung": "Positionierung und Selbstverpflichtungserklärung zum Kinderschutz.",
+    "datei": "/pdfs/Selbstverpflichtungserklaerung.pdf",
+    "kategorie": "Kinderschutz",
+    "datum": "2025-03-01"
+  }
+]

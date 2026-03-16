@@ -1,0 +1,16 @@
+[
+  { "slug": "akrobatik", "name": "Akrobatik", "icon": "🤸", "beschreibung": "Kreative Bewegungskunst für Kinder und Jugendliche – Kraft, Koordination und Teamwork in einer besonderen Sparte." },
+  { "slug": "badminton", "name": "Badminton", "icon": "🏸", "beschreibung": "Schnelles Racketspiel für alle Altersgruppen. Training und Freizeitspiel in geselliger Runde." },
+  { "slug": "bogenschiessen", "name": "Bogenschießen", "icon": "🏹", "beschreibung": "Konzentration und Präzision im Fokus – Bogenschießen für Einsteiger und Fortgeschrittene." },
+  { "slug": "boule", "name": "Boule", "icon": "⚪", "beschreibung": "Entspannte Geselligkeit und sportlicher Wettkampf zugleich – Boule für alle Generationen." },
+  { "slug": "dart", "name": "Dart", "icon": "🎯", "beschreibung": "Präzision trifft Leidenschaft – unsere Dartabteilung nimmt auch an Ligen teil." },
+  { "slug": "fitness", "name": "Fitness", "icon": "💪", "beschreibung": "Kraft, Ausdauer und Wohlbefinden – Fitnesstraining für alle, die aktiv bleiben wollen." },
+  { "slug": "fussball", "name": "Fußball", "icon": "⚽", "beschreibung": "Das Herzstück unseres Vereins. Von der Jugend bis zu den Herren – Fußball verbindet." },
+  { "slug": "judo", "name": "Judo", "icon": "🥋", "beschreibung": "Mehr als ein Kampfsport – Judo fördert Disziplin, Respekt und Stärke bei Kindern und Erwachsenen." },
+  { "slug": "kinderturnen", "name": "Kinderturnen", "icon": "🌟", "beschreibung": "Motorik, Spaß und erste sportliche Erfahrungen für unsere jüngsten Vereinsmitglieder." },
+  { "slug": "nordic-walking", "name": "Nordic-Walking", "icon": "🚶", "beschreibung": "Gemeinsam in der Lüneburger Heide unterwegs – Nordic-Walking für Gesundheit und Natur." },
+  { "slug": "sportabzeichen", "name": "Sportabzeichen", "icon": "🏅", "beschreibung": "Wir unterstützen beim Erwerb des Deutschen Sportabzeichens – für Jung und Alt." },
+  { "slug": "tischtennis", "name": "Tischtennis", "icon": "🏓", "beschreibung": "Schnelle Reflexe und Spielfreude – Tischtennis in geselliger Atmosphäre." },
+  { "slug": "volleyball", "name": "Volleyball", "icon": "🏐", "beschreibung": "Teamgeist und Dynamik – Volleyball für Erwachsene mit und ohne Wettkampferfahrung." },
+  { "slug": "yoga", "name": "Yoga", "icon": "🧘", "beschreibung": "Ruhe, Kraft und Balance – Yoga-Kurse für alle Niveaus in entspannter Vereinsatmosphäre." }
+]

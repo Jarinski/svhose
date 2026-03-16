@@ -1,0 +1,6 @@
+[
+  { "id": "1", "name": "JGR", "logo": "/images/partner-jgr.jpg", "url": "" },
+  { "id": "2", "name": "Partner 2", "logo": "/images/partner-2.jpg", "url": "" },
+  { "id": "3", "name": "Harms", "logo": "/images/partner-harms.png", "url": "" },
+  { "id": "4", "name": "Sparkasse Harburg-Buxtehude", "logo": "/images/partner-sparkasse.jpg", "url": "" }
+]

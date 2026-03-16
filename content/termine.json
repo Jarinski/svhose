@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "titel": "Heimspiel – Herren vs. TuS Nenndorf II",
+    "datum": "2026-03-20",
+    "uhrzeit": "15:00",
+    "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
+    "sparte": "Fußball",
+    "beschreibung": "Heimspiel unserer 1. Herrenmannschaft gegen TuS Nenndorf II.",
+    "bild": "/images/sportplatz.jpg"
+  },
+  {
+    "id": "2",
+    "titel": "Ostereier-Suche beim SV Holm-Seppensen",
+    "datum": "2026-04-04",
+    "uhrzeit": "14:00",
+    "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
+    "sparte": "Allgemein",
+    "beschreibung": "Gemeinsame Ostereier-Suche für alle Kinder des Vereins.",
+    "bild": "/images/ostern.jpg"
+  },
+  {
+    "id": "3",
+    "titel": "Heimspiel – Herren vs. FC Jesteburg-Bendestorf III",
+    "datum": "2026-04-10",
+    "uhrzeit": "15:00",
+    "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
+    "sparte": "Fußball",
+    "beschreibung": "Heimspiel unserer 1. Herrenmannschaft gegen FC Jesteburg-Bendestorf III.",
+    "bild": "/images/sportplatz.jpg"
+  }
+]

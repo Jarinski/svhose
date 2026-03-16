@@ -1,0 +1,53 @@
+[
+  {
+    "sparte": "Fußball",
+    "gruppen": [
+      { "name": "Herren", "tag": "Dienstag", "uhrzeit": "19:00 – 21:00", "ort": "Sportplatz Tostedter Weg" },
+      { "name": "Herren", "tag": "Donnerstag", "uhrzeit": "19:00 – 21:00", "ort": "Sportplatz Tostedter Weg" },
+      { "name": "Jugend", "tag": "Mittwoch", "uhrzeit": "17:00 – 18:30", "ort": "Sportplatz Mühlenschule" }
+    ]
+  },
+  {
+    "sparte": "Volleyball",
+    "gruppen": [
+      { "name": "Erwachsene", "tag": "Montag", "uhrzeit": "20:00 – 22:00", "ort": "Sporthalle Mühlenschule" }
+    ]
+  },
+  {
+    "sparte": "Judo",
+    "gruppen": [
+      { "name": "Kinder ab 6", "tag": "Freitag", "uhrzeit": "17:00 – 18:00", "ort": "Sporthalle Mühlenschule" },
+      { "name": "Erwachsene", "tag": "Freitag", "uhrzeit": "18:00 – 20:00", "ort": "Sporthalle Mühlenschule" }
+    ]
+  },
+  {
+    "sparte": "Yoga",
+    "gruppen": [
+      { "name": "Alle Niveaus", "tag": "Mittwoch", "uhrzeit": "19:00 – 20:30", "ort": "Vereinsheim" }
+    ]
+  },
+  {
+    "sparte": "Badminton",
+    "gruppen": [
+      { "name": "Erwachsene", "tag": "Donnerstag", "uhrzeit": "20:00 – 22:00", "ort": "Sporthalle Mühlenschule" }
+    ]
+  },
+  {
+    "sparte": "Tischtennis",
+    "gruppen": [
+      { "name": "Alle", "tag": "Dienstag", "uhrzeit": "19:00 – 21:00", "ort": "Vereinsheim" }
+    ]
+  },
+  {
+    "sparte": "Kinderturnen",
+    "gruppen": [
+      { "name": "Kinder 3–6 Jahre", "tag": "Samstag", "uhrzeit": "09:30 – 10:30", "ort": "Sporthalle Mühlenschule" }
+    ]
+  },
+  {
+    "sparte": "Nordic-Walking",
+    "gruppen": [
+      { "name": "Alle", "tag": "Sonntag", "uhrzeit": "09:00 – 10:30", "ort": "Treffpunkt Sportplatz Tostedter Weg" }
+    ]
+  }
+]

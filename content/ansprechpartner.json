@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "Vorstand",
+    "funktion": "1. Vorsitzender",
+    "sparte": "Vorstand",
+    "email": "info@sv-holm-seppensen.de",
+    "telefon": "0172 2970187"
+  },
+  {
+    "id": "2",
+    "name": "Abteilungsleiter Fußball",
+    "funktion": "Abteilungsleiter",
+    "sparte": "Fußball",
+    "email": "fussball@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "3",
+    "name": "Abteilungsleiter Judo",
+    "funktion": "Abteilungsleiter",
+    "sparte": "Judo",
+    "email": "judo@sv-holm-seppensen.de",
+    "telefon": ""
+  }
+]
