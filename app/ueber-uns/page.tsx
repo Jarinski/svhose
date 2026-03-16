@@ -75,7 +75,7 @@ export default function UeberUnsPage() {
 
       {/* CTA Mitglied werden */}
       <div className="px-6 max-w-7xl mx-auto">
-        <div className="bg-[#0a0a0a] text-[#f5f5f0] p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-[#0a0a0a] text-[#f5f5f0] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="font-display text-4xl tracking-tight mb-2">MITGLIED WERDEN</h2>
             <p className="text-[#6b6b6b]">Lade den Aufnahmeantrag herunter und werde Teil unserer Gemeinschaft.</p>

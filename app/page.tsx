@@ -72,7 +72,7 @@ export default function HomePage() {
           </div>
 
           <div className="animate-fade-up stagger-1">
-            <span className="inline-block text-[11px] tracking-[0.3em] uppercase text-[#6b6b6b] mb-8 border border-[#f5f5f0]/20 px-4 py-2 rounded-full">
+            <span className="inline-block text-[10px] sm:text-[11px] tracking-[0.15em] sm:tracking-[0.3em] uppercase text-[#6b6b6b] mb-8 border border-[#f5f5f0]/20 px-3 sm:px-4 py-2 rounded-full max-w-full">
               SV Holm-Seppensen e.V. — Gegründet in der Lüneburger Heide
             </span>
           </div>
@@ -96,7 +96,7 @@ export default function HomePage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-20 grid grid-cols-3 gap-8 max-w-sm animate-fade-up stagger-4">
+          <div className="mt-20 grid grid-cols-3 gap-4 sm:gap-8 max-w-sm animate-fade-up stagger-4">
             {[
               { num: '14', label: 'Sparten' },
               { num: '∞', label: 'Leidenschaft' },
@@ -215,7 +215,7 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="px-6 pb-24 max-w-7xl mx-auto">
-        <div className="bg-[#0a0a0a] text-[#f5f5f0] p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-[#0a0a0a] text-[#f5f5f0] p-8 sm:p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="font-display text-4xl md:text-6xl tracking-tight mb-3">MACH MIT.</h2>
             <p className="text-[#6b6b6b] max-w-md">Werde Teil unserer Gemeinschaft. Lade den Aufnahmeantrag herunter oder kontaktiere uns direkt.</p>

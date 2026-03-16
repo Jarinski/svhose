@@ -66,12 +66,12 @@ export default function TerminePage() {
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Vergangene Termine</div>
           <div className="space-y-px bg-[#0a0a0a]/10 opacity-50">
             {vergangen.map((t: any) => (
-              <div key={t.id} className="bg-[#f5f5f0] p-6 flex items-center gap-6">
+              <div key={t.id} className="bg-[#f5f5f0] p-6 flex flex-wrap items-center gap-2 sm:gap-6">
                 <div className="text-sm text-[#6b6b6b] w-24 shrink-0">
                   {format(new Date(t.datum), 'd. MMM yyyy', { locale: de })}
                 </div>
-                <div className="font-medium text-sm">{t.titel}</div>
-                <div className="ml-auto text-[10px] uppercase tracking-widest text-[#6b6b6b] border border-[#0a0a0a]/10 px-2 py-0.5">
+                <div className="font-medium text-sm flex-1 min-w-0">{t.titel}</div>
+                <div className="text-[10px] uppercase tracking-widest text-[#6b6b6b] border border-[#0a0a0a]/10 px-2 py-0.5 shrink-0">
                   {t.sparte}
                 </div>
               </div>

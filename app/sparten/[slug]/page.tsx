@@ -1,7 +1,7 @@
 import { getSparten, getTrainingszeiten } from '@/lib/content'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw } from 'lucide-react'
+import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock } from 'lucide-react'
 import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
@@ -48,6 +48,7 @@ const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'S
 
 function saisonBadge(j: string) {
   const l = j.toLowerCase()
+  if (l.includes('ganz')) return { label: 'Ganzjährig', bg: '#e5e7eb', color: '#374151' }
   if (l === 'sommer') return { label: 'Sommer', bg: '#fef9c3', color: '#92400e' }
   if (l === 'winter') return { label: 'Winter', bg: '#dbeafe', color: '#1e40af' }
   return { label: 'Ganzjährig', bg: '#e5e7eb', color: '#374151' }
@@ -62,6 +63,50 @@ function whatsappHref(phone: string) {
   return `https://wa.me/${num}`
 }
 
+/* ── Matching helpers (mirrored from SpartenClient) ─────────── */
+function keyWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
+    .split(/[\s/\-,·]+/)
+    .map(w => w.replace(/[^a-z0-9äöüß]/g, ''))
+    .filter(w => w.length > 2)
+}
+
+function getZeitenForMannschaft(
+  allZeiten: TrainingsEntry[],
+  sparteSlugs: string[],
+  mann: Mannschaft,
+): TrainingsEntry[] {
+  const base = allZeiten.filter(e => sparteSlugs.includes(e.sparte))
+  const words = keyWords(mann.name)
+  if (!words.length) return base
+  const matched = base.filter(e => {
+    const g = e.gruppe.toLowerCase()
+    return words.some(w => g.includes(w))
+  })
+  return matched.sort((a, b) => TAG_ORDER.indexOf(a.tag) - TAG_ORDER.indexOf(b.tag))
+}
+
+function getTrainerForMannschaft(
+  ap: Ansprechpartner[],
+  zeiten: TrainingsEntry[],
+  mann: Mannschaft,
+): Ansprechpartner[] {
+  if (zeiten.length > 0) {
+    const names = new Set<string>()
+    zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
+    const byName = ap.filter(a => names.has(a.name.toLowerCase()))
+    if (byName.length > 0) return byName
+  }
+  const words = keyWords(mann.name)
+  if (words.length > 0) {
+    const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
+    if (byRole.length > 0) return byRole
+  }
+  return ap.length <= 3 ? ap : []
+}
+
 /* ── Page ──────────────────────────────────────────────────── */
 export default function SparteDetailPage({ params }: { params: { slug: string } }) {
   const sparten: Sparte[]          = getSparten()
@@ -69,24 +114,10 @@ export default function SparteDetailPage({ params }: { params: { slug: string } 
   if (!sparte) notFound()
 
   const alleZeiten: TrainingsEntry[] = getTrainingszeiten()
-  const zeiten = alleZeiten
-    .filter(e => (sparte.trainingszeiten_spartes ?? []).includes(e.sparte))
-
-  // Sort by day order within each sub-group
-  const sorted = [...zeiten].sort((a, b) => {
-    const ai = TAG_ORDER.indexOf(a.tag), bi = TAG_ORDER.indexOf(b.tag)
-    return ai - bi
-  })
-
-  // Group by sparte sub-name (for multi-sparte like football)
-  const multiSparte = (sparte.trainingszeiten_spartes ?? []).length > 1
-  const zeitenGruppen = new Map<string, TrainingsEntry[]>()
-  sorted.forEach(e => {
-    if (!zeitenGruppen.has(e.sparte)) zeitenGruppen.set(e.sparte, [])
-    zeitenGruppen.get(e.sparte)!.push(e)
-  })
-
   const farbe = sparte.farbe ?? '#0a0a0a'
+
+  // Contacts not assigned to any team (fallback for sparten without mannschaften)
+  const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-5xl mx-auto">
@@ -102,7 +133,7 @@ export default function SparteDetailPage({ params }: { params: { slug: string } 
       {/* ── HERO ──────────────────────────────────────────────── */}
       <div className="mb-14 pl-6" style={{ borderLeft: `3px solid ${farbe}` }}>
         <div className="text-5xl mb-4 leading-none">{sparte.icon}</div>
-        <h1 className="font-display text-7xl md:text-[6.5rem] tracking-tight leading-none">
+        <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-[6.5rem] tracking-tight leading-none">
           {sparte.name.toUpperCase()}
         </h1>
         <p className="mt-4 text-lg text-[#6b6b6b] font-light max-w-2xl leading-relaxed">
@@ -133,92 +164,25 @@ export default function SparteDetailPage({ params }: { params: { slug: string } 
         </section>
       )}
 
-      {/* ── MANNSCHAFTEN ──────────────────────────────────────── */}
-      {sparte.mannschaften?.length > 0 && (
+      {/* ── MANNSCHAFTEN (with embedded times + contacts) ─────── */}
+      {hasMannschaften && (
         <section className="mb-16">
           <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={sparte.mannschaften.length} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[#0a0a0a]/10 mt-6">
-            {sparte.mannschaften.map((m, i) => (
-              <div key={i} className="bg-[#f5f5f0] flex flex-col">
-                {/* Photo or placeholder */}
-                <div
-                  className="aspect-video flex items-center justify-center text-5xl"
-                  style={{ background: `${farbe}12` }}
-                >
-                  {m.foto
-                    ? /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={m.foto} alt={m.name} className="w-full h-full object-cover" />
-                    : <span>{sparte.icon}</span>
-                  }
-                </div>
-                <div className="p-5 flex-1">
-                  <h3 className="font-medium text-sm mb-2 leading-snug">{m.name}</h3>
-                  <p className="text-xs text-[#6b6b6b] leading-relaxed">{m.beschreibung}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── TRAININGSZEITEN ───────────────────────────────────── */}
-      {sorted.length > 0 && (
-        <section className="mb-16">
-          <SectionHeader title="TRAININGSZEITEN" farbe={farbe} count={sorted.length} />
-          <div className="mt-6 space-y-8">
-            {Array.from(zeitenGruppen.entries()).map(([subSparte, entries]) => (
-              <div key={subSparte}>
-                {multiSparte && (
-                  <div
-                    className="text-[10px] tracking-[0.22em] uppercase font-medium mb-3 flex items-center gap-2"
-                    style={{ color: farbe }}
-                  >
-                    <span className="w-1 h-1 rounded-full inline-block" style={{ background: farbe }} />
-                    {subSparte}
-                  </div>
-                )}
-                <div className="space-y-px" style={{ borderLeft: `2px solid ${farbe}25` }}>
-                  {entries.map((e, i) => {
-                    const tc = TAG_COLOR[e.tag] ?? '#6b6b6b'
-                    const sb = saisonBadge(e.jahreszeit)
-                    return (
-                      <div
-                        key={i}
-                        className="bg-[#f5f5f0] hover:bg-white transition-colors pl-4 pr-5 py-3.5 flex items-center gap-4"
-                      >
-                        {/* Day */}
-                        <div
-                          className="w-9 h-9 shrink-0 flex items-center justify-center text-white text-[11px] font-semibold tracking-wide rounded-sm"
-                          style={{ background: tc }}
-                        >
-                          {TAG_SHORT[e.tag] ?? e.tag}
-                        </div>
-                        {/* Center */}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{e.gruppe}</div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b] mt-0.5">
-                            <span className="flex items-center gap-1">
-                              <MapPin size={9} className="shrink-0" />{e.ort}
-                            </span>
-                            <span className="opacity-50">·</span>
-                            <RefreshCw size={9} className="shrink-0 opacity-50" />
-                            <span>{e.frequenz}</span>
-                            {e.uhrzeit && <><span className="opacity-50">·</span><span>{e.uhrzeit} Uhr</span></>}
-                          </div>
-                        </div>
-                        {/* Season */}
-                        <span
-                          className="shrink-0 hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5"
-                          style={{ background: sb.bg, color: sb.color }}
-                        >
-                          {sb.label}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
+          <div className="mt-6 space-y-3">
+            {sparte.mannschaften.map((mann, i) => {
+              const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
+              const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+              return (
+                <MannschaftCard
+                  key={i}
+                  mann={mann}
+                  zeiten={mZeiten}
+                  trainer={mTrainer}
+                  farbe={farbe}
+                  sparteIcon={sparte.icon}
+                />
+              )
+            })}
           </div>
           <div className="mt-4">
             <Link
@@ -231,16 +195,78 @@ export default function SparteDetailPage({ params }: { params: { slug: string } 
         </section>
       )}
 
-      {/* ── ANSPRECHPARTNER ───────────────────────────────────── */}
-      {sparte.ansprechpartner?.length > 0 && (
-        <section className="mb-16">
-          <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={sparte.ansprechpartner.length} />
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sparte.ansprechpartner.map((a, i) => (
-              <KontaktKarte key={i} person={a} farbe={farbe} />
-            ))}
-          </div>
-        </section>
+      {/* ── FALLBACK: no mannschaften → show contacts + times directly ── */}
+      {!hasMannschaften && (
+        <>
+          {/* Training times */}
+          {(sparte.trainingszeiten_spartes?.length ?? 0) > 0 && (() => {
+            const zeiten = alleZeiten
+              .filter(e => (sparte.trainingszeiten_spartes ?? []).includes(e.sparte))
+              .sort((a, b) => TAG_ORDER.indexOf(a.tag) - TAG_ORDER.indexOf(b.tag))
+            return zeiten.length > 0 ? (
+              <section className="mb-16">
+                <SectionHeader title="TRAININGSZEITEN" farbe={farbe} count={zeiten.length} />
+                <div className="mt-6 space-y-px" style={{ borderLeft: `2px solid ${farbe}25` }}>
+                  {zeiten.map((e, i) => {
+                    const tc = TAG_COLOR[e.tag] ?? '#6b6b6b'
+                    const sb = saisonBadge(e.jahreszeit)
+                    return (
+                      <div
+                        key={i}
+                        className="bg-[#f5f5f0] hover:bg-white transition-colors pl-4 pr-5 py-3.5 flex items-center gap-4"
+                      >
+                        <div
+                          className="w-9 h-9 shrink-0 flex items-center justify-center text-white text-[11px] font-semibold tracking-wide rounded-sm"
+                          style={{ background: tc }}
+                        >
+                          {TAG_SHORT[e.tag] ?? e.tag}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{e.gruppe}</div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b] mt-0.5">
+                            <span className="flex items-center gap-1">
+                              <MapPin size={9} className="shrink-0" />{e.ort}
+                            </span>
+                            <span className="opacity-50">·</span>
+                            <RefreshCw size={9} className="shrink-0 opacity-50" />
+                            <span>{e.frequenz}</span>
+                            {e.uhrzeit && <><span className="opacity-50">·</span><span>{e.uhrzeit} Uhr</span></>}
+                          </div>
+                        </div>
+                        <span
+                          className="shrink-0 hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5"
+                          style={{ background: sb.bg, color: sb.color }}
+                        >
+                          {sb.label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/trainingszeiten"
+                    className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4"
+                  >
+                    Alle Trainingszeiten ansehen →
+                  </Link>
+                </div>
+              </section>
+            ) : null
+          })()}
+
+          {/* Contacts */}
+          {(sparte.ansprechpartner?.length ?? 0) > 0 && (
+            <section className="mb-16">
+              <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={sparte.ansprechpartner.length} />
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sparte.ansprechpartner.map((a, i) => (
+                  <KontaktKarte key={i} person={a} farbe={farbe} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       {/* ── CTA ───────────────────────────────────────────────── */}
@@ -283,13 +309,173 @@ function SectionHeader({ title, farbe, count }: { title: string; farbe: string; 
   )
 }
 
+/* ── Mannschaft card with embedded times + contacts ─────────── */
+function MannschaftCard({
+  mann, zeiten, trainer, farbe, sparteIcon,
+}: {
+  mann: Mannschaft
+  zeiten: TrainingsEntry[]
+  trainer: Ansprechpartner[]
+  farbe: string
+  sparteIcon: string
+}) {
+  const hasDetails = zeiten.length > 0 || trainer.length > 0
+
+  return (
+    <div className="border border-[#0a0a0a]/[0.08] bg-[#fafaf8] overflow-hidden">
+
+      {/* ── Card header ── */}
+      <div className="p-5 flex gap-4">
+        {/* Photo or icon placeholder */}
+        <div
+          className="w-16 h-16 shrink-0 flex items-center justify-center text-2xl overflow-hidden"
+          style={{ background: `${farbe}12` }}
+        >
+          {mann.foto
+            ? /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={mann.foto} alt={mann.name} className="w-full h-full object-cover" />
+            : <span>{sparteIcon}</span>
+          }
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h3 className="font-medium text-sm leading-tight">{mann.name}</h3>
+            {zeiten.length > 0 && (
+              <span
+                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5"
+                style={{ background: `${farbe}18`, color: farbe }}
+              >
+                <Clock size={8} className="shrink-0" />
+                {zeiten.length} Trainingszeit{zeiten.length !== 1 ? 'en' : ''}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
+        </div>
+      </div>
+
+      {/* ── Expanded details ── */}
+      {hasDetails && (
+        <div className="border-t border-[#0a0a0a]/[0.06] px-5 pb-5 space-y-5">
+
+          {/* Training times */}
+          {zeiten.length > 0 && (
+            <div className="pt-4">
+              <div
+                className="text-[10px] tracking-[0.18em] uppercase font-medium mb-3"
+                style={{ color: farbe }}
+              >
+                Trainingszeiten
+              </div>
+              <div className="space-y-2">
+                {zeiten.map((z, i) => {
+                  const tc = TAG_COLOR[z.tag] ?? '#6b6b6b'
+                  const sb = saisonBadge(z.jahreszeit)
+                  return (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <span
+                        className="w-7 h-7 flex items-center justify-center text-white text-[10px] font-semibold rounded-sm shrink-0"
+                        style={{ background: tc }}
+                      >
+                        {TAG_SHORT[z.tag] ?? z.tag}
+                      </span>
+                      <div className="flex-1 min-w-0 text-xs text-[#4a4a4a] truncate">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin size={9} className="shrink-0 text-[#6b6b6b]" />
+                          <span className="font-medium">{z.ort}</span>
+                        </span>
+                        {z.uhrzeit && (
+                          <span className="text-[#6b6b6b]"> · {z.uhrzeit} Uhr</span>
+                        )}
+                        <span className="text-[#6b6b6b]"> · {z.frequenz}</span>
+                      </div>
+                      <span
+                        className="hidden sm:inline text-[9px] tracking-[0.1em] uppercase px-1.5 py-0.5 shrink-0"
+                        style={{ background: sb.bg, color: sb.color }}
+                      >
+                        {sb.label === 'Ganzjährig' ? 'Ganzj.' : sb.label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Trainer / Ansprechpartner */}
+          {trainer.length > 0 && (
+            <div>
+              <div
+                className="text-[10px] tracking-[0.18em] uppercase font-medium mb-3"
+                style={{ color: farbe }}
+              >
+                Trainer & Ansprechpartner
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {trainer.map((t, i) => (
+                  <KontaktKarte key={i} person={t} farbe={farbe} compact />
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── Kontakt card ────────────────────────────────────────────── */
-function KontaktKarte({ person, farbe }: { person: Ansprechpartner; farbe: string }) {
+function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpartner; farbe: string; compact?: boolean }) {
   const ini = initials(person.name)
   const hasTel = !!person.telefon
   const waHref = person.whatsapp
     ? whatsappHref(person.whatsapp)
     : hasTel ? whatsappHref(person.telefon) : null
+
+  if (compact) {
+    return (
+      <div className="bg-white border border-[#0a0a0a]/[0.06] p-3 flex gap-2.5 items-start">
+        {person.foto
+          ? /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={person.foto} alt={person.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+          : (
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 select-none"
+              style={{ background: farbe }}
+            >
+              {ini}
+            </div>
+          )
+        }
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-xs leading-tight mb-0.5">{person.name}</div>
+          <div className="text-[10px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
+          <div className="space-y-0.5">
+            {person.email && (
+              <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+                <Mail size={9} className="shrink-0" />
+                <span className="truncate">{person.email}</span>
+              </a>
+            )}
+            {hasTel && (
+              <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+                <Phone size={9} className="shrink-0" />
+                {person.telefon}
+              </a>
+            )}
+            {waHref && (
+              <a href={waHref} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] text-[#16a34a] hover:text-[#15803d] transition-colors">
+                <MessageCircle size={9} className="shrink-0" />
+                WhatsApp
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-[#f5f5f0] p-5 flex flex-col">

@@ -19,12 +19,12 @@ export default function AnsprechpartnerPage() {
         <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Allgemeiner Kontakt</div>
         <div className="flex flex-col sm:flex-row gap-6">
           <a href="tel:00491722970187" className="flex items-center gap-3 group">
-            <Phone size={16} className="text-[#6b6b6b]" />
-            <span className="text-lg hover:text-[#f5f5f0]/60 transition-colors">+49 172 2970187</span>
+            <Phone size={16} className="text-[#6b6b6b] shrink-0" />
+            <span className="text-base sm:text-lg hover:text-[#f5f5f0]/60 transition-colors break-all">+49 172 2970187</span>
           </a>
           <a href="mailto:info@sv-holm-seppensen.de" className="flex items-center gap-3 group">
-            <Mail size={16} className="text-[#6b6b6b]" />
-            <span className="text-lg hover:text-[#f5f5f0]/60 transition-colors">info@sv-holm-seppensen.de</span>
+            <Mail size={16} className="text-[#6b6b6b] shrink-0" />
+            <span className="text-base sm:text-lg hover:text-[#f5f5f0]/60 transition-colors break-all">info@sv-holm-seppensen.de</span>
           </a>
         </div>
       </div>

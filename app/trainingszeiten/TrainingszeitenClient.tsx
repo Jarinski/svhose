@@ -252,68 +252,99 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                     return (
                       <div
                         key={i}
-                        className="group bg-[#f5f5f0] hover:bg-white transition-colors duration-150 ml-0 pl-5 pr-5 py-4 grid gap-3"
-                        style={{ gridTemplateColumns: '2.5rem 1fr auto' }}
+                        className="group bg-[#f5f5f0] hover:bg-white transition-colors duration-150 pl-5 pr-5 py-4"
                       >
-                        {/* Day badge */}
-                        <div
-                          className="w-10 h-10 flex items-center justify-center text-white text-[11px] font-semibold tracking-wider rounded-sm shrink-0"
-                          style={{ background: tagColor }}
-                        >
-                          {TAG_SHORT[e.tag] ?? e.tag}
-                        </div>
+                        {/* Top row: day badge + center info + right column (sm+) */}
+                        <div className="flex items-center gap-3">
+                          {/* Day badge */}
+                          <div
+                            className="w-10 h-10 flex items-center justify-center text-white text-[11px] font-semibold tracking-wider rounded-sm shrink-0"
+                            style={{ background: tagColor }}
+                          >
+                            {TAG_SHORT[e.tag] ?? e.tag}
+                          </div>
 
-                        {/* Center: group + location + frequency */}
-                        <div className="min-w-0 flex flex-col justify-center gap-1">
-                          <div className="font-medium text-sm leading-snug truncate">{e.gruppe}</div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b]">
-                            <span className="flex items-center gap-1">
-                              <MapPin size={9} className="shrink-0" />
-                              <span className="truncate">{e.ort}</span>
-                            </span>
-                            <span className="opacity-60">·</span>
-                            <span>{e.frequenz}</span>
-                            {e.uhrzeit && (
-                              <>
-                                <span className="opacity-60">·</span>
-                                <span>{e.uhrzeit} Uhr</span>
-                              </>
+                          {/* Center: group + location + frequency */}
+                          <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-medium text-sm leading-snug">{e.gruppe}</div>
+                              {/* Season badge – visible on sm+ only */}
+                              <span
+                                className="hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap shrink-0"
+                                style={{ background: saisonStyle.bg, color: saisonStyle.color }}
+                              >
+                                {norm === 'ganzjährig' ? 'Ganzjährig' : norm}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b]">
+                              <span className="flex items-center gap-1">
+                                <MapPin size={9} className="shrink-0" />
+                                <span className="truncate">{e.ort}</span>
+                              </span>
+                              <span className="opacity-60">·</span>
+                              <span>{e.frequenz}</span>
+                              {e.uhrzeit && (
+                                <>
+                                  <span className="opacity-60">·</span>
+                                  <span>{e.uhrzeit} Uhr</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: trainer info – hidden on mobile */}
+                          <div className="hidden sm:flex shrink-0 flex-col items-end justify-center gap-1 min-w-0">
+                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                              <User size={9} className="shrink-0" />
+                              <span className="max-w-[160px] truncate leading-tight">{e.trainer}</span>
+                            </div>
+                            {e.email && (
+                              <a
+                                href={`mailto:${e.email}`}
+                                className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+                              >
+                                <Mail size={9} className="shrink-0" />
+                                <span className="max-w-[160px] truncate">{e.email}</span>
+                              </a>
+                            )}
+                            {e.telefon && (
+                              <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                                <Phone size={9} className="shrink-0" />
+                                <span>{e.telefon}</span>
+                              </div>
                             )}
                           </div>
                         </div>
 
-                        {/* Right: season + trainer */}
-                        <div className="shrink-0 flex flex-col items-end justify-center gap-1.5">
-                          {/* Season badge */}
+                        {/* Mobile-only second row: season + trainer info */}
+                        <div className="sm:hidden mt-2 ml-[3.25rem] flex flex-wrap items-center gap-x-3 gap-y-1">
                           <span
                             className="text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap"
                             style={{ background: saisonStyle.bg, color: saisonStyle.color }}
                           >
                             {norm === 'ganzjährig' ? 'Ganzjährig' : norm}
                           </span>
-
-                          {/* Trainer */}
-                          <div className="text-right space-y-0.5">
-                            <div className="flex items-center justify-end gap-1 text-[10px] text-[#6b6b6b]">
+                          {e.trainer && (
+                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
                               <User size={9} className="shrink-0" />
-                              <span className="max-w-[180px] truncate leading-tight">{e.trainer}</span>
+                              <span className="truncate max-w-[200px]">{e.trainer}</span>
                             </div>
-                            {e.email && (
-                              <a
-                                href={`mailto:${e.email}`}
-                                className="flex items-center justify-end gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
-                              >
-                                <Mail size={9} className="shrink-0" />
-                                <span className="max-w-[180px] truncate">{e.email}</span>
-                              </a>
-                            )}
-                            {e.telefon && (
-                              <div className="flex items-center justify-end gap-1 text-[10px] text-[#6b6b6b]">
-                                <Phone size={9} className="shrink-0" />
-                                <span>{e.telefon}</span>
-                              </div>
-                            )}
-                          </div>
+                          )}
+                          {e.email && (
+                            <a
+                              href={`mailto:${e.email}`}
+                              className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+                            >
+                              <Mail size={9} className="shrink-0" />
+                              <span className="truncate max-w-[200px]">{e.email}</span>
+                            </a>
+                          )}
+                          {e.telefon && (
+                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                              <Phone size={9} className="shrink-0" />
+                              <span>{e.telefon}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )
