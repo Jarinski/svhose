@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
@@ -21,12 +21,15 @@ function hasFunctionalConsent(): boolean {
 
 export default function HeroBanner() {
   const [showVideo, setShowVideo] = useState(false)
+  const [videoError, setVideoError] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     setShowVideo(hasFunctionalConsent())
 
     function onConsentUpdate() {
       setShowVideo(hasFunctionalConsent())
+      setVideoError(false)
     }
 
     window.addEventListener('svhose:consent-updated', onConsentUpdate)
@@ -39,15 +42,62 @@ export default function HeroBanner() {
     }
   }, [])
 
+  // YouTube Bot-Detection erkennen: Wenn die iframe-Seite einen Login fordert,
+  // wird ein postMessage-Event mit bestimmten Fehlercodes gesendet.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (typeof e.data !== 'string') return
+      try {
+        const data = JSON.parse(e.data)
+        // YouTube sendet playerError mit Code 150 oder 101 bei Bot-Detection
+        if (
+          data?.event === 'onError' &&
+          (data?.info === 150 || data?.info === 101 || data?.info === 2)
+        ) {
+          setVideoError(true)
+        }
+      } catch {
+        // kein JSON → ignorieren
+      }
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [])
+
+  // Timeout-Fallback: Falls das Video nach 8 Sekunden nicht geladen hat
+  // (z.B. wegen Bot-Detection), auf den statischen Fallback wechseln.
+  useEffect(() => {
+    if (!showVideo || videoError) return
+    const t = setTimeout(() => {
+      const iframe = iframeRef.current
+      if (!iframe) return
+      // Prüfen ob der iframe tatsächlich Inhalt hat
+      try {
+        // Wenn youtube-nocookie geblockt ist, bleibt contentDocument null
+        if (!iframe.contentDocument || iframe.contentDocument.title.toLowerCase().includes('sign')) {
+          setVideoError(true)
+        }
+      } catch {
+        // Cross-Origin → iframe hat geladen (normal), kein Fehler
+      }
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [showVideo, videoError])
+
+  const videoSrc = `https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&origin=${
+    typeof window !== 'undefined' ? window.location.origin : 'https://sv-holm-seppensen.de'
+  }`
+
   return (
     <section className="relative min-h-[50vh] flex flex-col justify-end pb-10 pt-20 px-6 overflow-hidden bg-[#0a0a0a]">
 
-      {/* ── VIDEO HINTERGRUND (wenn funktionale Cookies akzeptiert) ── */}
-      {showVideo ? (
+      {/* ── VIDEO HINTERGRUND (wenn funktionale Cookies akzeptiert und kein Fehler) ── */}
+      {showVideo && !videoError ? (
         <>
           <div className="absolute inset-0 z-0 overflow-hidden">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=0`}
+              ref={iframeRef}
+              src={videoSrc}
               allow="autoplay; encrypted-media"
               aria-hidden="true"
               title=""
