@@ -120,6 +120,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
   if (!sparte) notFound()
 
   const farbe = sparte.farbe ?? '#0a0a0a'
+  const isAkrobatik = sparte.slug === 'akrobatik'
   const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
@@ -157,7 +158,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
       {/* ── TEAM PHOTO ────────────────────────────────────────── */}
       {sparte.foto && (
         <section className="mb-16">
-          <div className="aspect-[21/9] overflow-hidden">
+          <div className={`aspect-[21/9] overflow-hidden ${isAkrobatik ? 'w-full sm:w-1/2' : ''}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={sparte.foto}
@@ -468,10 +469,10 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
       <div className="bg-white border border-[#0a0a0a]/[0.06] p-3 flex gap-2.5 items-start">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={person.foto} alt={person.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+            <img src={person.foto} alt={person.name} className="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0" />
           : (
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 select-none"
+              className="w-[4.5rem] h-[4.5rem] rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 select-none"
               style={{ background: farbe }}
             >
               {ini}
