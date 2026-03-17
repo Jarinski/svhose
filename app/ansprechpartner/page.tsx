@@ -4,8 +4,23 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Ansprechpartner' }
 
+const GRUPPEN_REIHENFOLGE = ['Vorstand', 'Abteilungsleiter', 'Weitere Ansprechpartner']
+
 export default async function AnsprechpartnerPage() {
   const personen = await getAnsprechpartner()
+
+  // Gruppieren nach "gruppe"-Feld (Fallback auf "sparte" für ältere Einträge)
+  const grouped = GRUPPEN_REIHENFOLGE.reduce<Record<string, any[]>>((acc, g) => {
+    const members = personen.filter((p: any) => (p.gruppe || p.sparte) === g)
+    if (members.length > 0) acc[g] = members
+    return acc
+  }, {})
+
+  // Einträge, die keiner bekannten Gruppe zugeordnet sind
+  const ungrouped = personen.filter(
+    (p: any) => !GRUPPEN_REIHENFOLGE.includes(p.gruppe || p.sparte)
+  )
+  if (ungrouped.length > 0) grouped['Sonstige'] = ungrouped
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
@@ -29,30 +44,34 @@ export default async function AnsprechpartnerPage() {
         </div>
       </div>
 
-      {/* Ansprechpartner */}
-      <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Ansprechpartner</div>
-      <div className="space-y-px bg-[#0a0a0a]/10">
-        {personen.map((p: any) => (
-          <div key={p.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex-1">
-              <div className="font-medium text-lg">{p.name}</div>
-              <div className="text-sm text-[#6b6b6b] mt-0.5">{p.funktion} · {p.sparte}</div>
-            </div>
-            <div className="flex flex-col gap-2 text-sm">
-              {p.email && (
-                <a href={`mailto:${p.email}`} className="flex items-center gap-2 text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
-                  <Mail size={13} /> {p.email}
-                </a>
-              )}
-              {p.telefon && (
-                <a href={`tel:${p.telefon}`} className="flex items-center gap-2 text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
-                  <Phone size={13} /> {p.telefon}
-                </a>
-              )}
-            </div>
+      {/* Ansprechpartner nach Gruppen */}
+      {Object.entries(grouped).map(([gruppenName, mitglieder]) => (
+        <div key={gruppenName} className="mb-12">
+          <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">{gruppenName}</div>
+          <div className="space-y-px bg-[#0a0a0a]/10">
+            {mitglieder.map((p: any) => (
+              <div key={p.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex-1">
+                  <div className="font-medium text-lg">{p.name}</div>
+                  <div className="text-sm text-[#6b6b6b] mt-0.5">{p.funktion}</div>
+                </div>
+                <div className="flex flex-col gap-2 text-sm">
+                  {p.email && (
+                    <a href={`mailto:${p.email}`} className="flex items-center gap-2 text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+                      <Mail size={13} /> {p.email}
+                    </a>
+                  )}
+                  {p.telefon && (
+                    <a href={`tel:${p.telefon}`} className="flex items-center gap-2 text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+                      <Phone size={13} /> {p.telefon}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   )
 }

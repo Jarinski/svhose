@@ -98,6 +98,7 @@ export const ansprechpartnerQuery = groq`
     "id": _id,
     name,
     funktion,
+    gruppe,
     sparte,
     email,
     telefon,

@@ -158,6 +158,7 @@ async function migrateAnsprechpartner() {
       _type:      'ansprechpartner',
       name:       p.name,
       funktion:   p.funktion,
+      gruppe:     p.gruppe,
       sparte:     p.sparte,
       email:      p.email,
       telefon:    p.telefon,

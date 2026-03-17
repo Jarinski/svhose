@@ -1,26 +1,130 @@
 [
   {
-    "id": "1",
-    "name": "Vorstand",
+    "id": "vorstand-1",
+    "name": "Henrik Behrndt",
     "funktion": "1. Vorsitzender",
-    "sparte": "Vorstand",
-    "email": "info@sv-holm-seppensen.de",
-    "telefon": "0172 2970187"
-  },
-  {
-    "id": "2",
-    "name": "Abteilungsleiter Fußball",
-    "funktion": "Abteilungsleiter",
-    "sparte": "Fußball",
-    "email": "fussball@sv-holm-seppensen.de",
+    "gruppe": "Vorstand",
+    "email": "Henrik.Behrndt@sv-holm-seppensen.de",
     "telefon": ""
   },
   {
-    "id": "3",
-    "name": "Abteilungsleiter Judo",
-    "funktion": "Abteilungsleiter",
-    "sparte": "Judo",
-    "email": "judo@sv-holm-seppensen.de",
+    "id": "vorstand-2",
+    "name": "Lioba Te Nyenhuis",
+    "funktion": "2. Vorsitzende",
+    "gruppe": "Vorstand",
+    "email": "lioba.te.nyenhuis@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-3",
+    "name": "Sönke Fenz",
+    "funktion": "3. Vorsitzender",
+    "gruppe": "Vorstand",
+    "email": "Soenke.Fenz@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-4",
+    "name": "Thomas Ulrich",
+    "funktion": "Schatzmeister",
+    "gruppe": "Vorstand",
+    "email": "thomas.ulrich@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-5",
+    "name": "Leona Waldner",
+    "funktion": "1. Schriftführerin",
+    "gruppe": "Vorstand",
+    "email": "leonawaldner@googlemail.com",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-6",
+    "name": "Nele Winkler",
+    "funktion": "2. Schriftführerin",
+    "gruppe": "Vorstand",
+    "email": "winkler-nele@gmx.net",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-7",
+    "name": "Saad Fidaoui",
+    "funktion": "Öffentlichkeitsarbeit",
+    "gruppe": "Vorstand",
+    "email": "Saad.Fidaoui@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "vorstand-8",
+    "name": "Dierk Ulber",
+    "funktion": "Ohne Geschäftsbereich",
+    "gruppe": "Vorstand",
+    "email": "Dirk.Ulber@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-1",
+    "name": "Christian Krause",
+    "funktion": "Abteilungsleitung Fußball",
+    "gruppe": "Abteilungsleiter",
+    "email": "Christian.Krause@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-2",
+    "name": "Friedhelm Iske",
+    "funktion": "Abteilungsleitung Judo",
+    "gruppe": "Abteilungsleiter",
+    "email": "Friedhelm.Iske@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-3",
+    "name": "Susan Eisenberg",
+    "funktion": "Abteilungsleitung Akrobatik",
+    "gruppe": "Abteilungsleiter",
+    "email": "Susan.Eisenberg@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-4",
+    "name": "Nina Fenz",
+    "funktion": "Abteilungsleitung Tischtennis",
+    "gruppe": "Abteilungsleiter",
+    "email": "Nina.Fenz@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-5",
+    "name": "Sabrina Müller",
+    "funktion": "Abteilungsleitung Turnen",
+    "gruppe": "Abteilungsleiter",
+    "email": "Sabrina.Mueller@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "abt-6",
+    "name": "Brigitte Wiehe",
+    "funktion": "Abteilungsleitung Fitness",
+    "gruppe": "Abteilungsleiter",
+    "email": "Brigitte.Wiehe@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "weitere-1",
+    "name": "Jari Gonzales Reyes",
+    "funktion": "Webseitenverwalter",
+    "gruppe": "Weitere Ansprechpartner",
+    "email": "Jari.Gonzales@sv-holm-seppensen.de",
+    "telefon": ""
+  },
+  {
+    "id": "weitere-2",
+    "name": "Tim Wittwer",
+    "funktion": "Mitgliederverwaltung",
+    "gruppe": "Weitere Ansprechpartner",
+    "email": "tim.wittwer@t-online.de",
     "telefon": ""
   }
 ]

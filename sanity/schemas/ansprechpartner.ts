@@ -7,7 +7,8 @@ export default defineType({
   fields: [
     defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
     defineField({ name: 'funktion', title: 'Funktion', type: 'string' }),
-    defineField({ name: 'sparte', title: 'Sparte / Bereich', type: 'string' }),
+    defineField({ name: 'gruppe', title: 'Gruppe', type: 'string', description: 'z.B. Vorstand, Abteilungsleiter, Weitere Ansprechpartner' }),
+    defineField({ name: 'sparte', title: 'Sparte / Bereich (veraltet)', type: 'string' }),
     defineField({ name: 'email', title: 'E-Mail', type: 'string' }),
     defineField({ name: 'telefon', title: 'Telefon', type: 'string' }),
     defineField({ name: 'foto', title: 'Foto', type: 'image', options: { hotspot: true } }),

@@ -8,5 +8,11 @@
       "NEXT_PUBLIC_SANITY_DATASET": "production",
       "NEXT_PUBLIC_SANITY_API_VERSION": "2024-01-01"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/sync-fussball",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
