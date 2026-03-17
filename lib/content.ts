@@ -9,6 +9,9 @@ import {
   spartenQuery,
   sparteBySlugQuery,
   spartenSlugsQuery,
+  personenQuery,
+  jahrgaengeQuery,
+  mannschaftenQuery,
   termineQuery,
   trainingszeitenQuery,
   ansprechpartnerQuery,
@@ -48,6 +51,23 @@ export async function getSparteBySlug(slug: string): Promise<any | null> {
 
 export async function getSpartenSlugs(): Promise<{ slug: string }[]> {
   return (await sanityFetch<{ slug: string }[]>(spartenSlugsQuery)) ?? []
+}
+
+// ─── Personen / Jahrgänge / Mannschaften ───────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getPersonen(): Promise<any[]> {
+  return (await sanityFetch<any[]>(personenQuery)) ?? []
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getJahrgaenge(): Promise<any[]> {
+  return (await sanityFetch<any[]>(jahrgaengeQuery)) ?? []
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getMannschaften(): Promise<any[]> {
+  return (await sanityFetch<any[]>(mannschaftenQuery)) ?? []
 }
 
 // ─── Termine ────────────────────────────────────────────────────────────────

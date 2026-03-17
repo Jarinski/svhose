@@ -520,7 +520,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
             {person.email && (
               <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
                 <Mail size={9} className="shrink-0" />
-                <span className="truncate">{person.email}</span>
+                <span className="break-all leading-tight">{person.email}</span>
               </a>
             )}
             {hasTel && (

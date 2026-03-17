@@ -68,6 +68,73 @@ export const spartenSlugsQuery = groq`
   *[_type == "sparte"] { "slug": slug.current }
 `
 
+// ─── Personen / Jahrgänge / Mannschaften ───────────────────────────────────
+
+export const personenQuery = groq`
+  *[_type == "person"] | order(reihenfolge asc, name asc) {
+    "id": _id,
+    name,
+    rollen,
+    email,
+    telefon,
+    whatsapp,
+    "foto": foto.asset->url,
+    reihenfolge
+  }
+`
+
+export const jahrgaengeQuery = groq`
+  *[_type == "jahrgang"] | order(reihenfolge asc, name asc) {
+    "id": _id,
+    name,
+    jahrgangVon,
+    jahrgangBis,
+    altersklasse,
+    beschreibung,
+    trainer[]->{
+      "id": _id,
+      name,
+      rollen,
+      email,
+      telefon,
+      whatsapp,
+      "foto": foto.asset->url
+    },
+    reihenfolge
+  }
+`
+
+export const mannschaftenQuery = groq`
+  *[_type == "mannschaft"] | order(reihenfolge asc, name asc) {
+    "id": _id,
+    name,
+    bereich,
+    "sparte": sparte->{
+      "id": _id,
+      name,
+      "slug": slug.current
+    },
+    "jahrgang": jahrgang->{
+      "id": _id,
+      name,
+      jahrgangVon,
+      jahrgangBis
+    },
+    beschreibung,
+    trainer[]->{
+      "id": _id,
+      name,
+      rollen,
+      email,
+      telefon,
+      whatsapp,
+      "foto": foto.asset->url
+    },
+    "foto": foto.asset->url,
+    reihenfolge
+  }
+`
+
 // ─── Termine ────────────────────────────────────────────────────────────────
 
 export const termineQuery = groq`
@@ -88,16 +155,16 @@ export const termineQuery = groq`
 
 export const trainingszeitenQuery = groq`
   *[_type == "trainingszeit"] | order(sparte asc) {
-    sparte,
-    gruppe,
+    "sparte": coalesce(mannschaft->sparte->name, sparte),
+    "gruppe": coalesce(mannschaft->name, gruppe),
     tag,
     uhrzeit,
-    ort,
+    "ort": coalesce(trainingsplatz->name, ort),
     jahreszeit,
     frequenz,
-    trainer,
-    email,
-    telefon,
+    "trainer": coalesce(mannschaft->trainer[0]->name, trainer),
+    "email": coalesce(mannschaft->trainer[0]->email, email),
+    "telefon": coalesce(mannschaft->trainer[0]->telefon, telefon),
     "foto": foto.asset->url
   }
 `
