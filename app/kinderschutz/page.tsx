@@ -191,24 +191,48 @@ export default function KinderschutzPage() {
       <div className="px-6 max-w-7xl mx-auto mb-20">
         <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Wir schauen nicht weg</div>
         <h2 className="font-display text-4xl md:text-5xl tracking-tight mb-8">UNSER SELBSTVERSTÄNDNIS</h2>
-        <p className="text-[#6b6b6b] leading-relaxed max-w-3xl mb-4">
-          Für eine sichere und starke Zukunft unserer Jugend – um im Kinder- und Jugendsport weiter
-          einen konsequenten Weg des Hinschauens zu gehen und ein täterfeindliches Umfeld zu schaffen,
-          haben wir unser Präventionskonzept erfolgreich abgeschlossen und nehmen am Pilotprojekt des
-          Kinderschutzbundes und des Kreissportbundes zur Prävention teil.
-        </p>
-        <p className="text-[#6b6b6b] leading-relaxed max-w-3xl mb-12">
-          Unser Konzept umfasst <strong className="text-[#0a0a0a]">sechs zentrale Bausteine</strong>:
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[#0a0a0a]/10 mb-16">
-          {BAUSTEINE.map((b, i) => (
-            <div key={i} className="bg-[#f5f5f0] p-6 flex items-start gap-4">
-              <span className="font-display text-2xl text-[#0a0a0a]/20 shrink-0 leading-none w-8">
-                {i + 1}
-              </span>
-              <p className="text-sm text-[#0a0a0a] leading-relaxed">{b}</p>
+
+        {/* Bild + Text nebeneinander */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16 items-start">
+          {/* Zertifikat / Auszeichnung */}
+          <div className="relative">
+            <div className="border border-[#0a0a0a]/10 overflow-hidden">
+              <Image
+                src="/Schutzkonzepte/schutzkonzepte1.jpg"
+                alt="Auszeichnung Schutzkonzept SV Holm-Seppensen"
+                width={900}
+                height={600}
+                className="w-full h-auto object-cover"
+                priority
+              />
             </div>
-          ))}
+            <p className="text-[10px] tracking-[0.15em] uppercase text-[#6b6b6b] mt-2">
+              Pilotprojekt Kinderschutzbund &amp; Kreissportbund
+            </p>
+          </div>
+
+          {/* Text + Bausteine */}
+          <div>
+            <p className="text-[#6b6b6b] leading-relaxed mb-4">
+              Für eine sichere und starke Zukunft unserer Jugend – um im Kinder- und Jugendsport weiter
+              einen konsequenten Weg des Hinschauens zu gehen und ein täterfeindliches Umfeld zu schaffen,
+              haben wir unser Präventionskonzept erfolgreich abgeschlossen und nehmen am Pilotprojekt des
+              Kinderschutzbundes und des Kreissportbundes zur Prävention teil.
+            </p>
+            <p className="text-[#6b6b6b] leading-relaxed mb-8">
+              Unser Konzept umfasst <strong className="text-[#0a0a0a]">sechs zentrale Bausteine</strong>:
+            </p>
+            <div className="space-y-px">
+              {BAUSTEINE.map((b, i) => (
+                <div key={i} className="bg-[#f5f5f0] p-5 flex items-start gap-4">
+                  <span className="font-display text-xl text-[#0a0a0a]/20 shrink-0 leading-none w-7">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm text-[#0a0a0a] leading-relaxed">{b}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Aufgaben der Vertrauenspersonen */}
@@ -248,40 +272,14 @@ export default function KinderschutzPage() {
         </div>
       </div>
 
-      {/* ── Schutzkonzept Bilder ── */}
-      <div className="px-6 max-w-7xl mx-auto mb-20">
-        <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-6">
-          Unser Schutzkonzept
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-[#0a0a0a]/10 overflow-hidden">
-            <Image
-              src="/images/Schutzkonzepte1.png"
-              alt="Schutzkonzept SV Holm-Seppensen – Seite 1"
-              width={800}
-              height={1100}
-              className="w-full h-auto object-contain"
-              priority
-            />
-          </div>
-          <div className="border border-[#0a0a0a]/10 overflow-hidden">
-            <Image
-              src="/images/Schutzkonzepte2.jpg"
-              alt="Schutzkonzept SV Holm-Seppensen – Seite 2"
-              width={800}
-              height={1100}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* ── Verhaltenskodex / Grundsätze ── */}
       <div className="bg-[#0a0a0a] text-[#f5f5f0] py-20 px-6 mb-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Unsere Grundsätze</div>
           <h2 className="font-display text-4xl md:text-5xl tracking-tight mb-12">SELBSTVERPFLICHTUNG</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#f5f5f0]/10">
+
+          {/* Grundsätze-Grid + Ministeriums-Postkarte nebeneinander */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-[#f5f5f0]/10 mb-12">
             {[
               {
                 titel: 'Sicherheit',
@@ -302,6 +300,39 @@ export default function KinderschutzPage() {
               </div>
             ))}
           </div>
+
+          {/* Ministeriums-Postkarte "Vertrauen & Schutz" */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">
+                Ministerium für Soziales, Gesundheit und Gleichstellung
+              </div>
+              <h3 className="font-display text-3xl tracking-tight mb-4">VERTRAUEN &amp; SCHUTZ</h3>
+              <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6">
+                Wir sind Teil der niedersächsischen Initiative zum Schutz von Kindern und Jugendlichen
+                im Sport. Die offizielle Kampagne des Ministeriums für Soziales, Gesundheit und
+                Gleichstellung begleitet unsere Arbeit und stärkt das Bewusstsein für einen
+                sicheren Vereinssport.
+              </p>
+              <a
+                href="/Schutzkonzepte/ministerium-postkarte-vertrauenderschutz-DRUCK-3mm-Anschnitt_2.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 border border-[#f5f5f0]/30 text-[#f5f5f0] px-5 py-2.5 text-xs tracking-[0.1em] uppercase hover:border-[#f5f5f0] transition-colors"
+              >
+                Infokarte herunterladen <ArrowRight size={13} />
+              </a>
+            </div>
+            <div className="overflow-hidden">
+              <Image
+                src="/Schutzkonzepte/schutzkonzepte2.png"
+                alt="Vertrauen & Schutz – Ministerium Niedersachsen"
+                width={800}
+                height={560}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -318,25 +349,66 @@ export default function KinderschutzPage() {
         </div>
       </div>
 
-      {/* ── Dokument / Selbstverpflichtungserklärung ── */}
-      <div className="px-6 max-w-4xl mx-auto mb-12">
-        <div className="bg-[#f5f5f0] border border-[#0a0a0a]/10 p-8 md:p-10">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Dokument</div>
-          <h3 className="font-display text-3xl tracking-tight mb-4">SELBSTVERPFLICHTUNGSERKLÄRUNG</h3>
-          <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6">
-            Alle Trainer*innen, Betreuer*innen und ehrenamtlich Tätigen im SV Holm-Seppensen, die mit
-            Kindern und Jugendlichen arbeiten, unterzeichnen unsere Selbstverpflichtungserklärung.
-            Sie beschreibt das gemeinsame Verständnis und die Haltung aller Beteiligten im Umgang
-            mit Minderjährigen.
-          </p>
-          <a
-            href="/pdfs/Selbstverpflichtungserklaerung.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-6 py-3 text-sm tracking-[0.1em] uppercase hover:bg-[#1a1a1a] transition-colors"
-          >
-            PDF herunterladen <ArrowRight size={14} />
-          </a>
+      {/* ── Dokumente & Downloads ── */}
+      <div className="px-6 max-w-7xl mx-auto mb-12">
+        <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Zum Herunterladen</div>
+        <h2 className="font-display text-4xl md:text-5xl tracking-tight mb-12">DOKUMENTE</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#0a0a0a]/10">
+
+          {/* Selbstverpflichtungserklärung */}
+          <div className="bg-[#f5f5f0] p-8 flex flex-col">
+            <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Dokument</div>
+            <h3 className="font-display text-xl tracking-tight mb-4 leading-snug">SELBSTVERPFLICHTUNGS&shy;ERKLÄRUNG</h3>
+            <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6 flex-1">
+              Alle Trainer*innen, Betreuer*innen und ehrenamtlich Tätigen unterzeichnen unsere
+              Selbstverpflichtungserklärung für einen respektvollen Umgang mit Minderjährigen.
+            </p>
+            <a
+              href="/pdfs/Selbstverpflichtungserklaerung.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-3 text-xs tracking-[0.1em] uppercase hover:bg-[#1a1a1a] transition-colors self-start"
+            >
+              PDF herunterladen <ArrowRight size={13} />
+            </a>
+          </div>
+
+          {/* Leitfaden Ausgezeichnet */}
+          <div className="bg-[#f5f5f0] p-8 flex flex-col">
+            <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Leitfaden</div>
+            <h3 className="font-display text-xl tracking-tight mb-4 leading-snug">LEITFADEN<br />AUSGEZEICHNET</h3>
+            <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6 flex-1">
+              Der offizielle Leitfaden des Kinderschutzbundes und des Kreissportbundes zum
+              Schutzkonzept-Pilotprojekt – Grundlage unserer Präventionsarbeit seit 2023.
+            </p>
+            <a
+              href="/Schutzkonzepte/00_LEITFADEN__AUSGEZEICHNET_ab_2023.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-3 text-xs tracking-[0.1em] uppercase hover:bg-[#1a1a1a] transition-colors self-start"
+            >
+              PDF herunterladen <ArrowRight size={13} />
+            </a>
+          </div>
+
+          {/* Ministeriums-Infokarte */}
+          <div className="bg-[#f5f5f0] p-8 flex flex-col">
+            <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Infokarte</div>
+            <h3 className="font-display text-xl tracking-tight mb-4 leading-snug">VERTRAUEN<br />&amp; SCHUTZ</h3>
+            <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6 flex-1">
+              Die offizielle Informationskarte des Niedersächsischen Ministeriums für Soziales,
+              Gesundheit und Gleichstellung zur Kampagne „Vertrauen &amp; Schutz im Vereinssport".
+            </p>
+            <a
+              href="/Schutzkonzepte/ministerium-postkarte-vertrauenderschutz-DRUCK-3mm-Anschnitt_2.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-3 text-xs tracking-[0.1em] uppercase hover:bg-[#1a1a1a] transition-colors self-start"
+            >
+              PDF herunterladen <ArrowRight size={13} />
+            </a>
+          </div>
+
         </div>
       </div>
 
