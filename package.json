@@ -11,15 +11,10 @@
     "studio": "sanity dev"
   },
   "dependencies": {
-    "@mdx-js/loader": "^3.0.1",
-    "@mdx-js/react": "^3.0.1",
-    "@next/mdx": "^14.2.5",
     "@sanity/image-url": "^2.0.3",
     "date-fns": "^3.6.0",
-    "gray-matter": "^4.0.3",
     "lucide-react": "^0.400.0",
     "next": "14.2.5",
-    "next-mdx-remote": "^6.0.0",
     "next-sanity": "^9.12.3",
     "react": "^18",
     "react-dom": "^18",

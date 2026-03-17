@@ -1,4 +1,4 @@
-import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten, getSparteDownloadsFromJson } from '@/lib/content'
+import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten } from '@/lib/content'
 import { notFound } from 'next/navigation'
 
 export const revalidate = 60
@@ -12,12 +12,14 @@ interface Ansprechpartner {
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
 }
+interface SparteDownload { titel: string; beschreibung: string; datei: string }
 interface Sparte {
   slug: string; name: string; icon: string; farbe: string
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
   mannschaften: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
+  downloads?: SparteDownload[]
 }
 interface TrainingsEntry {
   sparte: string; gruppe: string; tag: string; uhrzeit: string
@@ -119,7 +121,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
-  const sparteDownloads = getSparteDownloadsFromJson(params.slug)
+  const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-5xl mx-auto">
@@ -276,7 +278,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         <section className="mb-16">
           <SectionHeader title="DOWNLOADS & FORMULARE" farbe={farbe} count={sparteDownloads.length} />
           <div className="mt-6 space-y-px bg-[#0a0a0a]/10">
-            {sparteDownloads.map((d, i) => (
+            {sparteDownloads.map((d: SparteDownload, i: number) => (
               <a
                 key={i}
                 href={d.datei}

@@ -469,12 +469,12 @@ function KontaktMini({
           <img
             src={person.foto}
             alt={person.name}
-            className="w-9 h-9 rounded-full object-cover shrink-0"
+            className="w-[72px] h-[72px] rounded-full object-cover shrink-0"
           />
         )
         : (
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 select-none"
+            className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 select-none"
             style={{ background: farbe }}
           >
             {ini}

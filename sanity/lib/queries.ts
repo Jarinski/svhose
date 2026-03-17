@@ -24,6 +24,11 @@ export const spartenQuery = groq`
       telefon,
       whatsapp,
       "foto": foto.asset->url
+    },
+    downloads[] {
+      titel,
+      beschreibung,
+      "datei": coalesce(datei.asset->url, dateiUrl)
     }
   }
 `
@@ -50,6 +55,11 @@ export const sparteBySlugQuery = groq`
       telefon,
       whatsapp,
       "foto": foto.asset->url
+    },
+    downloads[] {
+      titel,
+      beschreibung,
+      "datei": coalesce(datei.asset->url, dateiUrl)
     }
   }
 `

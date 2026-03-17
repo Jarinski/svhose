@@ -54,6 +54,34 @@ export default defineType({
         },
       ],
     }),
+    defineField({
+      name: 'downloads',
+      title: 'Downloads & Formulare',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'titel', title: 'Titel', type: 'string' }),
+            defineField({ name: 'beschreibung', title: 'Beschreibung', type: 'text', rows: 2 }),
+            defineField({
+              name: 'datei',
+              title: 'Datei',
+              type: 'file',
+              description: 'Lade die Datei hier hoch (PDF, etc.)',
+            }),
+            defineField({
+              name: 'dateiUrl',
+              title: 'Datei-URL (Fallback)',
+              type: 'url',
+              description: 'Alternativer direkter Link zur Datei (z. B. /pdfs/Datei.pdf)',
+            }),
+          ],
+          preview: { select: { title: 'titel' } },
+        },
+      ],
+      description: 'Sparten-spezifische Downloads und Formulare',
+    }),
   ],
   orderings: [{ title: 'Name', name: 'nameAsc', by: [{ field: 'name', direction: 'asc' }] }],
   preview: { select: { title: 'name', subtitle: 'beschreibung' } },

@@ -52,10 +52,6 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
           <PortableText value={post.body} />
         )}
 
-        {/* MDX-Fallback: Rohtext */}
-        {(!post.body || post.body.length === 0) && post.content && (
-          <div className="whitespace-pre-wrap">{post.content}</div>
-        )}
       </div>
     </div>
   )
