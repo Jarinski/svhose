@@ -129,7 +129,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
       {/* Back */}
       <Link
         href="/sparten"
-        className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors mb-14"
+        className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors mb-14"
       >
         <ArrowLeft size={11} /> Alle Sparten
       </Link>
@@ -191,7 +191,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           <div className="mt-4">
             <Link
               href="/trainingszeiten"
-              className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4"
+              className="text-xs tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4"
             >
               Alle Trainingszeiten ansehen →
             </Link>
@@ -220,14 +220,14 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
                         className="bg-[#f5f5f0] hover:bg-white transition-colors pl-4 pr-5 py-3.5 flex items-center gap-4"
                       >
                         <div
-                          className="w-9 h-9 shrink-0 flex items-center justify-center text-white text-[11px] font-semibold tracking-wide rounded-sm"
+                          className="w-9 h-9 shrink-0 flex items-center justify-center text-white text-xs font-semibold tracking-wide rounded-sm"
                           style={{ background: tc }}
                         >
                           {TAG_SHORT[e.tag] ?? e.tag}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{e.gruppe}</div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b] mt-0.5">
+                          <div className="font-medium text-base truncate">{e.gruppe}</div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b6b6b] mt-0.5">
                             <span className="flex items-center gap-1">
                               <MapPin size={9} className="shrink-0" />{e.ort}
                             </span>
@@ -238,7 +238,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
                           </div>
                         </div>
                         <span
-                          className="shrink-0 hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5"
+                          className="shrink-0 hidden sm:inline text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                           style={{ background: sb.bg, color: sb.color }}
                         >
                           {sb.label}
@@ -250,7 +250,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
                 <div className="mt-4">
                   <Link
                     href="/trainingszeiten"
-                    className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4"
+                    className="text-xs tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4"
                   >
                     Alle Trainingszeiten ansehen →
                   </Link>
@@ -329,11 +329,11 @@ function SectionHeader({ title, farbe, count }: { title: string; farbe: string; 
   return (
     <div className="flex items-center gap-3">
       <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: farbe }} />
-      <div className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: farbe }}>
+      <div className="text-xs tracking-[0.22em] uppercase font-medium" style={{ color: farbe }}>
         {title}
       </div>
       <div className="flex-1 h-px" style={{ background: `${farbe}25` }} />
-      <div className="text-[10px] text-[#6b6b6b] shrink-0">{count}</div>
+      <div className="text-[11px] text-[#6b6b6b] shrink-0">{count}</div>
     </div>
   )
 }
@@ -355,8 +355,9 @@ function MannschaftCard({
 
       {/* ── Card header ── */}
       <div className="p-5 flex gap-4">
+        {/* Team image: 128×80 px (16:10 ratio, double size) */}
         <div
-          className="w-16 h-16 shrink-0 flex items-center justify-center text-2xl overflow-hidden"
+          className="w-32 h-20 shrink-0 flex items-center justify-center text-2xl overflow-hidden"
           style={{ background: `${farbe}12` }}
         >
           {mann.foto
@@ -368,10 +369,10 @@ function MannschaftCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <h3 className="font-medium text-sm leading-tight">{mann.name}</h3>
+            <h3 className="font-medium text-base leading-tight">{mann.name}</h3>
             {zeiten.length > 0 && (
               <span
-                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5"
+                className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5"
                 style={{ background: `${farbe}18`, color: farbe }}
               >
                 <Clock size={8} className="shrink-0" />
@@ -379,7 +380,7 @@ function MannschaftCard({
               </span>
             )}
           </div>
-          <p className="text-xs text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
+          <p className="text-sm text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
         </div>
       </div>
 
@@ -391,7 +392,7 @@ function MannschaftCard({
           {zeiten.length > 0 && (
             <div className="pt-4">
               <div
-                className="text-[10px] tracking-[0.18em] uppercase font-medium mb-3"
+                className="text-[11px] tracking-[0.18em] uppercase font-medium mb-3"
                 style={{ color: farbe }}
               >
                 Trainingszeiten
@@ -403,12 +404,12 @@ function MannschaftCard({
                   return (
                     <div key={i} className="flex items-center gap-2.5">
                       <span
-                        className="w-7 h-7 flex items-center justify-center text-white text-[10px] font-semibold rounded-sm shrink-0"
+                        className="w-7 h-7 flex items-center justify-center text-white text-[11px] font-semibold rounded-sm shrink-0"
                         style={{ background: tc }}
                       >
                         {TAG_SHORT[z.tag] ?? z.tag}
                       </span>
-                      <div className="flex-1 min-w-0 text-xs text-[#4a4a4a] truncate">
+                      <div className="flex-1 min-w-0 text-sm text-[#4a4a4a] truncate">
                         <span className="inline-flex items-center gap-1">
                           <MapPin size={9} className="shrink-0 text-[#6b6b6b]" />
                           <span className="font-medium">{z.ort}</span>
@@ -419,7 +420,7 @@ function MannschaftCard({
                         <span className="text-[#6b6b6b]"> · {z.frequenz}</span>
                       </div>
                       <span
-                        className="hidden sm:inline text-[9px] tracking-[0.1em] uppercase px-1.5 py-0.5 shrink-0"
+                        className="hidden sm:inline text-[10px] tracking-[0.1em] uppercase px-1.5 py-0.5 shrink-0"
                         style={{ background: sb.bg, color: sb.color }}
                       >
                         {sb.label === 'Ganzjährig' ? 'Ganzj.' : sb.label}
@@ -435,7 +436,7 @@ function MannschaftCard({
           {trainer.length > 0 && (
             <div>
               <div
-                className="text-[10px] tracking-[0.18em] uppercase font-medium mb-3"
+                className="text-[11px] tracking-[0.18em] uppercase font-medium mb-3"
                 style={{ color: farbe }}
               >
                 Trainer & Ansprechpartner
@@ -478,23 +479,23 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
           )
         }
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-xs leading-tight mb-0.5">{person.name}</div>
-          <div className="text-[10px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
+          <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
+          <div className="text-[11px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
           <div className="space-y-0.5">
             {person.email && (
-              <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+              <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
                 <Mail size={9} className="shrink-0" />
                 <span className="truncate">{person.email}</span>
               </a>
             )}
             {hasTel && (
-              <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+              <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
                 <Phone size={9} className="shrink-0" />
                 {person.telefon}
               </a>
             )}
             {waHref && (
-              <a href={waHref} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] text-[#16a34a] hover:text-[#15803d] transition-colors">
+              <a href={waHref} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] text-[#16a34a] hover:text-[#15803d] transition-colors">
                 <MessageCircle size={9} className="shrink-0" />
                 WhatsApp
               </a>
@@ -522,29 +523,29 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
         }
       </div>
 
-      <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
-      <div className="text-[11px] text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
+      <div className="font-medium text-base leading-tight mb-0.5">{person.name}</div>
+      <div className="text-xs text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
 
       <div className="mt-auto space-y-2">
         {person.email && (
-          <a href={`mailto:${person.email}`} className="flex items-start gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group">
+          <a href={`mailto:${person.email}`} className="flex items-start gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group">
             <Mail size={11} className="shrink-0 mt-0.5" />
             <span className="break-all leading-tight">{person.email}</span>
           </a>
         )}
         {hasTel && (
-          <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+          <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
             <Phone size={11} className="shrink-0" />
             {person.telefon}
           </a>
         )}
         {person.whatsapp ? (
-          <a href={whatsappHref(person.whatsapp)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-[#16a34a] hover:text-[#15803d] transition-colors">
+          <a href={whatsappHref(person.whatsapp)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-[#16a34a] hover:text-[#15803d] transition-colors">
             <MessageCircle size={11} className="shrink-0" />
             WhatsApp
           </a>
         ) : hasTel && (
-          <a href={waHref!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#16a34a] transition-colors">
+          <a href={waHref!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-[#6b6b6b] hover:text-[#16a34a] transition-colors">
             <MessageCircle size={11} className="shrink-0" />
             WhatsApp
           </a>

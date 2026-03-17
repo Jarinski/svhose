@@ -122,7 +122,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
 
         {/* Sparte */}
         <div>
-          <div className="text-[10px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Sparte</div>
+          <div className="text-[11px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Sparte</div>
           <div className="flex flex-wrap gap-2">
             <FilterChip
               label="Alle"
@@ -146,7 +146,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
         {/* Tag + Saison row */}
         <div className="flex flex-wrap gap-x-10 gap-y-5">
           <div>
-            <div className="text-[10px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Wochentag</div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Wochentag</div>
             <div className="flex flex-wrap gap-2">
               <FilterChip
                 label="Alle"
@@ -167,7 +167,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
           </div>
 
           <div>
-            <div className="text-[10px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Saison</div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Saison</div>
             <div className="flex flex-wrap gap-2">
               {(['Alle', 'ganzjährig', 'Sommer', 'Winter'] as const).map(j => {
                 const style = SAISON_STYLE[j as keyof typeof SAISON_STYLE]
@@ -176,7 +176,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                   <button
                     key={j}
                     onClick={() => setActiveJahreszeit(activeJahreszeit === j && j !== 'Alle' ? 'Alle' : j)}
-                    className="text-[11px] tracking-[0.08em] uppercase px-3 py-1.5 border transition-all duration-150"
+                    className="text-xs tracking-[0.08em] uppercase px-3 py-1.5 border transition-all duration-150"
                     style={
                       isActive && style
                         ? { background: style.bg, borderColor: style.color, color: style.color, fontWeight: 500 }
@@ -195,7 +195,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
 
         {/* Status row */}
         <div className="flex items-center gap-4 pt-1 border-t border-[#0a0a0a]/8">
-          <span className="text-xs text-[#6b6b6b]">
+          <span className="text-sm text-[#6b6b6b]">
             <span className="font-medium text-[#0a0a0a]">{filtered.length}</span>{' '}
             Trainingseinheit{filtered.length !== 1 ? 'en' : ''} in{' '}
             <span className="font-medium text-[#0a0a0a]">{grouped.size}</span>{' '}
@@ -204,7 +204,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
           {hasActiveFilter && (
             <button
               onClick={clearAll}
-              className="flex items-center gap-1.5 text-[11px] tracking-wide text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+              className="flex items-center gap-1.5 text-xs tracking-wide text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
             >
               <RotateCcw size={11} />
               Filter zurücksetzen
@@ -232,13 +232,13 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
                   <div
-                    className="text-[11px] tracking-[0.22em] uppercase font-medium shrink-0"
+                    className="text-xs tracking-[0.22em] uppercase font-medium shrink-0"
                     style={{ color }}
                   >
                     {sparte}
                   </div>
                   <div className="flex-1 h-px" style={{ background: `${color}25` }} />
-                  <div className="text-[10px] text-[#6b6b6b] shrink-0">
+                  <div className="text-[11px] text-[#6b6b6b] shrink-0">
                     {entries.length} Einheit{entries.length !== 1 ? 'en' : ''}
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                         <div className="flex items-center gap-3">
                           {/* Day badge */}
                           <div
-                            className="w-10 h-10 flex items-center justify-center text-white text-[11px] font-semibold tracking-wider rounded-sm shrink-0"
+                            className="w-10 h-10 flex items-center justify-center text-white text-xs font-semibold tracking-wider rounded-sm shrink-0"
                             style={{ background: tagColor }}
                           >
                             {TAG_SHORT[e.tag] ?? e.tag}
@@ -268,16 +268,16 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                           {/* Center: group + location + frequency */}
                           <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="font-medium text-sm leading-snug">{e.gruppe}</div>
+                              <div className="font-medium text-base leading-snug">{e.gruppe}</div>
                               {/* Season badge – visible on sm+ only */}
                               <span
-                                className="hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap shrink-0"
+                                className="hidden sm:inline text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap shrink-0"
                                 style={{ background: saisonStyle.bg, color: saisonStyle.color }}
                               >
                                 {norm === 'ganzjährig' ? 'Ganzjährig' : norm}
                               </span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#6b6b6b]">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b6b6b]">
                               <span className="flex items-center gap-1">
                                 <MapPin size={9} className="shrink-0" />
                                 <span className="truncate">{e.ort}</span>
@@ -295,21 +295,21 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
 
                           {/* Right: trainer info – hidden on mobile */}
                           <div className="hidden sm:flex shrink-0 flex-col items-end justify-center gap-1" style={{ maxWidth: '240px' }}>
-                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                            <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
                               <User size={9} className="shrink-0" />
                               <span className="leading-tight text-right">{e.trainer}</span>
                             </div>
                             {e.email && (
                               <a
                                 href={`mailto:${e.email}`}
-                                className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+                                className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
                               >
                                 <Mail size={9} className="shrink-0" />
                                 <span className="break-all text-right">{e.email}</span>
                               </a>
                             )}
                             {e.telefon && (
-                              <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                              <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
                                 <Phone size={9} className="shrink-0" />
                                 <span>{e.telefon}</span>
                               </div>
@@ -321,13 +321,13 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                         {/* Mobile-only second row: season + trainer info */}
                         <div className="sm:hidden mt-2 ml-[3.25rem] flex flex-wrap items-center gap-x-3 gap-y-1">
                           <span
-                            className="text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap"
+                            className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5 whitespace-nowrap"
                             style={{ background: saisonStyle.bg, color: saisonStyle.color }}
                           >
                             {norm === 'ganzjährig' ? 'Ganzjährig' : norm}
                           </span>
                           {e.trainer && (
-                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                            <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
                               <User size={9} className="shrink-0" />
                               <span className="truncate max-w-[200px]">{e.trainer}</span>
                             </div>
@@ -335,14 +335,14 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                           {e.email && (
                             <a
                               href={`mailto:${e.email}`}
-                              className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+                              className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
                             >
                               <Mail size={9} className="shrink-0" />
                               <span className="break-all">{e.email}</span>
                             </a>
                           )}
                           {e.telefon && (
-                            <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
+                            <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
                               <Phone size={9} className="shrink-0" />
                               <span>{e.telefon}</span>
                             </div>
@@ -378,7 +378,7 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 text-[11px] tracking-[0.08em] uppercase px-3 py-1.5 border transition-all duration-150"
+      className="flex items-center gap-1.5 text-xs tracking-[0.08em] uppercase px-3 py-1.5 border transition-all duration-150"
       style={
         active
           ? { background: activeColor, borderColor: activeColor, color: '#f5f5f0' }
@@ -388,7 +388,7 @@ function FilterChip({
       {label}
       {count !== undefined && (
         <span
-          className="text-[9px] opacity-70"
+          className="text-[10px] opacity-70"
           style={active ? { color: 'rgba(245,245,240,0.7)' } : {}}
         >
           {count}

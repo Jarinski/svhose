@@ -45,7 +45,7 @@ interface TrainingsEntry {
   telefon: string
 }
 
-/* ─────────────────────────────────────────── Constants ── */
+/* ─────────────────────────────────────────────── Constants ── */
 const TAG_SHORT: Record<string, string> = {
   Montag: 'Mo', Dienstag: 'Di', Mittwoch: 'Mi',
   Donnerstag: 'Do', Freitag: 'Fr', Samstag: 'Sa', Sonntag: 'So',
@@ -166,13 +166,13 @@ export default function SpartenClient({
               {/* Name + meta */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                  <h2 className="font-display text-2xl md:text-3xl tracking-tight leading-tight group-hover:opacity-80 transition-opacity">
+                  <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-tight group-hover:opacity-80 transition-opacity">
                     {sparte.name}
                   </h2>
                   <div className="flex gap-1.5 flex-wrap">
                     {(sparte.mannschaften?.length ?? 0) > 0 && (
                       <span
-                        className="text-[9px] tracking-[0.15em] uppercase px-2 py-0.5"
+                        className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
                         {sparte.mannschaften.length} {sparte.mannschaften.length === 1 ? 'Gruppe' : 'Gruppen'}
@@ -180,7 +180,7 @@ export default function SpartenClient({
                     )}
                     {(sparte.ansprechpartner?.length ?? 0) > 0 && (
                       <span
-                        className="hidden sm:inline text-[9px] tracking-[0.15em] uppercase px-2 py-0.5"
+                        className="hidden sm:inline text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
                         {sparte.ansprechpartner.length} Trainer
@@ -188,7 +188,7 @@ export default function SpartenClient({
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-[#6b6b6b] mt-0.5 leading-snug line-clamp-1 pr-4">
+                <p className="text-base text-[#6b6b6b] mt-0.5 leading-snug line-clamp-1 pr-4">
                   {sparte.beschreibung}
                 </p>
               </div>
@@ -215,7 +215,7 @@ export default function SpartenClient({
                   style={{ borderColor: `${farbe}30` }}
                 >
                   {/* Long description */}
-                  <p className="text-sm leading-relaxed text-[#4a4a4a] mb-8 max-w-3xl pt-3">
+                  <p className="text-base leading-relaxed text-[#4a4a4a] mb-8 max-w-3xl pt-3">
                     {sparte.langbeschreibung}
                   </p>
 
@@ -267,7 +267,7 @@ export default function SpartenClient({
                   <div className="flex justify-end pt-4 border-t border-[#0a0a0a]/8">
                     <Link
                       href={`/sparten/${sparte.slug}`}
-                      className="inline-flex items-center gap-2 text-[11px] tracking-[0.12em] uppercase px-5 py-2.5 transition-all duration-200 hover:brightness-90"
+                      className="inline-flex items-center gap-2 text-xs tracking-[0.12em] uppercase px-5 py-2.5 transition-all duration-200 hover:brightness-90"
                       style={{ background: `${farbe}18`, color: farbe }}
                     >
                       Alle Details <ArrowRight size={11} />
@@ -316,10 +316,10 @@ function MannschaftCard({
         <div className="flex-1 min-w-0">
           {/* Name row */}
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className="font-medium text-sm leading-tight">{mann.name}</span>
+            <span className="font-medium text-base leading-tight">{mann.name}</span>
 
             {zeiten.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-[9px] text-[#6b6b6b] bg-[#0a0a0a]/[0.05] px-1.5 py-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#6b6b6b] bg-[#0a0a0a]/[0.05] px-1.5 py-0.5">
                 <Clock size={8} className="shrink-0" />
                 {zeiten.length} Trainingszeit{zeiten.length !== 1 ? 'en' : ''}
               </span>
@@ -327,11 +327,11 @@ function MannschaftCard({
           </div>
 
           {/* Description */}
-          <p className="text-xs text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
+          <p className="text-sm text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
 
           {/* Trainer preview */}
           {trainerPreview && (
-            <p className="text-[10px] text-[#6b6b6b] mt-1.5 italic">
+            <p className="text-[11px] text-[#6b6b6b] mt-1.5 italic">
               {trainerPreview}{trainerMore}
             </p>
           )}
@@ -360,7 +360,7 @@ function MannschaftCard({
             {/* Training times */}
             {zeiten.length > 0 && (
               <div className="pt-4">
-                <div className="text-[10px] tracking-[0.18em] uppercase text-[#6b6b6b] mb-3 font-medium">
+                <div className="text-[11px] tracking-[0.18em] uppercase text-[#6b6b6b] mb-3 font-medium">
                   Trainingszeiten
                 </div>
                 <div className="space-y-2">
@@ -372,14 +372,14 @@ function MannschaftCard({
                       <div key={i} className="flex items-center gap-2.5">
                         {/* Day badge */}
                         <span
-                          className="w-7 h-7 flex items-center justify-center text-white text-[10px] font-semibold rounded-sm shrink-0"
+                          className="w-7 h-7 flex items-center justify-center text-white text-[11px] font-semibold rounded-sm shrink-0"
                           style={{ background: tc }}
                         >
                           {TAG_SHORT[z.tag] ?? z.tag}
                         </span>
 
                         {/* Location + meta */}
-                        <div className="flex-1 min-w-0 text-xs text-[#4a4a4a] truncate">
+                        <div className="flex-1 min-w-0 text-sm text-[#4a4a4a] truncate">
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={9} className="shrink-0 text-[#6b6b6b]" />
                             <span className="font-medium">{z.ort}</span>
@@ -392,7 +392,7 @@ function MannschaftCard({
 
                         {/* Season pill */}
                         <span
-                          className="hidden sm:inline text-[9px] tracking-[0.1em] uppercase px-1.5 py-0.5 shrink-0"
+                          className="hidden sm:inline text-[10px] tracking-[0.1em] uppercase px-1.5 py-0.5 shrink-0"
                           style={{ background: ss.bg, color: ss.color }}
                         >
                           {norm === 'ganzjährig' ? 'Ganzj.' : norm}
@@ -407,7 +407,7 @@ function MannschaftCard({
             {/* Trainer / Ansprechpartner */}
             {trainer.length > 0 && (
               <div>
-                <div className="text-[10px] tracking-[0.18em] uppercase text-[#6b6b6b] mb-3 font-medium">
+                <div className="text-[11px] tracking-[0.18em] uppercase text-[#6b6b6b] mb-3 font-medium">
                   Trainer & Ansprechpartner
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -437,12 +437,12 @@ function SectionLabel({
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: farbe }} />
-      <span className="text-[11px] tracking-[0.22em] uppercase font-medium shrink-0" style={{ color: farbe }}>
+      <span className="text-xs tracking-[0.22em] uppercase font-medium shrink-0" style={{ color: farbe }}>
         {label}
       </span>
       <div className="flex-1 h-px" style={{ background: `${farbe}25` }} />
       {count !== undefined && (
-        <span className="text-[10px] text-[#6b6b6b] shrink-0">{count}</span>
+        <span className="text-[11px] text-[#6b6b6b] shrink-0">{count}</span>
       )}
     </div>
   )
@@ -474,7 +474,7 @@ function KontaktMini({
         )
         : (
           <div
-            className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 select-none"
+            className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-white text-[11px] font-semibold shrink-0 select-none"
             style={{ background: farbe }}
           >
             {ini}
@@ -484,14 +484,14 @@ function KontaktMini({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-xs leading-tight mb-0.5">{person.name}</div>
-        <div className="text-[10px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
+        <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
+        <div className="text-[11px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
 
         <div className="space-y-0.5">
           {person.email && (
             <a
               href={`mailto:${person.email}`}
-              className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
             >
               <Mail size={9} className="shrink-0" />
               <span className="truncate">{person.email}</span>
@@ -500,7 +500,7 @@ function KontaktMini({
           {hasTel && (
             <a
               href={`tel:${person.telefon.replace(/\s/g, '')}`}
-              className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
             >
               <Phone size={9} className="shrink-0" />
               {person.telefon}
@@ -511,7 +511,7 @@ function KontaktMini({
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[10px] text-[#16a34a] hover:text-[#15803d] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#16a34a] hover:text-[#15803d] transition-colors"
             >
               <MessageCircle size={9} className="shrink-0" />
               WhatsApp
