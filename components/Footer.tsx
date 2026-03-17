@@ -42,8 +42,11 @@ export default function Footer() {
             <div className="space-y-2 text-sm text-[#6b6b6b]">
               <p>SV Holm-Seppensen e.V.</p>
               <p>Holm-Seppensen</p>
-              <a href="tel:00491722970187" className="block hover:text-[#f5f5f0] transition-colors">
+              <a href="tel:+491722970187" className="block hover:text-[#f5f5f0] transition-colors">
                 +49 172 2970187
+              </a>
+              <a href="https://wa.me/491722970187" target="_blank" rel="noopener noreferrer" className="block hover:text-[#f5f5f0] transition-colors">
+                WhatsApp
               </a>
               <a href="mailto:info@sv-holm-seppensen.de" className="block hover:text-[#f5f5f0] transition-colors">
                 info@sv-holm-seppensen.de

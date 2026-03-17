@@ -27,6 +27,10 @@ export default function ImpressumPage() {
             <a href="tel:+491722970187" className="text-[#0a0a0a] underline underline-offset-2">
               +49 172 2970187
             </a>
+            {' '}·{' '}
+            <a href="https://wa.me/491722970187" target="_blank" rel="noopener noreferrer" className="text-[#0a0a0a] underline underline-offset-2">
+              WhatsApp
+            </a>
           </p>
         </div>
 
@@ -46,6 +50,10 @@ export default function ImpressumPage() {
                 Telefon:{' '}
                 <a href="tel:+491722970187" className="text-[#0a0a0a] underline underline-offset-2">
                   +49 172 2970187
+                </a>
+                {' '}·{' '}
+                <a href="https://wa.me/491722970187" target="_blank" rel="noopener noreferrer" className="text-[#0a0a0a] underline underline-offset-2">
+                  WhatsApp
                 </a>
                 <br />
                 E-Mail:{' '}

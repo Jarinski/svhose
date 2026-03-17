@@ -1,166 +1,37 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
-const STORAGE_KEY = 'svhose_cookie_consent'
-const VIDEO_ID = 'jP51-djhOM4'
-
-function hasFunctionalConsent(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return false
-    const c = JSON.parse(raw)
-    return c.functional === true
-  } catch {
-    return false
-  }
-}
-
 export default function HeroBanner() {
-  const [showVideo, setShowVideo] = useState(false)
-  const [videoError, setVideoError] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-
-  useEffect(() => {
-    setShowVideo(hasFunctionalConsent())
-
-    function onConsentUpdate() {
-      setShowVideo(hasFunctionalConsent())
-      setVideoError(false)
-    }
-
-    window.addEventListener('svhose:consent-updated', onConsentUpdate)
-    // Auch Tab-übergreifend reagieren
-    window.addEventListener('storage', onConsentUpdate)
-
-    return () => {
-      window.removeEventListener('svhose:consent-updated', onConsentUpdate)
-      window.removeEventListener('storage', onConsentUpdate)
-    }
-  }, [])
-
-  // YouTube Bot-Detection erkennen: Wenn die iframe-Seite einen Login fordert,
-  // wird ein postMessage-Event mit bestimmten Fehlercodes gesendet.
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (typeof e.data !== 'string') return
-      try {
-        const data = JSON.parse(e.data)
-        // YouTube sendet playerError mit Code 150 oder 101 bei Bot-Detection
-        if (
-          data?.event === 'onError' &&
-          (data?.info === 150 || data?.info === 101 || data?.info === 2)
-        ) {
-          setVideoError(true)
-        }
-      } catch {
-        // kein JSON → ignorieren
-      }
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [])
-
-  // Timeout-Fallback: Falls das Video nach 8 Sekunden nicht geladen hat
-  // (z.B. wegen Bot-Detection), auf den statischen Fallback wechseln.
-  useEffect(() => {
-    if (!showVideo || videoError) return
-    const t = setTimeout(() => {
-      const iframe = iframeRef.current
-      if (!iframe) return
-      // Prüfen ob der iframe tatsächlich Inhalt hat
-      try {
-        // Wenn youtube-nocookie geblockt ist, bleibt contentDocument null
-        if (!iframe.contentDocument || iframe.contentDocument.title.toLowerCase().includes('sign')) {
-          setVideoError(true)
-        }
-      } catch {
-        // Cross-Origin → iframe hat geladen (normal), kein Fehler
-      }
-    }, 8000)
-    return () => clearTimeout(t)
-  }, [showVideo, videoError])
-
-  const videoSrc = `https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1&origin=${
-    typeof window !== 'undefined' ? window.location.origin : 'https://sv-holm-seppensen.de'
-  }`
-
   return (
     <section className="relative min-h-[50vh] flex flex-col justify-end pb-10 pt-20 px-6 overflow-hidden bg-[#0a0a0a]">
 
-      {/* ── VIDEO HINTERGRUND (wenn funktionale Cookies akzeptiert und kein Fehler) ── */}
-      {showVideo && !videoError ? (
-        <>
-          <div className="absolute inset-0 z-0 overflow-hidden">
-            <iframe
-              ref={iframeRef}
-              src={videoSrc}
-              allow="autoplay; encrypted-media"
-              aria-hidden="true"
-              title=""
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                /* 16:9 – immer die ganze Fläche abdecken */
-                width: '100vw',
-                height: '56.25vw',
-                minWidth: '177.78vh',
-                minHeight: '100%',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                border: 'none',
-              }}
-            />
-          </div>
-          {/* Dunkles Overlay für Lesbarkeit */}
-          <div className="absolute inset-0 bg-[#0a0a0a]/60 z-[1]" />
-        </>
-      ) : (
-        /* ── FALLBACK (keine Einwilligung) ── */
-        <>
-          {/* Grid-Muster */}
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage:
-                'linear-gradient(#f5f5f0 1px, transparent 1px), linear-gradient(90deg, #f5f5f0 1px, transparent 1px)',
-              backgroundSize: '60px 60px',
-            }}
-          />
-          {/* Großer Hintergrundtext */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-            <span className="font-display text-[20vw] text-[#f5f5f0]/[0.03] leading-none whitespace-nowrap tracking-tight">
-              SPORT
-            </span>
-          </div>
-          {/* Großes 3D-Logo im Hintergrund */}
-          <div
-            className="absolute pointer-events-none select-none"
-            style={{
-              right: '-8%',
-              top: '50%',
-              width: '65vw',
-              maxWidth: '780px',
-              transform:
-                'translateY(-50%) perspective(900px) rotateY(-22deg) rotateX(8deg) rotate(-8deg)',
-              opacity: 0.07,
-              filter: 'blur(0.5px)',
-            }}
-          >
-            <img
-              src="/SV_Holm_Seppensen_Logo.svg"
-              alt=""
-              aria-hidden="true"
-              className="w-full h-full object-contain"
-              style={{ filter: 'brightness(10)' }}
-            />
-          </div>
-        </>
-      )}
+      {/* ── VIDEO HINTERGRUND ── */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <video
+          src="/videos/hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '100vw',
+            height: '56.25vw',
+            minWidth: '177.78vh',
+            minHeight: '100%',
+            transform: 'translate(-50%, -50%)',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+      {/* Dunkles Overlay für Lesbarkeit */}
+      <div className="absolute inset-0 bg-[#0a0a0a]/60 z-[1]" />
 
       {/* ── INHALT ── */}
       <div className="relative z-10 max-w-7xl mx-auto w-full">
