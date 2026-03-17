@@ -33,10 +33,19 @@ export default defineType({
     defineField({ name: 'trainer', title: 'Trainer', type: 'string' }),
     defineField({ name: 'email', title: 'E-Mail', type: 'string' }),
     defineField({ name: 'telefon', title: 'Telefon', type: 'string' }),
+    defineField({
+      name: 'foto',
+      title: 'Gruppenfoto',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Foto der Mannschaft / Trainingsgruppe',
+    }),
   ],
   orderings: [
     { title: 'Sparte', name: 'sparteAsc', by: [{ field: 'sparte', direction: 'asc' }] },
     { title: 'Wochentag', name: 'tagAsc', by: [{ field: 'tag', direction: 'asc' }] },
   ],
-  preview: { select: { title: 'sparte', subtitle: 'gruppe' } },
+  preview: {
+    select: { title: 'gruppe', subtitle: 'sparte', media: 'foto' },
+  },
 })

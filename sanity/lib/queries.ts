@@ -87,7 +87,8 @@ export const trainingszeitenQuery = groq`
     frequenz,
     trainer,
     email,
-    telefon
+    telefon,
+    "foto": foto.asset->url
   }
 `
 

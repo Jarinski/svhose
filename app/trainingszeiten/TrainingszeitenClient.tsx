@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { MapPin, Mail, Phone, User, RotateCcw } from 'lucide-react'
+import Image from 'next/image'
+import { MapPin, Mail, Phone, User, RotateCcw, ImageIcon } from 'lucide-react'
 
 interface TrainingsEntry {
   sparte: string
@@ -14,6 +15,7 @@ interface TrainingsEntry {
   trainer: string
   email: string
   telefon: string
+  foto?: string
 }
 
 const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
@@ -314,6 +316,11 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                               </div>
                             )}
                           </div>
+
+                          {/* Group photo / placeholder – hidden on mobile */}
+                          <div className="hidden sm:block shrink-0 ml-2">
+                            <GroupPhoto foto={e.foto} gruppe={e.gruppe} color={color} />
+                          </div>
                         </div>
 
                         {/* Mobile-only second row: season + trainer info */}
@@ -355,6 +362,42 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Group photo / placeholder ─────────────────────────────────
+function GroupPhoto({ foto, gruppe, color }: { foto?: string; gruppe: string; color: string }) {
+  const initials = gruppe
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase() ?? '')
+    .join('')
+
+  if (foto) {
+    return (
+      <div className="w-14 h-14 rounded-sm overflow-hidden relative border border-black/8">
+        <Image
+          src={foto}
+          alt={gruppe}
+          fill
+          sizes="56px"
+          className="object-cover"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="w-14 h-14 rounded-sm flex flex-col items-center justify-center gap-0.5 border"
+      style={{ background: `${color}12`, borderColor: `${color}30` }}
+      title="Kein Foto hinterlegt"
+    >
+      <ImageIcon size={14} style={{ color: `${color}80` }} />
+      <span className="text-[9px] font-semibold tracking-widest" style={{ color: `${color}90` }}>
+        {initials}
+      </span>
     </div>
   )
 }

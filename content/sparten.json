@@ -118,7 +118,7 @@
     "mannschaften": [
       { "name": "Herren", "beschreibung": "Unsere erste Herrenmannschaft spielt im aktiven Ligabetrieb und trainiert zweimal wöchentlich.", "foto": null },
       { "name": "Damen", "beschreibung": "Die Damenmannschaft des SV Holm-Seppensen ist ein festes Team mit regelmäßigem Training und Ligabetrieb.", "foto": null },
-      { "name": "E-Juniorinnen / E-Mädchen (Jg. 2013–2016)", "beschreibung": "Mädchenfußball ab der E-Jugend – Spaß am Sport und erste Wettkampferfahrungen.", "foto": null },
+      { "name": "E-Juniorinnen / E-Mädchen (Jg. 2013–2016)", "beschreibung": "Mädchenfußball ab der E-Jugend – Spaß am Sport und erste Wettkampferfahrungen.", "foto": "/images/ejuniorinnen.png" },
       { "name": "U17 (Jg. 2009/10)", "beschreibung": "Unsere B-Jugend trainiert leistungsorientiert mit erfahrenen Trainern.", "foto": null },
       { "name": "U15 (Jg. 2011)", "beschreibung": "Die C-Jugend – ein starkes Team mit hoher Trainingsbeteiligung.", "foto": "/images/U15.jpeg" },
       { "name": "U14 (Jg. 2012)", "beschreibung": "Nachwuchskicker der C-Jugend mit viel Begeisterung für den Sport.", "foto": null },
@@ -141,6 +141,7 @@
       { "name": "Jari Gonzales", "rolle": "Trainer E-Juniorinnen / E-Mädchen", "email": "Juniorinnen@sv-holm-seppensen.de", "telefon": "0179-3729097", "whatsapp": "", "foto": null },
       { "name": "Olaf Schubert", "rolle": "Trainer U17", "email": "Olaf.Schubert@sv-holm-seppensen.de", "telefon": "0176-42859980", "whatsapp": "", "foto": null },
       { "name": "Markus Jordan", "rolle": "Trainer U15", "email": "Markus.Jordan@sv-holm-seppensen.de", "telefon": "0171-1085012", "whatsapp": "", "foto": null },
+      { "name": "Christian Junge", "rolle": "Trainer U15", "email": "christian.junge@sv-holm-seppensen.de", "telefon": "0173-8415438", "whatsapp": "", "foto": null },
       { "name": "Thorsten Knopp", "rolle": "Trainer U14", "email": "Thorsten.Knopp@sv-holm-seppensen.de", "telefon": "0151-20407393", "whatsapp": "", "foto": null },
       { "name": "Philipp Noack", "rolle": "Trainer U12", "email": "Philipp.Noack@sv-holm-seppensen.de", "telefon": "01512-4136317", "whatsapp": "", "foto": null },
       { "name": "Saad Fidaoui", "rolle": "Trainer U11", "email": "Saad.Fidaoui@sv-holm-seppensen.de", "telefon": "0176-55266265", "whatsapp": "", "foto": null },
