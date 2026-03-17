@@ -122,52 +122,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* KINDERSCHUTZ TEASER */}
-      <section className="py-24 px-6 bg-[#0a0a0a] text-[#f5f5f0]">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden">
-            {/* Bild */}
-            <div className="relative overflow-hidden min-h-[320px] lg:min-h-0">
-              <Image
-                src="/Schutzkonzepte/schutzkonzepte1.jpg"
-                alt="Kinderschutz – SV Holm-Seppensen ausgezeichnet"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-              {/* Overlay für Lesbarkeit */}
-              <div className="absolute inset-0 bg-[#0a0a0a]/30" />
-            </div>
-
-            {/* Text */}
-            <div className="bg-[#111111] p-10 md:p-14 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-5">
-                <Shield size={14} className="text-[#6b6b6b]" />
-                <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b]">Ausgezeichnet</div>
-              </div>
-              <h2 className="font-display text-4xl md:text-5xl tracking-tight mb-5 leading-tight">
-                KINDERSCHUTZ<br />IM VEREIN
-              </h2>
-              <p className="text-[#f5f5f0]/60 text-sm leading-relaxed mb-4 max-w-sm">
-                Der SV Holm-Seppensen wurde für sein Schutzkonzept ausgezeichnet. Als Teil des
-                Pilotprojekts von Kinderschutzbund und Kreissportbund setzen wir uns aktiv für
-                ein sicheres Umfeld für Kinder und Jugendliche ein.
-              </p>
-              <p className="text-[#f5f5f0]/60 text-sm leading-relaxed mb-8 max-w-sm">
-                Unsere Vertrauenspersonen, unser Beschwerdemanagement und klare Verhaltensregeln
-                sind Teil dieses Engagements.
-              </p>
-              <Link
-                href="/kinderschutz"
-                className="inline-flex items-center gap-2 border border-[#f5f5f0]/30 text-[#f5f5f0] px-7 py-3.5 text-sm tracking-[0.1em] uppercase hover:border-[#f5f5f0] hover:bg-[#f5f5f0] hover:text-[#0a0a0a] transition-all self-start"
-              >
-                Mehr erfahren <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="px-6 pb-24 max-w-7xl mx-auto">
         <div className="bg-[#0a0a0a] text-[#f5f5f0] p-8 sm:p-12 md:p-20 flex flex-col md:flex-row items-center justify-between gap-8">

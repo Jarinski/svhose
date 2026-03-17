@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import CookieSettingsButton from '@/components/CookieSettingsButton'
 
 export default function Footer() {
@@ -51,8 +52,20 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#6b6b6b]">
-          <p>© {new Date().getFullYear()} SV Holm-Seppensen e.V.</p>
+        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-[#6b6b6b]">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <p>© {new Date().getFullYear()} SV Holm-Seppensen e.V.</p>
+            {/* Schutzkonzept-Auszeichnung */}
+            <Link href="/kinderschutz" title="Kinderschutz – Ausgezeichnetes Schutzkonzept">
+              <Image
+                src="/Schutzkonzepte/schutzkonzepte1.jpg"
+                alt="Ausgezeichnetes Schutzkonzept"
+                width={80}
+                height={54}
+                className="rounded opacity-70 hover:opacity-100 transition-opacity object-cover"
+              />
+            </Link>
+          </div>
           <div className="flex gap-6">
             <Link href="/impressum" className="hover:text-[#f5f5f0] transition-colors">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-[#f5f5f0] transition-colors">Datenschutz</Link>

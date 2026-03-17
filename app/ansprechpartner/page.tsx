@@ -1,5 +1,6 @@
 import { getAnsprechpartner } from '@/lib/content'
 import { Mail, Phone } from 'lucide-react'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Ansprechpartner' }
@@ -50,7 +51,19 @@ export default async function AnsprechpartnerPage() {
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">{gruppenName}</div>
           <div className="space-y-px bg-[#0a0a0a]/10">
             {mitglieder.map((p: any) => (
-              <div key={p.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4">
+              <div key={p.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
+                {/* Foto */}
+                {p.foto && (
+                  <div className="shrink-0">
+                    <Image
+                      src={p.foto}
+                      alt={p.name}
+                      width={72}
+                      height={72}
+                      className="w-[72px] h-[72px] rounded-full object-cover grayscale"
+                    />
+                  </div>
+                )}
                 <div className="flex-1">
                   <div className="font-medium text-lg">{p.name}</div>
                   <div className="text-sm text-[#6b6b6b] mt-0.5">{p.funktion}</div>
