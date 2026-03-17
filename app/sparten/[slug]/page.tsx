@@ -166,6 +166,36 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
               className="w-full h-full object-cover"
             />
           </div>
+
+          {isAkrobatik && (
+            <div className="mt-6 bg-[#f5f5f0] border border-[#0a0a0a]/10 p-5 sm:p-6 max-w-3xl">
+              <h3 className="font-medium text-lg mb-3">Information zu unseren Show-Akrobatik-Gruppen</h3>
+              <p className="text-sm text-[#4a4a4a] leading-relaxed mb-3">
+                Unsere Akrobatik-Abteilung besteht aus drei eigenständigen Showgruppen:
+              </p>
+              <ul className="text-sm text-[#4a4a4a] leading-relaxed mb-4 space-y-1">
+                <li>• Kids</li>
+                <li>• Girls</li>
+                <li>• Friends</li>
+              </ul>
+              <p className="text-sm text-[#4a4a4a] leading-relaxed mb-3">
+                Alle Gruppen treten regelmäßig bei Shows auf, die Girls und Friends nehmen auch an Wettbewerben teil. Damit wir gemeinsam tolle Auftritte zeigen können, ist es wichtig, dass alle mit Freude und zuverlässig am Training teilnehmen.
+              </p>
+              <p className="text-sm text-[#4a4a4a] leading-relaxed mb-3">
+                Oft kommt die Frage auf: „Wann darf ich in eine andere Gruppe wechseln?“ Ein Wechsel erfolgt nicht automatisch und es gibt auch keine feste Regel, wann oder nach welchen Kriterien er stattfindet. Jeder Wechsel wird vom Trainerteam individuell entschieden. Dabei berücksichtigen wir verschiedene Faktoren, zum Beispiel:
+              </p>
+              <ul className="text-sm text-[#4a4a4a] leading-relaxed space-y-1 mb-4">
+                <li>• die aktuelle Leistung und Entwicklung,</li>
+                <li>• die Trainingsbeteiligung,</li>
+                <li>• das Sozialverhalten,</li>
+                <li>• die Zusammensetzung der Gruppen (z. B. ob gerade Bases oder Flyer benötigt werden),</li>
+                <li>• und auch das Alter (bei manchen Wettbewerben müssen Altersvorgaben eingehalten werden).</li>
+              </ul>
+              <p className="text-sm text-[#4a4a4a] leading-relaxed">
+                So stellen wir sicher, dass jede Gruppe optimal zusammenpasst und alle Kinder die Chance haben, ihr Können zu zeigen und weiter zu wachsen. 💪🤸‍♀️
+              </p>
+            </div>
+          )}
         </section>
       )}
 
