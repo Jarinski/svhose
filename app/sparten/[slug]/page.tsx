@@ -355,28 +355,6 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── CTA ───────────────────────────────────────────────── */}
-      <div
-        className="p-8 flex flex-col sm:flex-row sm:items-center gap-6"
-        style={{ background: farbe }}
-      >
-        <div className="flex-1">
-          <div className="text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1">Interesse geweckt?</div>
-          <p className="text-white font-medium">
-            Melde dich gerne beim Trainerteam, wenn du Interesse hast.
-          </p>
-          <p className="text-white/60 text-sm mt-1">
-            Bitte gib uns vorher kurz Bescheid.
-          </p>
-        </div>
-        <Link
-          href="/ansprechpartner"
-          className="shrink-0 inline-flex items-center gap-2 text-[12px] tracking-[0.12em] uppercase bg-white/15 hover:bg-white/25 border border-white/30 px-5 py-3 text-white transition-colors"
-        >
-          Kontakt aufnehmen
-        </Link>
-      </div>
-
     </div>
   )
 }
