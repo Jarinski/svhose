@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'News' }
+export const revalidate = 60
 
 export default async function NewsPage() {
   const news = await getAllNews()

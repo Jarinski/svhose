@@ -3,6 +3,7 @@ import TermineClient from './TermineClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Termine' }
+export const revalidate = 60
 
 export default async function TerminePage() {
   const termine = await getTermine()

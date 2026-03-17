@@ -23,15 +23,21 @@ export const client = createClient({
 /**
  * Führt einen Sanity-Fetch durch und gibt ein leeres Array zurück,
  * wenn keine Sanity-Zugangsdaten konfiguriert sind.
+ *
+ * @param revalidate  ISR-Revalidierungszeit in Sekunden (Standard: 60).
+ *                    Übergib 0 für No-Cache oder false für unbegrenzte Gültigkeit.
  */
 export async function sanityFetch<T = unknown>(
   query: string,
   params?: Record<string, unknown>,
+  revalidate: number | false = 60,
 ): Promise<T> {
   if (!projectId) {
     // Sanity nicht konfiguriert → null zurückgeben.
     // Listenabfragen nutzen `?? []` in lib/content.ts als Fallback.
     return null as unknown as T
   }
-  return client.fetch<T>(query, params ?? {})
+  return client.fetch<T>(query, params ?? {}, {
+    next: { revalidate },
+  })
 }

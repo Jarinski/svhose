@@ -1,5 +1,7 @@
 import { getNewsBySlug, getNewsSlugs } from '@/lib/content'
 import { notFound } from 'next/navigation'
+
+export const revalidate = 60
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import Link from 'next/link'

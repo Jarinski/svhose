@@ -3,6 +3,7 @@ import { FileText, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Downloads' }
+export const revalidate = 60
 
 export default async function DownloadsPage() {
   const downloads = await getDownloads()

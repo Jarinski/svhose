@@ -1,5 +1,7 @@
 import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten, getSparteDownloadsFromJson } from '@/lib/content'
 import { notFound } from 'next/navigation'
+
+export const revalidate = 60
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock, FileText, Download } from 'lucide-react'
 import type { Metadata } from 'next'

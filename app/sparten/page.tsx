@@ -3,6 +3,7 @@ import SpartenClient from './SpartenClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Sparten' }
+export const revalidate = 60
 
 export default async function SpartenPage() {
   const [sparten, trainingszeiten] = await Promise.all([

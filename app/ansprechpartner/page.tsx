@@ -3,6 +3,9 @@ import { Mail, Phone } from 'lucide-react'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 
+// Seite alle 60 Sekunden neu generieren (ISR) → Sanity-Änderungen erscheinen zeitnah
+export const revalidate = 60
+
 /** Gibt true zurück, wenn die Nummer eine deutsche Mobilnummer ist (015x, 016x, 017x) */
 function isMobileNumber(tel: string): boolean {
   const digits = tel.replace(/[\s\-\(\)\+]/g, '')

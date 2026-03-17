@@ -3,6 +3,7 @@ import TrainingszeitenClient from './TrainingszeitenClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Trainingszeiten' }
+export const revalidate = 60
 
 export default async function TrainingszeitenPage() {
   const data = await getTrainingszeiten()

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { getAllNews, getTermine, getSparten } from '@/lib/content'
+
+export const revalidate = 60
 import { ArrowRight, Calendar, MapPin, Shield } from 'lucide-react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
