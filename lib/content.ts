@@ -105,7 +105,9 @@ export function getSparteDownloadsFromJson(slug: string): SparteDownload[] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getDownloads(): Promise<any[]> {
   const sanityDownloads = (await sanityFetch<any[]>(downloadsQuery)) ?? []
-  if (sanityDownloads.length > 0) return sanityDownloads
+  // Nur Downloads mit gültiger Datei-URL verwenden
+  const validSanityDownloads = sanityDownloads.filter((d: any) => d.datei)
+  if (validSanityDownloads.length > 0) return validSanityDownloads
   // Fallback: lokale JSON-Datei
   try {
     const downloadsPath = path.join(process.cwd(), 'content', 'downloads.json')

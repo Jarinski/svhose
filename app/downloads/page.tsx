@@ -28,6 +28,7 @@ export default async function DownloadsPage() {
                 <a
                   key={d.id}
                   href={d.datei}
+                  download
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#f5f5f0] p-6 flex items-center gap-4 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200"

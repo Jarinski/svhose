@@ -22,5 +22,13 @@
     "datei": "/pdfs/Einwilligungserklaerung_foto_film.pdf",
     "kategorie": "Formulare",
     "datum": "2024-05-01"
+  },
+  {
+    "id": "4",
+    "titel": "Spielerlaubnisantrag",
+    "beschreibung": "Antrag auf Spielerlaubnis (gültig ab 06/2024).",
+    "datei": "/pdfs/Spielerlaubnisantrag_0624.pdf",
+    "kategorie": "Formulare",
+    "datum": "2024-06-01"
   }
 ]
