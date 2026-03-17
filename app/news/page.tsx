@@ -27,12 +27,12 @@ export default async function NewsPage() {
             className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col"
           >
             {post.image && (
-              <div className="relative w-full aspect-video overflow-hidden">
+              <div className="relative w-full aspect-video overflow-hidden bg-[#efefe8]">
                 <Image
                   src={post.image}
                   alt={post.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-contain group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>

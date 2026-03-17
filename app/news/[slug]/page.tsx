@@ -30,12 +30,12 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
       <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight mb-12">{post.title}</h1>
 
       {post.image && (
-        <div className="relative w-full aspect-video rounded-sm overflow-hidden mb-12">
+        <div className="relative w-full aspect-video rounded-sm overflow-hidden mb-12 bg-[#efefe8]">
           <Image
             src={post.image}
             alt={post.title}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 896px) 100vw, 896px"
             priority
           />
