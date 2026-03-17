@@ -1,5 +1,6 @@
 import { getAllNews } from '@/lib/content'
 import Link from 'next/link'
+import Image from 'next/image'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { ArrowRight } from 'lucide-react'
@@ -23,15 +24,28 @@ export default async function NewsPage() {
           <Link
             key={post.slug}
             href={`/news/${post.slug}`}
-            className="bg-[#f5f5f0] p-8 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300"
+            className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col"
           >
-            <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
-              {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
-            </div>
-            <h2 className="font-display text-2xl tracking-tight leading-tight mb-4">{post.title}</h2>
-            <p className="text-sm text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 leading-relaxed">{post.excerpt}</p>
-            <div className="mt-6 flex items-center gap-2 text-xs tracking-[0.1em] uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-              Weiterlesen <ArrowRight size={12} />
+            {post.image && (
+              <div className="relative w-full aspect-video overflow-hidden">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+            <div className="p-8 flex flex-col flex-1">
+              <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
+                {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
+              </div>
+              <h2 className="font-display text-2xl tracking-tight leading-tight mb-4">{post.title}</h2>
+              <p className="text-sm text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 leading-relaxed flex-1">{post.excerpt}</p>
+              <div className="mt-6 flex items-center gap-2 text-xs tracking-[0.1em] uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+                Weiterlesen <ArrowRight size={12} />
+              </div>
             </div>
           </Link>
         ))}

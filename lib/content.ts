@@ -52,7 +52,35 @@ export async function getSparten(): Promise<any[]> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getSparteBySlug(slug: string): Promise<any | null> {
-  return (await sanityFetch<any | null>(sparteBySlugQuery, { slug })) ?? null
+  const sanityData = (await sanityFetch<any | null>(sparteBySlugQuery, { slug })) ?? null
+  if (!sanityData) return null
+
+  // Fallback: Fotos für Mannschaften aus lokaler JSON-Datei, wenn Sanity kein Foto hat
+  try {
+    const spartenPath = path.join(process.cwd(), 'content', 'sparten.json')
+    const raw = fs.readFileSync(spartenPath, 'utf8')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sparten: any[] = JSON.parse(raw)
+    const localSparte = sparten.find((s: any) => s.slug === slug)
+
+    if (localSparte && sanityData.mannschaften && localSparte.mannschaften) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sanityData.mannschaften = sanityData.mannschaften.map((mann: any) => {
+        if (!mann.foto) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const localMann = localSparte.mannschaften.find((m: any) => m.name === mann.name)
+          if (localMann?.foto) {
+            return { ...mann, foto: localMann.foto }
+          }
+        }
+        return mann
+      })
+    }
+  } catch {
+    // Fallback fehlgeschlagen – Sanity-Daten unverändert zurückgeben
+  }
+
+  return sanityData
 }
 
 export async function getSpartenSlugs(): Promise<{ slug: string }[]> {

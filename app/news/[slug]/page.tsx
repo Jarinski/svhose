@@ -5,6 +5,7 @@ export const revalidate = 60
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 import { PortableText } from '@portabletext/react'
 
@@ -27,6 +28,19 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
       </div>
       <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight mb-12">{post.title}</h1>
+
+      {post.image && (
+        <div className="relative w-full aspect-video rounded-sm overflow-hidden mb-12">
+          <Image
+            src={post.image}
+            alt={post.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 896px) 100vw, 896px"
+            priority
+          />
+        </div>
+      )}
 
       <div className="w-16 h-px bg-[#0a0a0a] mb-12" />
 
