@@ -140,3 +140,70 @@ body::before {
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
+
+/* Easter eggs */
+@keyframes egg-wobble {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--egg-rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-4px) rotate(calc(var(--egg-rotate, 0deg) * -1));
+  }
+}
+
+.easter-egg {
+  --egg-rotate: 0deg;
+  width: 28px;
+  height: 36px;
+  border: 2px solid rgba(10, 10, 10, 0.25);
+  border-radius: 50% 50% 48% 48%;
+  box-shadow: 0 4px 10px rgba(10, 10, 10, 0.14);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.2s ease;
+  animation: egg-wobble 2.6s ease-in-out infinite;
+}
+
+.easter-egg:hover {
+  filter: brightness(1.05);
+  transform: scale(1.08) rotate(var(--egg-rotate, 0deg));
+}
+
+.egg-stripe {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 10px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.egg-stripe.second {
+  top: 18px;
+  opacity: 0.9;
+}
+
+@keyframes chick-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.7);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -10px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -42px) scale(1);
+  }
+}
+
+.chick-pop {
+  position: absolute;
+  font-size: 28px;
+  line-height: 1;
+  animation: chick-pop 1.4s ease-out forwards;
+  text-shadow: 0 4px 8px rgba(10, 10, 10, 0.22);
+  user-select: none;
+}

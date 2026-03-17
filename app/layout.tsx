@@ -3,6 +3,7 @@ import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import CookieBanner from '@/components/CookieBanner'
+import EasterEggHunt from '@/components/EasterEggHunt'
 
 export const metadata: Metadata = {
   title: {
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="de">
       <body>
         <Navbar />
+        <EasterEggHunt />
         <main>{children}</main>
         <Footer />
         <CookieBanner />
