@@ -293,10 +293,10 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                           </div>
 
                           {/* Right: trainer info – hidden on mobile */}
-                          <div className="hidden sm:flex shrink-0 flex-col items-end justify-center gap-1 min-w-0">
+                          <div className="hidden sm:flex shrink-0 flex-col items-end justify-center gap-1" style={{ maxWidth: '240px' }}>
                             <div className="flex items-center gap-1 text-[10px] text-[#6b6b6b]">
                               <User size={9} className="shrink-0" />
-                              <span className="max-w-[160px] truncate leading-tight">{e.trainer}</span>
+                              <span className="leading-tight text-right">{e.trainer}</span>
                             </div>
                             {e.email && (
                               <a
@@ -304,7 +304,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                                 className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
                               >
                                 <Mail size={9} className="shrink-0" />
-                                <span className="max-w-[160px] truncate">{e.email}</span>
+                                <span className="break-all text-right">{e.email}</span>
                               </a>
                             )}
                             {e.telefon && (
@@ -336,7 +336,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                               className="flex items-center gap-1 text-[10px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
                             >
                               <Mail size={9} className="shrink-0" />
-                              <span className="truncate max-w-[200px]">{e.email}</span>
+                              <span className="break-all">{e.email}</span>
                             </a>
                           )}
                           {e.telefon && (

@@ -7,7 +7,8 @@ import { Menu, X } from 'lucide-react'
 const navLinks = [
   { href: '/news', label: 'News' },
   { href: '/sparten', label: 'Sparten' },
-  { href: '/fussball', label: 'Spielplan' },
+  { href: '/fussball', label: 'Fußball' },
+  { href: '/tischtennis', label: 'Tischtennis' },
   { href: '/termine', label: 'Termine' },
   { href: '/trainingszeiten', label: 'Training' },
   { href: '/ansprechpartner', label: 'Kontakt' },
