@@ -335,12 +335,12 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         style={{ background: farbe }}
       >
         <div className="flex-1">
-          <div className="text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1">Interesse?</div>
+          <div className="text-[10px] tracking-[0.2em] uppercase text-white/60 mb-1">Interesse geweckt?</div>
           <p className="text-white font-medium">
-            Komm einfach zum Probetraining – wir freuen uns auf dich!
+            Melde dich gerne beim Trainerteam, wenn du Interesse hast.
           </p>
           <p className="text-white/60 text-sm mt-1">
-            Kein Anmeldung nötig. Einfach vorbeikommen.
+            Bitte gib uns vorher kurz Bescheid.
           </p>
         </div>
         <Link

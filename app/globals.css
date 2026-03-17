@@ -184,6 +184,46 @@ body::before {
   opacity: 0.9;
 }
 
+.egg-cache {
+  min-width: 44px;
+}
+
+.egg-cache summary {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgba(10, 10, 10, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.12);
+}
+
+.egg-cache summary::-webkit-details-marker {
+  display: none;
+}
+
+.egg-cache[open] summary {
+  border-style: solid;
+}
+
+.egg-cache .easter-egg {
+  margin-top: 8px;
+}
+
+.egg-cache-empty {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(10, 10, 10, 0.82);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 @keyframes chick-pop {
   0% {
     opacity: 0;
