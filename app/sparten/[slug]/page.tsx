@@ -355,9 +355,9 @@ function MannschaftCard({
 
       {/* ── Card header ── */}
       <div className="p-5 flex gap-4">
-        {/* Team image: 256×160 px (16:10 ratio, nochmals verdoppelt) */}
+        {/* Team image: 512×320 px (16:10 ratio, nochmals verdoppelt) */}
         <div
-          className="w-64 h-40 shrink-0 flex items-center justify-center text-2xl overflow-hidden"
+          className="w-[512px] h-[320px] shrink-0 flex items-center justify-center text-2xl overflow-hidden"
           style={{ background: `${farbe}12` }}
         >
           {mann.foto
