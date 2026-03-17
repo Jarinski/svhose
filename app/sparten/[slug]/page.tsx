@@ -1,7 +1,7 @@
-import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten } from '@/lib/content'
+import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten, getSparteDownloadsFromJson } from '@/lib/content'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock } from 'lucide-react'
+import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock, FileText, Download } from 'lucide-react'
 import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
@@ -117,6 +117,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const sparteDownloads = getSparteDownloadsFromJson(params.slug)
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-5xl mx-auto">
@@ -266,6 +267,31 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
             </section>
           )}
         </>
+      )}
+
+      {/* ── DOWNLOADS ─────────────────────────────────────────── */}
+      {sparteDownloads.length > 0 && (
+        <section className="mb-16">
+          <SectionHeader title="DOWNLOADS & FORMULARE" farbe={farbe} count={sparteDownloads.length} />
+          <div className="mt-6 space-y-px bg-[#0a0a0a]/10">
+            {sparteDownloads.map((d, i) => (
+              <a
+                key={i}
+                href={d.datei}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#f5f5f0] p-5 flex items-center gap-4 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200"
+              >
+                <FileText size={18} className="text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 shrink-0" />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">{d.titel}</div>
+                  <div className="text-xs text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mt-0.5">{d.beschreibung}</div>
+                </div>
+                <Download size={14} className="text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 shrink-0" />
+              </a>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── CTA ───────────────────────────────────────────────── */}

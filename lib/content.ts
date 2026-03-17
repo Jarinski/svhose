@@ -80,11 +80,40 @@ export async function getAnsprechpartner(): Promise<any[]> {
   return (await sanityFetch<any[]>(ansprechpartnerQuery)) ?? []
 }
 
+// ─── Sparten Downloads (always from local JSON, independent of Sanity) ──────
+
+export interface SparteDownload {
+  titel: string
+  beschreibung: string
+  datei: string
+}
+
+export function getSparteDownloadsFromJson(slug: string): SparteDownload[] {
+  try {
+    const spartenPath = path.join(process.cwd(), 'content', 'sparten.json')
+    const raw = fs.readFileSync(spartenPath, 'utf8')
+    const sparten: Array<{ slug: string; downloads?: SparteDownload[] }> = JSON.parse(raw)
+    const sparte = sparten.find(s => s.slug === slug)
+    return sparte?.downloads ?? []
+  } catch {
+    return []
+  }
+}
+
 // ─── Downloads ──────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getDownloads(): Promise<any[]> {
-  return (await sanityFetch<any[]>(downloadsQuery)) ?? []
+  const sanityDownloads = (await sanityFetch<any[]>(downloadsQuery)) ?? []
+  if (sanityDownloads.length > 0) return sanityDownloads
+  // Fallback: lokale JSON-Datei
+  try {
+    const downloadsPath = path.join(process.cwd(), 'content', 'downloads.json')
+    const raw = fs.readFileSync(downloadsPath, 'utf8')
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
 }
 
 // ─── Partner ────────────────────────────────────────────────────────────────

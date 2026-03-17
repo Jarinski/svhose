@@ -107,6 +107,13 @@
     "beschreibung": "Das Herzstück unseres Vereins. Von der Jugend bis zu den Herren – Fußball verbindet.",
     "langbeschreibung": "Fußball ist das Herzstück des SV Holm-Seppensen. Mit einer der größten Jugendabteilungen der Region sowie aktiven Herren- und Damenmannschaften bieten wir für alle Altersgruppen ein sportliches Zuhause. Von den Minikickern der jüngsten Jahrgänge über alle Junioren-Altersklassen bis zu den erfahrenen Aktiven – bei uns findet jeder seinen Platz auf dem Platz.",
     "foto": null,
+    "downloads": [
+      {
+        "titel": "Spielerlaubnisantrag",
+        "beschreibung": "Antrag auf Spielerlaubnis für neue Spielerinnen und Spieler.",
+        "datei": "/pdfs/Spielerlaubnisantrag_0624.pdf"
+      }
+    ],
     "trainingszeiten_spartes": ["Fußball Herren", "Fußball Damen", "Fußball Junioren", "Fußball Juniorinnen", "Fußball Freizeit"],
     "mannschaften": [
       { "name": "Herren", "beschreibung": "Unsere erste Herrenmannschaft spielt im aktiven Ligabetrieb und trainiert zweimal wöchentlich.", "foto": null },

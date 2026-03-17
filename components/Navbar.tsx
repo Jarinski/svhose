@@ -13,6 +13,7 @@ const navLinks = [
   { href: '/ansprechpartner', label: 'Kontakt' },
   { href: '/downloads', label: 'Downloads' },
   { href: '/ueber-uns', label: 'Über uns' },
+  { href: '/kinderschutz', label: 'Kinderschutz' },
 ]
 
 export default function Navbar() {
