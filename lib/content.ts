@@ -107,15 +107,27 @@ export async function getDownloads(): Promise<any[]> {
   const sanityDownloads = (await sanityFetch<any[]>(downloadsQuery)) ?? []
   // Nur Downloads mit gültiger Datei-URL verwenden
   const validSanityDownloads = sanityDownloads.filter((d: any) => d.datei)
-  if (validSanityDownloads.length > 0) return validSanityDownloads
-  // Fallback: lokale JSON-Datei
+
+  // Lokale JSON-Datei immer laden
+  let localDownloads: any[] = []
   try {
     const downloadsPath = path.join(process.cwd(), 'content', 'downloads.json')
     const raw = fs.readFileSync(downloadsPath, 'utf8')
-    return JSON.parse(raw)
+    localDownloads = JSON.parse(raw)
   } catch {
-    return []
+    localDownloads = []
   }
+
+  if (validSanityDownloads.length === 0) return localDownloads
+
+  // Merge: Sanity hat Vorrang; lokale Downloads, die in Sanity fehlen, werden ergänzt
+  const sanityTitles = new Set(
+    validSanityDownloads.map((d: any) => (d.titel ?? '').toLowerCase())
+  )
+  const missingLocal = localDownloads.filter(
+    (d: any) => !sanityTitles.has((d.titel ?? '').toLowerCase())
+  )
+  return [...validSanityDownloads, ...missingLocal]
 }
 
 // ─── Partner ────────────────────────────────────────────────────────────────
