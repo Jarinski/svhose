@@ -4,9 +4,11 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Sparten' }
 
-export default function SpartenPage() {
-  const sparten        = getSparten()
-  const trainingszeiten = getTrainingszeiten()
+export default async function SpartenPage() {
+  const [sparten, trainingszeiten] = await Promise.all([
+    getSparten(),
+    getTrainingszeiten(),
+  ])
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-5xl mx-auto">

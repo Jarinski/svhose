@@ -7,7 +7,8 @@
     "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
     "sparte": "Fußball",
     "beschreibung": "Heimspiel unserer 1. Herrenmannschaft gegen TuS Nenndorf II.",
-    "bild": "/images/sportplatz.jpg"
+    "bild": "/images/sportplatz.jpg",
+    "tags": ["Heimspiel", "Herren", "Liga"]
   },
   {
     "id": "2",
@@ -17,7 +18,8 @@
     "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
     "sparte": "Allgemein",
     "beschreibung": "Gemeinsame Ostereier-Suche für alle Kinder des Vereins.",
-    "bild": "/images/ostern.jpg"
+    "bild": "/images/ostern.jpg",
+    "tags": ["Familie", "Kinder", "Veranstaltung"]
   },
   {
     "id": "3",
@@ -27,6 +29,7 @@
     "ort": "Sportplatz Tostedter Weg, Tostedter Weg 1, Holm-Seppensen",
     "sparte": "Fußball",
     "beschreibung": "Heimspiel unserer 1. Herrenmannschaft gegen FC Jesteburg-Bendestorf III.",
-    "bild": "/images/sportplatz.jpg"
+    "bild": "/images/sportplatz.jpg",
+    "tags": ["Heimspiel", "Herren", "Liga"]
   }
 ]

@@ -53,6 +53,8 @@ export default function CookieBanner() {
 
   function save(consent: ConsentState) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
+    // Andere Komponenten (z. B. HeroBanner) über Consent-Änderung informieren
+    window.dispatchEvent(new CustomEvent('svhose:consent-updated'))
     setVisible(false)
   }
 
@@ -122,7 +124,7 @@ export default function CookieBanner() {
                   Funktionale Cookies
                 </div>
                 <div className="text-xs text-[#6b6b6b] mt-0.5">
-                  Ermöglichen erweiterte Funktionen wie Karten-Einbindungen und Kontaktformulare.
+                  Ermöglichen erweiterte Funktionen wie Karten-Einbindungen, Kontaktformulare und externe Medieninhalte (z. B. YouTube-Videos).
                 </div>
               </div>
               <button

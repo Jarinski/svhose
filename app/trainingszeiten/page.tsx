@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Trainingszeiten' }
 
-export default function TrainingszeitenPage() {
-  const data = getTrainingszeiten()
+export default async function TrainingszeitenPage() {
+  const data = await getTrainingszeiten()
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-6xl mx-auto">

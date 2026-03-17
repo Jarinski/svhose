@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Downloads' }
 
-export default function DownloadsPage() {
-  const downloads = getDownloads()
+export default async function DownloadsPage() {
+  const downloads = await getDownloads()
   const kategorien = Array.from(new Set(downloads.map((d: any) => d.kategorie))) as string[]
 
   return (

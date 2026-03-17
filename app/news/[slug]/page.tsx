@@ -1,17 +1,18 @@
-import { getNewsBySlug, getAllNews } from '@/lib/content'
+import { getNewsBySlug, getNewsSlugs } from '@/lib/content'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { PortableText } from '@portabletext/react'
 
 export async function generateStaticParams() {
-  const news = getAllNews()
-  return news.map(post => ({ slug: post.slug }))
+  const slugs = await getNewsSlugs()
+  return slugs.map(s => ({ slug: s.slug }))
 }
 
-export default function NewsDetailPage({ params }: { params: { slug: string } }) {
-  const post = getNewsBySlug(params.slug)
+export default async function NewsDetailPage({ params }: { params: { slug: string } }) {
+  const post = await getNewsBySlug(params.slug)
   if (!post) notFound()
 
   return (
@@ -29,7 +30,16 @@ export default function NewsDetailPage({ params }: { params: { slug: string } })
 
       <div className="prose prose-lg max-w-none text-[#0a0a0a] leading-relaxed">
         <p className="text-lg text-[#6b6b6b] font-light mb-8">{post.excerpt}</p>
-        <div className="whitespace-pre-wrap">{post.content}</div>
+
+        {/* Sanity Portable Text */}
+        {post.body && post.body.length > 0 && (
+          <PortableText value={post.body} />
+        )}
+
+        {/* MDX-Fallback: Rohtext */}
+        {(!post.body || post.body.length === 0) && post.content && (
+          <div className="whitespace-pre-wrap">{post.content}</div>
+        )}
       </div>
     </div>
   )

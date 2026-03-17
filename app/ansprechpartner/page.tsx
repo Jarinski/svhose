@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Ansprechpartner' }
 
-export default function AnsprechpartnerPage() {
-  const personen = getAnsprechpartner()
+export default async function AnsprechpartnerPage() {
+  const personen = await getAnsprechpartner()
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-4xl mx-auto">

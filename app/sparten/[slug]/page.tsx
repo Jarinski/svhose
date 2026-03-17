@@ -1,4 +1,4 @@
-import { getSparten, getTrainingszeiten } from '@/lib/content'
+import { getSparteBySlug, getSpartenSlugs, getTrainingszeiten } from '@/lib/content'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock } from 'lucide-react'
@@ -25,13 +25,13 @@ interface TrainingsEntry {
 
 /* ── Static params ─────────────────────────────────────────── */
 export async function generateStaticParams() {
-  const sparten: Sparte[] = getSparten()
-  return sparten.map(s => ({ slug: s.slug }))
+  const slugs = await getSpartenSlugs()
+  return slugs.map(s => ({ slug: s.slug }))
 }
 
 /* ── Metadata ──────────────────────────────────────────────── */
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const sparte: Sparte | undefined = getSparten().find((s: Sparte) => s.slug === params.slug)
+  const sparte = await getSparteBySlug(params.slug)
   return { title: sparte ? `${sparte.name} – SV Holm-Seppensen` : 'Sparte' }
 }
 
@@ -108,15 +108,14 @@ function getTrainerForMannschaft(
 }
 
 /* ── Page ──────────────────────────────────────────────────── */
-export default function SparteDetailPage({ params }: { params: { slug: string } }) {
-  const sparten: Sparte[]          = getSparten()
-  const sparte: Sparte | undefined = sparten.find(s => s.slug === params.slug)
+export default async function SparteDetailPage({ params }: { params: { slug: string } }) {
+  const [sparte, alleZeiten] = await Promise.all([
+    getSparteBySlug(params.slug) as Promise<Sparte | null>,
+    getTrainingszeiten() as Promise<TrainingsEntry[]>,
+  ])
   if (!sparte) notFound()
 
-  const alleZeiten: TrainingsEntry[] = getTrainingszeiten()
   const farbe = sparte.farbe ?? '#0a0a0a'
-
-  // Contacts not assigned to any team (fallback for sparten without mannschaften)
   const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
 
   return (
@@ -326,7 +325,6 @@ function MannschaftCard({
 
       {/* ── Card header ── */}
       <div className="p-5 flex gap-4">
-        {/* Photo or icon placeholder */}
         <div
           className="w-16 h-16 shrink-0 flex items-center justify-center text-2xl overflow-hidden"
           style={{ background: `${farbe}12` }}
@@ -479,15 +477,10 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
 
   return (
     <div className="bg-[#f5f5f0] p-5 flex flex-col">
-      {/* Avatar */}
       <div className="mb-4">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={person.foto}
-              alt={person.name}
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            <img src={person.foto} alt={person.name} className="w-16 h-16 rounded-full object-cover" />
           : (
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-semibold select-none"
@@ -499,47 +492,29 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
         }
       </div>
 
-      {/* Name + Rolle */}
       <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
       <div className="text-[11px] text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
 
-      {/* Contact links */}
       <div className="mt-auto space-y-2">
         {person.email && (
-          <a
-            href={`mailto:${person.email}`}
-            className="flex items-start gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group"
-          >
+          <a href={`mailto:${person.email}`} className="flex items-start gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group">
             <Mail size={11} className="shrink-0 mt-0.5" />
             <span className="break-all leading-tight">{person.email}</span>
           </a>
         )}
         {hasTel && (
-          <a
-            href={`tel:${person.telefon.replace(/\s/g, '')}`}
-            className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors"
-          >
+          <a href={`tel:${person.telefon.replace(/\s/g, '')}`} className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
             <Phone size={11} className="shrink-0" />
             {person.telefon}
           </a>
         )}
         {person.whatsapp ? (
-          <a
-            href={whatsappHref(person.whatsapp)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-[11px] text-[#16a34a] hover:text-[#15803d] transition-colors"
-          >
+          <a href={whatsappHref(person.whatsapp)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-[#16a34a] hover:text-[#15803d] transition-colors">
             <MessageCircle size={11} className="shrink-0" />
             WhatsApp
           </a>
         ) : hasTel && (
-          <a
-            href={waHref!}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#16a34a] transition-colors"
-          >
+          <a href={waHref!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[11px] text-[#6b6b6b] hover:text-[#16a34a] transition-colors">
             <MessageCircle size={11} className="shrink-0" />
             WhatsApp
           </a>

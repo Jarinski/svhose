@@ -1,97 +1,23 @@
 import Link from 'next/link'
-import { getAllNews } from '@/lib/content'
-import { getTermine } from '@/lib/content'
-import { getSparten } from '@/lib/content'
+import { getAllNews, getTermine, getSparten } from '@/lib/content'
 import { ArrowRight, Calendar, MapPin } from 'lucide-react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
+import HeroBanner from '@/components/HeroBanner'
 
-export default function HomePage() {
-  const news = getAllNews().slice(0, 3)
-  const termine = getTermine().slice(0, 3)
-  const sparten = getSparten()
+export default async function HomePage() {
+  const [newsAll, termine, sparten] = await Promise.all([
+    getAllNews(),
+    getTermine(),
+    getSparten(),
+  ])
+  const news = newsAll.slice(0, 3)
+  const termineSliced = termine.slice(0, 3)
 
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[50vh] flex flex-col justify-end pb-10 pt-20 px-6 overflow-hidden bg-[#0a0a0a]">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'linear-gradient(#f5f5f0 1px, transparent 1px), linear-gradient(90deg, #f5f5f0 1px, transparent 1px)',
-            backgroundSize: '60px 60px'
-          }}
-        />
-        {/* Big background text */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-          <span className="font-display text-[20vw] text-[#f5f5f0]/[0.03] leading-none whitespace-nowrap tracking-tight">
-            SPORT
-          </span>
-        </div>
-
-        {/* ── Background Logo – large, angled, 3D, transparent ── */}
-        <div
-          className="absolute pointer-events-none select-none"
-          style={{
-            right: '-8%',
-            top: '50%',
-            width: '65vw',
-            maxWidth: '780px',
-            transform: 'translateY(-50%) perspective(900px) rotateY(-22deg) rotateX(8deg) rotate(-8deg)',
-            opacity: 0.07,
-            filter: 'blur(0.5px)',
-          }}
-        >
-          <img
-            src="/SV_Holm_Seppensen_Logo.svg"
-            alt=""
-            aria-hidden="true"
-            className="w-full h-full object-contain"
-            style={{ filter: 'brightness(10)' }}
-          />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto w-full">
-
-          <div className="animate-fade-up stagger-1">
-            <span className="inline-block text-[10px] sm:text-[11px] tracking-[0.15em] sm:tracking-[0.3em] uppercase text-[#6b6b6b] mb-8 border border-[#f5f5f0]/20 px-3 sm:px-4 py-2 rounded-full max-w-full">
-              SV Holm-Seppensen e.V. — Gegründet in der Lüneburger Heide
-            </span>
-          </div>
-          <h1 className="font-display text-[clamp(4rem,12vw,11rem)] leading-[0.9] text-[#f5f5f0] tracking-tight animate-fade-up stagger-2">
-            GEMEINSAM<br />
-            <span className="text-[#f5f5f0]/30">STARK.</span>
-          </h1>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 animate-fade-up stagger-3">
-            <Link
-              href="/sparten"
-              className="inline-flex items-center gap-2 bg-[#f5f5f0] text-[#0a0a0a] px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:bg-white transition-colors"
-            >
-              Unsere Sparten <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/downloads"
-              className="inline-flex items-center gap-2 border border-[#f5f5f0]/30 text-[#f5f5f0] px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:border-[#f5f5f0] transition-colors"
-            >
-              Aufnahmeantrag
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-20 grid grid-cols-3 gap-4 sm:gap-8 max-w-sm animate-fade-up stagger-4">
-            {[
-              { num: '14', label: 'Sparten' },
-              { num: '∞', label: 'Leidenschaft' },
-              { num: '1', label: 'Team' },
-            ].map(s => (
-              <div key={s.label}>
-                <div className="font-display text-4xl text-[#f5f5f0]">{s.num}</div>
-                <div className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HeroBanner />
 
       {/* SPARTEN TICKER */}
       <section className="bg-[#0a0a0a] border-t border-[#f5f5f0]/10 overflow-hidden py-4">
@@ -117,7 +43,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#0a0a0a]/10">
-          {news.map((post, i) => (
+          {news.map((post) => (
             <Link key={post.slug} href={`/news/${post.slug}`} className="bg-[#f5f5f0] p-8 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300">
               <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
                 {post.category} — {format(new Date(post.date), 'd. MMM yyyy', { locale: de })}
@@ -146,7 +72,7 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-px">
-            {termine.map((t: any, i: number) => (
+            {termineSliced.map((t: any) => (
               <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-6 border-b border-[#f5f5f0]/10 group">
                 <div className="shrink-0 w-16">
                   <div className="font-display text-3xl leading-none">
