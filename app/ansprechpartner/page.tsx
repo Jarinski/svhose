@@ -84,9 +84,9 @@ export default async function AnsprechpartnerPage() {
                     <Image
                       src={p.foto}
                       alt={p.name}
-                      width={72}
-                      height={72}
-                      className="w-[72px] h-[72px] rounded-full object-cover grayscale"
+                      width={90}
+                      height={90}
+                      className="w-[90px] h-[90px] rounded-full object-cover grayscale"
                     />
                   </div>
                 )}
