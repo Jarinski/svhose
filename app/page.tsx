@@ -110,12 +110,12 @@ export default async function HomePage() {
           <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Was wir bieten</div>
           <h2 className="font-display text-5xl md:text-7xl tracking-tight">SPARTEN</h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-px bg-[#0a0a0a]/10">
+        <div className="flex flex-wrap">
           {sparten.map((s: any) => (
             <Link
               key={s.slug}
               href={`/sparten/${s.slug}`}
-              className="bg-[#f5f5f0] p-4 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200 flex flex-col items-center text-center gap-2 py-6"
+              className="bg-[#f5f5f0] outline outline-1 outline-[#0a0a0a]/10 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200 flex flex-col items-center text-center gap-2 py-6 px-4 w-1/2 sm:w-1/3 md:w-1/4 lg:w-[14.285%]"
             >
               <span className="text-2xl">{s.icon}</span>
               <span className="text-[11px] tracking-[0.1em] uppercase font-medium">{s.name}</span>
