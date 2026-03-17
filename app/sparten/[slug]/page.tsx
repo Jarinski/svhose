@@ -158,17 +158,43 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
       {/* ── TEAM PHOTO ────────────────────────────────────────── */}
       {sparte.foto && (
         <section className="mb-16">
-          <div className={`aspect-[21/9] overflow-hidden ${isAkrobatik ? 'w-full sm:w-1/2' : ''}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={sparte.foto}
-              alt={`${sparte.name} – Teamfoto`}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {isAkrobatik ? (
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: farbe }} />
+                <h2 className="text-xs tracking-[0.22em] uppercase font-medium" style={{ color: farbe }}>
+                  Trainerteam
+                </h2>
+                <div className="flex-1 h-px" style={{ background: `${farbe}25` }} />
+              </div>
+
+              <div className="overflow-hidden border border-[#0a0a0a]/10 bg-[#fafaf8]">
+                <div className="aspect-[16/9] sm:aspect-[21/10]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={sparte.foto}
+                    alt={`${sparte.name} – Trainerteam`}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
+                <p className="px-4 py-3 text-xs text-[#6b6b6b] tracking-[0.08em] uppercase">
+                  Unser Trainerteam der Akrobatik
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="aspect-[21/9] overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={sparte.foto}
+                alt={`${sparte.name} – Teamfoto`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           {isAkrobatik && (
-            <div className="mt-6 bg-[#f5f5f0] border border-[#0a0a0a]/10 p-5 sm:p-6 max-w-3xl">
+            <div className="mt-8 bg-[#f5f5f0] border border-[#0a0a0a]/10 p-5 sm:p-6 max-w-3xl mx-auto">
               <h3 className="font-medium text-lg mb-3">Information zu unseren Show-Akrobatik-Gruppen</h3>
               <p className="text-sm text-[#4a4a4a] leading-relaxed mb-3">
                 Unsere Akrobatik-Abteilung besteht aus drei eigenständigen Showgruppen:
