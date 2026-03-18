@@ -12,11 +12,11 @@
   "crons": [
     {
       "path": "/api/cron/sync-fussball",
-      "schedule": "0 6 * * *"
+      "schedule": "0 4,5 * * *"
     },
     {
       "path": "/api/cron/sync-tischtennis",
-      "schedule": "0 7 * * *"
+      "schedule": "0 4,5 * * *"
     }
   ]
 }
