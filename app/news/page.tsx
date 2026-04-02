@@ -28,7 +28,7 @@ export default async function NewsPage() {
           >
             {post.image && (
               <div
-                className="relative w-full overflow-hidden bg-[#efefe8]"
+                className="relative w-full overflow-hidden"
                 style={{
                   aspectRatio: post.image.width && post.image.height ? `${post.image.width} / ${post.image.height}` : '16 / 9',
                 }}
@@ -37,7 +37,7 @@ export default async function NewsPage() {
                   src={post.image.url}
                   alt={post.title}
                   fill
-                  className="object-contain group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>

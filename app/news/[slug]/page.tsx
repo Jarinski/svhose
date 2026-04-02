@@ -31,7 +31,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
       {post.image && (
         <div
-          className="relative w-full rounded-sm overflow-hidden mb-12 bg-[#efefe8]"
+          className="relative w-full rounded-sm overflow-hidden mb-12"
           style={{
             aspectRatio: post.image.width && post.image.height ? `${post.image.width} / ${post.image.height}` : '16 / 9',
           }}
@@ -40,7 +40,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
             src={post.image.url}
             alt={post.title}
             fill
-            className="object-contain"
+            className="object-cover"
             sizes="(max-width: 896px) 100vw, 896px"
             priority
           />
