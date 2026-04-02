@@ -217,7 +217,11 @@ export const allNewsQuery = groq`
     "date": datum,
     category,
     sparte,
-    "image": image.asset->url,
+    "image": image.asset->{
+      "url": url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height
+    },
     excerpt,
     body
   }
@@ -230,7 +234,11 @@ export const newsBySlugQuery = groq`
     "date": datum,
     category,
     sparte,
-    "image": image.asset->url,
+    "image": image.asset->{
+      "url": url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height
+    },
     excerpt,
     body
   }
