@@ -19,34 +19,58 @@ export default defineConfig({
           .title('Inhalte')
           .items([
             S.listItem()
-              .title('News-Beiträge')
+              .title('News')
               .schemaType('newsPost')
               .child(S.documentTypeList('newsPost')),
             S.listItem()
-              .title('Termine')
-              .schemaType('termin')
-              .child(S.documentTypeList('termin')),
-            S.listItem()
-              .title('Sparten')
-              .schemaType('sparte')
-              .child(S.documentTypeList('sparte')),
+              .title('Ansprechpartner')
+              .schemaType('ansprechpartner')
+              .child(S.documentTypeList('ansprechpartner')),
             S.listItem()
               .title('Trainingszeiten')
               .schemaType('trainingszeit')
               .child(S.documentTypeList('trainingszeit')),
             S.divider(),
             S.listItem()
-              .title('Ansprechpartner')
-              .schemaType('ansprechpartner')
-              .child(S.documentTypeList('ansprechpartner')),
-            S.listItem()
-              .title('Downloads')
-              .schemaType('download')
-              .child(S.documentTypeList('download')),
-            S.listItem()
-              .title('Partner')
-              .schemaType('partner')
-              .child(S.documentTypeList('partner')),
+              .title('Weitere Inhalte / Verwaltung')
+              .child(
+                S.list()
+                  .title('Weitere Inhalte / Verwaltung')
+                  .items([
+                    S.listItem()
+                      .title('Termine')
+                      .schemaType('termin')
+                      .child(S.documentTypeList('termin')),
+                    S.listItem()
+                      .title('Sparten')
+                      .schemaType('sparte')
+                      .child(S.documentTypeList('sparte')),
+                    S.listItem()
+                      .title('Downloads')
+                      .schemaType('download')
+                      .child(S.documentTypeList('download')),
+                    S.listItem()
+                      .title('Partner')
+                      .schemaType('partner')
+                      .child(S.documentTypeList('partner')),
+                    S.listItem()
+                      .title('Personen')
+                      .schemaType('person')
+                      .child(S.documentTypeList('person')),
+                    S.listItem()
+                      .title('Mannschaften')
+                      .schemaType('mannschaft')
+                      .child(S.documentTypeList('mannschaft')),
+                    S.listItem()
+                      .title('Jahrgänge')
+                      .schemaType('jahrgang')
+                      .child(S.documentTypeList('jahrgang')),
+                    S.listItem()
+                      .title('Trainingsplätze')
+                      .schemaType('trainingsplatz')
+                      .child(S.documentTypeList('trainingsplatz')),
+                  ])
+              ),
           ]),
     }),
   ],
