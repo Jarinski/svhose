@@ -14,7 +14,7 @@ export default defineType({
       }
 
       return true
-    }),
+    }).warning(),
   fields: [
     defineField({
       name: 'name',
