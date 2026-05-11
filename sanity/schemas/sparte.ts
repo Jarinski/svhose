@@ -39,6 +39,7 @@ export default defineType({
       name: 'ansprechpartner',
       title: 'Ansprechpartner & Trainer',
       type: 'array',
+      description: 'Übergeordnete Ansprechpartner:innen der Sparte, z. B. Abteilungsleitung oder Organisation. Kontakte einzelner Mannschaften oder Trainingsgruppen bitte bei „Mannschaften / Gruppen“ pflegen.',
       of: [
         {
           type: 'object',
