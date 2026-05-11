@@ -62,7 +62,7 @@ export default defineType({
           to: [{ type: 'person' }],
         },
       ],
-      description: 'Verknüpfte Personen, die diese Mannschaft trainieren/betreuen.',
+      description: 'Trainer:innen oder Ansprechpartner:innen dieser Mannschaft/Gruppe. Die erste Person in der Liste wird als Hauptkontakt bei den Trainingszeiten angezeigt.',
     }),
     defineField({
       name: 'foto',
