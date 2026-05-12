@@ -258,12 +258,19 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           <div className="mt-6 space-y-3">
             {sparte.mannschaften.map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const mTrainer = getTrainerForMannschaft(
-                sparte.ansprechpartner ?? [],
-                mZeiten,
-                mann,
-                mann.trainer ?? [],
-              )
+              const hasDirectTrainer = (mann.trainer?.length ?? 0) > 0
+              const mTrainer = hasDirectTrainer
+                ? (mann.trainer ?? []).map((t) => ({
+                    ...t,
+                    rolle: t.rolle || `Trainer ${mann.name}`,
+                    _fotoSource: t.foto ? 'person' as const : 'none' as const,
+                  }))
+                : getTrainerForMannschaft(
+                    sparte.ansprechpartner ?? [],
+                    mZeiten,
+                    mann,
+                    mann.trainer ?? [],
+                  )
 
               return (
                 <MannschaftCard
