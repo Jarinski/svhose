@@ -165,6 +165,7 @@ export const trainingszeitenQuery = groq`
     "trainer": coalesce(mannschaft->trainer[0]->name, trainer),
     "email": coalesce(mannschaft->trainer[0]->email, email),
     "telefon": coalesce(mannschaft->trainer[0]->telefon, telefon),
+    "trainerFoto": mannschaft->trainer[0]->foto.asset->url,
     "foto": foto.asset->url
   }
 `

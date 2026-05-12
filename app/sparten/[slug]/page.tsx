@@ -24,7 +24,7 @@ interface Sparte {
 interface TrainingsEntry {
   sparte: string; gruppe: string; tag: string; uhrzeit: string
   ort: string; jahreszeit: string; frequenz: string
-  trainer: string; email: string; telefon: string
+  trainer: string; email: string; telefon: string; trainerFoto?: string
 }
 
 /* ── Static params ─────────────────────────────────────────── */
@@ -100,7 +100,15 @@ function getTrainerForMannschaft(
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
-    const byName = ap.filter(a => names.has(a.name.toLowerCase()))
+    const byName = ap
+      .filter(a => names.has(a.name.toLowerCase()))
+      .map(a => {
+        const z = zeiten.find(e => {
+          const trainerNames = e.trainer.split(',').map(t => t.trim().toLowerCase())
+          return trainerNames.includes(a.name.toLowerCase())
+        })
+        return z?.trainerFoto && !a.foto ? { ...a, foto: z.trainerFoto } : a
+      })
     if (byName.length > 0) return byName
   }
   const words = keyWords(mann.name)
