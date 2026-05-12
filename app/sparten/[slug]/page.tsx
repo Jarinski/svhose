@@ -7,10 +7,16 @@ import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock, FileTe
 import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
-interface Mannschaft  { name: string; beschreibung: string; foto: string | null }
+interface Mannschaft  {
+  name: string
+  beschreibung: string
+  foto: string | null
+  trainer?: Ansprechpartner[]
+}
 interface Ansprechpartner {
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
+  _fotoSource?: 'embedded' | 'person' | 'trainingszeit' | 'none'
 }
 interface SparteDownload { titel: string; beschreibung: string; datei: string }
 interface Sparte {
@@ -25,6 +31,7 @@ interface TrainingsEntry {
   sparte: string; gruppe: string; tag: string; uhrzeit: string
   ort: string; jahreszeit: string; frequenz: string
   trainer: string; email: string; telefon: string
+  foto?: string | null
 }
 
 /* ── Static params ─────────────────────────────────────────── */
@@ -96,6 +103,7 @@ function getTrainerForMannschaft(
   ap: Ansprechpartner[],
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
+  mannschaftTrainer: Ansprechpartner[] = [],
 ): Ansprechpartner[] {
   if (zeiten.length > 0) {
     const names = new Set<string>()
@@ -108,7 +116,25 @@ function getTrainerForMannschaft(
     const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
     if (byRole.length > 0) return byRole
   }
-  return ap.length <= 3 ? ap : []
+  const base = ap.length <= 3 ? ap : []
+
+  return base.map((a) => {
+    const personMatch = mannschaftTrainer.find(
+      (p) => p.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
+    )
+    if (a.foto) return { ...a, _fotoSource: 'embedded' }
+    if (personMatch?.foto) return { ...a, foto: personMatch.foto, _fotoSource: 'person' }
+
+    const zeitMatch = zeiten.find((z) =>
+      z.trainer
+        .split(',')
+        .map((t) => t.trim().toLowerCase())
+        .includes(a.name.trim().toLowerCase()),
+    )
+    if (zeitMatch?.foto) return { ...a, foto: zeitMatch.foto, _fotoSource: 'trainingszeit' }
+
+    return { ...a, _fotoSource: 'none' }
+  })
 }
 
 /* ── Page ──────────────────────────────────────────────────── */
@@ -232,7 +258,13 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           <div className="mt-6 space-y-3">
             {sparte.mannschaften.map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+              const mTrainer = getTrainerForMannschaft(
+                sparte.ansprechpartner ?? [],
+                mZeiten,
+                mann,
+                mann.trainer ?? [],
+              )
+
               return (
                 <MannschaftCard
                   key={i}

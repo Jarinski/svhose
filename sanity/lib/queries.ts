@@ -46,7 +46,14 @@ export const sparteBySlugQuery = groq`
     mannschaften[] {
       name,
       beschreibung,
-      "foto": foto.asset->url
+      "foto": foto.asset->url,
+      "trainer": *[_type == "mannschaft" && name == ^.name][0].trainer[]->{
+        name,
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
     },
     ansprechpartner[] {
       name,
