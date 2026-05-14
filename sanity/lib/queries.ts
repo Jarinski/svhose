@@ -49,6 +49,7 @@ export const sparteBySlugQuery = groq`
       "foto": foto.asset->url,
       "trainer": *[_type == "mannschaft" && name == ^.name][0].trainer[]->{
         name,
+        "rolle": coalesce(rollen[0], "Trainer"),
         email,
         telefon,
         whatsapp,
