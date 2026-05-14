@@ -105,36 +105,39 @@ function getTrainerForMannschaft(
   mann: Mannschaft,
   mannschaftTrainer: Ansprechpartner[] = [],
 ): Ansprechpartner[] {
+  const mergeWithMannschaftTrainer = (contacts: Ansprechpartner[]): Ansprechpartner[] =>
+    contacts.map((a) => {
+      const personMatch = mannschaftTrainer.find(
+        (p) => p.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
+      )
+      if (a.foto) return { ...a, _fotoSource: 'embedded' }
+      if (personMatch?.foto) return { ...a, foto: personMatch.foto, _fotoSource: 'person' }
+
+      const zeitMatch = zeiten.find((z) =>
+        z.trainer
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .includes(a.name.trim().toLowerCase()),
+      )
+      if (zeitMatch?.foto) return { ...a, foto: zeitMatch.foto, _fotoSource: 'trainingszeit' }
+
+      return { ...a, _fotoSource: 'none' }
+    })
+
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
     const byName = ap.filter(a => names.has(a.name.toLowerCase()))
-    if (byName.length > 0) return byName
+    if (byName.length > 0) return mergeWithMannschaftTrainer(byName)
   }
   const words = keyWords(mann.name)
   if (words.length > 0) {
     const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
-    if (byRole.length > 0) return byRole
+    if (byRole.length > 0) return mergeWithMannschaftTrainer(byRole)
   }
   const base = ap.length <= 3 ? ap : []
 
-  return base.map((a) => {
-    const personMatch = mannschaftTrainer.find(
-      (p) => p.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
-    )
-    if (a.foto) return { ...a, _fotoSource: 'embedded' }
-    if (personMatch?.foto) return { ...a, foto: personMatch.foto, _fotoSource: 'person' }
-
-    const zeitMatch = zeiten.find((z) =>
-      z.trainer
-        .split(',')
-        .map((t) => t.trim().toLowerCase())
-        .includes(a.name.trim().toLowerCase()),
-    )
-    if (zeitMatch?.foto) return { ...a, foto: zeitMatch.foto, _fotoSource: 'trainingszeit' }
-
-    return { ...a, _fotoSource: 'none' }
-  })
+  return mergeWithMannschaftTrainer(base)
 }
 
 /* ── Page ──────────────────────────────────────────────────── */
