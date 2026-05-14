@@ -4,6 +4,7 @@ import { groq } from 'next-sanity'
 
 export const spartenQuery = groq`
   *[_type == "sparte"] | order(name asc) {
+    "id": _id,
     "slug": slug.current,
     name,
     icon,
@@ -12,6 +13,22 @@ export const spartenQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
+    "echteMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      _id,
+      name,
+      bereich,
+      beschreibung,
+      foto { asset->{url} },
+      trainer[]->{
+        _id,
+        name,
+        rollen,
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
+    },
     mannschaften[] {
       name,
       beschreibung,
