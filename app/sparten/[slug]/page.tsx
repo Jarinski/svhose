@@ -155,6 +155,10 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
   const hasEchteMannschaften = echteMannschaften.length > 0
   const hasLegacyMannschaften = (sparte.mannschaften?.length ?? 0) > 0
   const hasMannschaften = hasEchteMannschaften || hasLegacyMannschaften
+  const mannschaftenToRender =
+    sparte.echteMannschaften && sparte.echteMannschaften.length > 0
+      ? sparte.echteMannschaften
+      : sparte.mannschaften
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
@@ -264,17 +268,17 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           <SectionHeader
             title="MANNSCHAFTEN & GRUPPEN"
             farbe={farbe}
-            count={hasEchteMannschaften ? echteMannschaften.length : sparte.mannschaften.length}
+            count={mannschaftenToRender.length}
           />
           <div className="mt-6 space-y-3">
-            {(hasEchteMannschaften ? echteMannschaften : sparte.mannschaften).map((mann, i) => {
+            {mannschaftenToRender.map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const hasDirectTrainer = (mann.trainer?.length ?? 0) > 0
-              const mTrainer = hasDirectTrainer
-                ? (mann.trainer ?? []).map((t) => ({
-                    ...t,
-                    rolle: t.rolle || `Trainer ${mann.name}`,
-                    _fotoSource: t.foto ? 'person' as const : 'none' as const,
+              const mTrainer = hasEchteMannschaften
+                ? (mann.trainer ?? []).map((trainer) => ({
+                    ...trainer,
+                    rolle: trainer.rolle || `Trainer ${mann.name}`,
+                    foto: trainer.foto,
+                    _fotoSource: trainer.foto ? 'person' as const : 'none' as const,
                   }))
                 : getTrainerForMannschaft(
                     sparte.ansprechpartner ?? [],
