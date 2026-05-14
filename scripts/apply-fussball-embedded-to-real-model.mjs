@@ -57,6 +57,10 @@ function makeMannschaftDocId(name) {
   return `mannschaft.fussball--${slugify(name)}`
 }
 
+function makeTrainerKey(ref = '') {
+  return `trainer-${slugify(ref.replace(/^person\./, ''))}`
+}
+
 const payload = await client.fetch(`{
   "fussball": *[_type == "sparte" && slug.current == "fussball"][0]{
     _id,
@@ -331,7 +335,7 @@ for (const em of embeddedMannschaften) {
       continue
     }
 
-    trainerRefs.push({ _type: 'reference', _ref: person._id })
+    trainerRefs.push({ _type: 'reference', _ref: person._id, _key: makeTrainerKey(person._id) })
   }
 
   const uniqueRefs = Array.from(new Map(trainerRefs.map((r) => [r._ref, r])).values())
