@@ -43,11 +43,13 @@ export const sparteBySlugQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
-    mannschaften[] {
+    "echteMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      "id": _id,
       name,
       beschreibung,
       "foto": foto.asset->url,
-      "trainer": *[_type == "mannschaft" && name == ^.name][0].trainer[]->{
+      trainer[]->{
+        "id": _id,
         name,
         "rolle": coalesce(rollen[0], "Trainer"),
         email,
@@ -55,6 +57,11 @@ export const sparteBySlugQuery = groq`
         whatsapp,
         "foto": foto.asset->url
       }
+    },
+    mannschaften[] {
+      name,
+      beschreibung,
+      "foto": foto.asset->url
     },
     ansprechpartner[] {
       name,

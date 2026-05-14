@@ -23,6 +23,7 @@ interface Sparte {
   slug: string; name: string; icon: string; farbe: string
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
+  echteMannschaften?: Mannschaft[]
   mannschaften: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
   downloads?: SparteDownload[]
@@ -74,7 +75,7 @@ function whatsappHref(phone: string) {
   return `https://wa.me/${num}`
 }
 
-/* ── Matching helpers (mirrored from SpartenClient) ─────────── */
+/* ── Matching helpers (nur Fallback-Pfad) ───────────────────── */
 function keyWords(s: string): string[] {
   return s
     .toLowerCase()
@@ -150,7 +151,10 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const echteMannschaften = sparte.echteMannschaften ?? []
+  const hasEchteMannschaften = echteMannschaften.length > 0
+  const hasLegacyMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const hasMannschaften = hasEchteMannschaften || hasLegacyMannschaften
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
@@ -254,12 +258,16 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── MANNSCHAFTEN (with embedded times + contacts) ─────── */}
+      {/* ── MANNSCHAFTEN: primär echte mannschaft-Dokumente ────── */}
       {hasMannschaften && (
         <section className="mb-16">
-          <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={sparte.mannschaften.length} />
+          <SectionHeader
+            title="MANNSCHAFTEN & GRUPPEN"
+            farbe={farbe}
+            count={hasEchteMannschaften ? echteMannschaften.length : sparte.mannschaften.length}
+          />
           <div className="mt-6 space-y-3">
-            {sparte.mannschaften.map((mann, i) => {
+            {(hasEchteMannschaften ? echteMannschaften : sparte.mannschaften).map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
               const hasDirectTrainer = (mann.trainer?.length ?? 0) > 0
               const mTrainer = hasDirectTrainer
@@ -298,7 +306,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── FALLBACK: no mannschaften → show contacts + times directly ── */}
+      {/* ── FALLBACK: keine echten/legacy Mannschaften → Kontakte+Zeiten ── */}
       {!hasMannschaften && (
         <>
           {/* Training times */}
