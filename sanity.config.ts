@@ -19,6 +19,7 @@ export default defineConfig({
           .title('Inhalte')
           .items([
             S.documentTypeListItem('newsPost').title('News'),
+            S.documentTypeListItem('termin').title('Termine'),
             S.documentTypeListItem('trainingszeit').title('Trainingszeiten'),
             S.documentTypeListItem('ansprechpartner').title('Ansprechpartner / Kontaktseite'),
             S.documentTypeListItem('sparte').title('Sparten bearbeiten'),
@@ -29,7 +30,6 @@ export default defineConfig({
                 S.list()
                   .title('Weitere Inhalte / Verwaltung')
                   .items([
-                    S.documentTypeListItem('termin').title('Termine'),
                     S.documentTypeListItem('download').title('Downloads'),
                     S.documentTypeListItem('partner').title('Partner'),
                     S.divider(),
