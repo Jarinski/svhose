@@ -18,6 +18,7 @@ interface Sparte {
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
   mannschaften: Mannschaft[]
+  zentraleMannschaften?: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
   downloads?: SparteDownload[]
 }
@@ -119,6 +120,23 @@ function getTrainerForMannschaft(
   return ap.length <= 3 ? ap : []
 }
 
+function mergeMannschaften(
+  embedded: Mannschaft[] = [],
+  zentral: Mannschaft[] = [],
+): Mannschaft[] {
+  const seen = new Set<string>()
+  const merged: Mannschaft[] = []
+
+  for (const mann of [...embedded, ...zentral]) {
+    const key = mann.name.trim().toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(mann)
+  }
+
+  return merged
+}
+
 /* ── Page ──────────────────────────────────────────────────── */
 export default async function SparteDetailPage({ params }: { params: { slug: string } }) {
   const [sparte, alleZeiten] = await Promise.all([
@@ -129,7 +147,8 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const mannschaften = mergeMannschaften(sparte.mannschaften ?? [], sparte.zentraleMannschaften ?? [])
+  const hasMannschaften = mannschaften.length > 0
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
@@ -236,9 +255,9 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
       {/* ── MANNSCHAFTEN (with embedded times + contacts) ─────── */}
       {hasMannschaften && (
         <section className="mb-16">
-          <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={sparte.mannschaften.length} />
+          <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={mannschaften.length} />
           <div className="mt-6 space-y-3">
-            {sparte.mannschaften.map((mann, i) => {
+            {mannschaften.map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
               const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
               return (

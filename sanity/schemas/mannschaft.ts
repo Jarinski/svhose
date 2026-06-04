@@ -10,8 +10,8 @@ export default defineType({
       const typedDoc = doc as { bereich?: string; jahrgang?: { _ref?: string } } | undefined
       if (!typedDoc) return true
 
-      if (typedDoc.bereich === 'Junioren' && !typedDoc.jahrgang?._ref) {
-        return 'Bei Junioren bitte einen Jahrgang zuordnen.'
+      if ((typedDoc.bereich === 'Junioren' || typedDoc.bereich === 'Juniorinnen') && !typedDoc.jahrgang?._ref) {
+        return 'Bei Junioren/Juniorinnen bitte einen Jahrgang zuordnen.'
       }
 
       return true
@@ -28,7 +28,7 @@ export default defineType({
       title: 'Bereich',
       type: 'string',
       options: {
-        list: ['Junioren', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
+        list: ['Junioren', 'Juniorinnen', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
       },
       validation: r => r.required(),
       description: 'Fortgeschrittene Verwaltung: Hilft bei der Unterscheidung zwischen Jugend (mit Jahrgang) und Erwachsenen-Teams.',

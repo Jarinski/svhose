@@ -17,6 +17,11 @@ export const spartenQuery = groq`
       beschreibung,
       "foto": foto.asset->url
     },
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      name,
+      beschreibung,
+      "foto": foto.asset->url
+    },
     ansprechpartner[] {
       name,
       rolle,
@@ -44,6 +49,11 @@ export const sparteBySlugQuery = groq`
     "foto": foto.asset->url,
     trainingszeiten_spartes,
     mannschaften[] {
+      name,
+      beschreibung,
+      "foto": foto.asset->url
+    },
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
       name,
       beschreibung,
       "foto": foto.asset->url
