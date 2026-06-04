@@ -20,13 +20,11 @@ export default defineConfig({
           .items([
             S.documentTypeListItem('newsPost').title('News'),
             S.documentTypeListItem('trainingszeit').title('Trainingszeiten'),
-            S.documentTypeListItem('mannschaft').title('Mannschaften / Gruppen'),
-            S.documentTypeListItem('person').title('Personen / Trainer'),
-            S.documentTypeListItem('sparte').title('Sparten'),
-            S.documentTypeListItem('ansprechpartner').title('Ansprechpartner'),
+            S.documentTypeListItem('ansprechpartner').title('Ansprechpartner / Kontaktseite'),
+            S.documentTypeListItem('sparte').title('Sparten bearbeiten'),
             S.divider(),
             S.listItem()
-              .title('Weitere Inhalte / Verwaltung')
+              .title('Weitere Inhalte / Verwaltung (fortgeschritten)')
               .child(
                 S.list()
                   .title('Weitere Inhalte / Verwaltung')
@@ -34,8 +32,11 @@ export default defineConfig({
                     S.documentTypeListItem('termin').title('Termine'),
                     S.documentTypeListItem('download').title('Downloads'),
                     S.documentTypeListItem('partner').title('Partner'),
-                    S.documentTypeListItem('jahrgang').title('Jahrgänge'),
-                    S.documentTypeListItem('trainingsplatz').title('Trainingsplätze'),
+                    S.divider(),
+                    S.documentTypeListItem('person').title('Personen / Trainer (fortgeschritten)'),
+                    S.documentTypeListItem('mannschaft').title('Mannschaften / Gruppen (fortgeschritten)'),
+                    S.documentTypeListItem('jahrgang').title('Jahrgänge (fortgeschritten)'),
+                    S.documentTypeListItem('trainingsplatz').title('Trainingsplätze (fortgeschritten)'),
                   ])
               ),
           ]),

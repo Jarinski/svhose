@@ -2,8 +2,9 @@ import { defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'mannschaft',
-  title: 'Mannschaft',
+  title: 'Mannschaft (fortgeschrittene Verwaltung)',
   type: 'document',
+  description: 'Fortgeschrittene Verwaltung: Nur bearbeiten, wenn klar ist, dass diese Mannschaft/Gruppe hier zentral gepflegt wird. Für normale Trainingszeiten bitte zuerst den Bereich „Trainingszeiten“ nutzen.',
   validation: Rule =>
     Rule.custom((doc) => {
       const typedDoc = doc as { bereich?: string; jahrgang?: { _ref?: string } } | undefined
@@ -30,7 +31,7 @@ export default defineType({
         list: ['Junioren', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
       },
       validation: r => r.required(),
-      description: 'Hilft bei der Unterscheidung zwischen Jugend (mit Jahrgang) und Erwachsenen-Teams.',
+      description: 'Fortgeschrittene Verwaltung: Hilft bei der Unterscheidung zwischen Jugend (mit Jahrgang) und Erwachsenen-Teams.',
     }),
     defineField({
       name: 'sparte',
@@ -44,7 +45,7 @@ export default defineType({
       title: 'Jahrgang',
       type: 'reference',
       to: [{ type: 'jahrgang' }],
-      description: 'Für Junioren-Mannschaften bitte setzen; bei Herren/Damen meist leer.',
+      description: 'Fortgeschrittene Verwaltung: Für Junioren-Mannschaften bitte setzen; bei Herren/Damen meist leer.',
     }),
     defineField({
       name: 'beschreibung',
@@ -62,7 +63,7 @@ export default defineType({
           to: [{ type: 'person' }],
         },
       ],
-      description: 'Trainer:innen oder Ansprechpartner:innen dieser Mannschaft/Gruppe. Die erste Person in der Liste wird als Hauptkontakt bei den Trainingszeiten angezeigt.',
+      description: 'Fortgeschrittene Verwaltung: Nur pflegen, wenn diese Mannschaft/Gruppe hier zentral verwaltet wird. Die erste Person in der Liste wird als Hauptkontakt bei den Trainingszeiten angezeigt.',
     }),
     defineField({
       name: 'foto',

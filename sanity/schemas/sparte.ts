@@ -4,8 +4,9 @@ export default defineType({
   name: 'sparte',
   title: 'Sparte',
   type: 'document',
+  description: 'Bestehende Sparte pflegen. Neue Sparten bitte nur durch Admins oder technische Pflege anlegen.',
   fields: [
-    defineField({ name: 'slug', title: 'Slug', type: 'slug', options: { source: 'name', maxLength: 96 }, validation: r => r.required() }),
+    defineField({ name: 'slug', title: 'Slug', type: 'slug', options: { source: 'name', maxLength: 96 }, description: 'Technischer URL-Name der Sparte. Bei bestehenden Sparten normalerweise nicht ändern. Neue Sparten bitte nur durch Admins oder technische Pflege anlegen.', validation: r => r.required() }),
     defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
     defineField({ name: 'icon', title: 'Icon (Emoji)', type: 'string' }),
     defineField({ name: 'farbe', title: 'Farbe (Hex)', type: 'string' }),
@@ -17,12 +18,13 @@ export default defineType({
       title: 'Trainingszeiten-Sparten (Keys)',
       type: 'array',
       of: [{ type: 'string' }],
-      description: 'Schlüssel zum Verknüpfen mit Trainingszeiten-Einträgen',
+      description: 'Technische Zuordnung zu Trainingszeiten. Bitte nur ändern, wenn klar ist, welche bestehenden Trainingszeiten zu dieser Sparte gehören.',
     }),
     defineField({
       name: 'mannschaften',
       title: 'Mannschaften & Gruppen',
       type: 'array',
+      description: 'Eingebettete Mannschaften/Gruppen dieser bestehenden Sparte. Neue Sparten oder neue zentrale Mannschaftsstrukturen bitte nur nach Rücksprache anlegen.',
       of: [
         {
           type: 'object',
@@ -39,7 +41,7 @@ export default defineType({
       name: 'ansprechpartner',
       title: 'Ansprechpartner & Trainer',
       type: 'array',
-      description: 'Übergeordnete Ansprechpartner:innen der Sparte, z. B. Abteilungsleitung oder Organisation. Kontakte einzelner Mannschaften oder Trainingsgruppen bitte bei „Mannschaften / Gruppen“ pflegen.',
+      description: 'Übergeordnete Ansprechpartner:innen dieser bestehenden Sparte, z. B. Abteilungsleitung oder Organisation. Kontakte einzelner Mannschaften oder Trainingsgruppen bitte nur dort pflegen, wo sie bereits zentral gepflegt werden.',
       of: [
         {
           type: 'object',

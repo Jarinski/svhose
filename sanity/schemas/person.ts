@@ -2,9 +2,9 @@ import { defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'person',
-  title: 'Person',
+  title: 'Person (fortgeschrittene Verwaltung)',
   type: 'document',
-  description: 'Personen können als Trainer:innen oder Ansprechpartner:innen bei Mannschaften/Gruppen verwendet werden.',
+  description: 'Fortgeschrittene Verwaltung: Personen nur bearbeiten, wenn klar ist, dass Trainer:innen oder Ansprechpartner:innen hier zentral gepflegt und bei Mannschaften/Gruppen verwendet werden.',
   fields: [
     defineField({
       name: 'name',
@@ -24,7 +24,7 @@ export default defineType({
           value: v,
         })),
       },
-      description: 'Eine Person kann mehrere Rollen haben.',
+      description: 'Fortgeschrittene Verwaltung: Eine zentral gepflegte Person kann mehrere Rollen haben.',
     }),
     defineField({ name: 'email', title: 'E-Mail', type: 'string' }),
     defineField({ name: 'telefon', title: 'Telefon', type: 'string' }),
