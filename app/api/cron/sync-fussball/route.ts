@@ -46,9 +46,9 @@ function toSanityIdPart(value: string): string {
     .replace(/ö/g, 'oe')
     .replace(/ü/g, 'ue')
     .replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/-+/g, '-')
-    .replace(/^[.-]+|[.-]+$/g, '')
+    .replace(/^-+|-+$/g, '')
 }
 
 /** Baut einen deterministischen Sanity-Dokument-ID aus der fussball.de Spiel-ID */
