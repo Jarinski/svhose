@@ -15,7 +15,11 @@ export const client = createClient({
   projectId: projectId || 'placeholder',
   dataset,
   apiVersion,
-  useCdn: process.env.NODE_ENV === 'production',
+  // Für Website-Inhalte bewusst nicht das Sanity-CDN verwenden:
+  // Neue/aktualisierte Studio-Inhalte (z. B. News auf der Landing Page) sollen
+  // spätestens nach der Next.js-Revalidierung sichtbar sein und nicht zusätzlich
+  // durch den Sanity-CDN-Cache verzögert werden.
+  useCdn: false,
   // Token für schreibenden Zugriff (z. B. Migration)
   token: process.env.SANITY_API_WRITE_TOKEN,
 })
