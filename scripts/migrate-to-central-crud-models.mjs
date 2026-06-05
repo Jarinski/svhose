@@ -8,6 +8,7 @@ const isVerbose = process.argv.includes('--verbose')
 const isJson = process.argv.includes('--json')
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
+const apiVersion = '2024-01-01'
 const token = process.env.SANITY_API_WRITE_TOKEN
 
 if (!projectId) {
@@ -23,10 +24,18 @@ if (isApply && !token) {
 const client = createClient({
   projectId,
   dataset,
-  apiVersion: '2024-01-01',
+  apiVersion,
   useCdn: false,
   ...(isApply ? { token } : {}),
 })
+
+const sanityClientConfigInfo = {
+  projectId,
+  dataset,
+  apiVersion,
+  mode: isApply ? 'APPLY' : 'DRY_RUN',
+  hasWriteToken: Boolean(token),
+}
 
 const normalize = (value) =>
   (value || '')
@@ -750,6 +759,7 @@ if (isApply) {
 
 const report = {
   mode: isApply ? 'APPLY' : 'DRY_RUN',
+  sanityClientConfig: sanityClientConfigInfo,
   guard: {
     dryRunDefault: !isApply,
     applyOnlyWithApplyFlag: true,
@@ -811,6 +821,7 @@ const report = {
 
 const compactReport = {
   mode: report.mode,
+  sanityClientConfig: sanityClientConfigInfo,
   entscheidungshilfe: {
     applySicherWenn: [
       'unsichereTrainingszeiten === 0',
