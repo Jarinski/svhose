@@ -103,6 +103,21 @@ Quelle: `vercel.json`
 
 ## 3) Import-/Migrationsprozesse
 
+## 3.0 Zentrale CRUD-Normalisierung im Sanity Studio
+- Script: `scripts/migrate-to-central-crud-models.mjs`
+- Ziel: Migration in echte zentrale CRUD-Dokumenttypen für `person`, `sparte`, `mannschaft`, `trainingszeit`, `termin` und `newsPost`.
+- Quelle:
+  - `sparte.mannschaften[]` für zentrale `mannschaft`-Dokumente,
+  - eingebettete Trainer/Ansprechpartner und globale `ansprechpartner` für zentrale `person`-Dokumente,
+  - eindeutige `trainingszeit.sparte + trainingszeit.gruppe`-Matches für `trainingszeit.mannschaft`.
+- Sicherheitsregeln:
+  - Dry-Run standardmäßig; Apply nur mit `--apply`.
+  - Kein hardcodiertes Secret; `SANITY_API_WRITE_TOKEN` nur aus `process.env` und im Apply-Modus zwingend.
+  - Keine Legacy-Felder und kein `sparte.mannschaften[]` werden gelöscht.
+  - Keine Mannschaften werden nur aus `trainingszeit.gruppe` erzeugt.
+  - Bestehende Inhalte werden nicht überschrieben, außer fehlende Referenzen/Felder werden gezielt gesetzt.
+- Output im Dry-Run: Zählwerte zu Sparten, eingebetteten/geplanten/vorhandenen Mannschaften, geplanten/vorhandenen Personen, Trainingszeit-Matches, kaputten Referenzen, unsicheren Matches und potenziellen Duplikaten.
+
 ## 3.1 Legacy JSON + MDX → Sanity (Initialmigration)
 - Script: `scripts/migrate-to-sanity.mjs`
 - Eingang:

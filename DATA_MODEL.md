@@ -18,9 +18,40 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 > Registrierte Typen laut `sanity/schemas/index.ts`:
 `sparte`, `person`, `jahrgang`, `mannschaft`, `trainingsplatz`, `termin`, `trainingszeit`, `ansprechpartner`, `download`, `partner`, `newsPost`
 
+## Zielmodell: zentrale CRUD-Modelle im Sanity Studio
+
+Das künftige produktive Zielmodell besteht aus echten zentralen CRUD-Dokumenttypen im Sanity Studio:
+
+1. `person` – zentrale Quelle für Trainer:innen, Ansprechpartner:innen, Vorstand usw.
+2. `sparte` – zentrale Quelle für Vereinsabteilungen/Sparten.
+3. `mannschaft` – zentrale Quelle für Mannschaften und Trainingsgruppen.
+4. `trainingszeit` – zentrale Quelle für Trainingszeiten; referenziert Mannschaft/Trainingsgruppe und Trainingsplatz.
+5. `termin` – zentrale Quelle für Termine.
+6. `newsPost` – zentrale Quelle für News.
+
+Fachliche Beziehungen im Zielmodell:
+
+- Eine `sparte` hat viele `mannschaft`-Dokumente.
+- Eine `mannschaft` gehört zu genau einer `sparte`.
+- Eine `mannschaft` hat eine oder mehrere `trainingszeit`-Dokumente.
+- Eine `trainingszeit` gehört zu genau einer `mannschaft`.
+- Eine `person` kann mehreren `mannschaft`-Dokumenten zugeordnet werden.
+- Eine `mannschaft` kann mehrere `person`-Dokumente als Trainer:innen/Ansprechpartner:innen referenzieren.
+- Ansprechpartner auf der Kontaktseite können ebenfalls auf zentrale `person`-Dokumente verweisen.
+
+Nicht-Ziel für die produktive Hauptquelle:
+
+- Keine eingebetteten Mannschaften in `sparte.mannschaften[]` als produktive Hauptquelle.
+- Keine Trainer-/Telefonnummern als produktive Inline-Freitexte in `trainingszeit`.
+- Keine sichtbaren Website-Inhalte aus alten JSON-Dateien.
+- Keine Mannschaften, die nur aus `trainingszeit.gruppe` entstehen.
+- Keine parallele Pflege derselben Mannschaft in `sparte.mannschaften[]` und `mannschaft`.
+
+Aktueller Übergang: Legacy-/Fallback-Felder bleiben vorhanden, werden aber nur noch als Altbestand/Diagnose betrachtet. Die Migration `scripts/migrate-to-central-crud-models.mjs` normalisiert aus `sparte.mannschaften[]`, Personenquellen und eindeutigen Trainingszeit-Matches in Richtung zentraler Dokumente, ohne Legacy-Felder zu löschen.
+
 ## 1.1 sparte
 
-- **Zweck**: Hauptobjekt für Vereinsabteilungen/Sparten inkl. Darstellung, Gruppen, Kontakte, spartenbezogene Downloads.
+- **Zweck**: Zentrale Quelle für Vereinsabteilungen/Sparten inkl. Darstellung und spartenbezogener Metadaten.
 - **Wichtigste Felder**:
   - `slug`, `name`, `icon`, `farbe`, `beschreibung`, `langbeschreibung`, `foto`
   - `trainingszeiten_spartes: string[]` (Matching-Key zu Trainingszeiten)
@@ -29,7 +60,8 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
   - `downloads[]` (embedded; `datei` + `dateiUrl` Fallback)
 - **Referenzen**: Keine echten Sanity-References innerhalb von `sparte`.
 - **Besonderheiten**:
-  - Mischmodell: enthält eigene eingebettete Teilstrukturen, obwohl es dedizierte Dokumenttypen (`mannschaft`, `ansprechpartner`, `download`) gibt.
+  - `sparte.mannschaften[]` bleibt als Legacy-/Übergangsbestand erhalten, ist aber nicht mehr produktive Hauptquelle für Mannschaften/Trainingsgruppen.
+  - Mannschaften/Gruppen sollen künftig über zentrale `mannschaft`-Dokumente gepflegt werden.
   - `trainingszeiten_spartes` steuert Frontend-Zuordnung von Trainingszeiten über String-Vergleich.
 
 ## 1.2 person
@@ -52,7 +84,7 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 
 ## 1.4 mannschaft
 
-- **Zweck**: Team-/Gruppenobjekt als zentrales Referenzmodell für Trainingszeiten.
+- **Zweck**: Zentrale Quelle für Mannschaften und Trainingsgruppen.
 - **Wichtigste Felder**: `name`, `bereich`, `sparte`, `jahrgang`, `beschreibung`, `trainer[]`, `foto`, `reihenfolge`.
 - **Referenzen**:
   - `sparte -> sparte`
@@ -60,6 +92,8 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
   - `trainer[] -> person`
   - Wird von `trainingszeit.mannschaft` referenziert.
 - **Besonderheiten**:
+  - Produktive Mannschaften/Trainingsgruppen werden hier gepflegt, nicht parallel in `sparte.mannschaften[]`.
+  - `trainer[]` referenziert zentrale `person`-Dokumente; eine Person kann in mehreren Mannschaften verwendet werden.
   - Validierung: Wenn `bereich == Junioren`, muss `jahrgang` gesetzt sein.
 
 ## 1.5 trainingsplatz
@@ -72,7 +106,7 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 
 ## 1.6 trainingszeit
 
-- **Zweck**: Trainings-Slots (Tag, Zeit, Ort, Gruppe, Kontakt).
+- **Zweck**: Zentrale Quelle für Trainings-Slots (Tag, Zeit, Ort) mit Referenz auf Mannschaft/Trainingsgruppe und Trainingsplatz.
 - **Wichtigste Felder**:
   - **Aktuell**: `mannschaft` (ref), `trainingsplatz` (ref)
   - **Fallback/Legacy**: `sparte`, `gruppe`, `ort`, `trainer`, `email`, `telefon`
@@ -81,6 +115,8 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
   - `mannschaft -> mannschaft`
   - `trainingsplatz -> trainingsplatz`
 - **Besonderheiten**:
+  - Trainingszeiten bleiben eigene Dokumente und werden nicht in Mannschaften eingebettet.
+  - Produktiv sollen Trainer:innen/Kontakte über `mannschaft.trainer[] -> person` gepflegt werden, nicht über Inline-Freitextfelder.
   - Dokumentvalidierung erlaubt **entweder** Referenzmodell **oder** Legacy-Fallback:
     - `mannschaft` ODER (`sparte` + `gruppe`)
     - `trainingsplatz` ODER `ort`
@@ -98,7 +134,7 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 
 - **Zweck**: Allgemeine Kontaktpersonen (z. B. Vorstand, Abteilungsleiter).
 - **Wichtigste Felder**: `name`, `funktion`, `gruppe`, `sparte (veraltet)`, `email`, `telefon`, `foto`, `reihenfolge`.
-- **Referenzen**: Keine.
+- **Referenzen**: Optional `person -> person` für zentrale Kontaktperson.
 - **Besonderheiten**:
   - Feld `sparte` ist explizit als **veraltet** markiert.
   - Frontend nutzt `gruppe` mit Fallback auf `sparte`.
@@ -129,7 +165,7 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 
 ## 2) Beziehungen zwischen Modellen
 
-## 2.1 Aktuelles Referenzmodell (technisch sauber)
+## 2.1 Ziel-Referenzmodell (produktiv)
 
 - `mannschaft -> sparte`
 - `mannschaft -> jahrgang`
@@ -137,6 +173,7 @@ Stand: Analyse auf Basis der vorhandenen Schemas, Queries und Content-Zugriffe i
 - `jahrgang -> person (trainer[])`
 - `trainingszeit -> mannschaft`
 - `trainingszeit -> trainingsplatz`
+- `ansprechpartner -> person` optional für Kontaktseite
 
 ## 2.2 Legacy-/Übergangsbeziehungen (string-basiert / embedded)
 
@@ -277,13 +314,26 @@ Hinweis: Öffentlich heißt hier „frontend-seitig angezeigt“, nicht zwingend
 
 ## Aktuelles Modell vs. Legacy-/Übergangsmodell (Kurzvergleich)
 
-## Aktuelles Modell (präferiert)
+## Zielmodell (präferiert)
 
 - Referenzbasierte Kernkette:
   - `trainingszeit -> mannschaft -> sparte`
   - `trainingszeit -> trainingsplatz`
   - `mannschaft/jahrgang -> person`
+- Kontaktseite optional über `ansprechpartner -> person`.
 - Ziel: zentrale, normalisierte Datenpflege mit referentieller Konsistenz.
+
+## Sicherer Migrationsplan zum Zielmodell
+
+Das Skript `scripts/migrate-to-central-crud-models.mjs` ist der konsolidierte, sichere Migrationspfad zum zentralen CRUD-Modell.
+
+- Standardmodus ist Dry-Run; Schreibzugriff nur mit `--apply`.
+- `SANITY_API_WRITE_TOKEN` wird nur aus `process.env` gelesen; im Apply-Modus bricht das Skript ohne Token hart ab.
+- Keine Legacy-Felder und kein `sparte.mannschaften[]` werden gelöscht.
+- Bestehende Inhalte werden nicht überschrieben; es werden nur fehlende Referenzen/Felder gezielt gesetzt.
+- Zentrale `mannschaft`-Dokumente entstehen aus eingebetteten `sparte.mannschaften[]`, nicht aus `trainingszeit.gruppe` allein.
+- Zentrale `person`-Dokumente entstehen aus eingebetteten Mannschaftstrainern, Sparten-Ansprechpartnern, globalen Ansprechpartnern und eindeutigen Trainingszeit-Kontakten.
+- `trainingszeit.mannschaft` wird nur bei eindeutigem Match nach Sparte + Gruppe gesetzt bzw. bei kaputter Referenz eindeutig repariert.
 
 ## Legacy-/Übergangsmodell (aktuell weiterhin aktiv)
 
