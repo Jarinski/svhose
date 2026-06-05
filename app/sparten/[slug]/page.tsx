@@ -26,7 +26,8 @@ interface Sparte {
   slug: string; name: string; icon: string; farbe: string
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
-  mannschaften: Mannschaft[]
+  mannschaften?: Mannschaft[]
+  embeddedMannschaften?: Mannschaft[]
   zentraleMannschaften?: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
   downloads?: SparteDownload[]
@@ -150,7 +151,9 @@ function getPreferredMannschaften(
   // Zentrale Mannschaften sind das Zielmodell. Embedded/Legacy-Mannschaften
   // werden nur verwendet, wenn es noch keine zentralen Mannschaften gibt.
   for (const mann of preferred) {
-    const key = mann.name?.trim().toLowerCase()
+    const id = mann.id?.trim()
+    const name = mann.name?.trim()
+    const key = id ? `id:${id}` : `name:${name.toLowerCase()}`
     if (!key || seen.has(key)) continue
     seen.add(key)
     unique.push(mann)
@@ -174,7 +177,10 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const mannschaften = getPreferredMannschaften(sparte.mannschaften ?? [], sparte.zentraleMannschaften ?? [])
+  const mannschaften = getPreferredMannschaften(
+    sparte.embeddedMannschaften ?? sparte.mannschaften ?? [],
+    sparte.zentraleMannschaften ?? [],
+  )
   const hasMannschaften = mannschaften.length > 0
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 

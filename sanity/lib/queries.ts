@@ -12,15 +12,15 @@ export const spartenQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
-    "mannschaften": select(
-      count(*[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))]) > 0 => *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
-        "id": _id,
-        name,
-        bereich,
-        "jahrgangText": jahrgang->name,
-        beschreibung,
-        "foto": foto.asset->url,
-        trainer[]->{
+    "embeddedMannschaften": mannschaften[] {
+      "id": _key,
+      name,
+      bereich,
+      jahrgangText,
+      beschreibung,
+      "foto": foto.asset->url,
+      trainer[] {
+        _type == "reference" => @->{
           "id": _id,
           name,
           "rolle": coalesce(rollen[0], "Trainer"),
@@ -28,37 +28,18 @@ export const spartenQuery = groq`
           telefon,
           whatsapp,
           "foto": foto.asset->url
-        }
-      },
-      mannschaften[] {
-        "id": _key,
-        name,
-        bereich,
-        jahrgangText,
-        beschreibung,
-        "foto": foto.asset->url,
-        trainer[] {
-          _type == "reference" => @->{
-            "id": _id,
-            name,
-            "rolle": coalesce(rollen[0], "Trainer"),
-            email,
-            telefon,
-            whatsapp,
-            "foto": foto.asset->url
-          },
-          _type != "reference" => {
-            "id": _key,
-            name,
-            rolle,
-            email,
-            telefon,
-            whatsapp,
-            "foto": foto.asset->url
-          }
+        },
+        _type != "reference" => {
+          "id": _key,
+          name,
+          rolle,
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
         }
       }
-    ),
+    },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
       "id": _id,
       name,
@@ -114,15 +95,15 @@ export const sparteBySlugQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
-    "mannschaften": select(
-      count(*[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))]) > 0 => *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
-        "id": _id,
-        name,
-        bereich,
-        "jahrgangText": jahrgang->name,
-        beschreibung,
-        "foto": foto.asset->url,
-        trainer[]->{
+    "embeddedMannschaften": mannschaften[] {
+      "id": _key,
+      name,
+      bereich,
+      jahrgangText,
+      beschreibung,
+      "foto": foto.asset->url,
+      trainer[] {
+        _type == "reference" => @->{
           "id": _id,
           name,
           "rolle": coalesce(rollen[0], "Trainer"),
@@ -130,37 +111,18 @@ export const sparteBySlugQuery = groq`
           telefon,
           whatsapp,
           "foto": foto.asset->url
-        }
-      },
-      mannschaften[] {
-        "id": _key,
-        name,
-        bereich,
-        jahrgangText,
-        beschreibung,
-        "foto": foto.asset->url,
-        trainer[] {
-          _type == "reference" => @->{
-            "id": _id,
-            name,
-            "rolle": coalesce(rollen[0], "Trainer"),
-            email,
-            telefon,
-            whatsapp,
-            "foto": foto.asset->url
-          },
-          _type != "reference" => {
-            "id": _key,
-            name,
-            rolle,
-            email,
-            telefon,
-            whatsapp,
-            "foto": foto.asset->url
-          }
+        },
+        _type != "reference" => {
+          "id": _key,
+          name,
+          rolle,
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
         }
       }
-    ),
+    },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
       "id": _id,
       name,
