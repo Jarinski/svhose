@@ -10,6 +10,7 @@ import {
 interface Mannschaft {
   id?: string
   name: string
+  anzeigenAufWebsite?: boolean
   bereich?: string
   jahrgangText?: string
   beschreibung: string
@@ -126,7 +127,8 @@ function getPreferredMannschaften(
   zentral: Mannschaft[] = [],
 ): Mannschaft[] {
   const seen = new Set<string>()
-  const preferred = validMannschaften(zentral).length > 0 ? zentral : embedded
+  const validZentral = validMannschaften(zentral)
+  const preferred = validZentral.length > 0 ? validZentral : validMannschaften(embedded)
   const unique: Mannschaft[] = []
 
   // Zentrale Mannschaften sind das Zielmodell. Embedded/Legacy-Mannschaften
@@ -145,7 +147,7 @@ function getPreferredMannschaften(
 
 function validMannschaften(mannschaften?: Mannschaft[] | null): Mannschaft[] {
   if (!Array.isArray(mannschaften)) return []
-  return mannschaften.filter(mann => Boolean(mann?.name?.trim()))
+  return mannschaften.filter(mann => Boolean(mann?.name?.trim()) && mann.anzeigenAufWebsite !== false)
 }
 
 /** Extract meaningful tokens from a display name for fuzzy matching */

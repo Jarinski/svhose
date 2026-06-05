@@ -40,9 +40,10 @@ export const spartenQuery = groq`
         }
       }
     },
-    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && anzeigenAufWebsite != false && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
       "id": _id,
       name,
+      anzeigenAufWebsite,
       bereich,
       "jahrgangText": jahrgang->name,
       beschreibung,
@@ -123,9 +124,10 @@ export const sparteBySlugQuery = groq`
         }
       }
     },
-    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && anzeigenAufWebsite != false && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
       "id": _id,
       name,
+      anzeigenAufWebsite,
       bereich,
       "jahrgangText": jahrgang->name,
       beschreibung,

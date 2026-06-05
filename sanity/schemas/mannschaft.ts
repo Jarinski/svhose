@@ -24,6 +24,13 @@ export default defineType({
       validation: r => r.required(),
     }),
     defineField({
+      name: 'anzeigenAufWebsite',
+      title: 'Auf Website anzeigen',
+      type: 'boolean',
+      description: 'Deaktivieren, wenn diese Mannschaft/Trainingsgruppe intern für Trainingszeiten erhalten bleiben soll, aber nicht öffentlich auf der Website erscheinen soll.',
+      initialValue: true,
+    }),
+    defineField({
       name: 'bereich',
       title: 'Bereich',
       type: 'string',
