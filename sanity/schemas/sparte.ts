@@ -22,9 +22,9 @@ export default defineType({
     }),
     defineField({
       name: 'mannschaften',
-      title: 'Mannschaften & Gruppen',
+      title: 'Mannschaften & Gruppen (Altbestand)',
       type: 'array',
-      description: 'Einfacher Redaktionsweg: Hier können Mannschaften/Gruppen dieser Sparte inkl. Jahrgang und Trainer:innen gepflegt werden.',
+      description: 'Mannschaften und Trainer bitte künftig unter Mannschaften / Trainingsgruppen pflegen. Dieser Bereich ist Altbestand.',
       of: [
         {
           type: 'object',

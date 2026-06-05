@@ -22,6 +22,7 @@ export default defineConfig({
             S.documentTypeListItem('termin').title('Termine'),
             S.documentTypeListItem('trainingszeit').title('Trainingszeiten'),
             S.documentTypeListItem('person').title('Personen'),
+            S.documentTypeListItem('mannschaft').title('Mannschaften / Trainingsgruppen'),
             S.documentTypeListItem('ansprechpartner').title('Ansprechpartner / Kontaktseite'),
             S.documentTypeListItem('sparte').title('Sparten bearbeiten'),
             S.divider(),
@@ -34,7 +35,6 @@ export default defineConfig({
                     S.documentTypeListItem('download').title('Downloads'),
                     S.documentTypeListItem('partner').title('Partner'),
                     S.divider(),
-                    S.documentTypeListItem('mannschaft').title('Mannschaften / Gruppen (fortgeschritten)'),
                     S.documentTypeListItem('jahrgang').title('Jahrgänge (fortgeschritten)'),
                     S.documentTypeListItem('trainingsplatz').title('Trainingsplätze (fortgeschritten)'),
                   ])
