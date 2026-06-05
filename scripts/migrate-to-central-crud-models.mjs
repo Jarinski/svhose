@@ -9,14 +9,16 @@ const isJson = process.argv.includes('--json')
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 const apiVersion = '2024-01-01'
-const token = process.env.SANITY_API_WRITE_TOKEN
+const readToken = process.env.SANITY_API_READ_TOKEN
+const writeToken = process.env.SANITY_API_WRITE_TOKEN
+const tokenUsed = isApply ? 'write' : readToken ? 'read' : 'none'
 
 if (!projectId) {
   console.error('Fehlt: NEXT_PUBLIC_SANITY_PROJECT_ID')
   process.exit(1)
 }
 
-if (isApply && !token) {
+if (isApply && !writeToken) {
   console.error('APPLY_ABORTED_MISSING_TOKEN: Für --apply muss SANITY_API_WRITE_TOKEN in process.env gesetzt sein.')
   process.exit(1)
 }
@@ -26,7 +28,7 @@ const client = createClient({
   dataset,
   apiVersion,
   useCdn: false,
-  ...(isApply ? { token } : {}),
+  ...(isApply ? { token: writeToken } : readToken ? { token: readToken } : {}),
 })
 
 const sanityClientConfigInfo = {
@@ -34,7 +36,9 @@ const sanityClientConfigInfo = {
   dataset,
   apiVersion,
   mode: isApply ? 'APPLY' : 'DRY_RUN',
-  hasWriteToken: Boolean(token),
+  hasReadToken: Boolean(readToken),
+  hasWriteToken: Boolean(writeToken),
+  tokenUsed,
 }
 
 const normalize = (value) =>
