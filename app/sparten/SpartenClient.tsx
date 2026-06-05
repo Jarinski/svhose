@@ -120,23 +120,29 @@ function uniqueContacts(contacts: Ansprechpartner[]): Ansprechpartner[] {
   return unique
 }
 
-function mergeMannschaften(
+function getPreferredMannschaften(
   embedded: Mannschaft[] = [],
   zentral: Mannschaft[] = [],
 ): Mannschaft[] {
   const seen = new Set<string>()
-  const merged: Mannschaft[] = []
+  const preferred = validMannschaften(zentral).length > 0 ? zentral : embedded
+  const unique: Mannschaft[] = []
 
-  // Zentrale Mannschaften sind das Zielmodell und werden bevorzugt.
-  // Embedded/Legacy-Mannschaften bleiben nur Fallback für noch nicht migrierte Sparten.
-  for (const mann of [...zentral, ...embedded]) {
+  // Zentrale Mannschaften sind das Zielmodell. Embedded/Legacy-Mannschaften
+  // werden nur verwendet, wenn es noch keine zentralen Mannschaften gibt.
+  for (const mann of preferred) {
     const key = mann.name?.trim().toLowerCase()
     if (!key || seen.has(key)) continue
     seen.add(key)
-    merged.push(mann)
+    unique.push(mann)
   }
 
-  return merged
+  return unique
+}
+
+function validMannschaften(mannschaften?: Mannschaft[] | null): Mannschaft[] {
+  if (!Array.isArray(mannschaften)) return []
+  return mannschaften.filter(mann => Boolean(mann?.name?.trim()))
 }
 
 /** Extract meaningful tokens from a display name for fuzzy matching */
@@ -219,7 +225,7 @@ export default function SpartenClient({
       {sparten.map(sparte => {
         const isOpen = openSparte === sparte.slug
         const farbe  = sparte.farbe ?? '#0a0a0a'
-        const mannschaften = mergeMannschaften(sparte.mannschaften ?? [], sparte.zentraleMannschaften ?? [])
+        const mannschaften = getPreferredMannschaften(sparte.mannschaften ?? [], sparte.zentraleMannschaften ?? [])
         const trainerCount = mannschaften.length > 0
           ? countUniqueTrainerForMannschaften(sparte, trainingszeiten, mannschaften)
           : uniqueContacts(sparte.ansprechpartner ?? []).length
