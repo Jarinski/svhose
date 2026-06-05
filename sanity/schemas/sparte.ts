@@ -24,6 +24,7 @@ export default defineType({
       name: 'mannschaften',
       title: 'Mannschaften & Gruppen (Altbestand)',
       type: 'array',
+      hidden: true,
       description: 'Mannschaften und Trainer bitte künftig unter Mannschaften / Trainingsgruppen pflegen. Dieser Bereich ist Altbestand.',
       of: [
         {
