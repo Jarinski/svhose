@@ -4,6 +4,8 @@ import { config } from 'dotenv'
 config({ path: '.env.local', quiet: true })
 
 const isApply = process.argv.includes('--apply')
+const isVerbose = process.argv.includes('--verbose')
+const isJson = process.argv.includes('--json')
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 const token = process.env.SANITY_API_WRITE_TOKEN
@@ -807,4 +809,45 @@ const report = {
     : 'Dry-Run: keine create/patch/commit-Aufrufe. Mit --apply wird geschrieben; SANITY_API_WRITE_TOKEN muss dann gesetzt sein.',
 }
 
-console.log(JSON.stringify(report, null, 2))
+const compactReport = {
+  mode: report.mode,
+  entscheidungshilfe: {
+    applySicherWenn: [
+      'unsichereTrainingszeiten === 0',
+      'trainingszeitenMitKaputterMannschaftReferenz === 0 oder durch eindeutige Patch-Operationen abgedeckt',
+      'potenzielleDuplikate fachlich geprüft bzw. erwartbar sind',
+    ],
+    hinweis: isApply
+      ? 'APPLY-Modus wurde ausgeführt.'
+      : 'DRY_RUN: keine Sanity-Mutationen. Mit --verbose Details anzeigen, mit --json vollständigen Report ausgeben.',
+  },
+  counts: {
+    spartenGesamt: sparten.length,
+    geplanteMannschaftenAusSparteMannschaften: plannedMannschaftenFromSparte.length,
+    geplanteTrainingsgruppenAusTrainingszeitGruppe: plannedTrainingsgruppenFromTrainingszeit.length,
+    geplanteZentraleMannschaftenGesamt: plannedCentralMannschaften.length,
+    vorhandeneZentraleMannschaften: existingMannschaften.length,
+    geplantePersonen: personCandidates.size,
+    vorhandenePersonen: existingPersons.length,
+    trainingszeitenGesamt: trainingszeiten.length,
+    trainingszeitenEindeutigVerknuepfbar: eindeutigVerknuepfbarCount,
+    unsichereTrainingszeiten: unsicherCount,
+    kaputteMannschaftsreferenzen: brokenMannschaftRefCount,
+    potenzielleDuplikateAnzahl: duplicateCandidates.length,
+  },
+  geplanteTrainingsgruppenAusTrainingszeitGruppe: plannedTrainingsgruppenFromTrainingszeit.map((plan) => ({
+    name: plan.name,
+    sparte: plan.sparteName,
+    geplanteId: plan.targetMannschaftId,
+    verknuepfteTrainingszeiten: plan.trainingszeitSourceIds.length,
+  })),
+  geplanteOperationenImDryRun: report.counts.dryRunPlannedOps,
+}
+
+if (isJson) {
+  console.log(JSON.stringify(report, null, 2))
+} else if (isVerbose) {
+  console.log(JSON.stringify({ ...compactReport, details: report }, null, 2))
+} else {
+  console.log(JSON.stringify(compactReport, null, 2))
+}
