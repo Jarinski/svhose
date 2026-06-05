@@ -50,10 +50,15 @@ export default defineType({
               name: 'trainer',
               title: 'Trainer & Ansprechpartner',
               type: 'array',
-              description: 'Trainer:innen/Ansprechpartner:innen dieser Mannschaft direkt hier pflegen.',
+              description: 'Empfohlen: zentrale Personen auswählen. Bestehende manuelle Einträge bleiben als Fallback möglich.',
               of: [
                 {
+                  type: 'reference',
+                  to: [{ type: 'person' }],
+                },
+                {
                   type: 'object',
+                  title: 'Manueller Kontakt (Fallback)',
                   fields: [
                     defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
                     defineField({ name: 'rolle', title: 'Rolle', type: 'string', initialValue: 'Trainer' }),
@@ -92,10 +97,15 @@ export default defineType({
       name: 'ansprechpartner',
       title: 'Ansprechpartner & Trainer',
       type: 'array',
-      description: 'Übergeordnete Ansprechpartner:innen dieser bestehenden Sparte, z. B. Abteilungsleitung oder Organisation. Kontakte einzelner Mannschaften oder Trainingsgruppen bitte nur dort pflegen, wo sie bereits zentral gepflegt werden.',
+      description: 'Übergeordnete Ansprechpartner:innen dieser Sparte. Empfohlen: zentrale Personen auswählen. Bestehende manuelle Einträge bleiben als Fallback möglich.',
       of: [
         {
+          type: 'reference',
+          to: [{ type: 'person' }],
+        },
+        {
           type: 'object',
+          title: 'Manueller Kontakt (Fallback)',
           fields: [
             defineField({ name: 'name', title: 'Name', type: 'string' }),
             defineField({ name: 'rolle', title: 'Rolle', type: 'string' }),

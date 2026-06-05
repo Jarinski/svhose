@@ -67,7 +67,12 @@ function saisonBadge(j: string) {
 }
 
 function initials(name: string) {
-  return name.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase()
+  return (name || '?').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?'
+}
+
+function validContacts(contacts?: Ansprechpartner[] | null): Ansprechpartner[] {
+  if (!Array.isArray(contacts)) return []
+  return contacts.filter(contact => Boolean(contact?.name?.trim()))
 }
 
 function whatsappHref(phone: string) {
@@ -105,12 +110,15 @@ function getTrainerForMannschaft(
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
 ): Ansprechpartner[] {
-  if ((mann.trainer?.length ?? 0) > 0) return mann.trainer!
+  const direkteTrainer = validContacts(mann.trainer)
+  const spartenKontakte = validContacts(ap)
+
+  if (direkteTrainer.length > 0) return direkteTrainer
 
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
-    const byName = ap
+    const byName = spartenKontakte
       .filter(a => names.has(a.name.toLowerCase()))
       .map(a => {
         const z = zeiten.find(e => {
@@ -123,10 +131,10 @@ function getTrainerForMannschaft(
   }
   const words = keyWords(mann.name)
   if (words.length > 0) {
-    const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
+    const byRole = spartenKontakte.filter(a => words.some(w => (a.rolle ?? '').toLowerCase().includes(w)))
     if (byRole.length > 0) return byRole
   }
-  return ap.length <= 3 ? ap : []
+  return spartenKontakte.length <= 3 ? spartenKontakte : []
 }
 
 function mergeMannschaften(
@@ -353,11 +361,11 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           })()}
 
           {/* Contacts */}
-          {(sparte.ansprechpartner?.length ?? 0) > 0 && (
+          {validContacts(sparte.ansprechpartner).length > 0 && (
             <section className="mb-16">
-              <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={sparte.ansprechpartner.length} />
+              <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={validContacts(sparte.ansprechpartner).length} />
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sparte.ansprechpartner.map((a, i) => (
+                {validContacts(sparte.ansprechpartner).map((a, i) => (
                   <KontaktKarte key={i} person={a} farbe={farbe} />
                 ))}
               </div>
@@ -542,7 +550,8 @@ function MannschaftCard({
 
 /* ── Kontakt card ────────────────────────────────────────────── */
 function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpartner; farbe: string; compact?: boolean }) {
-  const ini = initials(person.name)
+  const displayName = person.name || 'Kontakt'
+  const ini = initials(displayName)
   const hasTel = !!person.telefon
   const waHref = person.whatsapp
     ? whatsappHref(person.whatsapp)
@@ -553,7 +562,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
       <div className="bg-white border border-[#0a0a0a]/[0.06] p-3 flex gap-2.5 items-start">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={person.foto} alt={person.name} className="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0" />
+            <img src={person.foto} alt={displayName} className="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0" />
           : (
             <div
               className="w-[4.5rem] h-[4.5rem] rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 select-none"
@@ -564,7 +573,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
           )
         }
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
+          <div className="font-medium text-sm leading-tight mb-0.5">{displayName}</div>
           <div className="text-[11px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
           <div className="space-y-0.5">
             {person.email && (
@@ -596,7 +605,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
       <div className="mb-4">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={person.foto} alt={person.name} className="w-16 h-16 rounded-full object-cover" />
+            <img src={person.foto} alt={displayName} className="w-16 h-16 rounded-full object-cover" />
           : (
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-semibold select-none"
@@ -608,7 +617,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
         }
       </div>
 
-      <div className="font-medium text-base leading-tight mb-0.5">{person.name}</div>
+      <div className="font-medium text-base leading-tight mb-0.5">{displayName}</div>
       <div className="text-xs text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
 
       <div className="mt-auto space-y-2">

@@ -19,6 +19,49 @@ export const spartenQuery = groq`
       beschreibung,
       "foto": foto.asset->url,
       trainer[] {
+        _type == "reference" => @->{
+          name,
+          "rolle": coalesce(rollen[0], "Trainer"),
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
+        },
+        _type != "reference" => {
+          name,
+          rolle,
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
+        }
+      }
+    },
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      name,
+      bereich,
+      "jahrgangText": jahrgang->name,
+      beschreibung,
+      "foto": foto.asset->url,
+      trainer[]->{
+        name,
+        "rolle": coalesce(rollen[0], "Trainer"),
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
+    },
+    ansprechpartner[] {
+      _type == "reference" => @->{
+        name,
+        "rolle": coalesce(rollen[0], "Ansprechpartner"),
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      },
+      _type != "reference" => {
         name,
         rolle,
         email,
@@ -26,19 +69,6 @@ export const spartenQuery = groq`
         whatsapp,
         "foto": foto.asset->url
       }
-    },
-    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
-      name,
-      beschreibung,
-      "foto": foto.asset->url
-    },
-    ansprechpartner[] {
-      name,
-      rolle,
-      email,
-      telefon,
-      whatsapp,
-      "foto": foto.asset->url
     },
     downloads[] {
       titel,
@@ -65,6 +95,49 @@ export const sparteBySlugQuery = groq`
       beschreibung,
       "foto": foto.asset->url,
       trainer[] {
+        _type == "reference" => @->{
+          name,
+          "rolle": coalesce(rollen[0], "Trainer"),
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
+        },
+        _type != "reference" => {
+          name,
+          rolle,
+          email,
+          telefon,
+          whatsapp,
+          "foto": foto.asset->url
+        }
+      }
+    },
+    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      name,
+      bereich,
+      "jahrgangText": jahrgang->name,
+      beschreibung,
+      "foto": foto.asset->url,
+      trainer[]->{
+        name,
+        "rolle": coalesce(rollen[0], "Trainer"),
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
+    },
+    ansprechpartner[] {
+      _type == "reference" => @->{
+        name,
+        "rolle": coalesce(rollen[0], "Ansprechpartner"),
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      },
+      _type != "reference" => {
         name,
         rolle,
         email,
@@ -72,19 +145,6 @@ export const sparteBySlugQuery = groq`
         whatsapp,
         "foto": foto.asset->url
       }
-    },
-    "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
-      name,
-      beschreibung,
-      "foto": foto.asset->url
-    },
-    ansprechpartner[] {
-      name,
-      rolle,
-      email,
-      telefon,
-      whatsapp,
-      "foto": foto.asset->url
     },
     downloads[] {
       titel,
@@ -205,13 +265,13 @@ export const trainingszeitenQuery = groq`
 export const ansprechpartnerQuery = groq`
   *[_type == "ansprechpartner"] | order(reihenfolge asc) {
     "id": _id,
-    name,
+    "name": coalesce(person->name, name),
     funktion,
     gruppe,
     sparte,
-    email,
-    telefon,
-    "foto": foto.asset->url
+    "email": coalesce(person->email, email),
+    "telefon": coalesce(person->telefon, telefon),
+    "foto": coalesce(person->foto.asset->url, foto.asset->url)
   }
 `
 

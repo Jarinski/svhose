@@ -2,9 +2,9 @@ import { defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'person',
-  title: 'Person (fortgeschrittene Verwaltung)',
+  title: 'Person',
   type: 'document',
-  description: 'Fortgeschrittene Verwaltung: Personen nur bearbeiten, wenn klar ist, dass Trainer:innen oder Ansprechpartner:innen hier zentral gepflegt und bei Mannschaften/Gruppen verwendet werden.',
+  description: 'Zentrale Personenverwaltung: Personen können als Kontaktperson, Trainer:in, Ansprechpartner:in in Sparten oder bei mehreren Mannschaften verwendet werden.',
   fields: [
     defineField({
       name: 'name',
