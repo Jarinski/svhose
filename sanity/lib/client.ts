@@ -3,6 +3,7 @@ import { createClient } from 'next-sanity'
 export const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 export const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 export const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2024-01-01'
+const readToken = process.env.SANITY_API_READ_TOKEN
 
 /**
  * Sanity-Client – wird nur instanziiert, wenn eine Projekt-ID vorhanden ist.
@@ -20,8 +21,9 @@ export const client = createClient({
   // spätestens nach der Next.js-Revalidierung sichtbar sein und nicht zusätzlich
   // durch den Sanity-CDN-Cache verzögert werden.
   useCdn: false,
-  // Token für schreibenden Zugriff (z. B. Migration)
-  token: process.env.SANITY_API_WRITE_TOKEN,
+  // Optionaler serverseitiger Read-Token für nicht öffentlich lesbare Published-Dokumente.
+  // Wichtig: Für normale Website-Reads niemals SANITY_API_WRITE_TOKEN verwenden.
+  ...(readToken ? { token: readToken } : {}),
 })
 
 /**
