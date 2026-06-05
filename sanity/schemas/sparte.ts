@@ -24,16 +24,67 @@ export default defineType({
       name: 'mannschaften',
       title: 'Mannschaften & Gruppen',
       type: 'array',
-      description: 'Eingebettete Mannschaften/Gruppen dieser bestehenden Sparte. Neue Sparten oder neue zentrale Mannschaftsstrukturen bitte nur nach Rücksprache anlegen.',
+      description: 'Einfacher Redaktionsweg: Hier können Mannschaften/Gruppen dieser Sparte inkl. Jahrgang und Trainer:innen gepflegt werden.',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({ name: 'name', title: 'Name', type: 'string' }),
+            defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
+            defineField({
+              name: 'bereich',
+              title: 'Bereich',
+              type: 'string',
+              options: {
+                list: ['Junioren', 'Juniorinnen', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
+              },
+              description: 'Optional, hilft bei der Einordnung der Gruppe.',
+            }),
+            defineField({
+              name: 'jahrgangText',
+              title: 'Jahrgang / Altersklasse',
+              type: 'string',
+              description: 'Einfach eintragen, z. B. „Jg. 2011/12“, „C/D-Juniorinnen“ oder „ab 6 Jahre“.',
+            }),
             defineField({ name: 'beschreibung', title: 'Beschreibung', type: 'text', rows: 2 }),
+            defineField({
+              name: 'trainer',
+              title: 'Trainer & Ansprechpartner',
+              type: 'array',
+              description: 'Trainer:innen/Ansprechpartner:innen dieser Mannschaft direkt hier pflegen.',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
+                    defineField({ name: 'rolle', title: 'Rolle', type: 'string', initialValue: 'Trainer' }),
+                    defineField({ name: 'email', title: 'E-Mail', type: 'string' }),
+                    defineField({ name: 'telefon', title: 'Telefon', type: 'string' }),
+                    defineField({ name: 'whatsapp', title: 'WhatsApp', type: 'string' }),
+                    defineField({ name: 'foto', title: 'Foto', type: 'image', options: { hotspot: true } }),
+                  ],
+                  preview: { select: { title: 'name', subtitle: 'rolle', media: 'foto' } },
+                },
+              ],
+            }),
             defineField({ name: 'foto', title: 'Foto', type: 'image', options: { hotspot: true } }),
           ],
-          preview: { select: { title: 'name' } },
+          preview: {
+            select: { title: 'name', bereich: 'bereich', jahrgangText: 'jahrgangText', media: 'foto' },
+            prepare(selection) {
+              const { title, bereich, jahrgangText, media } = selection as {
+                title?: string
+                bereich?: string
+                jahrgangText?: string
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                media?: any
+              }
+              return {
+                title: title || 'Mannschaft / Gruppe',
+                subtitle: [bereich, jahrgangText].filter(Boolean).join(' · ') || undefined,
+                media,
+              }
+            },
+          },
         },
       ],
     }),

@@ -7,7 +7,14 @@ import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock, FileTe
 import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
-interface Mannschaft  { name: string; beschreibung: string; foto: string | null }
+interface Mannschaft  {
+  name: string
+  bereich?: string
+  jahrgangText?: string
+  beschreibung: string
+  foto: string | null
+  trainer?: Ansprechpartner[]
+}
 interface Ansprechpartner {
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
@@ -98,6 +105,8 @@ function getTrainerForMannschaft(
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
 ): Ansprechpartner[] {
+  if ((mann.trainer?.length ?? 0) > 0) return mann.trainer!
+
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
@@ -443,6 +452,20 @@ function MannschaftCard({
             )}
           </div>
           <p className="text-sm text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
+          {(mann.bereich || mann.jahrgangText) && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {mann.bereich && (
+                <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-[#0a0a0a]/5 text-[#6b6b6b]">
+                  {mann.bereich}
+                </span>
+              )}
+              {mann.jahrgangText && (
+                <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-[#0a0a0a]/5 text-[#6b6b6b]">
+                  {mann.jahrgangText}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

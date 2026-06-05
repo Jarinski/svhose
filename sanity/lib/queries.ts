@@ -14,8 +14,18 @@ export const spartenQuery = groq`
     trainingszeiten_spartes,
     mannschaften[] {
       name,
+      bereich,
+      jahrgangText,
       beschreibung,
-      "foto": foto.asset->url
+      "foto": foto.asset->url,
+      trainer[] {
+        name,
+        rolle,
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
     },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
       name,
@@ -50,8 +60,18 @@ export const sparteBySlugQuery = groq`
     trainingszeiten_spartes,
     mannschaften[] {
       name,
+      bereich,
+      jahrgangText,
       beschreibung,
-      "foto": foto.asset->url
+      "foto": foto.asset->url,
+      trainer[] {
+        name,
+        rolle,
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
     },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
       name,
