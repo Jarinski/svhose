@@ -8,11 +8,16 @@ import {
 
 /* ─────────────────────────────────────────────── Types ── */
 interface Mannschaft {
+  id?: string
   name: string
+  bereich?: string
+  jahrgangText?: string
   beschreibung: string
   foto: string | null
+  trainer?: Ansprechpartner[]
 }
 interface Ansprechpartner {
+  id?: string
   name: string
   rolle: string
   email: string
@@ -30,6 +35,7 @@ interface Sparte {
   foto: string | null
   trainingszeiten_spartes: string[]
   mannschaften: Mannschaft[]
+  zentraleMannschaften?: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
 }
 interface TrainingsEntry {
@@ -82,6 +88,57 @@ function whatsappHref(phone: string): string {
   return `https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '49')}`
 }
 
+function validContacts(contacts?: Ansprechpartner[] | null): Ansprechpartner[] {
+  if (!Array.isArray(contacts)) return []
+  return contacts.filter(contact => Boolean(contact?.name?.trim()))
+}
+
+function contactKey(contact: Ansprechpartner): string {
+  const id = contact.id?.trim()
+  if (id) return `id:${id}`
+
+  const email = contact.email?.trim().toLowerCase()
+  if (email) return `email:${email}`
+
+  const phone = (contact.telefon || contact.whatsapp || '').replace(/\D/g, '')
+  if (phone) return `phone:${phone}`
+
+  return `name:${contact.name.trim().toLowerCase()}`
+}
+
+function uniqueContacts(contacts: Ansprechpartner[]): Ansprechpartner[] {
+  const seen = new Set<string>()
+  const unique: Ansprechpartner[] = []
+
+  for (const contact of validContacts(contacts)) {
+    const key = contactKey(contact)
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(contact)
+  }
+
+  return unique
+}
+
+function mergeMannschaften(
+  embedded: Mannschaft[] = [],
+  zentral: Mannschaft[] = [],
+): Mannschaft[] {
+  const seen = new Set<string>()
+  const merged: Mannschaft[] = []
+
+  // Zentrale Mannschaften sind das Zielmodell und werden bevorzugt.
+  // Embedded/Legacy-Mannschaften bleiben nur Fallback für noch nicht migrierte Sparten.
+  for (const mann of [...zentral, ...embedded]) {
+    const key = mann.name?.trim().toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(mann)
+  }
+
+  return merged
+}
+
 /** Extract meaningful tokens from a display name for fuzzy matching */
 function keyWords(s: string): string[] {
   return s
@@ -112,21 +169,39 @@ function getTrainerForMannschaft(
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
 ): Ansprechpartner[] {
+  const direkteTrainer = validContacts(mann.trainer)
+  const spartenKontakte = validContacts(ap)
+
+  if (direkteTrainer.length > 0) return direkteTrainer
+
   // 1) match by trainer name listed in Trainingszeiten
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
-    const byName = ap.filter(a => names.has(a.name.toLowerCase()))
+    const byName = spartenKontakte.filter(a => names.has(a.name.toLowerCase()))
     if (byName.length > 0) return byName
   }
   // 2) match by role containing mannschaft key words
   const words = keyWords(mann.name)
   if (words.length > 0) {
-    const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
+    const byRole = spartenKontakte.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
     if (byRole.length > 0) return byRole
   }
   // 3) fallback: show all if sparte has ≤3 contacts
-  return ap.length <= 3 ? ap : []
+  return spartenKontakte.length <= 3 ? spartenKontakte : []
+}
+
+function countUniqueTrainerForMannschaften(
+  sparte: Sparte,
+  trainingszeiten: TrainingsEntry[],
+  mannschaften: Mannschaft[],
+): number {
+  const trainer = mannschaften.flatMap(mann => {
+    const zeiten = getZeitenForMannschaft(trainingszeiten, sparte.trainingszeiten_spartes ?? [], mann)
+    return getTrainerForMannschaft(sparte.ansprechpartner ?? [], zeiten, mann)
+  })
+
+  return uniqueContacts(trainer).length
 }
 
 /* ═══════════════════════════════════════ Main component ═══ */
@@ -144,6 +219,10 @@ export default function SpartenClient({
       {sparten.map(sparte => {
         const isOpen = openSparte === sparte.slug
         const farbe  = sparte.farbe ?? '#0a0a0a'
+        const mannschaften = mergeMannschaften(sparte.mannschaften ?? [], sparte.zentraleMannschaften ?? [])
+        const trainerCount = mannschaften.length > 0
+          ? countUniqueTrainerForMannschaften(sparte, trainingszeiten, mannschaften)
+          : uniqueContacts(sparte.ansprechpartner ?? []).length
 
         return (
           <div key={sparte.slug}>
@@ -170,20 +249,20 @@ export default function SpartenClient({
                     {sparte.name}
                   </h2>
                   <div className="flex gap-1.5 flex-wrap">
-                    {(sparte.mannschaften?.length ?? 0) > 0 && (
+                    {mannschaften.length > 0 && (
                       <span
                         className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
-                        {sparte.mannschaften.length} {sparte.mannschaften.length === 1 ? 'Gruppe' : 'Gruppen'}
+                        {mannschaften.length} {mannschaften.length === 1 ? 'Gruppe' : 'Gruppen'}
                       </span>
                     )}
-                    {(sparte.ansprechpartner?.length ?? 0) > 0 && (
+                    {trainerCount > 0 && (
                       <span
                         className="hidden sm:inline text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
-                        {sparte.ansprechpartner.length} Trainer
+                        {trainerCount} Trainer
                       </span>
                     )}
                   </div>
@@ -220,15 +299,15 @@ export default function SpartenClient({
                   </p>
 
                   {/* ── Mannschaften / Gruppen ── */}
-                  {(sparte.mannschaften?.length ?? 0) > 0 ? (
+                  {mannschaften.length > 0 ? (
                     <div className="mb-8">
                       <SectionLabel
                         label="Gruppen & Mannschaften"
                         farbe={farbe}
-                        count={sparte.mannschaften.length}
+                        count={mannschaften.length}
                       />
                       <div className="mt-4 space-y-2">
-                        {sparte.mannschaften.map((mann, i) => {
+                        {mannschaften.map((mann, i) => {
                           const mZeiten  = getZeitenForMannschaft(trainingszeiten, sparte.trainingszeiten_spartes ?? [], mann)
                           const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
                           return (
@@ -251,10 +330,10 @@ export default function SpartenClient({
                           <SectionLabel
                             label="Ansprechpartner & Trainer"
                             farbe={farbe}
-                            count={sparte.ansprechpartner.length}
+                            count={uniqueContacts(sparte.ansprechpartner ?? []).length}
                           />
                           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {sparte.ansprechpartner.map((a, i) => (
+                            {uniqueContacts(sparte.ansprechpartner ?? []).map((a, i) => (
                               <KontaktMini key={i} person={a} farbe={farbe} />
                             ))}
                           </div>

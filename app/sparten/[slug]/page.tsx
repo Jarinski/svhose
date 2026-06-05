@@ -8,6 +8,7 @@ import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
 interface Mannschaft  {
+  id?: string
   name: string
   bereich?: string
   jahrgangText?: string
@@ -16,6 +17,7 @@ interface Mannschaft  {
   trainer?: Ansprechpartner[]
 }
 interface Ansprechpartner {
+  id?: string
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
 }
@@ -144,7 +146,9 @@ function mergeMannschaften(
   const seen = new Set<string>()
   const merged: Mannschaft[] = []
 
-  for (const mann of [...embedded, ...zentral]) {
+  // Zentrale Mannschaften sind das Zielmodell und werden bevorzugt.
+  // Embedded/Legacy-Mannschaften bleiben nur Fallback für noch nicht migrierte Sparten.
+  for (const mann of [...zentral, ...embedded]) {
     const key = mann.name.trim().toLowerCase()
     if (!key || seen.has(key)) continue
     seen.add(key)

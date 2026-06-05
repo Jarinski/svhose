@@ -13,6 +13,7 @@ export const spartenQuery = groq`
     "foto": foto.asset->url,
     trainingszeiten_spartes,
     mannschaften[] {
+      "id": _key,
       name,
       bereich,
       jahrgangText,
@@ -20,6 +21,7 @@ export const spartenQuery = groq`
       "foto": foto.asset->url,
       trainer[] {
         _type == "reference" => @->{
+          "id": _id,
           name,
           "rolle": coalesce(rollen[0], "Trainer"),
           email,
@@ -28,6 +30,7 @@ export const spartenQuery = groq`
           "foto": foto.asset->url
         },
         _type != "reference" => {
+          "id": _key,
           name,
           rolle,
           email,
@@ -38,12 +41,14 @@ export const spartenQuery = groq`
       }
     },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
+      "id": _id,
       name,
       bereich,
       "jahrgangText": jahrgang->name,
       beschreibung,
       "foto": foto.asset->url,
       trainer[]->{
+        "id": _id,
         name,
         "rolle": coalesce(rollen[0], "Trainer"),
         email,
@@ -54,6 +59,7 @@ export const spartenQuery = groq`
     },
     ansprechpartner[] {
       _type == "reference" => @->{
+        "id": _id,
         name,
         "rolle": coalesce(rollen[0], "Ansprechpartner"),
         email,
@@ -62,6 +68,7 @@ export const spartenQuery = groq`
         "foto": foto.asset->url
       },
       _type != "reference" => {
+        "id": _key,
         name,
         rolle,
         email,
@@ -89,6 +96,7 @@ export const sparteBySlugQuery = groq`
     "foto": foto.asset->url,
     trainingszeiten_spartes,
     mannschaften[] {
+      "id": _key,
       name,
       bereich,
       jahrgangText,
@@ -96,6 +104,7 @@ export const sparteBySlugQuery = groq`
       "foto": foto.asset->url,
       trainer[] {
         _type == "reference" => @->{
+          "id": _id,
           name,
           "rolle": coalesce(rollen[0], "Trainer"),
           email,
@@ -104,6 +113,7 @@ export const sparteBySlugQuery = groq`
           "foto": foto.asset->url
         },
         _type != "reference" => {
+          "id": _key,
           name,
           rolle,
           email,
@@ -114,12 +124,14 @@ export const sparteBySlugQuery = groq`
       }
     },
     "zentraleMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id && !(_id in path("drafts.**"))] | order(reihenfolge asc, name asc) {
+      "id": _id,
       name,
       bereich,
       "jahrgangText": jahrgang->name,
       beschreibung,
       "foto": foto.asset->url,
       trainer[]->{
+        "id": _id,
         name,
         "rolle": coalesce(rollen[0], "Trainer"),
         email,
@@ -130,6 +142,7 @@ export const sparteBySlugQuery = groq`
     },
     ansprechpartner[] {
       _type == "reference" => @->{
+        "id": _id,
         name,
         "rolle": coalesce(rollen[0], "Ansprechpartner"),
         email,
@@ -138,6 +151,7 @@ export const sparteBySlugQuery = groq`
         "foto": foto.asset->url
       },
       _type != "reference" => {
+        "id": _key,
         name,
         rolle,
         email,
