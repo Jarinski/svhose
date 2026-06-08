@@ -12,6 +12,7 @@ interface Mannschaft  {
   name: string
   anzeigenAufWebsite?: boolean
   bereich?: string
+  reihenfolge?: number
   jahrgangText?: string
   beschreibung: string
   foto: string | null
@@ -61,6 +62,14 @@ const TAG_COLOR: Record<string, string> = {
   Donnerstag: '#ea580c', Freitag: '#7c3aed', Samstag: '#0891b2', Sonntag: '#db2777',
 }
 const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+const MANNSCHAFT_BEREICHE = [
+  { key: 'Herren', title: 'Herren' },
+  { key: 'Damen', title: 'Damen' },
+  { key: 'Junioren', title: 'Junioren' },
+  { key: 'Juniorinnen', title: 'Juniorinnen' },
+  { key: 'Freizeit', title: 'Freizeit / Hobby' },
+  { key: 'Weitere Gruppen', title: 'Weitere Gruppen' },
+] as const
 
 function saisonBadge(j: string) {
   const l = j.toLowerCase()
@@ -169,6 +178,35 @@ function validMannschaften(mannschaften?: Mannschaft[] | null): Mannschaft[] {
   return mannschaften.filter(mann => Boolean(mann?.name?.trim()) && mann.anzeigenAufWebsite !== false)
 }
 
+function compareMannschaften(a: Mannschaft, b: Mannschaft): number {
+  const aOrder = typeof a.reihenfolge === 'number' ? a.reihenfolge : Number.POSITIVE_INFINITY
+  const bOrder = typeof b.reihenfolge === 'number' ? b.reihenfolge : Number.POSITIVE_INFINITY
+
+  if (aOrder !== bOrder) return aOrder - bOrder
+  return a.name.localeCompare(b.name, 'de', { sensitivity: 'base' })
+}
+
+function normalizeMannschaftBereich(bereich?: string): typeof MANNSCHAFT_BEREICHE[number]['key'] {
+  const normalized = bereich?.trim().toLowerCase()
+
+  if (normalized === 'herren') return 'Herren'
+  if (normalized === 'damen') return 'Damen'
+  if (normalized === 'junioren') return 'Junioren'
+  if (normalized === 'juniorinnen') return 'Juniorinnen'
+  if (normalized === 'freizeit' || normalized === 'hobby') return 'Freizeit'
+
+  return 'Weitere Gruppen'
+}
+
+function groupMannschaftenByBereich(mannschaften: Mannschaft[]) {
+  return MANNSCHAFT_BEREICHE.map(group => ({
+    ...group,
+    mannschaften: mannschaften
+      .filter(mann => normalizeMannschaftBereich(mann.bereich) === group.key)
+      .sort(compareMannschaften),
+  })).filter(group => group.mannschaften.length > 0)
+}
+
 /* ── Page ──────────────────────────────────────────────────── */
 export default async function SparteDetailPage({ params }: { params: { slug: string } }) {
   const [sparte, alleZeiten] = await Promise.all([
@@ -183,6 +221,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
     sparte.embeddedMannschaften ?? sparte.mannschaften ?? [],
     sparte.zentraleMannschaften ?? [],
   )
+  const mannschaftenByBereich = groupMannschaftenByBereich(mannschaften)
   const hasMannschaften = mannschaften.length > 0
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
@@ -291,21 +330,35 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
       {hasMannschaften && (
         <section className="mb-16">
           <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={mannschaften.length} />
-          <div className="mt-6 space-y-3">
-            {mannschaften.map((mann, i) => {
-              const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
-              return (
-                <MannschaftCard
-                  key={i}
-                  mann={mann}
-                  zeiten={mZeiten}
-                  trainer={mTrainer}
-                  farbe={farbe}
-                  sparteIcon={sparte.icon}
-                />
-              )
-            })}
+          <div className="mt-8 space-y-10">
+            {mannschaftenByBereich.map(group => (
+              <div key={group.key}>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-sm tracking-[0.18em] uppercase font-medium" style={{ color: farbe }}>
+                    {group.title}
+                  </h3>
+                  <div className="flex-1 h-px" style={{ background: `${farbe}20` }} />
+                  <span className="text-[11px] text-[#6b6b6b] shrink-0">{group.mannschaften.length}</span>
+                </div>
+
+                <div className="space-y-3">
+                  {group.mannschaften.map(mann => {
+                    const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
+                    const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+                    return (
+                      <MannschaftCard
+                        key={mann.id ?? mann.name}
+                        mann={mann}
+                        zeiten={mZeiten}
+                        trainer={mTrainer}
+                        farbe={farbe}
+                        sparteIcon={sparte.icon}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
           <div className="mt-4">
             <Link
@@ -382,7 +435,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           {validContacts(sparte.ansprechpartner).length > 0 && (
             <section className="mb-16">
               <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={validContacts(sparte.ansprechpartner).length} />
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
                 {validContacts(sparte.ansprechpartner).map((a, i) => (
                   <KontaktKarte key={i} person={a} farbe={farbe} />
                 ))}
@@ -552,7 +605,7 @@ function MannschaftCard({
               >
                 Trainer & Ansprechpartner
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
                 {trainer.map((t, i) => (
                   <KontaktKarte key={i} person={t} farbe={farbe} compact />
                 ))}
@@ -595,9 +648,9 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
           <div className="text-[11px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
           <div className="space-y-0.5">
             {person.email && (
-              <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+              <a href={`mailto:${person.email}`} title={person.email} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors min-w-0">
                 <Mail size={9} className="shrink-0" />
-                <span className="break-all leading-tight">{person.email}</span>
+                <span className="truncate leading-tight min-w-0">{person.email}</span>
               </a>
             )}
             {hasTel && (
@@ -619,7 +672,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
   }
 
   return (
-    <div className="bg-[#f5f5f0] p-5 flex flex-col">
+    <div className="bg-[#f5f5f0] p-5 flex flex-col min-w-0">
       <div className="mb-4">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
@@ -638,11 +691,11 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
       <div className="font-medium text-base leading-tight mb-0.5">{displayName}</div>
       <div className="text-xs text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
 
-      <div className="mt-auto space-y-2">
+      <div className="mt-auto space-y-2 min-w-0">
         {person.email && (
-          <a href={`mailto:${person.email}`} className="flex items-start gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group">
-            <Mail size={11} className="shrink-0 mt-0.5" />
-            <span className="break-all leading-tight">{person.email}</span>
+          <a href={`mailto:${person.email}`} title={person.email} className="flex items-center gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group min-w-0">
+            <Mail size={11} className="shrink-0" />
+            <span className="truncate leading-tight min-w-0">{person.email}</span>
           </a>
         )}
         {hasTel && (
