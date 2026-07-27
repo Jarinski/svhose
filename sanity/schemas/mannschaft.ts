@@ -70,7 +70,7 @@ export default defineType({
           to: [{ type: 'person' }],
         },
       ],
-      description: 'Trainer:innen und Ansprechpartner:innen dieser Mannschaft/Trainingsgruppe. Personen werden zentral unter Personen gepflegt.',
+      description: 'Trainer:innen und Ansprechpartner:innen dieser Mannschaft/Trainingsgruppe. Personen werden zentral unter Personen gepflegt. Hinweis: Eine neu angelegte Person muss zuerst dort veröffentlicht werden ("Publish"), bevor sich diese Mannschaft veröffentlichen lässt.',
     }),
     defineField({
       name: 'foto',

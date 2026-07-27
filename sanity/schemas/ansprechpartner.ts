@@ -22,7 +22,7 @@ export default defineType({
       title: 'Zentrale Person',
       type: 'reference',
       to: [{ type: 'person' }],
-      description: 'Empfohlen: Person zentral auswählen. Name, E-Mail, Telefon und Foto kommen dann aus der zentralen Personenverwaltung.',
+      description: 'Empfohlen: Person zentral auswählen. Name, E-Mail, Telefon und Foto kommen dann aus der zentralen Personenverwaltung. Hinweis: Eine neu angelegte Person muss zuerst dort veröffentlicht werden ("Publish"), bevor sich dieser Ansprechpartner-Eintrag veröffentlichen lässt.',
     }),
     defineField({
       name: 'name',
