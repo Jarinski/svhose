@@ -4,7 +4,7 @@ export default defineType({
   name: 'person',
   title: 'Person',
   type: 'document',
-  description: 'Personen können als Trainer:innen oder Ansprechpartner:innen bei Mannschaften/Gruppen verwendet werden.',
+  description: 'Zentrale Personenverwaltung: Personen können als Kontaktperson, Trainer:in, Ansprechpartner:in in Sparten oder bei mehreren Mannschaften verwendet werden.',
   fields: [
     defineField({
       name: 'name',
@@ -24,7 +24,7 @@ export default defineType({
           value: v,
         })),
       },
-      description: 'Eine Person kann mehrere Rollen haben.',
+      description: 'Fortgeschrittene Verwaltung: Eine zentral gepflegte Person kann mehrere Rollen haben.',
     }),
     defineField({ name: 'email', title: 'E-Mail', type: 'string' }),
     defineField({ name: 'telefon', title: 'Telefon', type: 'string' }),

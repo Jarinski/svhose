@@ -8,31 +8,36 @@ import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
 interface Mannschaft  {
+  id?: string
   name: string
+  anzeigenAufWebsite?: boolean
+  bereich?: string
+  reihenfolge?: number
+  jahrgangText?: string
   beschreibung: string
   foto: string | null
   trainer?: Ansprechpartner[]
 }
 interface Ansprechpartner {
+  id?: string
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
-  _fotoSource?: 'embedded' | 'person' | 'trainingszeit' | 'none'
 }
 interface SparteDownload { titel: string; beschreibung: string; datei: string }
 interface Sparte {
   slug: string; name: string; icon: string; farbe: string
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
-  echteMannschaften?: Mannschaft[]
-  mannschaften: Mannschaft[]
+  mannschaften?: Mannschaft[]
+  embeddedMannschaften?: Mannschaft[]
+  zentraleMannschaften?: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
   downloads?: SparteDownload[]
 }
 interface TrainingsEntry {
   sparte: string; gruppe: string; tag: string; uhrzeit: string
   ort: string; jahreszeit: string; frequenz: string
-  trainer: string; email: string; telefon: string
-  foto?: string | null
+  trainer: string; email: string; telefon: string; trainerFoto?: string
 }
 
 /* ── Static params ─────────────────────────────────────────── */
@@ -57,6 +62,14 @@ const TAG_COLOR: Record<string, string> = {
   Donnerstag: '#ea580c', Freitag: '#7c3aed', Samstag: '#0891b2', Sonntag: '#db2777',
 }
 const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+const MANNSCHAFT_BEREICHE = [
+  { key: 'Herren', title: 'Herren' },
+  { key: 'Damen', title: 'Damen' },
+  { key: 'Junioren', title: 'Junioren' },
+  { key: 'Juniorinnen', title: 'Juniorinnen' },
+  { key: 'Freizeit', title: 'Freizeit / Hobby' },
+  { key: 'Weitere Gruppen', title: 'Weitere Gruppen' },
+] as const
 
 function saisonBadge(j: string) {
   const l = j.toLowerCase()
@@ -67,7 +80,12 @@ function saisonBadge(j: string) {
 }
 
 function initials(name: string) {
-  return name.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase()
+  return (name || '?').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?'
+}
+
+function validContacts(contacts?: Ansprechpartner[] | null): Ansprechpartner[] {
+  if (!Array.isArray(contacts)) return []
+  return contacts.filter(contact => Boolean(contact?.name?.trim()))
 }
 
 function whatsappHref(phone: string) {
@@ -75,7 +93,7 @@ function whatsappHref(phone: string) {
   return `https://wa.me/${num}`
 }
 
-/* ── Matching helpers (nur Fallback-Pfad) ───────────────────── */
+/* ── Matching helpers (mirrored from SpartenClient) ─────────── */
 function keyWords(s: string): string[] {
   return s
     .toLowerCase()
@@ -104,41 +122,89 @@ function getTrainerForMannschaft(
   ap: Ansprechpartner[],
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
-  mannschaftTrainer: Ansprechpartner[] = [],
 ): Ansprechpartner[] {
-  const mergeWithMannschaftTrainer = (contacts: Ansprechpartner[]): Ansprechpartner[] =>
-    contacts.map((a) => {
-      const personMatch = mannschaftTrainer.find(
-        (p) => p.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
-      )
-      if (a.foto) return { ...a, _fotoSource: 'embedded' }
-      if (personMatch?.foto) return { ...a, foto: personMatch.foto, _fotoSource: 'person' }
+  const direkteTrainer = validContacts(mann.trainer)
+  const spartenKontakte = validContacts(ap)
 
-      const zeitMatch = zeiten.find((z) =>
-        z.trainer
-          .split(',')
-          .map((t) => t.trim().toLowerCase())
-          .includes(a.name.trim().toLowerCase()),
-      )
-      if (zeitMatch?.foto) return { ...a, foto: zeitMatch.foto, _fotoSource: 'trainingszeit' }
-
-      return { ...a, _fotoSource: 'none' }
-    })
+  if (direkteTrainer.length > 0) return direkteTrainer
 
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
-    const byName = ap.filter(a => names.has(a.name.toLowerCase()))
-    if (byName.length > 0) return mergeWithMannschaftTrainer(byName)
+    const byName = spartenKontakte
+      .filter(a => names.has(a.name.toLowerCase()))
+      .map(a => {
+        const z = zeiten.find(e => {
+          const trainerNames = e.trainer.split(',').map(t => t.trim().toLowerCase())
+          return trainerNames.includes(a.name.toLowerCase())
+        })
+        return z?.trainerFoto && !a.foto ? { ...a, foto: z.trainerFoto } : a
+      })
+    if (byName.length > 0) return byName
   }
   const words = keyWords(mann.name)
   if (words.length > 0) {
-    const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
-    if (byRole.length > 0) return mergeWithMannschaftTrainer(byRole)
+    const byRole = spartenKontakte.filter(a => words.some(w => (a.rolle ?? '').toLowerCase().includes(w)))
+    if (byRole.length > 0) return byRole
   }
-  const base = ap.length <= 3 ? ap : []
+  return spartenKontakte.length <= 3 ? spartenKontakte : []
+}
 
-  return mergeWithMannschaftTrainer(base)
+function getPreferredMannschaften(
+  embedded: Mannschaft[] = [],
+  zentral: Mannschaft[] = [],
+): Mannschaft[] {
+  const seen = new Set<string>()
+  const validZentral = validMannschaften(zentral)
+  const preferred = validZentral.length > 0 ? validZentral : validMannschaften(embedded)
+  const unique: Mannschaft[] = []
+
+  // Zentrale Mannschaften sind das Zielmodell. Embedded/Legacy-Mannschaften
+  // werden nur verwendet, wenn es noch keine zentralen Mannschaften gibt.
+  for (const mann of preferred) {
+    const id = mann.id?.trim()
+    const name = mann.name?.trim()
+    const key = id ? `id:${id}` : `name:${name.toLowerCase()}`
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    unique.push(mann)
+  }
+
+  return unique
+}
+
+function validMannschaften(mannschaften?: Mannschaft[] | null): Mannschaft[] {
+  if (!Array.isArray(mannschaften)) return []
+  return mannschaften.filter(mann => Boolean(mann?.name?.trim()) && mann.anzeigenAufWebsite !== false)
+}
+
+function compareMannschaften(a: Mannschaft, b: Mannschaft): number {
+  const aOrder = typeof a.reihenfolge === 'number' ? a.reihenfolge : Number.POSITIVE_INFINITY
+  const bOrder = typeof b.reihenfolge === 'number' ? b.reihenfolge : Number.POSITIVE_INFINITY
+
+  if (aOrder !== bOrder) return aOrder - bOrder
+  return a.name.localeCompare(b.name, 'de', { sensitivity: 'base' })
+}
+
+function normalizeMannschaftBereich(bereich?: string): typeof MANNSCHAFT_BEREICHE[number]['key'] {
+  const normalized = bereich?.trim().toLowerCase()
+
+  if (normalized === 'herren') return 'Herren'
+  if (normalized === 'damen') return 'Damen'
+  if (normalized === 'junioren') return 'Junioren'
+  if (normalized === 'juniorinnen') return 'Juniorinnen'
+  if (normalized === 'freizeit' || normalized === 'hobby') return 'Freizeit'
+
+  return 'Weitere Gruppen'
+}
+
+function groupMannschaftenByBereich(mannschaften: Mannschaft[]) {
+  return MANNSCHAFT_BEREICHE.map(group => ({
+    ...group,
+    mannschaften: mannschaften
+      .filter(mann => normalizeMannschaftBereich(mann.bereich) === group.key)
+      .sort(compareMannschaften),
+  })).filter(group => group.mannschaften.length > 0)
 }
 
 /* ── Page ──────────────────────────────────────────────────── */
@@ -151,14 +217,12 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const echteMannschaften = sparte.echteMannschaften ?? []
-  const hasEchteMannschaften = echteMannschaften.length > 0
-  const hasLegacyMannschaften = (sparte.mannschaften?.length ?? 0) > 0
-  const hasMannschaften = hasEchteMannschaften || hasLegacyMannschaften
-  const mannschaftenToRender =
-    sparte.echteMannschaften && sparte.echteMannschaften.length > 0
-      ? sparte.echteMannschaften
-      : sparte.mannschaften
+  const mannschaften = getPreferredMannschaften(
+    sparte.embeddedMannschaften ?? sparte.mannschaften ?? [],
+    sparte.zentraleMannschaften ?? [],
+  )
+  const mannschaftenByBereich = groupMannschaftenByBereich(mannschaften)
+  const hasMannschaften = mannschaften.length > 0
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
@@ -262,42 +326,39 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── MANNSCHAFTEN: primär echte mannschaft-Dokumente ────── */}
+      {/* ── MANNSCHAFTEN (with embedded times + contacts) ─────── */}
       {hasMannschaften && (
         <section className="mb-16">
-          <SectionHeader
-            title="MANNSCHAFTEN & GRUPPEN"
-            farbe={farbe}
-            count={mannschaftenToRender.length}
-          />
-          <div className="mt-6 space-y-3">
-            {mannschaftenToRender.map((mann, i) => {
-              const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const mTrainer = hasEchteMannschaften
-                ? (mann.trainer ?? []).map((trainer) => ({
-                    ...trainer,
-                    rolle: trainer.rolle || `Trainer ${mann.name}`,
-                    foto: trainer.foto,
-                    _fotoSource: trainer.foto ? 'person' as const : 'none' as const,
-                  }))
-                : getTrainerForMannschaft(
-                    sparte.ansprechpartner ?? [],
-                    mZeiten,
-                    mann,
-                    mann.trainer ?? [],
-                  )
+          <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={mannschaften.length} />
+          <div className="mt-8 space-y-10">
+            {mannschaftenByBereich.map(group => (
+              <div key={group.key}>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-sm tracking-[0.18em] uppercase font-medium" style={{ color: farbe }}>
+                    {group.title}
+                  </h3>
+                  <div className="flex-1 h-px" style={{ background: `${farbe}20` }} />
+                  <span className="text-[11px] text-[#6b6b6b] shrink-0">{group.mannschaften.length}</span>
+                </div>
 
-              return (
-                <MannschaftCard
-                  key={i}
-                  mann={mann}
-                  zeiten={mZeiten}
-                  trainer={mTrainer}
-                  farbe={farbe}
-                  sparteIcon={sparte.icon}
-                />
-              )
-            })}
+                <div className="space-y-3">
+                  {group.mannschaften.map(mann => {
+                    const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
+                    const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+                    return (
+                      <MannschaftCard
+                        key={mann.id ?? mann.name}
+                        mann={mann}
+                        zeiten={mZeiten}
+                        trainer={mTrainer}
+                        farbe={farbe}
+                        sparteIcon={sparte.icon}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
           <div className="mt-4">
             <Link
@@ -310,7 +371,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── FALLBACK: keine echten/legacy Mannschaften → Kontakte+Zeiten ── */}
+      {/* ── FALLBACK: no mannschaften → show contacts + times directly ── */}
       {!hasMannschaften && (
         <>
           {/* Training times */}
@@ -371,11 +432,11 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
           })()}
 
           {/* Contacts */}
-          {(sparte.ansprechpartner?.length ?? 0) > 0 && (
+          {validContacts(sparte.ansprechpartner).length > 0 && (
             <section className="mb-16">
-              <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={sparte.ansprechpartner.length} />
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sparte.ansprechpartner.map((a, i) => (
+              <SectionHeader title="ANSPRECHPARTNER & TRAINER" farbe={farbe} count={validContacts(sparte.ansprechpartner).length} />
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+                {validContacts(sparte.ansprechpartner).map((a, i) => (
                   <KontaktKarte key={i} person={a} farbe={farbe} />
                 ))}
               </div>
@@ -470,6 +531,20 @@ function MannschaftCard({
             )}
           </div>
           <p className="text-sm text-[#6b6b6b] leading-relaxed">{mann.beschreibung}</p>
+          {(mann.bereich || mann.jahrgangText) && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {mann.bereich && (
+                <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-[#0a0a0a]/5 text-[#6b6b6b]">
+                  {mann.bereich}
+                </span>
+              )}
+              {mann.jahrgangText && (
+                <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-[#0a0a0a]/5 text-[#6b6b6b]">
+                  {mann.jahrgangText}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -530,7 +605,7 @@ function MannschaftCard({
               >
                 Trainer & Ansprechpartner
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
                 {trainer.map((t, i) => (
                   <KontaktKarte key={i} person={t} farbe={farbe} compact />
                 ))}
@@ -546,7 +621,8 @@ function MannschaftCard({
 
 /* ── Kontakt card ────────────────────────────────────────────── */
 function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpartner; farbe: string; compact?: boolean }) {
-  const ini = initials(person.name)
+  const displayName = person.name || 'Kontakt'
+  const ini = initials(displayName)
   const hasTel = !!person.telefon
   const waHref = person.whatsapp
     ? whatsappHref(person.whatsapp)
@@ -557,7 +633,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
       <div className="bg-white border border-[#0a0a0a]/[0.06] p-3 flex gap-2.5 items-start">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={person.foto} alt={person.name} className="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0" />
+            <img src={person.foto} alt={displayName} className="w-[4.5rem] h-[4.5rem] rounded-full object-cover shrink-0" />
           : (
             <div
               className="w-[4.5rem] h-[4.5rem] rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 select-none"
@@ -568,13 +644,13 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
           )
         }
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm leading-tight mb-0.5">{person.name}</div>
+          <div className="font-medium text-sm leading-tight mb-0.5">{displayName}</div>
           <div className="text-[11px] text-[#6b6b6b] mb-2 leading-snug">{person.rolle}</div>
           <div className="space-y-0.5">
             {person.email && (
-              <a href={`mailto:${person.email}`} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
+              <a href={`mailto:${person.email}`} title={person.email} className="flex items-center gap-1 text-[11px] text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors min-w-0">
                 <Mail size={9} className="shrink-0" />
-                <span className="break-all leading-tight">{person.email}</span>
+                <span className="truncate leading-tight min-w-0">{person.email}</span>
               </a>
             )}
             {hasTel && (
@@ -596,11 +672,11 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
   }
 
   return (
-    <div className="bg-[#f5f5f0] p-5 flex flex-col">
+    <div className="bg-[#f5f5f0] p-5 flex flex-col min-w-0">
       <div className="mb-4">
         {person.foto
           ? /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={person.foto} alt={person.name} className="w-16 h-16 rounded-full object-cover" />
+            <img src={person.foto} alt={displayName} className="w-16 h-16 rounded-full object-cover" />
           : (
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-semibold select-none"
@@ -612,14 +688,14 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Ansprechpart
         }
       </div>
 
-      <div className="font-medium text-base leading-tight mb-0.5">{person.name}</div>
+      <div className="font-medium text-base leading-tight mb-0.5">{displayName}</div>
       <div className="text-xs text-[#6b6b6b] mb-4 leading-snug">{person.rolle}</div>
 
-      <div className="mt-auto space-y-2">
+      <div className="mt-auto space-y-2 min-w-0">
         {person.email && (
-          <a href={`mailto:${person.email}`} className="flex items-start gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group">
-            <Mail size={11} className="shrink-0 mt-0.5" />
-            <span className="break-all leading-tight">{person.email}</span>
+          <a href={`mailto:${person.email}`} title={person.email} className="flex items-center gap-2 text-xs text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors group min-w-0">
+            <Mail size={11} className="shrink-0" />
+            <span className="truncate leading-tight min-w-0">{person.email}</span>
           </a>
         )}
         {hasTel && (

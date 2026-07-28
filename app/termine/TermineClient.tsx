@@ -17,6 +17,39 @@ interface Termin {
   tags?: string[]
 }
 
+const FUSSBALL_DE_URL_REGEX = /https:\/\/www\.fussball\.de\/spiel\/\S+/i
+
+function getBeschreibungMitFussballLink(beschreibung: string) {
+  const fussballUrl = beschreibung.match(FUSSBALL_DE_URL_REGEX)?.[0]
+
+  return {
+    text: fussballUrl
+      ? beschreibung.replace(new RegExp(`\\s*Details\\s*:\\s*${fussballUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'), '').trim()
+      : beschreibung,
+    fussballUrl,
+  }
+}
+
+function TerminBeschreibung({ beschreibung }: { beschreibung: string }) {
+  const { text, fussballUrl } = getBeschreibungMitFussballLink(beschreibung)
+
+  return (
+    <div className="text-sm text-[#6b6b6b]">
+      {text && <p>{text}</p>}
+      {fussballUrl && (
+        <a
+          href={fussballUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex mt-2 text-[11px] tracking-[0.12em] uppercase border border-[#0a0a0a]/20 px-3 py-1 text-[#6b6b6b] hover:border-[#0a0a0a]/50 hover:text-[#0a0a0a] transition-colors"
+        >
+          Details auf fussball.de
+        </a>
+      )}
+    </div>
+  )
+}
+
 export default function TermineClient({ termine }: { termine: Termin[] }) {
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
   const heute = new Date()
@@ -132,7 +165,7 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
                   ))}
                 </div>
                 <h3 className="font-medium text-lg mb-2">{t.titel}</h3>
-                <p className="text-sm text-[#6b6b6b]">{t.beschreibung}</p>
+                <TerminBeschreibung beschreibung={t.beschreibung} />
               </div>
 
               <div className="flex flex-col gap-2 text-xs text-[#6b6b6b] shrink-0">

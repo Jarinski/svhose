@@ -65,7 +65,7 @@ export default defineType({
       title: 'URL-Name',
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
-      description: 'Wird automatisch aus der Überschrift erzeugt. Nur ändern, wenn du genau weißt, was du tust.',
+      description: 'Adresse des Beitrags im Internet. Nach Eingabe der Überschrift bitte ggf. auf „Generate“ klicken, damit der URL-Name automatisch erzeugt wird. Danach normalerweise nicht mehr ändern.',
       validation: r => r.required(),
     }),
   ],

@@ -2,15 +2,16 @@ import { defineField, defineType } from 'sanity'
 
 export default defineType({
   name: 'mannschaft',
-  title: 'Mannschaft',
+  title: 'Mannschaft / Trainingsgruppe',
   type: 'document',
+  description: 'Zentrale Pflege von Mannschaften und Trainingsgruppen. Hier Sparte wählen und Trainer:innen/Ansprechpartner:innen aus den zentral gepflegten Personen zuordnen.',
   validation: Rule =>
     Rule.custom((doc) => {
       const typedDoc = doc as { bereich?: string; jahrgang?: { _ref?: string } } | undefined
       if (!typedDoc) return true
 
-      if (typedDoc.bereich === 'Junioren' && !typedDoc.jahrgang?._ref) {
-        return 'Bei Junioren bitte einen Jahrgang zuordnen.'
+      if ((typedDoc.bereich === 'Junioren' || typedDoc.bereich === 'Juniorinnen') && !typedDoc.jahrgang?._ref) {
+        return 'Bei Junioren/Juniorinnen bitte einen Jahrgang zuordnen.'
       }
 
       return true
@@ -23,11 +24,18 @@ export default defineType({
       validation: r => r.required(),
     }),
     defineField({
+      name: 'anzeigenAufWebsite',
+      title: 'Auf Website anzeigen',
+      type: 'boolean',
+      description: 'Deaktivieren, wenn diese Mannschaft/Trainingsgruppe intern für Trainingszeiten erhalten bleiben soll, aber nicht öffentlich auf der Website erscheinen soll.',
+      initialValue: true,
+    }),
+    defineField({
       name: 'bereich',
       title: 'Bereich',
       type: 'string',
       options: {
-        list: ['Junioren', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
+        list: ['Junioren', 'Juniorinnen', 'Herren', 'Damen', 'Senioren', 'Freizeit'].map(v => ({ title: v, value: v })),
       },
       validation: r => r.required(),
       description: 'Hilft bei der Unterscheidung zwischen Jugend (mit Jahrgang) und Erwachsenen-Teams.',
@@ -54,7 +62,7 @@ export default defineType({
     }),
     defineField({
       name: 'trainer',
-      title: 'Trainerteam',
+      title: 'Trainer:innen und Ansprechpartner:innen',
       type: 'array',
       of: [
         {
@@ -62,7 +70,7 @@ export default defineType({
           to: [{ type: 'person' }],
         },
       ],
-      description: 'Trainer:innen oder Ansprechpartner:innen dieser Mannschaft/Gruppe. Die erste Person in der Liste wird als Hauptkontakt bei den Trainingszeiten angezeigt.',
+      description: 'Trainer:innen und Ansprechpartner:innen dieser Mannschaft/Trainingsgruppe. Personen werden zentral unter Personen gepflegt. Hinweis: Eine neu angelegte Person muss zuerst dort veröffentlicht werden ("Publish"), bevor sich diese Mannschaft veröffentlichen lässt.',
     }),
     defineField({
       name: 'foto',

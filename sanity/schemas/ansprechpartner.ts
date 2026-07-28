@@ -4,12 +4,32 @@ export default defineType({
   name: 'ansprechpartner',
   title: 'Ansprechpartner',
   type: 'document',
+  validation: Rule =>
+    Rule.custom((doc) => {
+      const typedDoc = doc as { person?: { _ref?: string }; name?: string } | undefined
+      if (!typedDoc?.person?._ref && !typedDoc?.name) {
+        return 'Bitte entweder eine zentrale Person auswählen oder einen Namen eintragen.'
+      }
+      return true
+    }),
   fieldsets: [
     { name: 'sortierungVerwaltung', title: 'Sortierung / Verwaltung', options: { collapsible: true, collapsed: true } },
     { name: 'legacyVerwaltung', title: 'Legacy / Verwaltung', options: { collapsible: true, collapsed: true } },
   ],
   fields: [
-    defineField({ name: 'name', title: 'Name', type: 'string', validation: r => r.required() }),
+    defineField({
+      name: 'person',
+      title: 'Zentrale Person',
+      type: 'reference',
+      to: [{ type: 'person' }],
+      description: 'Empfohlen: Person zentral auswählen. Name, E-Mail, Telefon und Foto kommen dann aus der zentralen Personenverwaltung. Hinweis: Eine neu angelegte Person muss zuerst dort veröffentlicht werden ("Publish"), bevor sich dieser Ansprechpartner-Eintrag veröffentlichen lässt.',
+    }),
+    defineField({
+      name: 'name',
+      title: 'Name (Fallback / alter Eintrag)',
+      type: 'string',
+      description: 'Nur nutzen, wenn keine zentrale Person ausgewählt wird.',
+    }),
     defineField({
       name: 'funktion',
       title: 'Funktion / Rolle',
@@ -20,20 +40,20 @@ export default defineType({
       name: 'email',
       title: 'E-Mail',
       type: 'string',
-      description: 'Öffentliche Kontaktadresse. Optional.',
+      description: 'Optionaler Fallback. Wenn eine zentrale Person ausgewählt ist, kommt die E-Mail normalerweise von dort.',
     }),
     defineField({
       name: 'telefon',
       title: 'Telefon',
       type: 'string',
-      description: 'Optional. Mobilnummern können auf der Website zusätzlich als WhatsApp-Kontakt genutzt werden.',
+      description: 'Optionaler Fallback. Wenn eine zentrale Person ausgewählt ist, kommt die Telefonnummer normalerweise von dort.',
     }),
     defineField({
       name: 'foto',
       title: 'Foto',
       type: 'image',
       options: { hotspot: true },
-      description: 'Optionales Foto der Kontaktperson.',
+      description: 'Optionaler Fallback. Wenn eine zentrale Person ausgewählt ist, kommt das Foto normalerweise von dort.',
     }),
     defineField({
       name: 'gruppe',
@@ -66,13 +86,13 @@ export default defineType({
     { title: 'Name', name: 'nameAsc', by: [{ field: 'name', direction: 'asc' }] },
   ],
   preview: {
-    select: { title: 'name', funktion: 'funktion', gruppe: 'gruppe', media: 'foto' },
-    prepare({ title, funktion, gruppe, media }) {
+    select: { title: 'name', personName: 'person.name', funktion: 'funktion', gruppe: 'gruppe', media: 'foto', personMedia: 'person.foto' },
+    prepare({ title, personName, funktion, gruppe, media, personMedia }) {
       const subtitle = [funktion, gruppe].filter(Boolean).join(' · ')
       return {
-        title,
+        title: personName || title || 'Ansprechpartner',
         subtitle,
-        media,
+        media: personMedia || media,
       }
     },
   },

@@ -19,23 +19,24 @@ export default defineConfig({
           .title('Inhalte')
           .items([
             S.documentTypeListItem('newsPost').title('News'),
+            S.documentTypeListItem('termin').title('Termine'),
             S.documentTypeListItem('trainingszeit').title('Trainingszeiten'),
-            S.documentTypeListItem('mannschaft').title('Mannschaften / Gruppen'),
-            S.documentTypeListItem('person').title('Personen / Trainer'),
-            S.documentTypeListItem('sparte').title('Sparten'),
-            S.documentTypeListItem('ansprechpartner').title('Ansprechpartner'),
+            S.documentTypeListItem('person').title('Personen'),
+            S.documentTypeListItem('mannschaft').title('Mannschaften / Trainingsgruppen'),
+            S.documentTypeListItem('ansprechpartner').title('Ansprechpartner / Kontaktseite'),
+            S.documentTypeListItem('sparte').title('Sparten bearbeiten'),
             S.divider(),
             S.listItem()
-              .title('Weitere Inhalte / Verwaltung')
+              .title('Weitere Inhalte / Verwaltung (fortgeschritten)')
               .child(
                 S.list()
                   .title('Weitere Inhalte / Verwaltung')
                   .items([
-                    S.documentTypeListItem('termin').title('Termine'),
                     S.documentTypeListItem('download').title('Downloads'),
                     S.documentTypeListItem('partner').title('Partner'),
-                    S.documentTypeListItem('jahrgang').title('Jahrgänge'),
-                    S.documentTypeListItem('trainingsplatz').title('Trainingsplätze'),
+                    S.divider(),
+                    S.documentTypeListItem('jahrgang').title('Jahrgänge (fortgeschritten)'),
+                    S.documentTypeListItem('trainingsplatz').title('Trainingsplätze (fortgeschritten)'),
                   ])
               ),
           ]),

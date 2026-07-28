@@ -1,4 +1,4 @@
-import { getSparten, getTrainingszeiten } from '@/lib/content'
+import { getSparten } from '@/lib/content'
 import SpartenClient from './SpartenClient'
 import type { Metadata } from 'next'
 
@@ -6,10 +6,7 @@ export const metadata: Metadata = { title: 'Sparten' }
 export const revalidate = 60
 
 export default async function SpartenPage() {
-  const [sparten, trainingszeiten] = await Promise.all([
-    getSparten(),
-    getTrainingszeiten(),
-  ])
+  const sparten = await getSparten()
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-5xl mx-auto">
@@ -20,17 +17,13 @@ export default async function SpartenPage() {
           Was wir anbieten
         </div>
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">SPARTEN</h1>
-        <p className="mt-4 text-sm text-[#6b6b6b]">
-          <span className="font-medium text-[#0a0a0a]">{sparten.length}</span>{' '}
-          Abteilungen – für jedes Alter und jedes Niveau
-        </p>
-        <p className="mt-2 text-xs text-[#6b6b6b]">
-          Klicke auf eine Sparte, um Gruppen, Trainingszeiten und Ansprechpartner zu sehen.
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#6b6b6b]">
+          Entdecke unser vielfältiges Sportangebot und finde die Sparte, die zu dir passt.
         </p>
       </div>
 
-      {/* ── Accordion list ── */}
-      <SpartenClient sparten={sparten} trainingszeiten={trainingszeiten} />
+      {/* ── Sparten cards ── */}
+      <SpartenClient sparten={sparten} />
 
     </div>
   )

@@ -45,7 +45,7 @@ export default defineType({
           to: [{ type: 'person' }],
         },
       ],
-      description: 'Optional: direkte Zuordnung von Trainern zu diesem Jahrgang.',
+      description: 'Optional: direkte Zuordnung von Trainern zu diesem Jahrgang. Hinweis: Eine neu angelegte Person muss zuerst unter Personen veröffentlicht werden ("Publish"), bevor sich dieser Jahrgang veröffentlichen lässt.',
     }),
     defineField({
       name: 'reihenfolge',

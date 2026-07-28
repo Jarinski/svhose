@@ -36,9 +36,24 @@ function buildWriteClient() {
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────────────
 
+/** Normalisiert einen Wert zu einem Sanity-sicheren ID-Bestandteil */
+function toSanityIdPart(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
 /** Baut einen deterministischen Sanity-Dokument-ID aus der fussball.de Spiel-ID */
 function toDocId(spielId: string): string {
-  return `fussball-de-${spielId}`
+  return `fussball-de-${toSanityIdPart(spielId)}`
 }
 
 /** Konvertiert ein FussballSpiel in ein Sanity-Termin-Dokument */
