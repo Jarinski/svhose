@@ -8,7 +8,7 @@
  */
 
 export interface FussballSpiel {
-  id: string
+  id: string           // stable per-match ID from the fussball.de URL (falls back to a date+team key if the URL is missing)
   datum: string        // ISO-8601: "2026-03-20"
   uhrzeit: string      // "15:00"
   mannschaftsart: string // "Herren", "B-Junioren", "Frauen", …
@@ -114,6 +114,7 @@ function parseGamesFromHtml(html: string): FussballSpiel[] {
     const urlMatch = block.match(
       /class="column-detail">\s*<a\s+href="(https:\/\/www\.fussball\.de\/spiel\/[^"]+)"/
     )
+    const url = urlMatch?.[1] ?? ''
 
     // ── Determine if our club is the home team ───────────────────────────
     const isOurs = (name: string) =>
@@ -122,15 +123,26 @@ function parseGamesFromHtml(html: string): FussballSpiel[] {
 
     const heimspiel = isOurs(heim)
 
+    // ── Stable match ID ───────────────────────────────────────────────────
+    // fussball.de's own URLs end in "/-/spiel/<ID>", a stable per-match
+    // identifier. Prefer that over team names: fussball.de renders the same
+    // Jugendspielgemeinschaft under several spellings ("SG"/"FSG", abbreviated
+    // club names, …) across different fetches, so an ID built from team names
+    // silently drifts and produces duplicate termin documents over time.
+    const idFromUrl = url.match(/\/spiel\/([a-z0-9]+)$/i)?.[1]
+    const id = idFromUrl
+      ? idFromUrl.toLowerCase()
+      : `${datum}-${heim}-${gast}`.replace(/\s+/g, '-').toLowerCase().slice(0, 80)
+
     games.push({
-      id: `${datum}-${heim}-${gast}`.replace(/\s+/g, '-').toLowerCase().slice(0, 80),
+      id,
       datum,
       uhrzeit: time,
       mannschaftsart: teamType.trim(),
       liga: decodeEntities(league.trim()),
       heim,
       gast,
-      url: urlMatch?.[1] ?? '',
+      url,
       heimspiel,
     })
   }
