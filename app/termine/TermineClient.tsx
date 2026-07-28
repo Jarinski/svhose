@@ -52,7 +52,9 @@ function TerminBeschreibung({ beschreibung }: { beschreibung: string }) {
 
 export default function TermineClient({ termine }: { termine: Termin[] }) {
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
-  const heute = new Date()
+  // Compare date-only strings (t.datum is "YYYY-MM-DD") so today's own events
+  // count as upcoming regardless of the current time of day.
+  const heuteStr = new Date().toISOString().slice(0, 10)
 
   /* ── Collect all unique filter values (sparte + tags) ── */
   const allFilters = useMemo(() => {
@@ -84,8 +86,8 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
     return Array.from(activeFilters).some(f => termineValues.has(f))
   }
 
-  const kommend = termine.filter(t => new Date(t.datum) >= heute && matchesFilter(t))
-  const vergangen = termine.filter(t => new Date(t.datum) < heute && matchesFilter(t))
+  const kommend = termine.filter(t => t.datum >= heuteStr && matchesFilter(t))
+  const vergangen = termine.filter(t => t.datum < heuteStr && matchesFilter(t))
 
   const hasActiveFilters = activeFilters.size > 0
 
@@ -188,7 +190,7 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
       </div>
 
       {/* ── Vergangene Termine ── */}
-      {(vergangen.length > 0 || (hasActiveFilters && termine.filter(t => new Date(t.datum) < heute).length > 0)) && (
+      {(vergangen.length > 0 || (hasActiveFilters && termine.filter(t => t.datum < heuteStr).length > 0)) && (
         <div>
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Vergangene Termine</div>
           <div className="space-y-px bg-[#0a0a0a]/10 opacity-50">

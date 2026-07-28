@@ -15,7 +15,8 @@ export default async function HomePage() {
     getSparten(),
   ])
   const news = newsAll.slice(0, 3)
-  const termineSliced = termine.slice(0, 3)
+  const heuteStr = new Date().toISOString().slice(0, 10)
+  const termineSliced = termine.filter((t: any) => t.datum >= heuteStr).slice(0, 3)
 
   return (
     <>
