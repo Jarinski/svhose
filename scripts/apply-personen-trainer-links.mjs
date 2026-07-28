@@ -39,6 +39,7 @@ const normalizeName = (name) => {
 const normKey = (v) => normalizeName(v).toLowerCase()
 const splitTrainer = (raw) => (raw || '').split(/[;,]/g).map((p) => normalizeName(p)).filter(Boolean)
 const slugify = (v) => normKey(v).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+const trainerKey = (id) => `trainer-${slugify(String(id || '').replace(/^person\./, ''))}`
 
 const MANUAL_TEAM_RESOLUTIONS = {
   'mannschaft.judo--kinder-anfanger-5-7-jahre': {
@@ -246,7 +247,7 @@ for (const t of teamState.values()) {
   const refs = t.proposedTrainerKeys
     .map((k) => personByKey.get(k)?.targetPersonId)
     .filter(Boolean)
-    .map((id) => ({ _type: 'reference', _ref: id }))
+    .map((id) => ({ _type: 'reference', _ref: id, _key: trainerKey(id) }))
   teamPatchOps.push({ mannschaftId: t.mannschaftId, trainer: refs })
 }
 
