@@ -4,6 +4,7 @@ export default defineType({
   name: 'person',
   title: 'Person',
   type: 'document',
+  description: 'Personen können als Trainer:innen oder Ansprechpartner:innen bei Mannschaften/Gruppen verwendet werden.',
   fields: [
     defineField({
       name: 'name',

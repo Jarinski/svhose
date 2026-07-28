@@ -7,16 +7,23 @@ import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, RefreshCw, Clock, FileTe
 import type { Metadata } from 'next'
 
 /* ── Types ─────────────────────────────────────────────────── */
-interface Mannschaft  { name: string; beschreibung: string; foto: string | null }
+interface Mannschaft  {
+  name: string
+  beschreibung: string
+  foto: string | null
+  trainer?: Ansprechpartner[]
+}
 interface Ansprechpartner {
   name: string; rolle: string; email: string
   telefon: string; whatsapp: string; foto: string | null
+  _fotoSource?: 'embedded' | 'person' | 'trainingszeit' | 'none'
 }
 interface SparteDownload { titel: string; beschreibung: string; datei: string }
 interface Sparte {
   slug: string; name: string; icon: string; farbe: string
   beschreibung: string; langbeschreibung: string; foto: string | null
   trainingszeiten_spartes: string[]
+  echteMannschaften?: Mannschaft[]
   mannschaften: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
   downloads?: SparteDownload[]
@@ -25,6 +32,7 @@ interface TrainingsEntry {
   sparte: string; gruppe: string; tag: string; uhrzeit: string
   ort: string; jahreszeit: string; frequenz: string
   trainer: string; email: string; telefon: string
+  foto?: string | null
 }
 
 /* ── Static params ─────────────────────────────────────────── */
@@ -67,7 +75,7 @@ function whatsappHref(phone: string) {
   return `https://wa.me/${num}`
 }
 
-/* ── Matching helpers (mirrored from SpartenClient) ─────────── */
+/* ── Matching helpers (nur Fallback-Pfad) ───────────────────── */
 function keyWords(s: string): string[] {
   return s
     .toLowerCase()
@@ -96,19 +104,41 @@ function getTrainerForMannschaft(
   ap: Ansprechpartner[],
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
+  mannschaftTrainer: Ansprechpartner[] = [],
 ): Ansprechpartner[] {
+  const mergeWithMannschaftTrainer = (contacts: Ansprechpartner[]): Ansprechpartner[] =>
+    contacts.map((a) => {
+      const personMatch = mannschaftTrainer.find(
+        (p) => p.name.trim().toLowerCase() === a.name.trim().toLowerCase(),
+      )
+      if (a.foto) return { ...a, _fotoSource: 'embedded' }
+      if (personMatch?.foto) return { ...a, foto: personMatch.foto, _fotoSource: 'person' }
+
+      const zeitMatch = zeiten.find((z) =>
+        z.trainer
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .includes(a.name.trim().toLowerCase()),
+      )
+      if (zeitMatch?.foto) return { ...a, foto: zeitMatch.foto, _fotoSource: 'trainingszeit' }
+
+      return { ...a, _fotoSource: 'none' }
+    })
+
   if (zeiten.length > 0) {
     const names = new Set<string>()
     zeiten.forEach(e => e.trainer.split(',').forEach(t => names.add(t.trim().toLowerCase())))
     const byName = ap.filter(a => names.has(a.name.toLowerCase()))
-    if (byName.length > 0) return byName
+    if (byName.length > 0) return mergeWithMannschaftTrainer(byName)
   }
   const words = keyWords(mann.name)
   if (words.length > 0) {
     const byRole = ap.filter(a => words.some(w => a.rolle.toLowerCase().includes(w)))
-    if (byRole.length > 0) return byRole
+    if (byRole.length > 0) return mergeWithMannschaftTrainer(byRole)
   }
-  return ap.length <= 3 ? ap : []
+  const base = ap.length <= 3 ? ap : []
+
+  return mergeWithMannschaftTrainer(base)
 }
 
 /* ── Page ──────────────────────────────────────────────────── */
@@ -121,7 +151,14 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
 
   const farbe = sparte.farbe ?? '#0a0a0a'
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const hasMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const echteMannschaften = sparte.echteMannschaften ?? []
+  const hasEchteMannschaften = echteMannschaften.length > 0
+  const hasLegacyMannschaften = (sparte.mannschaften?.length ?? 0) > 0
+  const hasMannschaften = hasEchteMannschaften || hasLegacyMannschaften
+  const mannschaftenToRender =
+    sparte.echteMannschaften && sparte.echteMannschaften.length > 0
+      ? sparte.echteMannschaften
+      : sparte.mannschaften
   const sparteDownloads: SparteDownload[] = sparte.downloads ?? []
 
   return (
@@ -225,14 +262,31 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── MANNSCHAFTEN (with embedded times + contacts) ─────── */}
+      {/* ── MANNSCHAFTEN: primär echte mannschaft-Dokumente ────── */}
       {hasMannschaften && (
         <section className="mb-16">
-          <SectionHeader title="MANNSCHAFTEN & GRUPPEN" farbe={farbe} count={sparte.mannschaften.length} />
+          <SectionHeader
+            title="MANNSCHAFTEN & GRUPPEN"
+            farbe={farbe}
+            count={mannschaftenToRender.length}
+          />
           <div className="mt-6 space-y-3">
-            {sparte.mannschaften.map((mann, i) => {
+            {mannschaftenToRender.map((mann, i) => {
               const mZeiten  = getZeitenForMannschaft(alleZeiten, sparte.trainingszeiten_spartes ?? [], mann)
-              const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+              const mTrainer = hasEchteMannschaften
+                ? (mann.trainer ?? []).map((trainer) => ({
+                    ...trainer,
+                    rolle: trainer.rolle || `Trainer ${mann.name}`,
+                    foto: trainer.foto,
+                    _fotoSource: trainer.foto ? 'person' as const : 'none' as const,
+                  }))
+                : getTrainerForMannschaft(
+                    sparte.ansprechpartner ?? [],
+                    mZeiten,
+                    mann,
+                    mann.trainer ?? [],
+                  )
+
               return (
                 <MannschaftCard
                   key={i}
@@ -256,7 +310,7 @@ export default async function SparteDetailPage({ params }: { params: { slug: str
         </section>
       )}
 
-      {/* ── FALLBACK: no mannschaften → show contacts + times directly ── */}
+      {/* ── FALLBACK: keine echten/legacy Mannschaften → Kontakte+Zeiten ── */}
       {!hasMannschaften && (
         <>
           {/* Training times */}

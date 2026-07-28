@@ -8,12 +8,16 @@ import {
 
 /* ─────────────────────────────────────────────── Types ── */
 interface Mannschaft {
+  _id?: string
   name: string
   beschreibung: string
   foto: string | null
+  trainer?: Ansprechpartner[]
 }
 interface Ansprechpartner {
+  _id?: string
   name: string
+  rollen?: string[]
   rolle: string
   email: string
   telefon: string
@@ -21,6 +25,7 @@ interface Ansprechpartner {
   foto: string | null
 }
 interface Sparte {
+  id?: string
   slug: string
   name: string
   icon: string
@@ -29,6 +34,7 @@ interface Sparte {
   langbeschreibung: string
   foto: string | null
   trainingszeiten_spartes: string[]
+  echteMannschaften?: Mannschaft[]
   mannschaften: Mannschaft[]
   ansprechpartner: Ansprechpartner[]
 }
@@ -112,6 +118,7 @@ function getTrainerForMannschaft(
   zeiten: TrainingsEntry[],
   mann: Mannschaft,
 ): Ansprechpartner[] {
+  if ((mann.trainer?.length ?? 0) > 0) return mann.trainer ?? []
   // 1) match by trainer name listed in Trainingszeiten
   if (zeiten.length > 0) {
     const names = new Set<string>()
@@ -144,6 +151,19 @@ export default function SpartenClient({
       {sparten.map(sparte => {
         const isOpen = openSparte === sparte.slug
         const farbe  = sparte.farbe ?? '#0a0a0a'
+        const hasEchteMannschaften = (sparte.echteMannschaften?.length ?? 0) > 0
+        const mannschaftenToRender = hasEchteMannschaften
+          ? (sparte.echteMannschaften ?? [])
+          : (sparte.mannschaften ?? [])
+        const gruppenCount = mannschaftenToRender.length
+        const trainerCount = hasEchteMannschaften
+          ? new Set(
+              (sparte.echteMannschaften ?? [])
+                .flatMap(m => m.trainer ?? [])
+                .map(t => t._id ?? t.name.toLowerCase())
+                .filter(Boolean),
+            ).size
+          : (sparte.ansprechpartner?.length ?? 0)
 
         return (
           <div key={sparte.slug}>
@@ -170,20 +190,20 @@ export default function SpartenClient({
                     {sparte.name}
                   </h2>
                   <div className="flex gap-1.5 flex-wrap">
-                    {(sparte.mannschaften?.length ?? 0) > 0 && (
+                    {gruppenCount > 0 && (
                       <span
                         className="text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
-                        {sparte.mannschaften.length} {sparte.mannschaften.length === 1 ? 'Gruppe' : 'Gruppen'}
+                        {gruppenCount} {gruppenCount === 1 ? 'Gruppe' : 'Gruppen'}
                       </span>
                     )}
-                    {(sparte.ansprechpartner?.length ?? 0) > 0 && (
+                    {trainerCount > 0 && (
                       <span
                         className="hidden sm:inline text-[10px] tracking-[0.15em] uppercase px-2 py-0.5"
                         style={{ background: `${farbe}18`, color: farbe }}
                       >
-                        {sparte.ansprechpartner.length} Trainer
+                        {trainerCount} Trainer
                       </span>
                     )}
                   </div>
@@ -220,20 +240,22 @@ export default function SpartenClient({
                   </p>
 
                   {/* ── Mannschaften / Gruppen ── */}
-                  {(sparte.mannschaften?.length ?? 0) > 0 ? (
+                  {gruppenCount > 0 ? (
                     <div className="mb-8">
                       <SectionLabel
                         label="Gruppen & Mannschaften"
                         farbe={farbe}
-                        count={sparte.mannschaften.length}
+                        count={gruppenCount}
                       />
                       <div className="mt-4 space-y-2">
-                        {sparte.mannschaften.map((mann, i) => {
+                        {mannschaftenToRender.map((mann, i) => {
                           const mZeiten  = getZeitenForMannschaft(trainingszeiten, sparte.trainingszeiten_spartes ?? [], mann)
-                          const mTrainer = getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
+                          const mTrainer = hasEchteMannschaften
+                            ? (mann.trainer ?? [])
+                            : getTrainerForMannschaft(sparte.ansprechpartner ?? [], mZeiten, mann)
                           return (
                             <MannschaftCard
-                              key={i}
+                              key={mann._id ?? `${sparte.slug}-${mann.name}-${i}`}
                               mann={mann}
                               zeiten={mZeiten}
                               trainer={mTrainer}

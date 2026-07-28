@@ -30,7 +30,11 @@ export interface NewsPost {
   date: string
   category: string
   sparte: string
-  image?: string
+  image?: {
+    url: string
+    width: number
+    height: number
+  }
   excerpt: string
   /** Sanity Portable Text blocks – wird in News-Detail-Page gerendert */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,6 +4,7 @@ import { groq } from 'next-sanity'
 
 export const spartenQuery = groq`
   *[_type == "sparte"] | order(name asc) {
+    "id": _id,
     "slug": slug.current,
     name,
     icon,
@@ -12,6 +13,22 @@ export const spartenQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
+    "echteMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      _id,
+      name,
+      bereich,
+      beschreibung,
+      foto { asset->{url} },
+      trainer[]->{
+        _id,
+        name,
+        rollen,
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
+    },
     mannschaften[] {
       name,
       beschreibung,
@@ -43,6 +60,21 @@ export const sparteBySlugQuery = groq`
     langbeschreibung,
     "foto": foto.asset->url,
     trainingszeiten_spartes,
+    "echteMannschaften": *[_type == "mannschaft" && sparte._ref == ^._id] | order(reihenfolge asc, name asc) {
+      "id": _id,
+      name,
+      beschreibung,
+      "foto": foto.asset->url,
+      trainer[]->{
+        "id": _id,
+        name,
+        "rolle": coalesce(rollen[0], "Trainer"),
+        email,
+        telefon,
+        whatsapp,
+        "foto": foto.asset->url
+      }
+    },
     mannschaften[] {
       name,
       beschreibung,
@@ -217,7 +249,11 @@ export const allNewsQuery = groq`
     "date": datum,
     category,
     sparte,
-    "image": image.asset->url,
+    "image": image.asset->{
+      "url": url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height
+    },
     excerpt,
     body
   }
@@ -230,7 +266,11 @@ export const newsBySlugQuery = groq`
     "date": datum,
     category,
     sparte,
-    "image": image.asset->url,
+    "image": image.asset->{
+      "url": url,
+      "width": metadata.dimensions.width,
+      "height": metadata.dimensions.height
+    },
     excerpt,
     body
   }
