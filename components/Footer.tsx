@@ -51,6 +51,14 @@ export default function Footer() {
               <a href="mailto:info@sv-holm-seppensen.de" className="block hover:text-[#f5f5f0] transition-colors">
                 info@sv-holm-seppensen.de
               </a>
+              <a
+                href="https://www.instagram.com/svholmseppensen/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:text-[#f5f5f0] transition-colors"
+              >
+                Instagram
+              </a>
             </div>
           </div>
         </div>
