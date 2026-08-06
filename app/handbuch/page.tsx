@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { Mail, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { Mail, ArrowRight, LogIn } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Studio-Handbuch – SV Holm-Seppensen',
@@ -270,6 +271,12 @@ export default function HandbuchPage() {
               euch mit einem bestehenden Google- oder GitHub-Konto an, oder per E-Mail-Link. Beim
               allerersten Mal muss euch jemand mit Zugriff vorher als Mitglied im Projekt hinzufügen.
             </p>
+            <Link
+              href="/studio"
+              className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-6 py-3.5 text-sm tracking-[0.08em] uppercase font-medium hover:bg-[#1a1a1a] transition-colors mb-5"
+            >
+              <LogIn size={16} /> Zum Studio
+            </Link>
             <p className="text-xs text-[#6b6b6b] leading-relaxed">
               Es gibt noch keine feinen Rollen wie „Autor“ oder „Redakteur“ — wer eingeloggt ist, kann
               aktuell alles bearbeiten. Geht also mit der gleichen Vorsicht ran wie bisher mit dem
