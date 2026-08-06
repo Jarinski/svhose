@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Mail, ArrowRight, LogIn } from 'lucide-react'
+import { ArrowRight, LogIn } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Studio-Handbuch – SV Holm-Seppensen',
@@ -368,25 +368,6 @@ export default function HandbuchPage() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* ── Hilfe ── */}
-      <div className="px-6 max-w-4xl mx-auto">
-        <div className="border border-[#0a0a0a]/10 p-8 md:p-10">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Wenn's hakt</div>
-          <h3 className="font-display text-3xl tracking-tight mb-4">FRAGEN &amp; PROBLEME</h3>
-          <p className="text-[#6b6b6b] text-sm leading-relaxed mb-6">
-            Meldet euch bei der Vereins-IT statt lange herumzuprobieren — besonders bei roten
-            Fehlermeldungen beim Veröffentlichen. Viele davon lösen sich über Kapitel 03 (erst die
-            verknüpfte Person/den verknüpften Ort veröffentlichen).
-          </p>
-          <a
-            href="mailto:Jari.Gonzales@sv-holm-seppensen.de"
-            className="inline-flex items-center gap-2 border border-[#0a0a0a] px-6 py-3 text-sm tracking-[0.1em] uppercase hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-colors"
-          >
-            <Mail size={14} /> E-Mail schreiben
-          </a>
         </div>
       </div>
     </div>
