@@ -24,6 +24,7 @@ const navLinks: NavLink[] = [
   { href: '/downloads', label: 'Downloads' },
   { href: '/ueber-uns', label: 'Über uns' },
   { href: '/kinderschutz', label: 'Kinderschutz' },
+  { href: '/handbuch', label: 'Handbuch' },
 ]
 
 function DropdownMenu({ label, children }: { label: string; children: { href: string; label: string }[] }) {
