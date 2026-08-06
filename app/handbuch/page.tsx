@@ -211,6 +211,12 @@ const UNTERSCHIEDE = [
   },
 ]
 
+const ZUGRIFF = [
+  { name: 'Henrik Behrndt', rolle: '1. Vorsitzender' },
+  { name: 'Saad Fidaoui', rolle: 'Öffentlichkeitsarbeit' },
+  { name: 'Nina Fenz', rolle: 'Abteilungsleitung Tischtennis' },
+]
+
 export default function HandbuchPage() {
   return (
     <div className="pt-32 pb-24">
@@ -285,6 +291,24 @@ export default function HandbuchPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* ── Wer hat Zugriff ── */}
+      <div className="px-6 max-w-7xl mx-auto mb-20">
+        <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Einstieg</div>
+        <h2 className="font-display text-3xl tracking-tight mb-8">WER HAT ZUGRIFF</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[#0a0a0a]/10 max-w-3xl mb-6">
+          {ZUGRIFF.map(p => (
+            <div key={p.name} className="bg-[#f5f5f0] p-6">
+              <div className="font-medium text-[#0a0a0a] mb-1">{p.name}</div>
+              <div className="text-xs text-[#6b6b6b]">{p.rolle}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-[#6b6b6b] max-w-2xl leading-relaxed">
+          Neuer Zugang nötig? Das läuft nicht über die Website, sondern direkt bei Sanity
+          (manage.sanity.io → Members → Invite). Nur der Projekt-Owner kann neue Mitglieder einladen.
+        </p>
       </div>
 
       {/* ── Kapitel ── */}
