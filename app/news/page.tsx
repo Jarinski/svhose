@@ -1,6 +1,6 @@
 import { getAllNews } from '@/lib/content'
 import Link from 'next/link'
-import Image from 'next/image'
+import NewsThumbnail from '@/components/NewsThumbnail'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { ArrowRight } from 'lucide-react'
@@ -26,22 +26,11 @@ export default async function NewsPage() {
             href={`/news/${post.slug}`}
             className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col"
           >
-            {post.image && (
-              <div
-                className="relative w-full overflow-hidden"
-                style={{
-                  aspectRatio: post.image.width && post.image.height ? `${post.image.width} / ${post.image.height}` : '16 / 9',
-                }}
-              >
-                <Image
-                  src={post.image.url}
-                  alt={post.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-              </div>
-            )}
+            <NewsThumbnail
+              bild={post.image}
+              alt={post.title}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
             <div className="p-8 flex flex-col flex-1">
               <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
                 {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
