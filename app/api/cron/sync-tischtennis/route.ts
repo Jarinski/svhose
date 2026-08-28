@@ -72,6 +72,53 @@ function spielToTermin(spiel: TischtennisSpiel) {
   }
 }
 
+/**
+ * Findet Termine, die click-tt nicht mehr kennt – verlegte oder abgesagte Spiele.
+ *
+ * `getTischtennisAlleSaison()` fragt einen Zeitraum ab (kommende sechs Monate plus
+ * letzte sieben Tage), nicht die komplette Historie. Ältere Spiele – etwa die
+ * Rückrunde der Vorsaison – fehlen in der Antwort, ohne abgesagt zu sein. Gelöscht
+ * wird deshalb nur zwischen dem ersten und letzten gelieferten Spieltag; nuLiga gibt
+ * einen Datumsbereich vollständig zurück, die Randtage sind also belastbar.
+ *
+ * Fällt eine der beiden Abfragen aus, schrumpft das Fenster auf die verbliebenen
+ * Daten – außerhalb wird dann nichts angefasst.
+ */
+async function findeVeralteteTermine(
+  sanity: ReturnType<typeof buildWriteClient>,
+  allSpiele: TischtennisSpiel[],
+): Promise<{ ids: string[]; uebersprungen: boolean }> {
+  const daten = allSpiele.map(s => s.datum).sort()
+  const von   = daten[0]
+  const bis   = daten[daten.length - 1]
+
+  // datum ist ein ISO-Datum ("YYYY-MM-DD") und damit lexikografisch vergleichbar.
+  const vorhandeneIds: string[] = await sanity.fetch(
+    `*[_type == "termin"
+       && defined(clickTtId)
+       && !(_id in path("drafts.**"))
+       && datum >= $von
+       && datum <= $bis]._id`,
+    { von, bis },
+  )
+
+  const aktuelleIds = new Set(allSpiele.map(s => toDocId(s.id)))
+  const veraltet    = vorhandeneIds.filter(id => !aktuelleIds.has(id))
+
+  // Notbremse: Ändert sich das ID-Schema oder bricht der Parser, wirken auf einmal
+  // alle Termine im Fenster veraltet. Ein einzelner Cron-Lauf soll den Kalender
+  // dann nicht leerräumen – lieber Dubletten als Datenverlust.
+  if (veraltet.length > vorhandeneIds.length / 2 && vorhandeneIds.length > 0) {
+    console.warn(
+      `[sync-tischtennis] ${veraltet.length} von ${vorhandeneIds.length} Terminen im Fenster ` +
+      `wirken veraltet – Löschen übersprungen, bitte Parser prüfen.`,
+    )
+    return { ids: [], uebersprungen: true }
+  }
+
+  return { ids: veraltet, uebersprungen: false }
+}
+
 // ── GET handler ────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
@@ -117,15 +164,27 @@ export async function GET(req: NextRequest) {
       transaction.createOrReplace(spielToTermin(spiel))
     }
 
+    // 5. Verlegte/abgesagte Spiele entfernen
+    const veraltet = await findeVeralteteTermine(sanity, allSpiele)
+    for (const id of veraltet.ids) {
+      transaction.delete(id)
+    }
+
     await transaction.commit()
 
-    console.log(`[sync-tischtennis] ${allSpiele.length} Spiele synchronisiert.`)
+    console.log(
+      `[sync-tischtennis] ${allSpiele.length} Spiele synchronisiert, ` +
+      `${veraltet.ids.length} veraltete Termine gelöscht.`,
+    )
 
     return NextResponse.json({
       success:   true,
       synced:    allSpiele.length,
       kommende:  allSpiele.filter(s => !s.ergebnis).length,
       vergangene: allSpiele.filter(s => !!s.ergebnis).length,
+      geloescht:     veraltet.ids.length,
+      geloeschteIds: veraltet.ids,
+      ...(veraltet.uebersprungen ? { loeschenUebersprungen: true } : {}),
     })
   } catch (err) {
     console.error('[sync-tischtennis] Fehler:', err)

@@ -78,6 +78,10 @@ Quelle: `vercel.json`
   - Mapping `FussballSpiel -> termin`
   - `_id = fussball-de-<spielId>`
   - Upsert via `transaction.createOrReplace(...)`
+- Aufräumen: Termine, die fussball.de nicht mehr listet (verlegt/abgesagt), werden gelöscht.
+  Weil die Endpunkte nur je zehn Spiele liefern, gilt das ausschließlich für den Bereich
+  *zwischen* ältestem vergangenen und jüngstem kommenden Spieltag – beide Randtage sind
+  durch die Kappung angeschnitten und bleiben ausgenommen.
 - Ziel in Sanity: Dokumenttyp `termin`
 
 ### B) Tischtennis-Sync
@@ -89,6 +93,10 @@ Quelle: `vercel.json`
   - Mapping `TischtennisSpiel -> termin`
   - `_id = click-tt-<spielId>`
   - Upsert via `transaction.createOrReplace(...)`
+- Aufräumen: Termine, die click-tt nicht mehr listet, werden gelöscht – begrenzt auf den
+  Bereich zwischen erstem und letztem gelieferten Spieltag. Die Abfrage deckt nur kommende
+  sechs Monate plus letzte sieben Tage ab; ältere Spiele (Vorsaison) liegen außerhalb und
+  bleiben erhalten.
 - Ziel in Sanity: Dokumenttyp `termin`
 
 ### Sicherheit / Betrieb

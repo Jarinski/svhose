@@ -98,6 +98,9 @@ Quelle: `vercel.json`, `app/api/cron/*`.
      - lädt kommende + vergangene Spiele von fussball.de
      - dedupliziert
      - schreibt per `createOrReplace` als `termin`-Dokumente nach Sanity
+     - löscht verlegte/abgesagte Spiele, allerdings nur im verlässlich abgedeckten
+       Datumsfenster (siehe `findeVeralteteTermine`); die Antwort enthält
+       `geloescht` und `geloeschteIds`
 
 2. `GET /api/cron/sync-tischtennis`
    - Schedule: `0 4,5 * * *`
@@ -106,6 +109,8 @@ Quelle: `vercel.json`, `app/api/cron/*`.
      - lädt Saison-/Vergangenheitsdaten aus click-tt
      - dedupliziert
      - schreibt per `createOrReplace` als `termin`-Dokumente nach Sanity
+     - löscht verlegte/abgesagte Spiele im gelieferten Datumsbereich
+       (siehe `findeVeralteteTermine`)
 
 ### 3.2 Authentifizierung / Sicherheit
 
@@ -169,6 +174,9 @@ Quelle: `vercel.json`, `app/api/cron/*`.
 - HTML-Änderungen bei fussball.de / click-tt führen zu `0` Treffern oder fehlerhaften Daten.
 - Netzwerk-/Rate-Limit-/bot-protection-Effekte möglich.
 - Parser sind nicht API-contract-basiert, sondern markupsensitiv.
+- Ein verändertes ID-Schema lässt alle Termine im Löschfenster veraltet wirken. Beide Cronjobs
+  brechen deshalb ab, wenn mehr als die Hälfte des Fensters zum Löschen anstünde – die Antwort
+  enthält dann `loeschenUebersprungen: true` und das Log eine Warnung.
 
 ---
 

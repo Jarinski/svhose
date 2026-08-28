@@ -162,7 +162,8 @@ const CHAPTERS: Chapter[] = [
       <Callout type="warn" label="Ausnahme" key="c1">
         Spieltermine mit dem Vermerk „Automatische Fußball-ID“ werden nachts automatisch aus
         fussball.de/click-tt nachgezogen. Handänderungen daran können beim nächsten Sync wieder
-        überschrieben werden — für die reguläre Terminpflege betrifft euch das nicht.
+        überschrieben werden, verlegte Spiele verschwinden von selbst — für die reguläre
+        Terminpflege betrifft euch das nicht.
       </Callout>,
     ],
   },

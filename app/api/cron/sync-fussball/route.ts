@@ -84,6 +84,59 @@ function spielToTermin(spiel: FussballSpiel) {
   }
 }
 
+/**
+ * Findet Termine, die fussball.de nicht mehr kennt – verlegte oder abgesagte Spiele.
+ *
+ * Die beiden AJAX-Endpunkte liefern jeweils nur die nächsten bzw. letzten zehn
+ * Spiele. "Nicht in der Antwort" heißt also nicht "existiert nicht mehr" – die
+ * meisten Termine in Sanity liegen schlicht außerhalb dieses Fensters.
+ *
+ * Verlässlich ist nur der Bereich *zwischen* den beiden Rändern: der älteste Tag
+ * der vergangenen und der jüngste Tag der kommenden Spiele sind durch die
+ * Zehnerkappung angeschnitten (von einem Spieltag mit zehn Partien schafft es
+ * womöglich nur ein Teil in die Liste). Beide Randtage bleiben deshalb außen vor,
+ * und ohne beide Ränder wird gar nicht gelöscht.
+ */
+async function findeVeralteteTermine(
+  sanity: ReturnType<typeof buildWriteClient>,
+  kommende: FussballSpiel[],
+  vergangene: FussballSpiel[],
+  allSpiele: FussballSpiel[],
+): Promise<{ ids: string[]; uebersprungen: boolean }> {
+  const nichts = { ids: [], uebersprungen: false }
+  if (kommende.length === 0 || vergangene.length === 0) return nichts
+
+  const von = vergangene.reduce((min, s) => (s.datum < min ? s.datum : min), vergangene[0].datum)
+  const bis = kommende.reduce((max, s) => (s.datum > max ? s.datum : max), kommende[0].datum)
+  if (von >= bis) return nichts
+
+  // datum ist ein ISO-Datum ("YYYY-MM-DD") und damit lexikografisch vergleichbar.
+  const vorhandeneIds: string[] = await sanity.fetch(
+    `*[_type == "termin"
+       && defined(fussballDeId)
+       && !(_id in path("drafts.**"))
+       && datum > $von
+       && datum < $bis]._id`,
+    { von, bis },
+  )
+
+  const aktuelleIds = new Set(allSpiele.map((s) => toDocId(s.id)))
+  const veraltet = vorhandeneIds.filter((id) => !aktuelleIds.has(id))
+
+  // Notbremse: Ändert sich das ID-Schema oder bricht der Parser, wirken auf einmal
+  // alle Termine im Fenster veraltet. Ein einzelner Cron-Lauf soll den Kalender
+  // dann nicht leerräumen – lieber Dubletten als Datenverlust.
+  if (veraltet.length > vorhandeneIds.length / 2 && vorhandeneIds.length > 0) {
+    console.warn(
+      `[sync-fussball] ${veraltet.length} von ${vorhandeneIds.length} Terminen im Fenster ` +
+        `wirken veraltet – Löschen übersprungen, bitte Parser prüfen.`,
+    )
+    return { ids: [], uebersprungen: true }
+  }
+
+  return { ids: veraltet, uebersprungen: false }
+}
+
 // ── GET-Handler ────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
@@ -135,15 +188,26 @@ export async function GET(req: NextRequest) {
       transaction.createOrReplace(spielToTermin(spiel))
     }
 
+    // 5. Verlegte/abgesagte Spiele entfernen
+    const veraltet = await findeVeralteteTermine(sanity, kommende, vergangene, allSpiele)
+    for (const id of veraltet.ids) {
+      transaction.delete(id)
+    }
+
     await transaction.commit()
 
-    console.log(`[sync-fussball] ${allSpiele.length} Spiele synchronisiert.`)
+    console.log(
+      `[sync-fussball] ${allSpiele.length} Spiele synchronisiert, ${veraltet.ids.length} veraltete Termine gelöscht.`,
+    )
 
     return NextResponse.json({
       success: true,
       synced: allSpiele.length,
       kommende: kommende.length,
       vergangene: vergangene.length,
+      geloescht: veraltet.ids.length,
+      geloeschteIds: veraltet.ids,
+      ...(veraltet.uebersprungen ? { loeschenUebersprungen: true } : {}),
     })
   } catch (err) {
     console.error('[sync-fussball] Fehler bei der Synchronisation:', err)
