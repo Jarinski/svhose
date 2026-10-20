@@ -13,7 +13,8 @@ import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import * as schema from './schema'
 
-export type Datenbank = BetterSQLite3Database<typeof schema>
+/** Drizzle-Instanz; über $client ist die rohe better-sqlite3-Verbindung erreichbar. */
+export type Datenbank = BetterSQLite3Database<typeof schema> & { $client: Database.Database }
 
 export const DATENBANK_PFAD = path.resolve(process.env.DATENBANK_PFAD ?? path.join('data', 'svhs.db'))
 const MIGRATIONEN_PFAD = path.resolve('drizzle')

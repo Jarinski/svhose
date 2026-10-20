@@ -11,14 +11,16 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "export:sanity": "node scripts/sanity-export.mjs",
-    "import:sanity": "tsx scripts/import-aus-sanity.ts"
+    "import:sanity": "tsx scripts/import-aus-sanity.ts",
+    "verwaltung:admin": "tsx scripts/verwaltung-admin.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.45.3",
     "lucide-react": "^0.400.0",
-    "next": "14.2.5",
+    "next": "^14.2.35",
+    "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^10.1.0",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",

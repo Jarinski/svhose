@@ -7,9 +7,11 @@ Technische Betriebs- und Wartungsdokumentation für das Projekt **sv-holm-seppen
 ## Ziel / Scope
 
 Dieses Dokument beschreibt den Betrieb auf einem **eigenen Server** (geplant: Hetzner): Aufbau,
-Umgebungsvariablen, Cronjobs, Backups und Wiederherstellung, Deployment, Recovery und Sicherheit.
+Umgebungsvariablen, Cronjobs, Backups und Wiederherstellung, Deployment, Recovery und Sicherheit,
+dazu den Betrieb der Verwaltung unter `/verwaltung` (Abschnitt 9).
 
-Stand: 2026-10-03. Die Website ist noch **nicht produktiv**; der Server ist noch nicht eingerichtet.
+Stand: 2026-10-20 (Verwaltung ergänzt). Die Website ist noch **nicht produktiv**; der Server ist
+noch nicht eingerichtet.
 Pfade, Dienst- und Benutzernamen in den Beispielen (`/srv/sv-holm-seppensen`, `svhs`) sind
 Vorschläge und bei der Einrichtung festzulegen.
 
@@ -30,6 +32,7 @@ Vorschläge und bei der Einrichtung festzulegen.
 ```mermaid
 flowchart LR
   B["Besucher:innen"] -->|"HTTPS 443"| N["nginx"]
+  R["Redaktion<br/>/verwaltung"] -->|"HTTPS 443"| N
   N -->|"127.0.0.1:3000"| A["next start<br/>(systemd-Dienst)"]
   A --> DB[("data/svhs.db")]
   A --> M[("data/medien")]
@@ -64,8 +67,8 @@ flowchart LR
 
 | Pfad | Inhalt | Hinweis |
 |---|---|---|
-| `data/svhs.db` | die Datenbank | dazu im Betrieb `svhs.db-wal` und `svhs.db-shm` (WAL-Modus) |
-| `data/medien/` | Bilder und Dateien, ausgeliefert unter `/medien/<pfad>` | |
+| `data/svhs.db` | die Datenbank: Inhalte, Zugänge der Verwaltung, angemeldete Geräte und Verlauf | dazu im Betrieb `svhs.db-wal` und `svhs.db-shm` (WAL-Modus) |
+| `data/medien/` | Bilder und Dateien, ausgeliefert unter `/medien/<pfad>` | auch alle Uploads aus der Verwaltung |
 | `data/backup/` | nächtliche Datenbank-Kopien (Vorschlag) | zusätzlich außer Haus sichern |
 | `data/import/` | Sanity-Export vom 03.10.2026 | nur für die Erstbefüllung; enthält personenbezogene Daten |
 
@@ -84,7 +87,7 @@ flowchart LR
 | `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>` | **hoch** |
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
-| `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>` | niedrig |
+| `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>`. Außerdem die Adresse in den Einladungs-Links und -QR-Codes der Verwaltung: Ohne sie nimmt die Verwaltung die Adresse der aktuellen Anfrage, das Skript `npm run verwaltung:admin` dagegen `http://localhost:3000` | niedrig |
 | `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET` | nur für `npm run export:sanity` | – | einmaliger Export aus Sanity | niedrig |
 | `SANITY_API_READ_TOKEN` bzw. `SANITY_API_WRITE_TOKEN` | nur für `npm run export:sanity` | – | Lesezugriff für den Export | **kritisch** – nach dem Umzug widerrufen und löschen |
 
@@ -102,6 +105,9 @@ Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter h
   `DATENBANK_PFAD=/var/lib/svhs/svhs.db MEDIEN_PFAD=/var/lib/svhs/medien npm run import:sanity`.
   Sonst baut der Import `./data/svhs.db` und `./data/medien` auf, während die Website den
   konfigurierten Pfad liest.
+- `npm run verwaltung:admin` (tsx) liest ebenfalls **keine** Env-Datei. `SEITEN_URL` und einen
+  abweichenden `DATENBANK_PFAD` deshalb beim Aufruf mitgeben (Abschnitt 9.1). Sonst landet der
+  Admin-Zugang in `./data/svhs.db`, und der Link im QR-Code zeigt auf `http://localhost:3000`.
 - `.env` und `.env*.local` sind gitignored. Geheimnisse gehören **nie** in versionierte Dateien.
 - Die crontab braucht `CRON_SECRET` ebenfalls (Abschnitt 3.1). Bei einem Wechsel des Secrets
   beide Stellen gleichzeitig ändern.
@@ -173,13 +179,18 @@ curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron
 
 | Was | Wie | Warum |
 |---|---|---|
-| `data/svhs.db` | täglich konsistente Kopie per SQLite-Backup (nicht per `cp`) | alle Inhalte |
-| `data/medien/` | täglich per `rsync` | Bilder und Dateien |
+| `data/svhs.db` | täglich konsistente Kopie per SQLite-Backup (nicht per `cp`) | alle Inhalte, dazu Zugänge, Geräte und Verlauf der Verwaltung |
+| `data/medien/` | täglich per `rsync` | Bilder und Dateien, auch alle Uploads aus der Verwaltung |
 | `.env` / `.env.local` | einmalig und nach Änderungen, getrennt und zugriffsgeschützt | Secrets |
 | Code | liegt im Git | – |
 
 Die Datenbank läuft im WAL-Modus. Ein einfaches `cp` während des Betriebs kann eine inkonsistente
 Kopie erzeugen. Deshalb die Backup-Funktion von SQLite nutzen.
+
+Die Verwaltung braucht kein eigenes Backup: Zugänge, Geräte und Verlauf stehen in derselben
+Datenbankdatei und sind im nächtlichen Backup enthalten. Damit enthält jedes Backup aber auch die
+Passwort-Hashes und die Geheimnisse der Authenticator-Apps im Klartext (`DATA_MODEL.md`,
+Abschnitt 3.18). Backups deshalb so schützen wie Passwörter.
 
 ### 4.2 Nächtliches Backup (Beispiel)
 
@@ -234,11 +245,25 @@ sudo systemctl start svhs
   beim ersten Zugriff automatisch ein.
 - Danach Startseite, Sparten, Trainingszeiten, Kontaktseite und News prüfen.
 - Medien bei Bedarf per `rsync` aus der Sicherung zurückholen.
+- **Auch die Zugänge springen auf den Stand des Backups zurück:** Später angelegte Zugänge fehlen,
+  spätere Passwortänderungen und Zurücksetzungen sind rückgängig gemacht, und Geräte, die damals
+  angemeldet und noch nicht abgelaufen waren, sind wieder angemeldet. Der Verlauf endet mit dem
+  Backup. Nach der Wiederherstellung deshalb unter „Zugänge“ prüfen und betroffene Zugänge erneut
+  zurücksetzen oder ihre Geräte abmelden (Abschnitt 9.3).
 
 ### 4.4 Einzelne Daten zurückholen
 
-Für einen versehentlich gelöschten Eintrag nicht die ganze Datenbank zurückspielen. Stattdessen
-das Backup getrennt öffnen und die Werte von Hand übertragen:
+Für einen versehentlich gelöschten oder falsch geänderten Eintrag nicht die ganze Datenbank
+zurückspielen.
+
+Erster Weg ist der **Verlauf** der Verwaltung („Verlauf“, nur für Admins): Er zeigt jede Änderung
+mit Stand vorher und nachher, auch bei gelöschten Einträgen. Die alten Werte von dort in der
+Verwaltung wieder eintragen. Einen Knopf „Wiederherstellen“ gibt es noch nicht. Ein ersetztes oder
+entferntes Foto hat die Verwaltung meist schon aus dem Medienordner gelöscht; die Datei dann aus
+der Medien-Sicherung holen oder neu hochladen.
+
+Hilft das nicht (z. B. bei Änderungen in Drizzle Studio, die nicht im Verlauf stehen), das Backup
+getrennt öffnen und die Werte von Hand übertragen:
 
 ```sh
 DATENBANK_PFAD=data/backup/svhs-2026-10-02.db npm run db:studio
@@ -258,20 +283,25 @@ automatisch mit ein.
    öffnen, SSH nur mit Schlüssel, Zeitzone `Europe/Berlin`, automatische Sicherheitsupdates.
 2. **Pakete installieren**: Node.js 22 LTS (oder neuer), git, nginx, certbot, sqlite3.
    Build-Werkzeuge (`build-essential`, `python3`) nur, falls `better-sqlite3` kein fertiges
-   Binary für die Plattform findet.
+   Binary für die Plattform findet. `sharp` bringt seine Binaries als optionale Pakete mit
+   (Abschnitt 9.6).
 3. **Dienstbenutzer** anlegen (z. B. `svhs`) und das Repository nach `/srv/sv-holm-seppensen` klonen.
-4. **Umgebung**: `.env` bzw. `.env.local` anlegen (mindestens `CRON_SECRET`, siehe Abschnitt 2).
+4. **Umgebung**: `.env` bzw. `.env.local` anlegen (mindestens `CRON_SECRET` und `SEITEN_URL`,
+   siehe Abschnitt 2).
 5. **Abhängigkeiten und Build**: `npm ci` und `npm run build`.
 6. **Daten**: die gepflegte `data/svhs.db` und `data/medien/` per `scp`/`rsync` auf den Server
    kopieren. Alternativ einmalig `npm run import:sanity`, falls `data/import/` dort liegt
-   (bei abweichenden Pfaden diese beim Aufruf setzen, siehe Abschnitt 2.2).
-   Ab dann wird **nur noch auf dem Server** gepflegt.
+   (bei abweichenden Pfaden diese beim Aufruf setzen, siehe Abschnitt 2.2). Der Import bricht ab,
+   sobald die Datenbank Zugänge enthält (Abschnitt 7.3), also vor dem ersten Admin ausführen.
+   Ab dann wird **nur noch auf dem Server** gepflegt, über die Verwaltung.
 7. **systemd-Dienst** einrichten (Beispiel unten), aktivieren und starten.
 8. **nginx** als Reverse Proxy einrichten (Beispiel unten) und TLS mit `certbot --nginx` holen.
 9. **crontab** und Backup-Skript einrichten (Abschnitte 3 und 4).
 10. **Domain** auf den Server zeigen lassen, `SEITEN_URL` in der Env-Datei auf die öffentliche
     Adresse setzen (Abschnitt 2.1; mit oder ohne „www“ vorher klären), Dienst neu starten und alle
     Seiten prüfen.
+11. **Ersten Admin der Verwaltung** anlegen (Abschnitt 9.1), sich über `https://…/verwaltung`
+    anmelden und mindestens einen zweiten Admin einrichten.
 
 systemd-Dienst `/etc/systemd/system/svhs.service` (Beispiel):
 
@@ -294,17 +324,42 @@ WantedBy=multi-user.target
 nginx (Beispiel, TLS-Teil ergänzt certbot):
 
 ```nginx
+# Im http-Block (z. B. /etc/nginx/conf.d/svhs-limit.conf): nur POST-Anfragen zählen
+map $request_method $svhs_post_ip {
+  POST    $binary_remote_addr;
+  default "";
+}
+limit_req_zone $svhs_post_ip zone=svhs_verwaltung:10m rate=30r/m;
+
 server {
   server_name www.example.de;
 
+  # Uploads in der Verwaltung: bis 15 MB pro Datei (nginx-Standard wäre 1 MB)
+  client_max_body_size 16m;
+
+  # auf Server-Ebene, damit beide location-Blöcke sie erben
+  proxy_set_header Host $host;
+  # Pflicht: echte Client-IP für die Begrenzung der Fehlversuche (Abschnitt 9.2)
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  # Pflicht: daran erkennt die Verwaltung HTTPS und setzt das Cookie als Secure
+  proxy_set_header X-Forwarded-Proto $scheme;
+
   location / {
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Empfohlen: POST-Anfragen (Anmeldung, Speichern) in der Verwaltung pro IP drosseln
+  location /verwaltung {
+    limit_req zone=svhs_verwaltung burst=20 nodelay;
+    proxy_pass http://127.0.0.1:3000;
   }
 }
 ```
+
+Die kommentierten Einstellungen braucht bzw. empfiehlt die Verwaltung; Begründung in Abschnitt 9.2.
+Die Werte für `limit_req` sind ein Vorschlag (30 POST-Anfragen pro Minute und IP, kurzzeitig 20
+mehr) und bei Bedarf anzupassen.
 
 ### 5.2 Update einspielen
 
@@ -318,6 +373,9 @@ sudo systemctl restart svhs
 
 - **Vorher ein Backup ziehen**, wenn neue Dateien in `drizzle/` dabei sind (Schemaänderung).
   Migrationen werden beim ersten Datenbankzugriff nach dem Neustart automatisch eingespielt.
+  Das gilt auch für das erste Update mit der Verwaltung (Migration `0001_verwaltung`, siehe
+  `DATA_MODEL.md`, Abschnitt 9). Danach den ersten Admin anlegen (Abschnitt 9.1).
+- Ein Neustart beendet keine Anmeldungen: Die Sitzungen stehen in der Datenbank (`geraete`).
 - `next build` überschreibt `.next/`, während die alte Instanz noch läuft. In dieser Zeit können
   einzelne Seiten kurz fehlschlagen. Updates daher zu ruhigen Zeiten einspielen.
 - **Zurückrollen**: vorherigen Commit auschecken, `npm ci`, `npm run build`, neu starten. Wurde
@@ -349,6 +407,9 @@ sudo systemctl restart svhs
 
 - Sanity wird nicht mehr genutzt. Die Website braucht zur Laufzeit außer fussball.de und click-tt
   keinen externen Dienst.
+- Auch die Verwaltung kommt ohne externen Dienst aus: kein Mailversand, kein Login-Anbieter.
+  QR-Codes (Paket `qrcode`), Passwort-Hashes (scrypt) und App-Codes (TOTP) berechnet der Server
+  selbst; die Authenticator-Apps auf den Handys arbeiten offline.
 - Später kommen Telegram und OpenRouter für den Bot dazu (`CMS_KONZEPT.md`).
 
 ---
@@ -365,12 +426,23 @@ sudo systemctl restart svhs
 | Cron liefert `401` | `CRON_SECRET` in crontab und Env-Datei unterschiedlich | beide angleichen |
 | Cron liefert 0 Spiele oder `loeschenUebersprungen: true` | Parser passt nicht mehr zur Quelle | `lib/fussball-de.ts` bzw. `lib/click-tt.ts` prüfen; Bestand bleibt erhalten |
 | Bild oder Download liefert 404 | Datei fehlt im Medienordner oder Pfad in der Datenbank falsch | Datei unter `data/medien/<pfad>` prüfen; Pfad ohne `/medien/`-Präfix eintragen |
-| Inhalt versehentlich gelöscht oder geändert | Pflegefehler | Einzelwerte aus dem Backup übertragen (Abschnitt 4.4) |
+| Inhalt versehentlich gelöscht oder geändert | Pflegefehler | alte Werte aus dem Verlauf der Verwaltung oder aus dem Backup übertragen (Abschnitt 4.4) |
 | Platte voll | Backups, Logs, WAL-Datei | alte Backups und Logs löschen; Dienst neu starten |
+| Upload in der Verwaltung bricht mit `413` ab | `client_max_body_size` in nginx zu klein | auf `16m` setzen (Abschnitt 5.1), nginx neu laden |
+| „Das Bild konnte nicht gelesen werden“ bei jedem Bild | `sharp` ohne passendes Binary installiert | `npm ci` ohne `--omit=optional` wiederholen, Log prüfen (Abschnitt 9.6) |
+| App-Code wird immer abgelehnt, Passwort stimmt | Uhr des Servers oder des Handys geht falsch (die Codes sind zeitbasiert) | `timedatectl` prüfen, Zeitabgleich (NTP) einschalten; am Handy automatische Uhrzeit einschalten |
+| „Zu viele falsche Versuche“ | 5 Fehlversuche mit diesem Benutzernamen von dieser IP oder 20 von dieser IP insgesamt in 15 Minuten | eine Viertelstunde warten |
+| Alle Nutzer:innen sind gleichzeitig wegen Fehlversuchen gesperrt | nginx gibt die Client-IP nicht weiter (weder `X-Real-IP` noch `X-Forwarded-For`), alle Anfragen zählen für dieselbe Adresse | Header in nginx setzen (Abschnitt 5.1), nginx neu laden |
+| `503` beim Speichern oder Anmelden | `limit_req` in nginx greift | Werte in `limit_req_zone`/`burst` erhöhen (Abschnitt 5.1) |
+| Einladungs-Link zeigt auf `localhost` | `SEITEN_URL` beim Skript nicht gesetzt bzw. nicht in der Env-Datei | Code von Hand auf `/verwaltung/anmelden` eingeben oder Skript mit `SEITEN_URL` neu aufrufen (Abschnitt 9.1) |
+| Niemand kann sich als Admin anmelden | alle Admins ausgesperrt (Handy verloren, Passwort vergessen) | Notfall-Zugang per Skript (Abschnitt 9.4) |
 
 ### 7.2 Inhalte auf dem Server pflegen (Drizzle Studio per SSH-Tunnel)
 
-Bis die Verwaltung `/verwaltung` existiert, ist Drizzle Studio der Weg, Inhalte zu pflegen.
+Inhalte werden über die Verwaltung unter `/verwaltung` gepflegt (Abschnitt 9, `README.md`).
+Drizzle Studio bleibt für Technik und Notfälle. Es **umgeht Rechte, Prüfungen, Konfliktprüfung
+und Verlauf** der Verwaltung (Abschnitt 9.5): Änderungen hier erscheinen nirgends im Verlauf und
+lassen sich dort nicht nachvollziehen.
 Drizzle Studio lauscht nur lokal (Port 4983) und darf **nie** öffentlich erreichbar sein.
 
 1. Vom eigenen Rechner einen Tunnel öffnen: `ssh -L 4983:127.0.0.1:4983 svhs@<server>`
@@ -385,14 +457,24 @@ Alternative für Einzelkorrekturen: `sqlite3 data/svhs.db`, dann zuerst
 
 `npm run import:sanity` löscht Datenbank und Medienordner und baut beide aus `data/import/sanity-export.json` neu auf.
 Das ist **nur** für eine frische Entwicklungsumgebung gedacht. Auf dem Server würde es alle
-Änderungen seit dem 03.10.2026 verwerfen.
+Änderungen seit dem 03.10.2026 verwerfen, dazu alle Zugänge, den Verlauf und alle Uploads.
+
+Als Schutz bricht der Import ab, sobald die Datenbank Zugänge der Verwaltung enthält (dort wird
+also schon gearbeitet). Nur mit ausdrücklichem Schalter läuft er trotzdem:
+
+```sh
+npm run import:sanity -- --alles-ueberschreiben
+```
+
+Diesen Schalter auf dem Server mit Live-Daten nie verwenden. Danach gibt es keine Zugänge mehr;
+der erste Admin muss neu angelegt werden (Abschnitt 9.1).
 
 ### 7.4 Medien ersetzen oder löschen (Cache)
 
 `/medien/<pfad>` wird gecacht (`app/medien/[...pfad]/route.ts`):
 
-- Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legt der Import Bilder ab) gelten
-  als unveränderlich: `Cache-Control: public, max-age=31536000, immutable`.
+- Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen der Import und die
+  Verwaltung Dateien ab) gelten als unveränderlich: `Cache-Control: public, max-age=31536000, immutable`.
 - Alle anderen Dateien (z. B. `downloads/satzung.pdf`) werden bei jedem Abruf nachgeprüft
   (`max-age=0, must-revalidate` mit ETag und Last-Modified, unverändert ⇒ `304`).
 
@@ -400,11 +482,14 @@ Daraus folgt:
 
 - **Ersetzen**: neue Fassung immer unter **neuem Dateinamen** ablegen (z. B. mit Datum oder Hash im
   Namen) und den Pfad in der Tabelle anpassen. Eine unter gleichem Namen überschriebene Datei mit
-  Hash-Suffix bliebe bei Besucher:innen bis zu ein Jahr alt.
+  Hash-Suffix bliebe bei Besucher:innen bis zu ein Jahr alt. Die Verwaltung macht das beim
+  Hochladen automatisch und löscht die alte Datei, sobald nichts mehr auf sie verweist
+  (`DATA_MODEL.md`, Abschnitt 7.1).
 - **Foto löschen oder ersetzen** (z. B. Widerruf einer Einwilligung): `next/image` hält verkleinerte
   Kopien in `.next/cache/images` (der Ordner übersteht auch `npm run build`) und liefert einen
-  abgelaufenen Eintrag weiter aus, selbst wenn das Original fehlt. Deshalb danach den Bildcache
-  leeren:
+  abgelaufenen Eintrag weiter aus, selbst wenn das Original fehlt. Das gilt auch, wenn das Foto in
+  der Verwaltung entfernt oder ersetzt wurde: Sie löscht das Original, aber nicht den Bildcache.
+  Deshalb danach den Bildcache leeren:
 
   ```sh
   cd /srv/sv-holm-seppensen
@@ -439,16 +524,27 @@ Daraus folgt:
   nicht dorthin. Die Route lässt keine Pfade außerhalb des Medienordners zu (`medienDatei()`).
 - Wird ein Foto gelöscht (z. B. Widerruf der Einwilligung), reicht das Entfernen von Datei und
   Datenbankeintrag nicht: zusätzlich den Bildcache leeren (Abschnitt 7.4).
-- Für die spätere Verwaltung: beim Hochladen immer einen Inhalts-Hash in den Dateinamen schreiben
-  und beim Löschen eines Bildes den Bildcache leeren (`CMS_KONZEPT.md`).
-- Die Datenschutzerklärung (`app/datenschutz/page.tsx`) um das Hosting auf dem eigenen Server
-  ergänzen, später um Telegram-Bot und LLM.
+- Die Verwaltung schreibt beim Hochladen einen Inhalts-Hash in den Dateinamen, entfernt
+  Metadaten wie GPS-Koordinaten aus Bildern und löscht ersetzte Dateien. Den Bildcache leert sie
+  nicht (Abschnitt 7.4).
+- **Verlauf:** Er hebt alte Stände dauerhaft auf, bei Personen auch Kontaktdaten und interne
+  Notizen, und zwar auch nach dem Löschen der Person. Eine automatische Löschfrist gibt es nicht.
+  Bei einem Löschwunsch (z. B. Widerruf der Einwilligung) die betroffenen Einträge in `verlauf`
+  zusätzlich per Drizzle Studio entfernen; Backups laufen nach 30 Tagen von selbst aus.
+- **Zugänge** brauchen keine E-Mail-Adresse: gespeichert werden Name, Benutzername, Rechte und die
+  Gerätenamen aus dem User-Agent. IP-Adressen stehen nur gehasht in `fehlversuche` und
+  verschwinden nach etwa einem Tag (`DATA_MODEL.md`, Abschnitt 3.16).
+- Die Datenschutzerklärung (`app/datenschutz/page.tsx`) um das Hosting auf dem eigenen Server und
+  die Verwaltung (Anmelde-Cookie `svhs_sitzung`, Verlauf) ergänzen, später um Telegram-Bot und LLM.
 
 ### 8.3 Server
 
 - SSH nur mit Schlüssel, kein Passwort-Login; Firewall nur für 22, 80 und 443.
 - Node.js lauscht nur auf `127.0.0.1`; von außen ist nur nginx erreichbar.
-- `data/` und die Env-Dateien gehören dem Dienstbenutzer und sind für andere nicht lesbar.
+- `data/` und die Env-Dateien gehören dem Dienstbenutzer und sind für andere nicht lesbar. Die
+  Datenbank enthält Passwort-Hashes und App-Geheimnisse der Verwaltung.
+- Systemzeit per Zeitabgleich (NTP) synchron halten: Die App-Codes der Anmeldung sind zeitbasiert
+  und vertragen nur rund 30 Sekunden Abweichung.
 - Automatische Sicherheitsupdates einschalten; Node.js und npm-Abhängigkeiten regelmäßig aktualisieren.
 
 ### 8.4 Cron-Endpunkte
@@ -461,8 +557,11 @@ Daraus folgt:
 1. **Hoch**: Sanity-Tokens in der öffentlichen Git-Historie, solange sie nicht widerrufen sind.
 2. **Hoch**: Datenverlust ohne Backup außer Haus (ein Server, eine Datei).
 3. **Mittel-Hoch**: Scraper-Abhängigkeit von externem HTML (fussball.de, click-tt).
-4. **Mittel**: Pflegefehler in Drizzle Studio ohne Verlauf und Rückgängig.
-5. **Mittel**: offene Cron-Endpunkte, falls `CRON_SECRET` fehlt.
+4. **Mittel**: Pflegefehler. In der Verwaltung stehen sie im Verlauf, lassen sich aber noch nicht
+   per Knopf wiederherstellen; in Drizzle Studio gibt es weder Verlauf noch Rückgängig.
+5. **Mittel**: alle Admins ausgesperrt (Handy verloren, Passwort vergessen). Der Notfall-Zugang
+   (Abschnitt 9.4) braucht SSH-Zugriff auf den Server.
+6. **Mittel**: offene Cron-Endpunkte, falls `CRON_SECRET` fehlt.
 
 ### 8.6 Empfehlungen
 
@@ -470,18 +569,130 @@ Daraus folgt:
 2. **Vor dem Livegang**: Backups außer Haus einrichten und eine Wiederherstellung testen.
 3. **Monitoring**: Cron-Ergebnisse per Mail oder Log prüfen; Alarm bei Fehlern oder wiederholt
    0 synchronisierten Spielen; optional ein externer Uptime-Check der Startseite.
-4. **Mittelfristig**: die Verwaltung `/verwaltung` mit Rechten, Verlauf und Wiederherstellen
-   (`CMS_KONZEPT.md`) ersetzt die Pflege per Drizzle Studio.
+4. **Verwaltung**: Die Pflege per Drizzle Studio ist durch `/verwaltung` mit Rechten und Verlauf
+   ersetzt (seit 20.10.2026). Mindestens zwei Admins einrichten und SSH-Zugang für mindestens zwei
+   Personen vorhalten (Abschnitt 9.4). Offen ist noch „Wiederherstellen“ im Verlauf (`CMS_KONZEPT.md`).
+
+---
+
+## 9) Verwaltung `/verwaltung`
+
+Die Verwaltung ist Teil derselben Next.js-Anwendung: kein eigener Dienst, keine eigene Datenbank.
+Angemeldet wird mit Zwei-Faktor (Benutzername + Passwort + 6-stelliger Code aus einer
+Authenticator-App). Bedienung: `README.md`; Ablauf und Rechte: `CMS_KONZEPT.md`, Abschnitte 5
+und 6; Tabellen: `DATA_MODEL.md`, Abschnitte 3.12–3.18.
+
+### 9.1 Erster Admin auf dem Server
+
+Den allerersten Admin legt ein Skript direkt in der Datenbank an. Auf dem Server als
+Dienstbenutzer im Projektverzeichnis (damit neu angelegte Dateien in `data/` dem Dienst gehören):
+
+```sh
+cd /srv/sv-holm-seppensen
+SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname Nachname"
+```
+
+- Das Skript liest **keine** Env-Datei. `SEITEN_URL` muss beim Aufruf mitgegeben werden, sonst
+  zeigt der Link im QR-Code auf `http://localhost:3000`. Liegt die Datenbank nicht unter
+  `data/svhs.db`, auch `DATENBANK_PFAD=…` mitgeben, sonst entsteht der Zugang in einer neuen,
+  leeren Datei.
+- Ausgabe: QR-Code im Terminal, Benutzername, Einladungs-Code, Link und Ablaufzeit. Der Code gilt
+  7 Tage und nur einmal. Er erscheint nur in dieser Ausgabe.
+- Danach den QR-Code mit dem Handy scannen (oder am PC `/verwaltung/anmelden` öffnen und den Code
+  eintippen), ein Passwort mit mindestens 10 Zeichen festlegen und die Authenticator-App koppeln.
+- Weitere Zugänge legt der Admin dann in der Verwaltung unter „Zugänge“ an. **Mindestens zwei
+  Admins** einrichten, damit nicht ein verlorenes Handy alle aussperrt.
+- Das Skript braucht nur Zugriff auf die Datenbankdatei, der Dienst kann dabei weiterlaufen.
+  Fehlende Migrationen spielt es selbst ein.
+
+### 9.2 HTTPS, Cookie und nginx
+
+- **Sitzungs-Cookie** `svhs_sitzung`: `httpOnly`, `SameSite=Lax`, Pfad `/`. Es enthält nur ein
+  Zufallstoken; die Sitzung selbst steht in der Tabelle `geraete`. Mit „angemeldet bleiben“ gilt
+  es 30 Tage, sonst endet es mit dem Schließen des Browsers (die Sitzung spätestens nach 12 Stunden).
+- **`Secure`** setzt die Anwendung nur, wenn die Anfrage über HTTPS kam. Hinter nginx erkennt sie
+  das am Header `X-Forwarded-Proto` (erster Wert; ohne den Header an `Origin` bzw. `Referer`).
+  `proxy_set_header X-Forwarded-Proto $scheme;` ist deshalb Pflicht (Beispiel in Abschnitt 5.1).
+  Die Verwaltung nur über `https://` benutzen.
+- **Fehlversuche** werden pro IP-Adresse (20 in 15 Minuten) und pro Kombination aus
+  Benutzername und IP-Adresse (5 in 15 Minuten) gezählt. Ein Benutzername allein wird nicht
+  gesperrt; so kann niemand fremde Zugänge gezielt aussperren. Die IP-Adresse nimmt die Anwendung
+  aus `X-Real-IP`, ersatzweise aus dem **letzten** Eintrag von `X-Forwarded-For` (den hat nginx
+  selbst angehängt; frühere Einträge kann ein Client fälschen).
+  `proxy_set_header X-Real-IP $remote_addr;` ist deshalb Pflicht (Beispiel in Abschnitt 5.1).
+- **Drosselung in nginx** (empfohlen): `limit_req` für POST-Anfragen unter `/verwaltung`
+  (Beispiel in Abschnitt 5.1). Das bremst massenhafte Anmeldeversuche, bevor sie die Anwendung
+  erreichen.
+- **Uploads** laufen über Server-Aktionen. `next.config.js` erlaubt dafür 16 MB pro Anfrage
+  (`serverActions.bodySizeLimit`), die Verwaltung selbst höchstens 15 MB pro Datei. nginx lässt
+  standardmäßig nur 1 MB durch: `client_max_body_size 16m;` setzen.
+- **Systemzeit**: Die App-Codes sind zeitbasiert (30 Sekunden, ein Schritt Toleranz). Server per
+  NTP synchron halten (`timedatectl`).
+- Alle Seiten unter `/verwaltung` sind für Suchmaschinen gesperrt (`noindex`) und von der Website
+  aus nicht verlinkt.
+
+### 9.3 Zugang zurücksetzen (Passwort vergessen, Handy verloren)
+
+- Ein Admin öffnet „Zugänge“ → Zugang → „Zugang zurücksetzen“. Dabei werden Passwort und
+  App-Kopplung ungültig, **alle Geräte** abgemeldet und offene Einladungs-Codes gelöscht. Es
+  erscheint ein neuer Einladungs-Code mit QR-Code (7 Tage, einmal), nur dieses eine Mal.
+- Den Code nur persönlich oder per Direktnachricht weitergeben, nicht in Gruppen.
+- Den eigenen Zugang kann ein Admin ebenfalls zurücksetzen; er ist danach selbst abgemeldet.
+- Deaktivierte Zugänge lassen sich nicht zurücksetzen, sie müssen zuerst wieder aktiviert werden.
+- Wer sein Passwort nur ändern will, macht das selbst unter „Mein Zugang“ (aktuelles Passwort +
+  App-Code). Dabei werden alle anderen Geräte abgemeldet.
+- Verdacht auf Missbrauch: einzelne Geräte abmelden (unter „Zugänge“ bzw. „Mein Zugang“) oder den
+  Zugang deaktivieren. Deaktivieren meldet sofort alle Geräte ab.
+
+### 9.4 Notfall: alle Admins ausgesperrt
+
+Kann sich kein Admin mehr anmelden, hilft nur das Skript aus Abschnitt 9.1, direkt auf dem Server:
+
+```sh
+cd /srv/sv-holm-seppensen
+SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname Nachname"
+```
+
+- Gibt es schon einen Zugang mit **genau diesem Namen** (wie unter „Zugänge“ angezeigt), wird er
+  wieder aktiviert, zum Admin gemacht und zurückgesetzt: alle Geräte abgemeldet, Passwort und
+  App-Kopplung ungültig, neue Einladung. Sonst legt das Skript einen neuen Admin-Zugang an.
+- Im Verlauf steht der Vorgang mit der Quelle „System“.
+- Voraussetzung ist SSH-Zugriff auf den Server. Diesen Zugriff deshalb für mindestens zwei
+  Personen einrichten.
+
+### 9.5 Drizzle Studio und direkte SQL-Änderungen
+
+- Drizzle Studio (Abschnitt 7.2) und `sqlite3` umgehen die Verwaltung: **keine Rechteprüfung,
+  keine Plausibilitätsprüfung, keine Konfliktprüfung, kein Eintrag im Verlauf**. Auch ersetzte
+  Dateien bleiben dann im Medienordner liegen.
+- Nur für Technik und Notfälle verwenden. Inhalte normal über die Verwaltung pflegen.
+- In `zugaenge` nie `passwort_hash`, `totp_geheimnis` oder `totp_letzter_schritt` von Hand ändern.
+  Für Ausgesperrte gibt es Zurücksetzen (9.3) und das Notfall-Skript (9.4).
+- Im Notfall wirksam und harmlos: Zeilen in `geraete` löschen (meldet diese Geräte ab) oder
+  `zugaenge.aktiv` auf `0` setzen (sperrt den Zugang sofort; offene Codes und Geräte bleiben dann
+  aber stehen, anders als beim Deaktivieren in der Verwaltung).
+
+### 9.6 Abhängigkeiten
+
+- **`sharp`** verkleinert hochgeladene Bilder und wandelt sie in WebP um. Wie `better-sqlite3` ist
+  es ein natives Modul und steht deshalb in `next.config.js` unter
+  `serverComponentsExternalPackages` (wird nicht gebündelt, sondern aus `node_modules` geladen).
+  Die Binaries für Linux x64 kommen als optionale Pakete (`@img/sharp-…`) mit dem Lockfile;
+  `npm ci` deshalb nicht mit `--omit=optional` aufrufen.
+- **`qrcode`** erzeugt die QR-Codes (SVG in der Verwaltung, Text im Terminal beim Skript).
+- Passwörter (scrypt), Hashes (SHA-256) und App-Codes (TOTP) nutzen nur `node:crypto`.
 
 ---
 
 ## Anhang: Relevante Betriebsdateien
 
-- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`)
-- `next.config.js`
+- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`, `verwaltung:admin`)
+- `next.config.js` (externe Pakete `better-sqlite3` und `sharp`, Upload-Grenze der Server-Aktionen)
 - `drizzle.config.ts`, `drizzle/`
 - `lib/db/index.ts`, `lib/db/schema.ts`
 - `lib/medien.ts`, `app/medien/[...pfad]/route.ts`
+- `lib/verwaltung/` (Anmeldung, Sitzung, Rechte, Uploads, Verlauf), `app/verwaltung/`
+- `scripts/verwaltung-admin.ts`
 - `app/api/cron/sync-fussball/route.ts`
 - `app/api/cron/sync-tischtennis/route.ts`
 - `lib/fussball-de.ts`

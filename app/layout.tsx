@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import SiteChrome from '@/components/SiteChrome'
+import Footer from '@/components/Footer'
 
 /**
  * Öffentliche Adresse der Website aus SEITEN_URL (z. B. https://www.<vereinsdomain>.de).
@@ -36,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body>
-        <SiteChrome>{children}</SiteChrome>
+        <SiteChrome footer={<Footer />}>{children}</SiteChrome>
       </body>
     </html>
   )

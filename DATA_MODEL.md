@@ -1,8 +1,11 @@
 # DATA MODEL – SV Holm-Seppensen (SQLite)
 
-Stand: 2026-10-03  
-Scope: Datenmodell der Vereinswebsite nach dem Umzug von Sanity auf eine eigene SQLite-Datenbank.  
-Quelle der Wahrheit: `lib/db/schema.ts` (Drizzle ORM). Die SQL-Fassung steht in `drizzle/0000_initial.sql`.
+Stand: 2026-10-20 (Verwaltungstabellen ergänzt; Inhaltstabellen unverändert seit 2026-10-03)  
+Scope: Datenmodell der Vereinswebsite nach dem Umzug von Sanity auf eine eigene SQLite-Datenbank,
+einschließlich der Tabellen der Verwaltung unter `/verwaltung`.  
+Quelle der Wahrheit: `lib/db/schema.ts` (Drizzle ORM). Die SQL-Fassung steht in den Migrationen
+`drizzle/0000_initial.sql` (Inhaltstabellen) und `drizzle/0001_verwaltung.sql` (Verwaltung, siehe
+Abschnitt 9).
 
 ---
 
@@ -13,9 +16,10 @@ Quelle der Wahrheit: `lib/db/schema.ts` (Drizzle ORM). Die SQL-Fassung steht in 
 - **Regeln für die Pflege**: Was gehört wozu (Trainingszeit, News, Vereinsfunktion)?
 - **Konventionen**: Medienpfade, Datums- und Zeitformate, Sortierung.
 
-Die Daten liegen in **einer Datei**: `data/svhs.db` (anpassbar über `DATENBANK_PFAD`). Bilder und
-Dateien liegen im Medienordner `data/medien` (anpassbar über `MEDIEN_PFAD`). Beides ist nicht im
-Git, weil es personenbezogene Daten enthält.
+Die Daten liegen in **einer Datei**: `data/svhs.db` (anpassbar über `DATENBANK_PFAD`). Dazu
+gehören seit dem 20.10.2026 auch die Zugänge der Verwaltung, die angemeldeten Geräte und der
+Verlauf. Bilder und Dateien liegen im Medienordner `data/medien` (anpassbar über `MEDIEN_PFAD`).
+Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 
 ---
 
@@ -26,11 +30,17 @@ Git, weil es personenbezogene Daten enthält.
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads` | Was auf der Website erscheint |
+| **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
 und Gruppen hängen **Trainingszeiten** und ein **Trainerteam** aus **Personen**. Personen können
 außerdem **Ansprechpartner:innen einer Sparte** sein oder eine **Vereinsfunktion** haben. **News**,
 **Termine** und **Downloads** können sich auf eine Sparte, Mannschaft oder Gruppe beziehen.
+
+Für die Verwaltung: Ein **Zugang** ist entweder Admin oder hat **Bereiche** (Sparten, Mannschaften,
+Gruppen), die er bearbeiten darf. Eingerichtet wird er über einen **Einladungs-Code**, danach meldet
+er sich mit Passwort und Authenticator-App an; jede Anmeldung ist ein **Gerät** (Sitzung). Jede
+Änderung landet im **Verlauf**.
 
 ---
 
@@ -183,14 +193,90 @@ erDiagram
   }
 ```
 
+Die Verwaltungstabellen (seit 20.10.2026, Abschnitte 3.12–3.18) hängen so an den Inhaltstabellen.
+Deren Felder stehen im Diagramm oben; `fehlversuche` hat keine Beziehungen.
+
+```mermaid
+erDiagram
+  personen |o--o{ zugaenge : "das bin ich"
+  zugaenge ||--o{ zugang_bereiche : "darf bearbeiten"
+  sparten |o--o{ zugang_bereiche : "Bereich"
+  mannschaften |o--o{ zugang_bereiche : "Bereich"
+  gruppen |o--o{ zugang_bereiche : "Bereich"
+  zugaenge ||--o{ anmelde_codes : "Einladung"
+  zugaenge ||--o{ geraete : "angemeldet auf"
+  zugaenge |o--o{ verlauf : "hat geändert"
+
+  zugaenge {
+    int id PK
+    text name
+    text benutzername UK
+    text passwort_hash
+    text totp_geheimnis
+    int totp_letzter_schritt
+    text eingerichtet_am
+    bool ist_admin
+    bool aktiv
+    int person_id FK
+    int erstellt_von
+    text letzte_anmeldung
+  }
+  zugang_bereiche {
+    int id PK
+    int zugang_id FK
+    int sparte_id FK
+    int mannschaft_id FK
+    int gruppe_id FK
+  }
+  anmelde_codes {
+    int id PK
+    int zugang_id FK
+    text code_hash UK
+    text zweck
+    text laeuft_ab
+    text verwendet_am
+    text totp_geheimnis
+    int erstellt_von
+    text erstellt_am
+  }
+  geraete {
+    int id PK
+    int zugang_id FK
+    text sitzung_hash UK
+    text name
+    text angemeldet_am
+    text zuletzt_aktiv
+    text laeuft_ab
+  }
+  fehlversuche {
+    int id PK
+    text schluessel
+    text zeitpunkt
+  }
+  verlauf {
+    int id PK
+    text zeitpunkt
+    int zugang_id FK
+    text zugang_name
+    text quelle
+    text aktion
+    text objekt_typ
+    int objekt_id
+    text bezeichnung
+    text vorher
+    text nachher
+  }
+```
+
 ---
 
 ## 3) Tabellen im Detail
 
 Spaltennamen stehen hier so, wie sie in der Datenbank heißen (`snake_case`). Im TypeScript-Code
 heißen sie in `camelCase` (`sparte_id` → `sparteId`, `bild_breite` → `bildBreite`).
-„Pflicht“ bedeutet `NOT NULL`. Alle Tabellen mit eigener `id` haben zusätzlich `erstellt_am` und
-`geaendert_am` (siehe Abschnitt 7.3).
+„Pflicht“ bedeutet `NOT NULL`. Alle Inhaltstabellen mit eigener `id` (3.1–3.11) haben zusätzlich
+`erstellt_am` und `geaendert_am` (siehe Abschnitt 7.3). Von den Verwaltungstabellen (3.12–3.17)
+hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dort stehen.
 
 ## 3.1 personen
 
@@ -416,6 +502,185 @@ heißen sie in `camelCase` (`sparte_id` → `sparteId`, `bild_breite` → `bildB
 | `sparte_id` | integer | nein | – | → `sparten.id` |
 | `reihenfolge` | integer | ja | `0` | Sortierung bei gleichem Datum |
 
+**Verwaltungstabellen (seit 20.10.2026):** Die folgenden Tabellen gehören zur Verwaltung unter `/verwaltung` (Migration `0001_verwaltung`).
+Die Website liest sie nie. Wie Anmeldung und Rechte fachlich ablaufen,
+beschreibt `CMS_KONZEPT.md` (Abschnitte 5 und 6); der Code steht in `lib/verwaltung/`.
+
+## 3.12 zugaenge
+
+- **Zweck**: Wer die Verwaltung benutzen darf. Angemeldet wird mit Zwei-Faktor: Benutzername +
+  Passwort + 6-stelliger Code aus einer Authenticator-App. Passwort und App richtet die Person
+  einmalig über einen Einladungs-Code ein (`anmelde_codes`).
+- **Beziehungen**: optional → `personen` („das bin ich“); hat `zugang_bereiche`, `anmelde_codes`
+  und `geraete`; wird von `verlauf` referenziert.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `name` | text | ja | – | Anzeigename, z. B. „Max Beispiel“ |
+| `benutzername` | text | nein*, **eindeutig** | – | Anmeldename: klein geschrieben, 2–40 Zeichen aus a–z, 0–9, `.`, `-`, `_`; Vorschlag aus dem Namen, z. B. `max.beispiel` |
+| `passwort_hash` | text | nein | – | scrypt-Hash im Format `scrypt$N$r$p$salt$hash`; leer = noch nicht eingerichtet oder zurückgesetzt |
+| `totp_geheimnis` | text | nein | – | Base32-Geheimnis der Authenticator-App (160 Bit), **im Klartext** (siehe 3.18); leer = keine App gekoppelt |
+| `totp_letzter_schritt` | integer | nein | – | zuletzt akzeptierter 30-Sekunden-Schritt; damit gilt jeder App-Code nur einmal |
+| `eingerichtet_am` | text | nein | – | wann Passwort und App zuletzt eingerichtet wurden; leer = Einrichtung ausstehend |
+| `ist_admin` | boolean | ja | `false` | Admins dürfen alles, alle anderen nur ihre Bereiche |
+| `aktiv` | boolean | ja | `true` | deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet |
+| `person_id` | integer | nein | – | → `personen.id`, die eigene Person (optional) |
+| `erstellt_von` | integer | nein | – | ID des Zugangs, der diesen angelegt hat; bewusst **ohne** Fremdschlüssel, damit Löschen nie blockiert |
+| `letzte_anmeldung` | text | nein | – | Zeitstempel der letzten erfolgreichen Anmeldung |
+
+\* In der Datenbank optional (kein `NOT NULL`), in der Verwaltung und im Skript
+`verwaltung:admin` bei jedem Zugang Pflicht. Ein Zugang ohne Benutzername kann keine Einladung
+einlösen.
+
+- **Besonderheiten** (von der Verwaltung geprüft, nicht von der Datenbank):
+  - Der Name ist eindeutig, ohne Rücksicht auf Groß- und Kleinschreibung.
+  - Es bleibt immer mindestens ein aktiver Admin. Niemand kann sich selbst die Admin-Rechte
+    entziehen, sich selbst deaktivieren oder löschen.
+  - **Zurücksetzen** leert `passwort_hash`, `totp_geheimnis`, `totp_letzter_schritt` und
+    `eingerichtet_am`, löscht alle `geraete` und offenen `anmelde_codes` des Zugangs und erstellt
+    einen neuen Einladungs-Code.
+  - **Deaktivieren** löscht alle `geraete` und offenen `anmelde_codes`. Wieder aktiviert, gelten
+    Passwort und App weiter.
+
+## 3.13 zugang_bereiche
+
+- **Zweck**: Was ein Zugang ohne Adminrechte bearbeiten darf. Jede Zeile ist **genau eine**
+  Sparte, Mannschaft oder Gruppe (CHECK). Eine Sparte umfasst alle ihre Mannschaften und Gruppen.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `zugang_id` | integer | ja | – | → `zugaenge.id` |
+| `sparte_id` | integer | nein* | – | → `sparten.id` |
+| `mannschaft_id` | integer | nein* | – | → `mannschaften.id` |
+| `gruppe_id` | integer | nein* | – | → `gruppen.id` |
+
+\* Genau eines der drei Felder ist gesetzt.
+
+- **Besonderheiten**:
+  - Admins haben keine Bereiche. Wird ein Zugang zum Admin, löscht die Verwaltung seine Bereiche.
+  - Mannschaften und Gruppen einer ganz ausgewählten Sparte speichert die Verwaltung nicht extra.
+  - Wird eine Sparte, Mannschaft oder Gruppe gelöscht, verschwindet der Bereich mit (CASCADE).
+    Der Zugang bleibt bestehen, notfalls ganz ohne Bereiche.
+
+## 3.14 anmelde_codes
+
+- **Zweck**: Einladungs-Codes. Mit einem Code legt die Person einmalig ihr Passwort fest und
+  koppelt die Authenticator-App. Gespeichert wird **nur der Hash**, nie der Code selbst.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `zugang_id` | integer | ja | – | → `zugaenge.id` |
+| `code_hash` | text | ja, **eindeutig** | – | SHA-256 (hex) des 12-stelligen Codes |
+| `zweck` | text | ja | – | Werteliste `CODE_ZWECKE`; genutzt wird nur `einladung` |
+| `laeuft_ab` | text | ja | – | Ablaufzeitpunkt (Einladung: 7 Tage nach dem Erstellen) |
+| `verwendet_am` | text | nein | – | gesetzt, sobald der Code eingelöst ist; danach ist er ungültig |
+| `totp_geheimnis` | text | nein | – | App-Geheimnis für die Einrichtung (Base32, **Klartext**): erzeugt beim Öffnen der Einladung, beim erfolgreichen Abschluss in `zugaenge.totp_geheimnis` übernommen. Neu laden erzeugt ein neues |
+| `erstellt_von` | integer | nein | – | ID des erstellenden Zugangs, ohne Fremdschlüssel; leer beim Skript `verwaltung:admin` |
+| `erstellt_am` | text | ja | jetzt | Zeitstempel |
+
+- **Besonderheiten**:
+  - Pro Zugang ist immer nur ein Code offen: Ein neuer Code löscht den alten, unbenutzten.
+  - Der Browser schickt das App-Geheimnis bei der Einrichtung nie zurück, nur den 6-stelligen
+    App-Code. Eingelöst wird nur mit dem zuletzt erzeugten Geheimnis.
+  - Beim Erstellen eines Codes werden (für alle Zugänge) Codes gelöscht, die seit mehr als 30
+    Tagen abgelaufen oder benutzt sind. Bis dahin bleibt an einem benutzten Code auch
+    `totp_geheimnis` stehen.
+  - `geraet` in `CODE_ZWECKE` stammt aus dem ersten Entwurf („Gerät hinzufügen“) und wird nicht
+    benutzt (siehe `CMS_KONZEPT.md`, Abschnitt 6).
+
+## 3.15 geraete
+
+- **Zweck**: Angemeldete Geräte, also Sitzungen. Das Cookie `svhs_sitzung` enthält ein
+  Zufallstoken (256 Bit); in der Tabelle steht nur dessen Hash.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `zugang_id` | integer | ja | – | → `zugaenge.id` |
+| `sitzung_hash` | text | ja, **eindeutig** | – | SHA-256 (hex) des Cookie-Tokens |
+| `name` | text | ja | – | lesbarer Gerätename aus dem User-Agent, z. B. „iPhone · Safari“ |
+| `angemeldet_am` | text | ja | jetzt | Zeitpunkt der Anmeldung |
+| `zuletzt_aktiv` | text | ja | jetzt | wird höchstens einmal pro Stunde aktualisiert |
+| `laeuft_ab` | text | ja | – | Ende der Sitzung: 30 Tage mit „angemeldet bleiben“, sonst 12 Stunden; keine Verlängerung bei Nutzung |
+
+- **Besonderheiten**:
+  - Eine Sitzung gilt nur, solange ihre Zeile existiert, `laeuft_ab` in der Zukunft liegt und der
+    Zugang aktiv ist. Abmelden heißt: Zeile löschen.
+  - Abgelaufene Zeilen werden nicht automatisch gelöscht; sie verschwinden beim Zurücksetzen,
+    Deaktivieren oder Abmelden.
+  - IP-Adressen werden hier nicht gespeichert.
+
+## 3.16 fehlversuche
+
+- **Zweck**: Begrenzung von Fehlversuchen bei Anmeldung und Einladung. Gespeichert wird nur ein
+  Hash, keine IP-Adresse und kein Benutzername im Klartext.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `schluessel` | text | ja | – | SHA-256 eines Schlüssels aus der IP-Adresse bzw. aus Benutzername und IP-Adresse |
+| `zeitpunkt` | text | ja | jetzt | Zeitpunkt des Fehlversuchs |
+
+- **Besonderheiten**:
+  - Gezählt wird in einem Fenster von 15 Minuten: ab **20** Fehlversuchen pro IP-Adresse oder
+    **5** pro Kombination aus Benutzername und IP-Adresse ist eine Viertelstunde Pause. Einen
+    Benutzernamen allein sperrt die Anwendung bewusst nicht, damit niemand fremde Zugänge
+    gezielt aussperren kann.
+  - Als Fehlversuch zählen eine fehlgeschlagene Anmeldung (Benutzername, Passwort oder App-Code
+    falsch), ein ungültiger Einladungs-Code und ein falscher App-Code bei der Einrichtung.
+  - Einträge, die älter als einen Tag sind, löscht der nächste Fehlversuch.
+  - Der Hash ist nicht gesalzen. Er verbirgt die IP-Adresse vor einem flüchtigen Blick, ist aber
+    nur eine Pseudonymisierung.
+  - Keine Beziehungen zu anderen Tabellen.
+
+## 3.17 verlauf
+
+- **Zweck**: Änderungsprotokoll. Wer hat wann was über welchen Weg geändert, mit Stand vorher und
+  nachher. Dazu kommen An- und Abmeldungen.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `zeitpunkt` | text | ja | jetzt | Zeitpunkt der Änderung |
+| `zugang_id` | integer | nein | – | → `zugaenge.id`; leer bei Änderungen durch das System (Skript) |
+| `zugang_name` | text | nein | – | Name zum Zeitpunkt der Änderung; bleibt lesbar, auch wenn der Zugang gelöscht wird |
+| `quelle` | text | ja | `verwaltung` | Werteliste `VERLAUF_QUELLEN`; heute genutzt: `verwaltung` und `system` (`npm run verwaltung:admin`) |
+| `aktion` | text | ja | – | Werteliste `VERLAUF_AKTIONEN` |
+| `objekt_typ` | text | ja | – | Tabellenname, z. B. `mannschaften`, `personen`, `zugaenge` oder `geraete` (An- und Abmeldungen) |
+| `objekt_id` | integer | nein | – | ID des Datensatzes, **ohne** Fremdschlüssel (der Eintrag bleibt nach dem Löschen stehen) |
+| `bezeichnung` | text | ja | – | lesbare Beschreibung, z. B. „Fußball · U13“ |
+| `vorher`, `nachher` | text (JSON) | nein | – | Stand vor bzw. nach der Änderung |
+
+- **Besonderheiten**:
+  - Im Verlauf stehen **nie** Einladungs-Codes, Passwort-Hashes, App-Geheimnisse oder
+    Sitzungstoken. Bei Zugängen werden nur Name, Benutzername, eigene Person, Rechte, Status und
+    Einrichtungszeitpunkt festgehalten.
+  - Inhaltsdaten stehen dagegen vollständig drin, bei Personen also auch Kontaktdaten und die
+    interne Notiz, und zwar auch nach dem Löschen der Person. Der Verlauf wird nie automatisch
+    gekürzt.
+  - Ansehen können ihn Admins unter „Verlauf“; die Übersicht zeigt die letzten Änderungen.
+    **Wiederherstellen** gibt es noch nicht; alte Werte lassen sich aus `vorher` von Hand
+    übernehmen.
+  - Änderungen in Drizzle Studio oder per SQL landen **nicht** im Verlauf.
+
+## 3.18 Was nur als Hash gespeichert wird (und was nicht)
+
+| Geheimnis | Gespeichert als | Spalte |
+|---|---|---|
+| Einladungs-Code (12 Zeichen) | SHA-256-Hash | `anmelde_codes.code_hash` |
+| Sitzungstoken im Cookie `svhs_sitzung` | SHA-256-Hash | `geraete.sitzung_hash` |
+| Passwort | scrypt-Hash mit Salt (N = 16384, r = 8, p = 1) | `zugaenge.passwort_hash` |
+| IP-Adresse bzw. Benutzername + IP-Adresse bei Fehlversuchen | SHA-256-Hash | `fehlversuche.schluessel` |
+| Geheimnis der Authenticator-App | **Klartext** (Base32) | `zugaenge.totp_geheimnis`, während der Einrichtung `anmelde_codes.totp_geheimnis` |
+
+Das App-Geheimnis lässt sich nicht hashen: Der Server braucht es, um die erwarteten Codes zu
+berechnen. Wer die Datenbankdatei oder ein Backup in die Hände bekommt, kann damit App-Codes
+erzeugen, braucht für eine Anmeldung aber weiterhin das Passwort. Datenbank und Backups deshalb
+genauso schützen wie Passwörter (`OPERATIONS.md`, Abschnitt 4).
+
 ---
 
 ## 4) Wertelisten
@@ -431,6 +696,9 @@ CHECK-Constraint sie in der Datenbank ab. Eine neue Option braucht dort also ein
 | `FUNKTIONS_GRUPPEN` | `funktionen.gruppe` | `vorstand`, `abteilungsleitung`, `weitere` |
 | `TERMIN_QUELLEN` | `termine.quelle` | `manuell`, `fussball-de`, `click-tt` |
 | `TRAINER_ROLLEN` (nur Vorschläge) | `mannschaft_personen.rolle`, `gruppe_personen.rolle` | `Trainer:in`, `Co-Trainer:in`, `Torwarttrainer:in`, `Betreuer:in`, `Übungsleiter:in` |
+| `CODE_ZWECKE` | `anmelde_codes.zweck` | `einladung`, `geraet` (unbenutzt, siehe 3.14) |
+| `VERLAUF_QUELLEN` | `verlauf.quelle` | `verwaltung`, `api`, `telegram`, `system` (`api` und `telegram` für die geplante REST-API und den Bot) |
+| `VERLAUF_AKTIONEN` | `verlauf.aktion` | `angelegt`, `geaendert`, `geloescht`, `anmeldung`, `abmeldung` |
 
 `TRAINER_ROLLEN` ist bewusst **kein** Constraint, damit neue Rollen ohne Migration möglich sind.
 
@@ -460,6 +728,10 @@ Anzeige der Funktionsgruppen auf der Kontaktseite (in dieser Reihenfolge):
 | `trainingszeiten_rhythmus_check` | `trainingszeiten` | `rhythmus` ist einer der `RHYTHMEN` |
 | `termine_quelle_check` | `termine` | `quelle` ist eine der `TERMIN_QUELLEN` |
 | `termine_externe_id_check` | `termine` | bei `quelle ≠ manuell` muss `externe_id` gesetzt sein |
+| `zugang_bereiche_genau_einer_check` | `zugang_bereiche` | **genau eines** von `sparte_id`, `mannschaft_id`, `gruppe_id` ist gesetzt |
+| `anmelde_codes_zweck_check` | `anmelde_codes` | `zweck` ist einer der `CODE_ZWECKE` |
+| `verlauf_quelle_check` | `verlauf` | `quelle` ist eine der `VERLAUF_QUELLEN` |
+| `verlauf_aktion_check` | `verlauf` | `aktion` ist eine der `VERLAUF_AKTIONEN` |
 
 Hinweise:
 
@@ -477,6 +749,12 @@ Hinweise:
 | `gruppen` | (`sparte_id`, `name`) |
 | `termine` | (`quelle`, `externe_id`). Manuelle Termine haben `externe_id = NULL`; mehrere `NULL` sind in SQLite erlaubt |
 | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner` | zusammengesetzter Primärschlüssel aus Team bzw. Sparte und Person |
+| `zugaenge` | `benutzername` (Index `zugaenge_benutzername_unique`). Leere Werte (`NULL`) dürfen mehrfach vorkommen |
+| `anmelde_codes` | `code_hash` |
+| `geraete` | `sitzung_hash` |
+
+Der Name eines Zugangs ist nur in der Verwaltung eindeutig (ohne Rücksicht auf Groß- und
+Kleinschreibung), nicht in der Datenbank.
 
 ## 5.3 Fremdschlüssel und Verhalten beim Löschen
 
@@ -499,6 +777,15 @@ Alle Fremdschlüssel haben `ON UPDATE NO ACTION` (IDs ändern sich nicht). Beim 
 | `news.sparte_id`, `news.mannschaft_id`, `news.gruppe_id` | jeweiliges Ziel | SET NULL | News bleibt; ohne jeden Bezug gehört sie dem Verein |
 | `termine.sparte_id`, `termine.mannschaft_id` | jeweiliges Ziel | SET NULL | Termin bleibt |
 | `downloads.sparte_id` | `sparten` | SET NULL | Download bleibt, erscheint nur noch auf `/downloads` |
+| `zugaenge.person_id` | `personen` | SET NULL | Zugang bleibt, ohne eigene Person |
+| `zugang_bereiche.zugang_id` | `zugaenge` | CASCADE | Bereiche des Zugangs verschwinden |
+| `zugang_bereiche.sparte_id`, `.mannschaft_id`, `.gruppe_id` | jeweiliges Ziel | **CASCADE** | das Recht auf diese Sparte, Mannschaft bzw. Gruppe verschwindet |
+| `anmelde_codes.zugang_id` | `zugaenge` | CASCADE | Codes des Zugangs verschwinden |
+| `geraete.zugang_id` | `zugaenge` | CASCADE | alle Sitzungen des Zugangs enden |
+| `verlauf.zugang_id` | `zugaenge` | SET NULL | Eintrag bleibt; `zugang_name` zeigt weiter, wer es war |
+
+Ohne Fremdschlüssel sind bewusst `zugaenge.erstellt_von`, `anmelde_codes.erstellt_von` und
+`verlauf.objekt_id`: Sie sollen ein Löschen nie blockieren und auch danach stehen bleiben.
 
 Wichtig für die Pflege:
 
@@ -507,6 +794,10 @@ Wichtig für die Pflege:
 - **Mannschaft oder Gruppe löschen** löscht deren Trainingszeiten mit. Das gilt auch für eine
   Trainingszeit, die an Mannschaft **und** Gruppe hängt: Die ganze Zeile wird gelöscht.
   Meist ist **Ausblenden** (`sichtbar = false`) die bessere Wahl.
+- **Mannschaft, Gruppe oder Sparte löschen** nimmt auch die Rechte darauf mit
+  (`zugang_bereiche`). Wer nur dieses Team bearbeiten durfte, sieht danach nichts mehr.
+- **Zugang löschen** entfernt seine Bereiche, Codes und Geräte. Seine Einträge im Verlauf bleiben
+  mit Namen erhalten.
 - Fremdschlüssel greifen nur, wenn die Verbindung sie einschaltet. `lib/db/index.ts` setzt
   `PRAGMA foreign_keys = ON`, und `better-sqlite3` (auch in Drizzle Studio) schaltet sie
   standardmäßig ein. Im `sqlite3`-Kommandozeilenwerkzeug sind sie **aus** – dort zuerst
@@ -519,8 +810,11 @@ Wichtig für die Pflege:
 - Ob ein Medienpfad auf eine vorhandene Datei im Medienordner zeigt.
 - Ob E-Mail-Adressen, Telefonnummern, Farbwerte oder Slugs sinnvoll formatiert sind.
 
-Diese Regeln muss die Pflege einhalten. Später übernimmt die Service-Schicht der Verwaltung die
-Prüfung (siehe `CMS_KONZEPT.md`).
+Die Verwaltung prüft das Wichtigste davon vor dem Speichern selbst: Pflichtfelder, E-Mail-Adressen,
+Farbwerte (`#12ab56`) und Slugs. Bei News setzt sie zur gewählten Mannschaft bzw. Gruppe
+automatisch deren Sparte, Trainingszeiten legt sie immer für genau ein Team an, und Medienpfade
+vergibt sie beim Hochladen selbst. Wer in Drizzle Studio oder per SQL pflegt, muss diese Regeln
+weiterhin selbst einhalten.
 
 ---
 
@@ -613,8 +907,23 @@ Prüfung (siehe `CMS_KONZEPT.md`).
   in der Datenbank anpassen. Die Route cacht Dateinamen mit 8-stelligem Hash-Suffix
   (`…-1a2b3c4d.webp`, mindestens ein Buchstabe a–f) ein Jahr lang als unveränderlich; alle anderen
   werden bei jedem Abruf per ETag/Last-Modified nachgeprüft.
+- **Uploads über die Verwaltung** (`lib/verwaltung/medien-upload.ts`) halten diese Regeln
+  automatisch ein:
+  - Bilder werden gedreht, auf höchstens 1600 px Kantenlänge verkleinert und als WebP gespeichert.
+    Dabei fallen Metadaten wie EXIF und GPS-Koordinaten weg. Ablage unter
+    `<kategorie>/<name>-<hash8>.webp`, Kategorie `personen`, `sparten`, `mannschaften`, `gruppen`,
+    `news` oder `termine`.
+  - PDFs werden geprüft (Dateianfang `%PDF-`) und unverändert unter
+    `downloads/<titel>-<hash8>.pdf` abgelegt.
+  - Höchstens 15 MB pro Datei. `<hash8>` sind die ersten 8 Hex-Zeichen eines Hashes über den
+    Inhalt; eine neue Fassung bekommt damit automatisch einen neuen Namen.
+  - Eine ersetzte oder entfernte Datei löscht die Verwaltung aus dem Medienordner, sobald keine der
+    Spalten `personen.foto`, `sparten.foto`, `mannschaften.foto`, `gruppen.foto`, `news.bild`,
+    `termine.bild` oder `downloads.datei` mehr darauf verweist. Bilder, die nur im Markdown-Text
+    einer News eingebunden sind, prüft sie dabei nicht.
 - Nach dem Löschen oder Ersetzen eines Fotos den Bildcache von `next/image` leeren
-  (`OPERATIONS.md`, Abschnitt 7.4), sonst liefert er verkleinerte Kopien weiter aus.
+  (`OPERATIONS.md`, Abschnitt 7.4), sonst liefert er verkleinerte Kopien weiter aus. Das gilt auch
+  für Änderungen über die Verwaltung.
 
 ## 7.2 Datum und Uhrzeit
 
@@ -631,6 +940,13 @@ Prüfung (siehe `CMS_KONZEPT.md`).
 - `geaendert_am` aktualisiert Drizzle bei Updates aus der Anwendung (`$onUpdate`). Es gibt keinen
   Datenbank-Trigger: Bei direkten SQL-Änderungen bleibt der alte Wert stehen.
 - Die Verknüpfungstabellen (`*_personen`, `sparte_ansprechpartner`) haben keine Zeitstempel.
+- **Konfliktprüfung in der Verwaltung:** Die Formulare für Mannschaften, Gruppen, Personen,
+  Sparten, News, Termine und Downloads merken sich beim Öffnen `geaendert_am` (die Kontaktseite
+  eine Prüfsumme über alle Funktionen; Zugänge haben keine Konfliktprüfung). Hat sich der Wert beim Speichern
+  geändert, lehnt die Verwaltung ab („Bitte Seite neu laden“), statt fremde Änderungen zu
+  überschreiben. Ändert sich das Trainerteam einer Mannschaft oder Gruppe über eine Person, setzt
+  die Verwaltung deshalb auch `geaendert_am` des Teams neu. Eine eigene `version`-Spalte gibt es
+  nicht. Änderungen, die `geaendert_am` nicht setzen (z. B. per SQL), erkennt die Prüfung nicht.
 
 ## 7.4 Sortierung
 
@@ -669,6 +985,11 @@ liefern nur Sichtbares bzw. Veröffentlichtes und geben Bild- und Dateifelder al
 `personen.notiz` wird nie gelesen. Die Seiten rendern dynamisch (`force-dynamic`), Änderungen in der
 Datenbank sind also sofort sichtbar.
 
+Geschrieben wird über die Verwaltung: Die Server-Aktionen unter `app/verwaltung/` rufen Funktionen
+in `lib/verwaltung/` bzw. `app/verwaltung/(intern)/*/logik.ts` auf. Diese prüfen die Rechte selbst,
+speichern in einer Transaktion und schreiben den Eintrag in `verlauf`. Die Verwaltungstabellen
+(3.12–3.17) liest die Website nie.
+
 ---
 
 ## 9) Schema ändern
@@ -678,7 +999,21 @@ Datenbank sind also sofort sichtbar.
 3. Die Migration prüfen und mit dem Code committen. Bestehende Migrationen (z. B.
    `drizzle/0000_initial.sql`) **nie** nachträglich ändern.
 4. Die Anwendung spielt ausstehende Migrationen beim ersten Datenbankzugriff automatisch ein.
-   Alternativ: `npm run db:migrate`.
+   Alternativ: `npm run db:migrate`. Auch `npm run verwaltung:admin` öffnet die Datenbank über
+   `lib/db/index.ts` und spielt fehlende Migrationen dabei ein.
+
+Bisherige Migrationen:
+
+| Migration | Datum | Inhalt |
+|---|---|---|
+| `0000_initial.sql` | 03.10.2026 | alle Inhaltstabellen (Abschnitte 3.1–3.11) |
+| `0001_verwaltung.sql` | 20.10.2026 | neue Tabellen `zugaenge` (mit Benutzername, Passwort-Hash und App-Geheimnis), `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` samt Indizes und CHECKs (Abschnitte 3.12–3.17). Die Inhaltstabellen ändert sie nicht |
+
+Während der Entwicklung gab es kurz eine zweite Migration `0002_zwei_faktor`. Sie wurde vor dem
+ersten Deployment in `0001_verwaltung` zusammengeführt. Eine lokale Entwicklungsdatenbank, auf
+der die alten Fassungen schon eingespielt waren, passt nicht mehr zum Migrationsverlauf und muss
+neu aufgebaut werden, z. B. mit `npm run import:sanity` (bei vorhandenen Zugängen mit
+`-- --alles-ueberschreiben`).
 
 SQLite kann manche Änderungen (z. B. neue Constraints) nur über eine neue Tabelle mit
 Datenübernahme abbilden. `drizzle-kit` erzeugt das selbst. Vor solchen Migrationen auf dem Server
@@ -711,12 +1046,19 @@ News sowie die Zuordnung von Trainingszeiten per Stichwort-Heuristik.
 Details zur Umwandlung stehen im Importskript `scripts/import-aus-sanity.ts`. Jeder Lauf schreibt
 außerdem einen Bericht nach `data/import/import-bericht.md` (nicht im Git).
 
+Die Verwaltungstabellen füllt der Import nicht. Weil er Datenbank und Medienordner komplett neu
+aufbaut, bricht er ab, sobald es in der Datenbank Zugänge gibt. Nur mit
+`npm run import:sanity -- --alles-ueberschreiben` läuft er trotzdem und verwirft dann alles,
+auch Zugänge, Verlauf und hochgeladene Medien.
+
 ---
 
 ## Quellen
 
-- Schema: `lib/db/schema.ts`, Migration `drizzle/0000_initial.sql`
+- Schema: `lib/db/schema.ts`, Migrationen `drizzle/0000_initial.sql`, `drizzle/0001_verwaltung.sql`
 - Verbindung: `lib/db/index.ts`
-- Medien: `lib/medien.ts`, `app/medien/[...pfad]/route.ts`
+- Medien: `lib/medien.ts`, `app/medien/[...pfad]/route.ts`, Uploads: `lib/verwaltung/medien-upload.ts`
 - Datenschicht: `lib/content.ts`
+- Verwaltung: `lib/verwaltung/` (u. a. `anmeldung.ts`, `sitzung.ts`, `rechte.ts`, `passwort.ts`,
+  `totp.ts`, `codes.ts`, `verlauf.ts`), `app/verwaltung/`, `scripts/verwaltung-admin.ts`
 - Übernahme: `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`

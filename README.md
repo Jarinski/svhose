@@ -22,8 +22,9 @@ npm run dev
   `data/import/sanity-export.json` auf und kopiert die Bilder und Dateien in den Medienordner.
   Achtung: Der Import **löscht und ersetzt Datenbank und Medienordner** komplett.
 - **Ohne Export**: einfach `npm run dev` starten. Die Datenbank `data/svhs.db` wird beim ersten
-  Zugriff automatisch mit allen Tabellen angelegt, ist dann aber leer. Inhalte lassen sich mit
-  `npm run db:studio` eintragen.
+  Zugriff automatisch mit allen Tabellen angelegt, ist dann aber leer. Danach mit
+  `npm run verwaltung:admin -- "Vorname Nachname"` den ersten Admin anlegen und Inhalte unter
+  `/verwaltung` eintragen.
 - `data/` ist **nicht im Git**, weil es personenbezogene Daten enthält (das Repository ist
   öffentlich). Export oder Datenbank gibt es bei den Webverantwortlichen, nicht über Git oder Chats.
 
@@ -44,9 +45,17 @@ sv-holm-seppensen/
 │   ├── fussball/, tischtennis/ ← Spielpläne (live von fussball.de / click-tt)
 │   ├── ueber-uns/, kinderschutz/, impressum/, datenschutz/
 │   ├── medien/[...pfad]/       ← liefert Bilder & Dateien aus data/medien aus
-│   └── api/cron/               ← sync-fussball, sync-tischtennis (Spiele → Tabelle termine)
+│   ├── api/cron/               ← sync-fussball, sync-tischtennis (Spiele → Tabelle termine)
+│   └── verwaltung/             ← Verwaltung (eigener Rahmen, nicht in Suchmaschinen)
+│       ├── login/              ← Anmeldung: Benutzername + Passwort + App-Code
+│       ├── anmelden/           ← Einladung einlösen: Passwort festlegen, App koppeln
+│       ├── aktionen.ts         ← Server-Aktionen rund um Anmeldung und Passwort
+│       └── (intern)/           ← alles mit Anmeldung: Übersicht, teams/, personen/, sparten/,
+│                                 news/, termine/, downloads/, kontakte/, zugaenge/, verlauf/,
+│                                 geraete/ („Mein Zugang“)
 │
 ├── components/                 ← Wiederverwendbare Komponenten (Navbar, Footer, …)
+│   └── verwaltung/             ← Formularbausteine und Navigation der Verwaltung
 │
 ├── lib/
 │   ├── content.ts              ← Datenschicht: alle Seiten lesen hierüber
@@ -54,12 +63,15 @@ sv-holm-seppensen/
 │   ├── db/index.ts             ← Datenbankverbindung, spielt Migrationen automatisch ein
 │   ├── medien.ts               ← Medienordner und /medien-URLs
 │   ├── fussball-de.ts          ← Spiele von fussball.de
-│   └── click-tt.ts             ← Spiele von click-tt
+│   ├── click-tt.ts             ← Spiele von click-tt
+│   └── verwaltung/             ← Anmeldung (Passwort, TOTP, Sitzungen), Rechte, Uploads,
+│                                 Verlauf und Speicherlogik der Verwaltung
 │
 ├── drizzle/                    ← SQL-Migrationen (erzeugt mit npm run db:generate)
 ├── scripts/
 │   ├── sanity-export.mjs       ← einmaliger Export aus Sanity
-│   └── import-aus-sanity.ts    ← baut die Datenbank aus dem Export auf
+│   ├── import-aus-sanity.ts    ← baut die Datenbank aus dem Export auf
+│   └── verwaltung-admin.ts     ← ersten Admin anlegen bzw. Notfall-Zugang (npm run verwaltung:admin)
 │
 ├── data/                       ← NICHT im Git (personenbezogene Daten)
 │   ├── svhs.db                 ← die Datenbank
@@ -73,15 +85,44 @@ sv-holm-seppensen/
 
 ## ✏️ Inhalte pflegen
 
-### Aktuell: Drizzle Studio
+### Die Verwaltung unter `/verwaltung`
+
+Inhalte werden über die eigene, handytaugliche Verwaltung unter **`/verwaltung`** gepflegt:
+Mannschaften und Gruppen (mit Trainingszeiten und Trainerteam in einem Formular), Personen,
+Sparten, News, Termine, Downloads, Kontaktseite, Zugänge und Verlauf. Gespeichert = sofort live.
+
+**Anmeldung mit Zwei-Faktor:** Benutzername + Passwort + 6-stelliger Code aus einer
+Authenticator-App (z. B. Google Authenticator, Microsoft Authenticator, Aegis).
+
+- **Rechte:** Admins dürfen alles. Alle anderen Zugänge bekommen Bereiche – eine ganze Sparte
+  (Spartenleitung) oder einzelne Mannschaften/Gruppen (Trainer:innen) – und sehen nur diese.
+- **Neuen Zugang einrichten:** Admin → „Zugänge“ → „Neuer Zugang“ → es erscheint ein
+  Einladungs-QR-Code (7 Tage gültig, einmal verwendbar). Die Person scannt ihn, legt ihr Passwort
+  fest und koppelt die Authenticator-App.
+- **Passwort vergessen / Handy verloren:** Admin → „Zugänge“ → Zugang → „Zugang zurücksetzen“.
+  Alle Geräte sind sofort abgemeldet, es gibt eine neue Einladung.
+- **Der allererste Admin** (oder Notfall, wenn alle Admins ausgesperrt sind) – direkt auf dem
+  Rechner bzw. Server mit Zugriff auf die Datenbank:
+
+  ```bash
+  npm run verwaltung:admin -- "Vorname Nachname"
+  ```
+
+  Zeigt Benutzername und Einladungs-QR-Code im Terminal. Für Links mit der echten Adresse vorher
+  `SEITEN_URL` setzen (z. B. `SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "…"`).
+
+Jede Änderung landet im **Verlauf** (wer, wann, vorher/nachher).
+
+### Für Technik: Drizzle Studio
 
 ```bash
 npm run db:studio
 ```
 
 Drizzle Studio öffnet sich im Browser unter `https://local.drizzle.studio` und zeigt alle Tabellen
-zum Bearbeiten. Jede gespeicherte Änderung ist **sofort** auf der Website sichtbar (Bilder und
-Dateien unter `/medien` werden dagegen gecacht, siehe Tabelle).
+direkt. Gedacht für Technik und Notfälle – Änderungen hier umgehen Rechte und Verlauf. Jede
+gespeicherte Änderung ist **sofort** auf der Website sichtbar (Bilder und Dateien unter `/medien`
+werden dagegen gecacht, siehe Tabelle).
 Auf dem Server läuft das über einen SSH-Tunnel (siehe `OPERATIONS.md`, Abschnitt 7.2).
 
 | Ich möchte … | Tabelle |
@@ -98,16 +139,13 @@ Auf dem Server läuft das über einen SSH-Tunnel (siehe `OPERATIONS.md`, Abschni
 
 Wichtig:
 
-- **Es gibt kein Rückgängig.** Eine gelöschte Person verschwindet aus allen Trainerteams und
-  Funktionen, eine gelöschte Mannschaft nimmt ihre Trainingszeiten mit. Lieber ausblenden.
+- **In Drizzle Studio gibt es kein Rückgängig.** Eine gelöschte Person verschwindet aus allen
+  Trainerteams und Funktionen, eine gelöschte Mannschaft nimmt ihre Trainingszeiten mit. Lieber
+  ausblenden – oder gleich die Verwaltung benutzen.
 - Spiele von fussball.de und click-tt kommen automatisch (nächtliche Cronjobs). Änderungen an
   diesen Terminen werden beim nächsten Lauf überschrieben.
-- Alle Felder und Regeln: [`DATA_MODEL.md`](DATA_MODEL.md).
-
-### Später: eigene Verwaltung
-
-Unter `/verwaltung` entsteht eine eigene, handytaugliche Verwaltung mit Login per QR-Code,
-abgestuften Rechten und Verlauf. Konzept: [`CMS_KONZEPT.md`](CMS_KONZEPT.md).
+- Alle Felder und Regeln: [`DATA_MODEL.md`](DATA_MODEL.md). Konzept der Verwaltung:
+  [`CMS_KONZEPT.md`](CMS_KONZEPT.md).
 
 ---
 
@@ -119,7 +157,8 @@ abgestuften Rechten und Verlauf. Konzept: [`CMS_KONZEPT.md`](CMS_KONZEPT.md).
 | `npm run db:generate` | erzeugt nach einer Änderung an `lib/db/schema.ts` eine neue Migration in `drizzle/` |
 | `npm run db:migrate` | spielt ausstehende Migrationen ein (passiert sonst automatisch beim ersten Zugriff) |
 | `npm run export:sanity` | einmaliger Export aus Sanity nach `data/import/` (braucht die Sanity-Variablen in `.env.local`) |
-| `npm run import:sanity` | baut Datenbank und Medienordner aus `data/import/sanity-export.json` neu auf (**überschreibt alles**; Bericht in `data/import/import-bericht.md`) |
+| `npm run import:sanity` | baut Datenbank und Medienordner aus `data/import/sanity-export.json` neu auf (**überschreibt alles**, auch Zugänge und Verlauf; bricht ab, sobald es Zugänge gibt – dann nur mit `-- --alles-ueberschreiben`; Bericht in `data/import/import-bericht.md`) |
+| `npm run verwaltung:admin -- "Name"` | legt einen Admin-Zugang an bzw. setzt ihn zurück und zeigt den Einladungs-QR-Code |
 
 Pfade lassen sich über `DATENBANK_PFAD` (Standard `data/svhs.db`) und `MEDIEN_PFAD`
 (Standard `data/medien`) ändern. `npm run import:sanity` liest dafür keine Env-Datei, abweichende
@@ -167,6 +206,8 @@ Wiederherstellung: [`OPERATIONS.md`](OPERATIONS.md).
 | [react-markdown](https://github.com/remarkjs/react-markdown) | News-Text (Markdown) |
 | [date-fns](https://date-fns.org) | Datumsformatierung |
 | [Lucide React](https://lucide.dev) | Icons |
+| [sharp](https://sharp.pixelplumbing.com) | Bilder beim Hochladen verkleinern (WebP), Bildoptimierung |
+| [qrcode](https://github.com/soldair/node-qrcode) | QR-Codes für Einladungen und die Authenticator-App |
 | [tsx](https://github.com/privatenumber/tsx) | TypeScript-Skripte (z. B. Import) |
 | eigener Server (geplant: Hetzner) | Hosting mit Node.js und nginx |
 

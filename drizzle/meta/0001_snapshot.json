@@ -1,0 +1,2048 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "7d394b0b-4d70-4563-976b-3c312a10b681",
+  "prevId": "3aed941b-cbd1-4bd6-b6c8-ee7fdf38ea18",
+  "tables": {
+    "anmelde_codes": {
+      "name": "anmelde_codes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "zugang_id": {
+          "name": "zugang_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "code_hash": {
+          "name": "code_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "zweck": {
+          "name": "zweck",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "laeuft_ab": {
+          "name": "laeuft_ab",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "verwendet_am": {
+          "name": "verwendet_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totp_geheimnis": {
+          "name": "totp_geheimnis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "anmelde_codes_code_hash_unique": {
+          "name": "anmelde_codes_code_hash_unique",
+          "columns": [
+            "code_hash"
+          ],
+          "isUnique": true
+        },
+        "anmelde_codes_zugang_idx": {
+          "name": "anmelde_codes_zugang_idx",
+          "columns": [
+            "zugang_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "anmelde_codes_zugang_id_zugaenge_id_fk": {
+          "name": "anmelde_codes_zugang_id_zugaenge_id_fk",
+          "tableFrom": "anmelde_codes",
+          "tableTo": "zugaenge",
+          "columnsFrom": [
+            "zugang_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "anmelde_codes_zweck_check": {
+          "name": "anmelde_codes_zweck_check",
+          "value": "\"anmelde_codes\".\"zweck\" IN ('einladung')"
+        }
+      }
+    },
+    "downloads": {
+      "name": "downloads",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kategorie": {
+          "name": "kategorie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "datei": {
+          "name": "datei",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "datum": {
+          "name": "datum",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "downloads_sparte_idx": {
+          "name": "downloads_sparte_idx",
+          "columns": [
+            "sparte_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "downloads_sparte_id_sparten_id_fk": {
+          "name": "downloads_sparte_id_sparten_id_fk",
+          "tableFrom": "downloads",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "fehlversuche": {
+      "name": "fehlversuche",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "schluessel": {
+          "name": "schluessel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "fehlversuche_schluessel_idx": {
+          "name": "fehlversuche_schluessel_idx",
+          "columns": [
+            "schluessel",
+            "zeitpunkt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "funktionen": {
+      "name": "funktionen",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bezeichnung": {
+          "name": "bezeichnung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gruppe": {
+          "name": "gruppe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'weitere'"
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "funktionen_person_idx": {
+          "name": "funktionen_person_idx",
+          "columns": [
+            "person_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "funktionen_person_id_personen_id_fk": {
+          "name": "funktionen_person_id_personen_id_fk",
+          "tableFrom": "funktionen",
+          "tableTo": "personen",
+          "columnsFrom": [
+            "person_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "funktionen_sparte_id_sparten_id_fk": {
+          "name": "funktionen_sparte_id_sparten_id_fk",
+          "tableFrom": "funktionen",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "funktionen_gruppe_check": {
+          "name": "funktionen_gruppe_check",
+          "value": "\"funktionen\".\"gruppe\" IN ('vorstand', 'abteilungsleitung', 'weitere')"
+        }
+      }
+    },
+    "geraete": {
+      "name": "geraete",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "zugang_id": {
+          "name": "zugang_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sitzung_hash": {
+          "name": "sitzung_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "angemeldet_am": {
+          "name": "angemeldet_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "zuletzt_aktiv": {
+          "name": "zuletzt_aktiv",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "laeuft_ab": {
+          "name": "laeuft_ab",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "geraete_sitzung_hash_unique": {
+          "name": "geraete_sitzung_hash_unique",
+          "columns": [
+            "sitzung_hash"
+          ],
+          "isUnique": true
+        },
+        "geraete_zugang_idx": {
+          "name": "geraete_zugang_idx",
+          "columns": [
+            "zugang_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "geraete_zugang_id_zugaenge_id_fk": {
+          "name": "geraete_zugang_id_zugaenge_id_fk",
+          "tableFrom": "geraete",
+          "tableTo": "zugaenge",
+          "columnsFrom": [
+            "zugang_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "gruppe_personen": {
+      "name": "gruppe_personen",
+      "columns": {
+        "gruppe_id": {
+          "name": "gruppe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Trainer:in'"
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "gruppe_personen_person_idx": {
+          "name": "gruppe_personen_person_idx",
+          "columns": [
+            "person_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "gruppe_personen_gruppe_id_gruppen_id_fk": {
+          "name": "gruppe_personen_gruppe_id_gruppen_id_fk",
+          "tableFrom": "gruppe_personen",
+          "tableTo": "gruppen",
+          "columnsFrom": [
+            "gruppe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "gruppe_personen_person_id_personen_id_fk": {
+          "name": "gruppe_personen_person_id_personen_id_fk",
+          "tableFrom": "gruppe_personen",
+          "tableTo": "personen",
+          "columnsFrom": [
+            "person_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "gruppe_personen_gruppe_id_person_id_pk": {
+          "columns": [
+            "gruppe_id",
+            "person_id"
+          ],
+          "name": "gruppe_personen_gruppe_id_person_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "gruppen": {
+      "name": "gruppen",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "altersklasse": {
+          "name": "altersklasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "foto": {
+          "name": "foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sichtbar": {
+          "name": "sichtbar",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "gruppen_sparte_name_unique": {
+          "name": "gruppen_sparte_name_unique",
+          "columns": [
+            "sparte_id",
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "gruppen_sparte_id_sparten_id_fk": {
+          "name": "gruppen_sparte_id_sparten_id_fk",
+          "tableFrom": "gruppen",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "mannschaft_personen": {
+      "name": "mannschaft_personen",
+      "columns": {
+        "mannschaft_id": {
+          "name": "mannschaft_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Trainer:in'"
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "mannschaft_personen_person_idx": {
+          "name": "mannschaft_personen_person_idx",
+          "columns": [
+            "person_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "mannschaft_personen_mannschaft_id_mannschaften_id_fk": {
+          "name": "mannschaft_personen_mannschaft_id_mannschaften_id_fk",
+          "tableFrom": "mannschaft_personen",
+          "tableTo": "mannschaften",
+          "columnsFrom": [
+            "mannschaft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mannschaft_personen_person_id_personen_id_fk": {
+          "name": "mannschaft_personen_person_id_personen_id_fk",
+          "tableFrom": "mannschaft_personen",
+          "tableTo": "personen",
+          "columnsFrom": [
+            "person_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "mannschaft_personen_mannschaft_id_person_id_pk": {
+          "columns": [
+            "mannschaft_id",
+            "person_id"
+          ],
+          "name": "mannschaft_personen_mannschaft_id_person_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "mannschaften": {
+      "name": "mannschaften",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bereich": {
+          "name": "bereich",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "altersklasse": {
+          "name": "altersklasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "foto": {
+          "name": "foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sichtbar": {
+          "name": "sichtbar",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "mannschaften_sparte_name_unique": {
+          "name": "mannschaften_sparte_name_unique",
+          "columns": [
+            "sparte_id",
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "mannschaften_sparte_id_sparten_id_fk": {
+          "name": "mannschaften_sparte_id_sparten_id_fk",
+          "tableFrom": "mannschaften",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "mannschaften_bereich_check": {
+          "name": "mannschaften_bereich_check",
+          "value": "\"mannschaften\".\"bereich\" IS NULL OR \"mannschaften\".\"bereich\" IN ('Herren', 'Damen', 'Junioren', 'Juniorinnen', 'Senioren', 'Freizeit')"
+        }
+      }
+    },
+    "news": {
+      "name": "news",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "teaser": {
+          "name": "teaser",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "inhalt": {
+          "name": "inhalt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "bild": {
+          "name": "bild",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bild_breite": {
+          "name": "bild_breite",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bild_hoehe": {
+          "name": "bild_hoehe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kategorie": {
+          "name": "kategorie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "datum": {
+          "name": "datum",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "veroeffentlicht": {
+          "name": "veroeffentlicht",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mannschaft_id": {
+          "name": "mannschaft_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gruppe_id": {
+          "name": "gruppe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "news_slug_unique": {
+          "name": "news_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "news_datum_idx": {
+          "name": "news_datum_idx",
+          "columns": [
+            "veroeffentlicht",
+            "datum"
+          ],
+          "isUnique": false
+        },
+        "news_sparte_idx": {
+          "name": "news_sparte_idx",
+          "columns": [
+            "sparte_id"
+          ],
+          "isUnique": false
+        },
+        "news_mannschaft_idx": {
+          "name": "news_mannschaft_idx",
+          "columns": [
+            "mannschaft_id"
+          ],
+          "isUnique": false
+        },
+        "news_gruppe_idx": {
+          "name": "news_gruppe_idx",
+          "columns": [
+            "gruppe_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "news_sparte_id_sparten_id_fk": {
+          "name": "news_sparte_id_sparten_id_fk",
+          "tableFrom": "news",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "news_mannschaft_id_mannschaften_id_fk": {
+          "name": "news_mannschaft_id_mannschaften_id_fk",
+          "tableFrom": "news",
+          "tableTo": "mannschaften",
+          "columnsFrom": [
+            "mannschaft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "news_gruppe_id_gruppen_id_fk": {
+          "name": "news_gruppe_id_gruppen_id_fk",
+          "tableFrom": "news",
+          "tableTo": "gruppen",
+          "columnsFrom": [
+            "gruppe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "personen": {
+      "name": "personen",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "telefon": {
+          "name": "telefon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "whatsapp": {
+          "name": "whatsapp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "foto": {
+          "name": "foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "notiz": {
+          "name": "notiz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sparte_ansprechpartner": {
+      "name": "sparte_ansprechpartner",
+      "columns": {
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Ansprechpartner:in'"
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "sparte_ansprechpartner_person_idx": {
+          "name": "sparte_ansprechpartner_person_idx",
+          "columns": [
+            "person_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sparte_ansprechpartner_sparte_id_sparten_id_fk": {
+          "name": "sparte_ansprechpartner_sparte_id_sparten_id_fk",
+          "tableFrom": "sparte_ansprechpartner",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sparte_ansprechpartner_person_id_personen_id_fk": {
+          "name": "sparte_ansprechpartner_person_id_personen_id_fk",
+          "tableFrom": "sparte_ansprechpartner",
+          "tableTo": "personen",
+          "columnsFrom": [
+            "person_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sparte_ansprechpartner_sparte_id_person_id_pk": {
+          "columns": [
+            "sparte_id",
+            "person_id"
+          ],
+          "name": "sparte_ansprechpartner_sparte_id_person_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sparten": {
+      "name": "sparten",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "farbe": {
+          "name": "farbe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kurzbeschreibung": {
+          "name": "kurzbeschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "foto": {
+          "name": "foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sichtbar": {
+          "name": "sichtbar",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "sparten_slug_unique": {
+          "name": "sparten_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "termine": {
+      "name": "termine",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "datum": {
+          "name": "datum",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "uhrzeit": {
+          "name": "uhrzeit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "beschreibung": {
+          "name": "beschreibung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bild": {
+          "name": "bild",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bereich": {
+          "name": "bereich",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mannschaft_id": {
+          "name": "mannschaft_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'manuell'"
+        },
+        "externe_id": {
+          "name": "externe_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "termine_datum_idx": {
+          "name": "termine_datum_idx",
+          "columns": [
+            "datum"
+          ],
+          "isUnique": false
+        },
+        "termine_quelle_externe_id_unique": {
+          "name": "termine_quelle_externe_id_unique",
+          "columns": [
+            "quelle",
+            "externe_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "termine_sparte_id_sparten_id_fk": {
+          "name": "termine_sparte_id_sparten_id_fk",
+          "tableFrom": "termine",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "termine_mannschaft_id_mannschaften_id_fk": {
+          "name": "termine_mannschaft_id_mannschaften_id_fk",
+          "tableFrom": "termine",
+          "tableTo": "mannschaften",
+          "columnsFrom": [
+            "mannschaft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "termine_quelle_check": {
+          "name": "termine_quelle_check",
+          "value": "\"termine\".\"quelle\" IN ('manuell', 'fussball-de', 'click-tt')"
+        },
+        "termine_externe_id_check": {
+          "name": "termine_externe_id_check",
+          "value": "\"termine\".\"quelle\" = 'manuell' OR \"termine\".\"externe_id\" IS NOT NULL"
+        }
+      }
+    },
+    "trainingszeiten": {
+      "name": "trainingszeiten",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "mannschaft_id": {
+          "name": "mannschaft_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gruppe_id": {
+          "name": "gruppe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "wochentag": {
+          "name": "wochentag",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "beginn": {
+          "name": "beginn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ende": {
+          "name": "ende",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "saison": {
+          "name": "saison",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'ganzjährig'"
+        },
+        "rhythmus": {
+          "name": "rhythmus",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'jede Woche'"
+        },
+        "hinweis": {
+          "name": "hinweis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reihenfolge": {
+          "name": "reihenfolge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "trainingszeiten_mannschaft_idx": {
+          "name": "trainingszeiten_mannschaft_idx",
+          "columns": [
+            "mannschaft_id"
+          ],
+          "isUnique": false
+        },
+        "trainingszeiten_gruppe_idx": {
+          "name": "trainingszeiten_gruppe_idx",
+          "columns": [
+            "gruppe_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "trainingszeiten_mannschaft_id_mannschaften_id_fk": {
+          "name": "trainingszeiten_mannschaft_id_mannschaften_id_fk",
+          "tableFrom": "trainingszeiten",
+          "tableTo": "mannschaften",
+          "columnsFrom": [
+            "mannschaft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trainingszeiten_gruppe_id_gruppen_id_fk": {
+          "name": "trainingszeiten_gruppe_id_gruppen_id_fk",
+          "tableFrom": "trainingszeiten",
+          "tableTo": "gruppen",
+          "columnsFrom": [
+            "gruppe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "trainingszeiten_zuordnung_check": {
+          "name": "trainingszeiten_zuordnung_check",
+          "value": "\"trainingszeiten\".\"mannschaft_id\" IS NOT NULL OR \"trainingszeiten\".\"gruppe_id\" IS NOT NULL"
+        },
+        "trainingszeiten_wochentag_check": {
+          "name": "trainingszeiten_wochentag_check",
+          "value": "\"trainingszeiten\".\"wochentag\" BETWEEN 1 AND 7"
+        },
+        "trainingszeiten_beginn_check": {
+          "name": "trainingszeiten_beginn_check",
+          "value": "\"trainingszeiten\".\"beginn\" GLOB '[0-2][0-9]:[0-5][0-9]'"
+        },
+        "trainingszeiten_ende_check": {
+          "name": "trainingszeiten_ende_check",
+          "value": "\"trainingszeiten\".\"ende\" IS NULL OR (\"trainingszeiten\".\"ende\" GLOB '[0-2][0-9]:[0-5][0-9]' AND \"trainingszeiten\".\"ende\" > \"trainingszeiten\".\"beginn\")"
+        },
+        "trainingszeiten_saison_check": {
+          "name": "trainingszeiten_saison_check",
+          "value": "\"trainingszeiten\".\"saison\" IN ('ganzjährig', 'Sommer', 'Winter')"
+        },
+        "trainingszeiten_rhythmus_check": {
+          "name": "trainingszeiten_rhythmus_check",
+          "value": "\"trainingszeiten\".\"rhythmus\" IN ('jede Woche', 'alle 2 Wochen')"
+        }
+      }
+    },
+    "verlauf": {
+      "name": "verlauf",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "zugang_id": {
+          "name": "zugang_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "zugang_name": {
+          "name": "zugang_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'verwaltung'"
+        },
+        "aktion": {
+          "name": "aktion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "objekt_typ": {
+          "name": "objekt_typ",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "objekt_id": {
+          "name": "objekt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bezeichnung": {
+          "name": "bezeichnung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vorher": {
+          "name": "vorher",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nachher": {
+          "name": "nachher",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "verlauf_zeitpunkt_idx": {
+          "name": "verlauf_zeitpunkt_idx",
+          "columns": [
+            "zeitpunkt"
+          ],
+          "isUnique": false
+        },
+        "verlauf_objekt_idx": {
+          "name": "verlauf_objekt_idx",
+          "columns": [
+            "objekt_typ",
+            "objekt_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "verlauf_zugang_id_zugaenge_id_fk": {
+          "name": "verlauf_zugang_id_zugaenge_id_fk",
+          "tableFrom": "verlauf",
+          "tableTo": "zugaenge",
+          "columnsFrom": [
+            "zugang_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "verlauf_quelle_check": {
+          "name": "verlauf_quelle_check",
+          "value": "\"verlauf\".\"quelle\" IN ('verwaltung', 'api', 'telegram', 'system')"
+        },
+        "verlauf_aktion_check": {
+          "name": "verlauf_aktion_check",
+          "value": "\"verlauf\".\"aktion\" IN ('angelegt', 'geaendert', 'geloescht', 'anmeldung', 'abmeldung')"
+        }
+      }
+    },
+    "zugaenge": {
+      "name": "zugaenge",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "benutzername": {
+          "name": "benutzername",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "passwort_hash": {
+          "name": "passwort_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totp_geheimnis": {
+          "name": "totp_geheimnis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totp_letzter_schritt": {
+          "name": "totp_letzter_schritt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "eingerichtet_am": {
+          "name": "eingerichtet_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ist_admin": {
+          "name": "ist_admin",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "letzte_anmeldung": {
+          "name": "letzte_anmeldung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "erstellt_am": {
+          "name": "erstellt_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "geaendert_am": {
+          "name": "geaendert_am",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "zugaenge_benutzername_unique": {
+          "name": "zugaenge_benutzername_unique",
+          "columns": [
+            "benutzername"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "zugaenge_person_id_personen_id_fk": {
+          "name": "zugaenge_person_id_personen_id_fk",
+          "tableFrom": "zugaenge",
+          "tableTo": "personen",
+          "columnsFrom": [
+            "person_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "zugang_bereiche": {
+      "name": "zugang_bereiche",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "zugang_id": {
+          "name": "zugang_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mannschaft_id": {
+          "name": "mannschaft_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gruppe_id": {
+          "name": "gruppe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "zugang_bereiche_zugang_idx": {
+          "name": "zugang_bereiche_zugang_idx",
+          "columns": [
+            "zugang_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "zugang_bereiche_zugang_id_zugaenge_id_fk": {
+          "name": "zugang_bereiche_zugang_id_zugaenge_id_fk",
+          "tableFrom": "zugang_bereiche",
+          "tableTo": "zugaenge",
+          "columnsFrom": [
+            "zugang_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zugang_bereiche_sparte_id_sparten_id_fk": {
+          "name": "zugang_bereiche_sparte_id_sparten_id_fk",
+          "tableFrom": "zugang_bereiche",
+          "tableTo": "sparten",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zugang_bereiche_mannschaft_id_mannschaften_id_fk": {
+          "name": "zugang_bereiche_mannschaft_id_mannschaften_id_fk",
+          "tableFrom": "zugang_bereiche",
+          "tableTo": "mannschaften",
+          "columnsFrom": [
+            "mannschaft_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zugang_bereiche_gruppe_id_gruppen_id_fk": {
+          "name": "zugang_bereiche_gruppe_id_gruppen_id_fk",
+          "tableFrom": "zugang_bereiche",
+          "tableTo": "gruppen",
+          "columnsFrom": [
+            "gruppe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "zugang_bereiche_genau_einer_check": {
+          "name": "zugang_bereiche_genau_einer_check",
+          "value": "(\"zugang_bereiche\".\"sparte_id\" IS NOT NULL) + (\"zugang_bereiche\".\"mannschaft_id\" IS NOT NULL) + (\"zugang_bereiche\".\"gruppe_id\" IS NOT NULL) = 1"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

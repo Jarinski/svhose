@@ -29,6 +29,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import Database from 'better-sqlite3'
 import type BetterSqlite3 from 'better-sqlite3'
 import { DATENBANK_PFAD, datenbank, schema, type Datenbank } from '@/lib/db'
 import { MANNSCHAFT_BEREICHE, RHYTHMEN, SAISONS } from '@/lib/db/schema'
@@ -2006,8 +2007,32 @@ function berichtErstellen(daten: ExportDaten, zaehlung: Record<string, number>, 
 
 // ─── Hauptprogramm ───────────────────────────────────────────────────────────
 
+/**
+ * Schutz vor versehentlichem Überschreiben: Sobald in der Datenbank Zugänge für die Verwaltung
+ * angelegt sind, wird dort gearbeitet – ein Neuaufbau würde alle Änderungen, Zugänge und Uploads
+ * seit dem Import verwerfen. Dann nur mit ausdrücklichem --alles-ueberschreiben.
+ */
+function pruefeUeberschreiben(): void {
+  if (process.argv.indexOf('--alles-ueberschreiben') >= 0 || !fs.existsSync(DATENBANK_PFAD)) return
+  const db = new Database(DATENBANK_PFAD, { readonly: true, fileMustExist: true })
+  try {
+    const tabelle = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'zugaenge'").get()
+    const zugaenge = tabelle ? (db.prepare('SELECT count(*) AS n FROM zugaenge').get() as { n: number }).n : 0
+    if (zugaenge > 0) {
+      abbruch(
+        `In ${path.relative(process.cwd(), DATENBANK_PFAD)} gibt es bereits ${zugaenge} Zugang/Zugänge für die Verwaltung – ` +
+          'dort wird also schon gearbeitet. Der Import würde ALLES verwerfen (Inhalte, Zugänge, hochgeladene Medien). ' +
+          'Wenn das wirklich gewollt ist: npm run import:sanity -- --alles-ueberschreiben',
+      )
+    }
+  } finally {
+    db.close()
+  }
+}
+
 function main(): void {
   pruefeArbeitsverzeichnis()
+  pruefeUeberschreiben()
   const daten = exportLesen()
   const plan = planen(daten)
 

@@ -1,7 +1,8 @@
 # ARCHITECTURE DECISIONS – SV Holm-Seppensen
 
-Stand: 2026-10-03 (Abschnitt 0 neu; Abschnitte 1–9 historisch, Stand 2026-05-10)  
-Scope: Wesentliche Architekturentscheidungen des Projekts, zuletzt der Wechsel von Sanity zu SQLite.
+Stand: 2026-10-20 (Abschnitt 0b neu; Abschnitt 0 vom 2026-10-03; Abschnitte 1–9 historisch, Stand 2026-05-10)  
+Scope: Wesentliche Architekturentscheidungen des Projekts, zuletzt der Wechsel von Sanity zu SQLite
+und die eigene Verwaltung mit Zwei-Faktor-Anmeldung.
 
 ---
 
@@ -28,7 +29,8 @@ Betrieben wird künftig auf einem **eigenen Server** (geplant: Hetzner) statt au
 Da die Website noch nicht produktiv ist, gibt es keinen Parallelbetrieb und keinen Umschalter:
 Sanity, `/studio` und das Studio-Handbuch (`/handbuch`) sind entfernt. Die Inhalte wurden am
 03.10.2026 einmalig exportiert (`scripts/sanity-export.mjs`) und importiert (`npm run import:sanity`).
-Gepflegt wird bis zur eigenen Verwaltung `/verwaltung` per Drizzle Studio (`npm run db:studio`).
+Gepflegt wurde bis zur eigenen Verwaltung `/verwaltung` per Drizzle Studio (`npm run db:studio`);
+seit dem 20.10.2026 über die Verwaltung (Abschnitt 0b).
 
 ### Gründe
 - **Registrierung und Bedienung zu kompliziert**: Jede Person brauchte ein eigenes Sanity-Konto
@@ -67,8 +69,8 @@ Gepflegt wird bis zur eigenen Verwaltung `/verwaltung` per Drizzle Studio (`npm 
   - Weniger Ballast: Pakete `sanity`, `next-sanity`, `@sanity/image-url`, `styled-components`
     sowie alle Patch- und Migrationsskripte sind entfernt.
 - **Negativ / Aufwand**
-  - Bis zur Verwaltung `/verwaltung` können nur technisch Verantwortliche pflegen (Drizzle Studio),
-    ohne Rechte, Verlauf und Rückgängig.
+  - Bis zur Verwaltung `/verwaltung` konnten nur technisch Verantwortliche pflegen (Drizzle Studio),
+    ohne Rechte, Verlauf und Rückgängig. Erledigt am 20.10.2026 (Abschnitt 0b).
   - Betrieb, Updates, TLS und **Backups** liegen in eigener Verantwortung (`OPERATIONS.md`).
   - Vercel ist mit SQLite nicht mehr nutzbar. Die Cronjobs laufen per crontab auf dem Server.
   - Bilder werden nicht mehr von einem CDN skaliert und ausgeliefert.
@@ -89,6 +91,69 @@ Weitere Folgeentscheidungen: News-Text als Markdown statt Portable Text, Partner
 (wurden nirgends angezeigt), Jahrgänge und Trainingsplätze entfallen (keine Einträge). Für den
 späteren Telegram-Bot ist OpenRouter statt der direkten Anthropic-API vorgesehen
 (`CMS_KONZEPT.md`).
+
+---
+
+## 0b) Oktober 2026: eigene Verwaltung mit Zwei-Faktor-Anmeldung
+
+### Entscheidung
+Inhalte werden über eine **eigene Verwaltung unter `/verwaltung`** gepflegt, die in die bestehende
+Next.js-Anwendung eingebaut ist: Server-Aktionen schreiben direkt in dieselbe SQLite-Datenbank,
+Rechte und Verlauf prüft bzw. schreibt jede Speicherfunktion selbst. Umgesetzt am 20.10.2026
+(Migration `drizzle/0001_verwaltung.sql`, Code in `app/verwaltung/` und `lib/verwaltung/`).
+
+Angemeldet wird **für alle Zugänge mit Zwei-Faktor**: Benutzername + Passwort (scrypt-Hash) +
+6-stelliger Code aus einer Authenticator-App (TOTP nach RFC 6238). Neue Zugänge bekommen vom Admin
+einen Einladungs-Code mit QR-Code (7 Tage, einmal verwendbar, nur als Hash gespeichert), über den
+die Person ihr Passwort festlegt und die App koppelt. Das ersetzt den Login allein per Einmal-Code
+bzw. QR-Code aus dem Konzept vom 03.10.2026. Rechte: Admin oder Bereiche (Sparte, Mannschaft,
+Gruppe). Jede Änderung landet mit Stand vorher und nachher im Verlauf.
+
+### Gründe
+- **Pflege ohne Technikwissen:** Drizzle Studio (Abschnitt 0) war nur für technisch
+  Verantwortliche geeignet, ohne Rechte, Verlauf und Prüfungen.
+- **Zugeschnitten auf den Verein:** alles zu einer Mannschaft in einem Formular, deutsch und
+  handytauglich (`CMS_KONZEPT.md`, Abschnitte 4 und 7).
+- **Zwei-Faktor statt Einmal-Code-Login:** Ein weitergeleiteter Link oder QR-Code allein
+  verschafft keinen Zugang mehr; jede Anmeldung braucht Passwort und Handy mit App. Ein eigener
+  Ablauf „Gerät hinzufügen“ entfällt, weil sich jedes Gerät gleich anmeldet.
+- **Keine Fremddienste:** kein Mailversand, kein Login-Anbieter, kein Fremdkonto für die
+  Redaktion. QR-Codes, Hashes und App-Codes berechnet der Server selbst.
+
+### Betrachtete Alternativen
+
+| Option | Bewertung |
+|---|---|
+| **Weiter per Drizzle Studio** | Keine Rechte, kein Verlauf, nur für Technik. Bleibt als Notfallwerkzeug (es umgeht Rechte und Verlauf). |
+| **Fertiges CMS bzw. Login-Dienst** (Payload, Supabase u. a.) | Bewertet in `CMS_KONZEPT.md`, Abschnitt 15: Upgrade-Zwang, generische Oberfläche bzw. weiteres Fremdkonto. Verworfen. |
+| **Login per E-Mail-Link** | Braucht Mailversand, DNS-Einträge und E-Mail-Adressen aller Zugänge. Am 03.10.2026 verworfen. |
+| **Login nur per Einmal-Code/QR-Code** (Entwurf 03.10.2026) | Kein Passwort nötig, aber wer einen gültigen Code in die Hände bekommt, ist angemeldet; jedes weitere Gerät bräuchte einen eigenen Code. Am 20.10.2026 durch Zwei-Faktor ersetzt. |
+| **Zwei-Faktor mit Passwort und Authenticator-App** ✅ | Zwei unabhängige Faktoren, kein Fremddienst, Apps kostenlos und offline. Dafür einmalige Einrichtung pro Person und kein „Passwort vergessen“ zum Selbermachen. |
+
+### Einordnung
+✅ **Gute Entscheidung**, mit ⚖️ **Kompromissen** beim Zurücksetzen (nur über Admins) und beim
+noch fehlenden „Wiederherstellen“.
+
+### Folgen
+- **Positiv**
+  - Trainer:innen und Spartenleitungen pflegen selbst, auch vom Handy, und sehen nur ihre Bereiche.
+  - Jede Änderung ist im Verlauf nachvollziehbar (wer, wann, vorher/nachher).
+  - Uploads werden automatisch verkleinert (`sharp`, WebP), von Metadaten befreit und mit
+    Inhalts-Hash benannt; ersetzte Dateien werden aufgeräumt.
+  - Gleichzeitige Änderungen werden erkannt (Konfliktprüfung über `geaendert_am`).
+  - Die Speicherfunktionen hängen nicht von Next.js ab und sind für REST-API und Telegram-Bot
+    wiederverwendbar.
+- **Negativ / Aufwand**
+  - Anmeldung, Rechte und Verlauf sind selbst gebaut und selbst zu pflegen.
+  - Ohne E-Mail kein „Passwort vergessen“ zum Selbermachen: Ein Admin setzt den Zugang zurück.
+    Sind alle Admins ausgesperrt, hilft nur `npm run verwaltung:admin` auf dem Server.
+  - Die App-Geheimnisse stehen im Klartext in der Datenbank (anders geht TOTP nicht); Datenbank
+    und Backups sind entsprechend zu schützen.
+  - Betrieb hinter nginx braucht passende Einstellungen (`X-Forwarded-Proto`, `X-Real-IP`,
+    `client_max_body_size`) und eine synchrone Uhr (`OPERATIONS.md`, Abschnitt 9).
+  - Neue Abhängigkeiten: `sharp` (natives Modul) und `qrcode`.
+  - „Wiederherstellen“ im Verlauf, REST-API und Telegram-Bot sind noch offen (`CMS_KONZEPT.md`,
+    Abschnitt 14).
 
 ---
 
@@ -334,6 +399,20 @@ Patch-/Migrationsskripte wurden genutzt, um große Altbestände, Medienzuordnung
 
 ### Einordnung
 ✅ **Gute Entscheidung**. Begründung und Folgen: Abschnitt 0.
+
+---
+
+## 7.5 Drizzle Studio → eigene Verwaltung (Oktober 2026)
+
+### Vorher
+- Pflege direkt in den Tabellen per Drizzle Studio, nur durch technisch Verantwortliche.
+
+### Heute
+- Verwaltung unter `/verwaltung` mit Zwei-Faktor-Anmeldung, abgestuften Rechten und Verlauf;
+  Drizzle Studio nur noch für Technik und Notfälle.
+
+### Einordnung
+✅ **Gute Entscheidung**. Begründung und Folgen: Abschnitt 0b.
 
 ---
 

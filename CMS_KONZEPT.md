@@ -1,13 +1,15 @@
 # KONZEPT – Eigene Vereinsverwaltung statt Sanity
 
-Stand: 2026-10-03 (Login per QR-Code, REST-API und Telegram-Bot ergänzt; Umstellung auf SQLite,
-eigenen Server und OpenRouter; Datenübernahme erledigt)  
-Status: Entwurf zur Abstimmung. Datenmodell und Datenübernahme sind umgesetzt, die Verwaltung
-selbst noch nicht.  
-Scope: Mannschaften und Gruppen, Trainingszeiten, Trainer:innen/Ansprechpartner:innen, Sparten und
-Kontaktseite. Bearbeitet wird über die Verwaltung, eine REST-API und einen Telegram-Bot. News,
-Termine und Downloads liegen schon in der Datenbank; ihre Bearbeitung in der Verwaltung folgt
-später (siehe Abschnitt 14). Die Partner entfallen.
+Stand: 2026-10-20 (Verwaltung umgesetzt; Anmeldung mit Zwei-Faktor statt Einmal-Code-Login).
+Davor 2026-10-03: REST-API und Telegram-Bot ergänzt, Umstellung auf SQLite, eigenen Server und
+OpenRouter, Datenübernahme erledigt.  
+Status: Die Verwaltung unter `/verwaltung` ist umgesetzt, einschließlich News, Termine und
+Downloads. Offen sind REST-API, Telegram-Bot über OpenRouter, „Wiederherstellen“ im Verlauf und
+der Betrieb auf dem Hetzner-Server (Abschnitt 14). Teile dieses Konzepts, die anders umgesetzt
+wurden, sind als **ersetzt** oder **offen** gekennzeichnet.  
+Scope: Mannschaften und Gruppen, Trainingszeiten, Trainer:innen/Ansprechpartner:innen, Sparten,
+Kontaktseite, News, Termine und Downloads. Bearbeitet wird über die Verwaltung, später auch über
+eine REST-API und einen Telegram-Bot. Die Partner entfallen.
 
 ---
 
@@ -17,21 +19,23 @@ später (siehe Abschnitt 14). Die Partner entfallen.
   bestehende Next.js-Projekt eingebaut und deckt genau unsere Inhalte ab.
 - **Leitidee: Alles zu einer Mannschaft auf einer Seite.** Trainingszeiten, Trainerteam, Foto und
   Beschreibung stehen in einem Formular. Ein Klick auf „Speichern“ macht die Änderung sofort live.
-- **Anmeldung per QR-Code.** Ein Admin legt den Zugang an und bekommt einen QR-Code. Die Person
-  scannt ihn mit der Handykamera und ist angemeldet. Am PC tippt sie den Code ein. Es gibt keine
-  Passwörter, keine Konten und keinen Mailversand.
+- **Anmeldung mit Zwei-Faktor** (seit 20.10.2026, ersetzt den reinen QR-Code-Login): Benutzername +
+  Passwort + 6-stelliger Code aus einer Authenticator-App. Ein Admin legt den Zugang an und
+  bekommt einen Einladungs-QR-Code. Die Person scannt ihn, legt ihr Passwort fest und koppelt die
+  App. Es gibt keine Fremdkonten und keinen Mailversand.
 - **Abgestufte Rechte:** Admin, Spartenleitung (eigene Sparte) und Trainer:in (nur die eigene
   Mannschaft bzw. Gruppe).
-- **REST-API und Telegram-Bot:** Dieselben Funktionen gibt es auch als REST-API. Darauf baut ein
-  Telegram-Bot auf. Er versteht Nachrichten wie „U13 trainiert ab jetzt dienstags 17:30“ mit einem
+- **REST-API und Telegram-Bot (offen):** Dieselben Funktionen soll es auch als REST-API geben.
+  Darauf baut ein Telegram-Bot auf. Er versteht Nachrichten wie „U13 trainiert ab jetzt dienstags 17:30“ mit einem
   LLM (über OpenRouter, Modell noch offen) und bereitet die Änderung selbst vor. Ein Tipp auf
   „Übernehmen“, und sie ist online.
 - **Technik:** SQLite-Datenbank als Datei (`data/svhs.db`), Fotos im lokalen Medienordner
   (`data/medien`), beides auf einem **eigenen Server** (geplant: Hetzner). LLM für den Bot über
   OpenRouter. Es gibt keinen separaten Datenbankdienst.
 - Die bestehenden Daten aus Sanity wurden am **03.10.2026 automatisch übernommen** (siehe
-  Abschnitt 13). Sanity, `/studio` und das Studio-Handbuch sind entfernt. Bis die Verwaltung
-  steht, werden die Inhalte per Drizzle Studio gepflegt.
+  Abschnitt 13). Sanity, `/studio` und das Studio-Handbuch sind entfernt. Seit dem 20.10.2026
+  werden die Inhalte über die Verwaltung gepflegt; Drizzle Studio bleibt für Technik und
+  Notfälle (es umgeht Rechte und Verlauf).
 
 ---
 
@@ -93,8 +97,11 @@ gut machbar, Handarbeit fällt kaum an.
 
 1. **Denken wie der Verein:** Der Einstieg ist „meine Mannschaft“, nicht „Dokumenttyp Trainingszeit“.
 2. **Speichern = live.** Es gibt keinen Entwurf/Publish-Schritt und keine Reihenfolge-Regeln.
-   Absicherung bieten der Verlauf und die Wiederherstellen-Funktion.
-3. **Einen Zugang einrichten dauert 30 Sekunden:** Name eintragen, QR-Code zeigen, fertig.
+   Absicherung bietet der Verlauf (die Wiederherstellen-Funktion ist noch offen). Ausnahme: News
+   haben einen Schalter „veröffentlicht“.
+3. **Einen Zugang einrichten geht schnell:** Admin trägt Name und Rechte ein und zeigt den
+   Einladungs-QR-Code. Die Person legt ihr Passwort fest und koppelt die Authenticator-App
+   (ersetzt: „Name eintragen, QR-Code zeigen, fertig“ aus dem ersten Entwurf).
 4. **Jede:r sieht nur, was sie/er bearbeiten darf.** Das gilt in der Verwaltung, in der API und im Bot.
 5. **Komplett deutsch und handytauglich.** Trainer:innen sollen auch vom Sportplatz aus pflegen können.
 6. **Einmal pflegen, überall aktuell:** Eine Person existiert einmal, eine Trainingszeit hängt an der Mannschaft.
@@ -102,147 +109,204 @@ gut machbar, Handarbeit fällt kaum an.
    Ausgeführt wird erst nach einem Tipp auf „Übernehmen“, es sei denn, ein Zugang ist für
    „sofort ausführen“ freigeschaltet.
 8. **So wenig Technik wie möglich:** Website, Datenbank und Medien laufen auf einem Server, ohne
-   separaten Datenbankdienst. Für die Verwaltung braucht niemand ein Fremdkonto, Telegram ist freiwillig.
+   separaten Datenbankdienst. Für die Verwaltung braucht niemand ein Fremdkonto, nur eine
+   kostenlose Authenticator-App. Telegram ist freiwillig.
 
 ---
 
 ## 5) Rollen und Rechte
 
+Umgesetzt am 20.10.2026 (`lib/verwaltung/rechte.ts`).
+
 | Stufe | Für wen | Darf |
 |---|---|---|
-| **Admin** | Vorstand, Webverantwortliche | alles, inklusive Sparten, Kontaktseite, Zugänge, API-Schlüssel und Verlauf |
-| **Spartenleitung** | z. B. Abteilungsleitung Tischtennis | alle Mannschaften und Gruppen der eigenen Sparte(n) anlegen, bearbeiten und löschen, dazu Spartentext und -foto |
-| **Trainer:in** | Trainerteam einer Mannschaft oder Gruppe | nur die eigene(n) Mannschaft(en) bzw. Gruppe(n) bearbeiten: Trainingszeiten, Beschreibung, Foto, Trainerteam |
+| **Admin** | Vorstand, Webverantwortliche | alles, inklusive Sparten anlegen und löschen, Kontaktseite, Downloads, Zugänge und Verlauf; später API-Schlüssel |
+| **Spartenleitung** | z. B. Abteilungsleitung Tischtennis | alle Mannschaften und Gruppen der eigenen Sparte(n) anlegen, bearbeiten und löschen, dazu Spartentext, -foto, -farbe und Ansprechpartner:innen; News und (manuelle) Termine der Sparte |
+| **Trainer:in** | Trainerteam einer Mannschaft oder Gruppe | nur die eigene(n) Mannschaft(en) bzw. Gruppe(n) bearbeiten: Trainingszeiten, Beschreibung, Foto, Trainerteam, ausblenden; News der eigenen Teams. Löschen kann sie das Team nicht |
 
 Technisch bleibt das einfach. Ein Zugang ist entweder Admin, oder er hat eine Liste von
-**Bereichen** (Sparten, Mannschaften und/oder Gruppen). Daraus ergeben sich die Rechte:
+**Bereichen** (Tabelle `zugang_bereiche`: Sparten, Mannschaften und/oder Gruppen). Spartenleitung
+und Trainer:in sind also keine eigenen Rollen, sondern ergeben sich aus den Bereichen:
 
-- `kannSparteBearbeiten` = Admin **oder** Sparte steht in den Bereichen
-- `kannMannschaftBearbeiten` = `kannSparteBearbeiten(sparte)` **oder** Mannschaft steht in den
-  Bereichen (für Gruppen entsprechend)
-- Personen darf bearbeiten, wer eine Mannschaft oder Sparte bearbeiten darf, in der die Person vorkommt.
-- Nur Admins: Kontaktseite, Zugänge, API-Schlüssel, Sparten anlegen/löschen, gesamter Verlauf.
+- `kannSparte` = Admin **oder** Sparte steht in den Bereichen
+- `kannMannschaft` = `kannSparte(sparte der Mannschaft)` **oder** Mannschaft steht in den
+  Bereichen (für Gruppen entsprechend `kannGruppe`)
+- **Personen** (`kannPerson`): Wer kein Admin ist, darf eine Person nur bearbeiten, wenn sie in
+  mindestens einem Trainerteam bzw. als Ansprechpartner:in vorkommt und **alle** diese
+  Verwendungen im eigenen Bereich liegen. Personen mit einer Vereinsfunktion (Kontaktseite), mit
+  dem Zugang einer anderen Person verknüpfte Personen und Personen in fremden Teams bzw. Sparten
+  bearbeiten nur Admins. Die eigene, mit dem Zugang verknüpfte Person darf jede:r bearbeiten. Neue
+  Personen darf jede:r anlegen; wer kein Admin ist, ordnet sie dabei gleich einem eigenen Team zu.
+  Personen löschen nur Admins.
+- **News** (`kannZuordnung`): wer die zugeordnete Sparte, Mannschaft bzw. Gruppe bearbeiten darf,
+  beim Ändern die alte und die neue Zuordnung. News ohne Zuordnung (ganzer Verein) nur Admins.
+- **Termine**: nur manuelle, und nur mit Recht auf die Sparte des Termins; Termine ohne Sparte nur
+  Admins. Synchronisierte Spiele (fussball.de, click-tt) sind schreibgeschützt.
+- **Nur Admins**: Kontaktseite, Downloads, Zugänge, Verlauf, Sparten anlegen und löschen, die
+  Adresse (Slug) einer Sparte ändern, Personen löschen; später API-Schlüssel.
 
-Diese Rechte prüft **eine zentrale Service-Schicht auf dem Server**, bei jedem Zugriff. Dabei ist
-egal, ob der Zugriff aus der Verwaltung, über die REST-API oder vom Telegram-Bot kommt.
+Diese Rechte prüft **jede Server-Aktion bzw. Speicherfunktion auf dem Server selbst**, bei jedem
+Zugriff; die Oberfläche blendet nur aus, was jemand nicht darf. Die Speicherfunktionen hängen
+nicht von Next.js ab, damit REST-API und Telegram-Bot sie später genauso nutzen können
+(statt der ursprünglich geplanten einen Datei `lib/verwaltung/service.ts`, siehe Abschnitt 9).
 
 ---
 
-## 6) Anmeldung per QR-Code und Anmelde-Code
+## 6) Anmeldung mit Zwei-Faktor (Passwort + Authenticator-App)
 
-Entschieden am 03.10.2026: **keine Passwörter, keine Konten, kein Mailversand.** Angemeldet wird
-mit einem **Anmelde-Code**. Das ist ein Einmal-Token aus 12 Zeichen wie `K7QM-9XTD-2HWP`. Derselbe
-Code steckt auch in einem QR-Code.
+**Entschieden am 20.10.2026, umgesetzt:** Alle Zugänge melden sich mit **Benutzername + Passwort +
+6-stelligem Code aus einer Authenticator-App** an (z. B. Google Authenticator, Microsoft
+Authenticator, Aegis). Das ersetzt den Login per Einmal-Code bzw. QR-Code vom 03.10.2026
+(Abschnitt 6.6). Der **QR-Code** dient jetzt nur noch zwei Dingen: der **Einladung** (Link zur
+Einrichtung) und der **Kopplung der Authenticator-App**. Ein Link oder QR-Code allein meldet
+niemanden mehr an; jede Anmeldung braucht das Passwort und das Handy mit der App.
 
-- **Handy oder Tablet:** den QR-Code mit der normalen Kamera scannen. Eine App braucht es nicht.
-- **PC:** den Code auf `/verwaltung/login` eintippen.
+Weiterhin gilt: **keine Fremdkonten, kein Mailversand.** Code: `lib/verwaltung/anmeldung.ts`,
+`sitzung.ts`, `passwort.ts`, `totp.ts`, `codes.ts`; Seiten unter `app/verwaltung/anmelden` und
+`app/verwaltung/login`.
 
-Ein Code gilt nur **einmal** und nur **kurz**. Danach bleibt das Gerät angemeldet.
+### 6.1 Zugang anlegen und einladen
 
-### Woher kommt ein Code?
-
-| Quelle | Wofür | Gültig |
-|---|---|---|
-| **Einladung vom Admin** | erste Anmeldung, oder wenn alle Geräte verloren sind | 7 Tage, einmal |
-| **„Gerät hinzufügen“** auf einem eigenen, schon angemeldeten Gerät | zweites Gerät, z. B. erst Handy, dann PC | 10 Minuten, einmal |
-| **„Telegram verbinden“** (siehe Abschnitt 11) | Telegram-Konto mit dem Zugang verknüpfen | 10 Minuten, einmal |
-
-### Erste Anmeldung
-
-1. Admin: „Zugänge“ → „+ Zugang“ → Name und Bereiche eintragen → „Anmelde-QR erstellen“.
-2. Die Person scannt den QR-Code direkt vom Bildschirm, zum Beispiel bei der Trainersitzung.
-   Alternativ schickt der Admin den Link per Direktnachricht.
-3. Es öffnet sich eine Seite: „Willkommen, Max! Auf diesem Gerät anmelden? [Anmelden]“.
-4. Nach dem Klick ist der Code verbraucht. Das Gerät bleibt **180 Tage** angemeldet, und jede
-   Nutzung verlängert diese Frist. Ist der Code abgelaufen oder schon benutzt, steht auf der
-   Seite, an wen man sich wenden kann.
+1. Admin: „Zugänge“ → „Neuer Zugang“ → Name, Benutzername (Vorschlag aus dem Namen, z. B.
+   `max.beispiel`), optional die eigene Person („das bin ich“) und die Rechte: „Alles (Admin)“
+   oder „Bestimmte Bereiche“ (Sparten, Mannschaften, Gruppen).
+2. Nach dem Speichern erscheint der **Einladungs-Code** (12 Zeichen wie `K7QM-9XTD-2HWP`) mit
+   QR-Code und Link `…/verwaltung/anmelden#<code>`. Er gilt **7 Tage** und **einmal** und wird nur
+   dieses eine Mal angezeigt.
+3. Die Person scannt den QR-Code direkt vom Bildschirm, oder der Admin schickt den Link per
+   Direktnachricht. Am PC lässt sich der Code auf `/verwaltung/anmelden` auch eintippen.
 
 ```
 Zugang hinzufügen
-  Name        [ Max Beispiel                 ]   (aus „Personen“ übernehmen)
+  Name          [ Max Beispiel                 ]
+  Benutzername  [ max.beispiel                 ]
+  Eigene Person [ Person suchen …               ]   (optional, „das bin ich“)
   Darf bearbeiten
     ( ) Alles (Admin)
-    ( ) Sparte(n)        [ Tischtennis ✕ ] [+]
-    (•) Mannschaft(en)   [ Fußball · U13 Junioren ✕ ] [+]
-                                    [ Abbrechen ]  [ Anmelde-QR erstellen ]
+    (•) Bestimmte Bereiche   [x] Fußball · U13 Junioren   [ ] Sparte Tischtennis …
+                                         [ Zugang anlegen und Einladungs-Code erstellen ]
 
-Anmelde-Code für Max Beispiel
+Einladung für Max Beispiel
   ┌───────────┐
   │           │   K7QM-9XTD-2HWP
-  │  QR-Code  │   gültig bis 10.10.2026 · nur einmal verwendbar
+  │  QR-Code  │   gültig bis 27.10.2026 · nur einmal verwendbar
   │           │
   └───────────┘
   [ Link kopieren ]  [ Code kopieren ]
   ⓘ Nur persönlich oder per Direktnachricht weitergeben – nicht in Gruppen.
 ```
 
-### Weiteres Gerät
+### 6.2 Zugang einrichten (einmalig)
 
-Auf dem angemeldeten Gerät öffnet man „Meine Geräte“ → „Gerät hinzufügen“. Es erscheinen ein
-QR-Code und ein Code, beide 10 Minuten gültig. Das neue Gerät scannt den QR-Code (Handy/Tablet),
-oder man tippt den Code ein (PC).
+Auf `/verwaltung/anmelden` prüft die Seite den Einladungs-Code und zeigt drei Schritte:
 
-```
-Meine Geräte
-  iPhone · Safari       dieses Gerät     zuletzt aktiv: heute
-  Windows · Chrome                       zuletzt aktiv: 01.10.     [ Abmelden ]
-  Telegram              verbunden                                  [ Trennen ]
-  [ + Gerät hinzufügen ]   [ Telegram verbinden ]
-```
+1. **Benutzername** zum Merken (wird für Passwort-Manager mitgegeben).
+2. **Passwort festlegen** (zweimal eingeben).
+3. **Authenticator-App koppeln:** QR-Code mit der App scannen oder, auf demselben Handy, den
+   angezeigten Schlüssel abtippen. Zur Kontrolle den aktuellen 6-stelligen Code eingeben.
 
-### Später als Komfort: „Mit dem Handy anmelden“ am PC
+Dazu „Auf diesem Gerät angemeldet bleiben (30 Tage)“. Mit dem Abschicken ist der Einladungs-Code
+verbraucht, Passwort und App sind gespeichert, und das Gerät ist angemeldet.
 
-Wie bei WhatsApp Web zeigt die Login-Seite am PC einen QR-Code. Man scannt ihn mit dem Handy,
-auf dem man schon angemeldet ist, und bestätigt dort: „Windows · Chrome anmelden?“
+Das Geheimnis für die App erzeugt der Server beim Öffnen der Einladung und speichert es am
+Einladungs-Code (`anmelde_codes.totp_geheimnis`). Der Browser zeigt nur QR-Code und Schlüssel an
+und schickt das Geheimnis nicht zurück, sondern nur den 6-stelligen App-Code. Beim Zugang
+gespeichert wird es erst, wenn dieser Code passt. Wird die Seite neu geladen, entsteht ein neues
+Geheimnis; die App muss dann den neuen QR-Code scannen.
 
-Dafür sind eine Wartefunktion am PC und eine Bestätigungsseite am Handy nötig. Das kommt erst,
-wenn der Grundablauf läuft (Schritt 7).
+### 6.3 Anmelden
 
-### Sicherheitsregeln
+- Auf `/verwaltung/login`: **Benutzername + Passwort + aktueller App-Code.**
+- „Angemeldet bleiben“: **30 Tage**, ohne Verlängerung bei Nutzung. Ohne den Haken endet die
+  Sitzung mit dem Schließen des Browsers, spätestens nach **12 Stunden**.
+- Ein neues Gerät (z. B. erst Handy, dann PC) meldet sich genauso an. Einen eigenen Code zum
+  „Gerät hinzufügen“ braucht es nicht mehr.
+- Die Fehlermeldung verrät nicht, ob Benutzername, Passwort oder App-Code falsch war.
 
-- **Einmal-Codes statt dauerhaftem Token.** Ein weitergeleiteter Screenshot oder ein verlorener
-  Zettel ist nach der Nutzung oder nach Ablauf wertlos. Ein dauerhafter Token wäre dagegen ein
-  Passwort, das niemand ändern kann.
-- **Pro Zugang ist immer nur ein Einladungs-Code aktiv.** Erstellt der Admin einen neuen Code,
-  wird der alte ungültig.
-- **Codes werden nur als Hash gespeichert** und nur einmal angezeigt. Ist ein Code verloren, wird
-  einfach ein neuer erstellt.
+### 6.4 Mein Zugang, Zurücksetzen, Notfall
+
+- **„Mein Zugang“** (alle): angemeldete Geräte sehen und einzeln abmelden; Passwort ändern
+  (aktuelles Passwort + App-Code). Beim Passwortwechsel werden alle anderen Geräte abgemeldet.
+- **Passwort vergessen oder Handy verloren:** Ein Admin setzt den Zugang zurück. Passwort und
+  App-Kopplung werden ungültig, alle Geräte abgemeldet, offene Codes gelöscht, und es gibt einen
+  neuen Einladungs-Code. Danach richtet die Person den Zugang neu ein (6.2).
+- **Deaktivieren** (Admin): Der Zugang ist sofort auf allen Geräten abgemeldet, offene Codes sind
+  gelöscht. Wieder aktiviert, gelten Passwort und App weiter.
+- **Erster Admin und Notfall:** `npm run verwaltung:admin -- "Name"` legt direkt in der Datenbank
+  einen Admin an und zeigt Einladungs-Code und QR-Code im Terminal. Gibt es den Namen schon, wird
+  dieser Zugang wieder aktiviert, zum Admin gemacht und zurückgesetzt. Das ist auch der Weg, wenn
+  alle Admins ausgesperrt sind. Es braucht Zugriff auf den Server (`OPERATIONS.md`, Abschnitt 9).
+- Es muss immer **mindestens ein aktiver Admin** übrig bleiben. Niemand kann sich selbst die
+  Admin-Rechte entziehen, sich selbst deaktivieren oder löschen.
+
+### 6.5 Sicherheitsregeln
+
+- **Passwörter**: mindestens 10 Zeichen, nicht den Benutzernamen enthaltend, nicht nur ein
+  wiederholtes Zeichen. Gespeichert als **scrypt-Hash** mit Salt. Bei unbekanntem Benutzernamen
+  rechnet der Server trotzdem einen Hash, damit die Antwortzeit nichts verrät.
+- **App-Codes** nach RFC 6238 (TOTP): SHA-1, 6 Ziffern, 30 Sekunden. Akzeptiert werden der
+  aktuelle Zeitschritt und je einer davor und danach. **Jeder Code gilt nur einmal**, auch bei zwei
+  gleichzeitigen Anmeldungen.
+- **Einladungs-Codes**: 12 Zeichen aus einem eindeutigen Alphabet (Crockford: O wird als 0, I/L
+  als 1 gelesen), rund 60 Bit Zufall. Gespeichert wird nur der **SHA-256-Hash**. Pro Zugang ist
+  immer nur ein Code offen; ein neuer macht den alten ungültig.
 - **Der Code steht im Link hinter `#`** (`…/verwaltung/anmelden#K7QM9XTD2HWP`). Dieser Teil wird
-  nie an den Server geschickt. Er landet also nicht in Server-Logs, und Link-Vorschauen in
-  WhatsApp, Signal oder Telegram sehen ihn nicht.
-- **Die Anmeldung braucht den Klick auf „Anmelden“.** Programme, die Links vorab öffnen, können
-  den Code dadurch nicht verbrauchen.
-- **12 Zeichen** ergeben rund 60 Bit Zufall. Das Alphabet ist eindeutig: Verwechslungen wie O/0
-  oder I/1 werden automatisch korrigiert. Zusammen mit einer Begrenzung der Fehlversuche pro IP
-  (z. B. 10 pro Viertelstunde) lässt sich ein Code nicht erraten.
-- **Geräte-Sitzungen** sind eine zufällige ID in einem `httpOnly`/`Secure`-Cookie und werden als
-  Hash in der DB gespeichert. Jedes Gerät lässt sich einzeln abmelden. Wird ein Zugang
-  deaktiviert, sind sofort alle Geräte, offenen Codes, API-Schlüssel und die Telegram-Verbindung
-  ungültig.
-- **Nachvollziehbar:** Jede Anmeldung erscheint im Verlauf, zum Beispiel „Max · iPhone · Safari ·
-  per Einladungs-Code“. Hat jemand anderes den Code benutzt, sieht der Admin das und meldet das
-  Gerät ab.
-- **Erster Admin:** Ein Skript (`npm run verwaltung:admin -- "Name"`) legt ihn an und zeigt Code
-  und QR-Code im Terminal. Dasselbe Skript dient als Notfall-Zugang, falls alle Admins
-  ausgesperrt sind. Es braucht dafür den Datenbankzugang.
+  nicht mit dem Seitenaufruf an den Server geschickt; erst die Seite selbst prüft ihn. Er landet
+  also nicht in Server-Logs, und Link-Vorschauen in WhatsApp, Signal oder Telegram können ihn
+  weder sehen noch verbrauchen. Verbraucht wird er erst mit dem Abschluss der Einrichtung.
+- **Fehlversuche** werden begrenzt: 20 pro IP-Adresse und 5 pro Kombination aus Benutzername und
+  IP-Adresse in 15 Minuten, danach eine Viertelstunde Pause. Ein Benutzername allein wird nicht
+  gesperrt, damit niemand fremde Zugänge gezielt aussperren kann. Gespeichert wird nur ein Hash
+  (Tabelle `fehlversuche`).
+- **Geräte-Sitzungen** sind ein Zufallstoken (256 Bit) im Cookie `svhs_sitzung` (`httpOnly`,
+  `SameSite=Lax`, `Secure` bei HTTPS). In der Datenbank steht nur der Hash. Jedes Gerät lässt
+  sich einzeln abmelden.
+- **Nachvollziehbar:** Jede Anmeldung und Abmeldung erscheint im Verlauf, z. B. „Max Beispiel ·
+  iPhone · Safari · angemeldet bleiben“. Codes, Passwort-Hashes und App-Geheimnisse landen nie im
+  Verlauf.
+- Das **Geheimnis der App** liegt im Klartext in der Datenbank (anders geht TOTP nicht). Datenbank
+  und Backups deshalb schützen (`DATA_MODEL.md`, Abschnitt 3.18).
+
+### 6.6 Was aus dem ersten Entwurf (03.10.2026) ersetzt oder offen ist
+
+| Erster Entwurf | Stand 20.10.2026 |
+|---|---|
+| Anmeldung nur mit Einmal-Code/QR-Code, ohne Passwort | **ersetzt** durch Zwei-Faktor (6.3) |
+| Einladungs-Code 7 Tage, einmal, nur als Hash, Code hinter `#` | **umgesetzt**, führt jetzt zur Einrichtung von Passwort und App |
+| „Gerät hinzufügen“: Code für ein weiteres Gerät, 10 Minuten | **ersetzt**: Jedes Gerät meldet sich mit Benutzername, Passwort und App-Code an. Der Zweck `geraet` in `anmelde_codes.zweck` ist ein unbenutzter Rest |
+| „Mit dem Handy anmelden“ am PC (wie WhatsApp Web) | **nicht umgesetzt**; mit der Passwort-Anmeldung am PC entbehrlich. Offen, falls doch gewünscht |
+| Geräte 180 Tage angemeldet, Verlängerung bei jeder Nutzung | **ersetzt**: 30 Tage mit „angemeldet bleiben“ (ohne Verlängerung), sonst 12 Stunden |
+| Begrenzung z. B. 10 Fehlversuche pro IP und Viertelstunde | **ersetzt** durch die Regeln in 6.5 |
+| „Telegram verbinden“ per Einmal-Code (10 Minuten) | **offen**, kommt mit dem Bot (Abschnitt 11) |
+| Anmeldung im Verlauf, Geräte einzeln abmelden, Deaktivieren sperrt sofort | **umgesetzt** |
 
 ### Vergleich
 
 | | Bisher (Sanity) | Neu |
 |---|---|---|
-| Zugang einrichten | Owner lädt auf manage.sanity.io ein, die Person legt ein Sanity-Konto an und nimmt die Einladung an | Admin legt den Zugang an, die Person scannt den QR-Code |
-| Passwort/Konto/E-Mail | Google-, GitHub- oder Sanity-Konto nötig | nichts davon |
+| Zugang einrichten | Owner lädt auf manage.sanity.io ein, die Person legt ein Sanity-Konto an und nimmt die Einladung an | Admin legt den Zugang an, die Person scannt den Einladungs-QR-Code, legt ihr Passwort fest und koppelt die Authenticator-App |
+| Passwort/Konto/E-Mail | Google-, GitHub- oder Sanity-Konto nötig | eigenes Passwort und eine Authenticator-App; kein Fremdkonto, keine E-Mail |
 | Rechte | alle dürfen alles | Admin / Sparte / eigene Mannschaft |
-| Neues Gerät | Login bei Sanity | „Gerät hinzufügen“ auf dem eigenen Handy |
+| Neues Gerät | Login bei Sanity | Anmeldung mit Benutzername, Passwort und App-Code |
 | Zugang entziehen | auf manage.sanity.io | ein Klick in „Zugänge“, alle Geräte sind sofort abgemeldet |
 
-**Gut zu wissen:** Ohne E-Mail gibt es kein „Passwort vergessen“ zum Selbermachen. Wer alle
-Geräte verliert oder 180 Tage nicht angemeldet war, bekommt vom Admin einen neuen Code. Das ist
-selten und dauert eine Minute.
+**Gut zu wissen:** Ohne E-Mail gibt es kein „Passwort vergessen“ zum Selbermachen. Wer das Passwort
+vergisst oder das Handy mit der App verliert, bekommt vom Admin über „Zugang zurücksetzen“ eine
+neue Einladung. Das dauert eine Minute.
 
 ---
 
 ## 7) Bedienkonzept
+
+**Umgesetzt am 20.10.2026** unter `app/verwaltung/` (Seiten) und `components/verwaltung/`
+(Bausteine). Die Skizzen unten sind der Entwurf; die wichtigsten Abweichungen:
+
+- Die Übersicht zeigt alle bearbeitbaren Mannschaften und Gruppen nach Sparte gruppiert, mit
+  Hinweisen „kein Trainerteam“, „keine Trainingszeit“ und „ausgeblendet“, dazu „Zuletzt geändert“
+  (Admins: alle Änderungen, sonst die eigenen). Eine direkte Weiterleitung bei nur einem Team und
+  ein Suchfeld auf der Übersicht gibt es nicht; gesucht wird in den Listen.
+- Mannschaften und Gruppen liegen unter `/verwaltung/teams/<mannschaft|gruppe>/<id>`.
+- Wiederherstellen über den Verlauf ist **offen** (7.2, 7.4).
 
 ### 7.1 Übersicht (Startseite nach dem Login)
 
@@ -300,8 +364,9 @@ Zuletzt geändert am 03.10.2026, 14:12 von Lea Muster · Verlauf
 - **Ort mit Vorschlägen** aus den bestehenden Orten. Ein neuer Ort lässt sich einfach eintippen.
 - **Hinweis-Feld** für Ausnahmen wie „ab Februar“.
 - Beim Verlassen der Seite mit ungespeicherten Änderungen erscheint eine Warnung.
-- Die Mannschaft lässt sich **ausblenden statt löschen**. Löschen geht nur mit Rückfrage und
-  ist über den Verlauf wiederherstellbar.
+- Die Mannschaft lässt sich **ausblenden statt löschen**. Löschen geht nur mit Rückfrage
+  (Spartenleitung und Admins). Der alte Stand steht im Verlauf; „Wiederherstellen“ per Knopf ist
+  noch **offen**.
 - **Gruppen** (Trainings- und Kursgruppen ohne Ligabetrieb, siehe Abschnitt 8) werden mit
   demselben Formular bearbeitet. Das Feld „Bereich“ gibt es dort nicht.
 
@@ -327,23 +392,24 @@ Sanity gibt es damit nicht mehr.
 
 ### 7.4 Weitere Seiten
 
-| Seite | Wer | Inhalt |
-|---|---|---|
-| **Personen** | alle (im eigenen Bereich) | Liste mit Suche. Bearbeiten: Name, Telefon, E-Mail, WhatsApp (abweichende Nummer, optional), Foto. Die Seite zeigt, wo die Person vorkommt (z. B. „Trainer:in bei U13, Kontaktseite“). Löschen geht nur, wenn die Person nirgends mehr verwendet wird |
-| **Sparten** | Admin, Spartenleitung | Name, Icon, Farbe, Kurz- und Langtext, Foto, Ansprechpartner:innen der Sparte, Reihenfolge der Mannschaften und Gruppen |
-| **Kontaktseite** | Admin | Gruppen „Vorstand / Abteilungsleiter / Weitere Ansprechpartner“ (Tabelle `funktionen`). Jede Zeile besteht aus Person und Funktion, sortierbar |
-| **Meine Geräte** | alle | eigene Geräte sehen und abmelden, Gerät hinzufügen, Telegram verbinden oder trennen |
-| **Zugänge** | Admin | Liste aller Zugänge mit Geräten, letzter Anmeldung und Telegram-Status. Anmelde-QR erstellen, Bereiche ändern, Bot-Modus festlegen, API-Schlüssel verwalten, Zugang deaktivieren |
-| **Verlauf** | Admin (Spartenleitung für die eigene Sparte) | Wer hat wann was geändert und über welchen Weg (Verwaltung, API, Telegram), mit Vorher/Nachher und „Wiederherstellen“ |
-| **Einstellungen** | Admin | optional: „Trainingszeiten gültig ab“ (heute fest im Code: 01.12.2025) und die allgemeinen Kontaktdaten der Kontaktseite |
+| Seite | Wer | Inhalt | Stand 20.10.2026 |
+|---|---|---|---|
+| **Personen** | alle (Rechte siehe Abschnitt 5) | Liste mit Suche. Bearbeiten: Name, Telefon, E-Mail, WhatsApp (abweichende Nummer, optional), Foto, interne Notiz. Die Seite zeigt, wo die Person vorkommt (z. B. „Trainer:in bei U13, Kontaktseite“) | umgesetzt. **Abweichung:** Löschen dürfen nur Admins, auch wenn die Person noch verwendet wird; die Verwendung wird vorher angezeigt |
+| **Sparten** | Admin, Spartenleitung | Name, Icon, Farbe, Kurz- und Langtext, Foto, Ansprechpartner:innen der Sparte, Reihenfolge der Mannschaften und Gruppen | umgesetzt; anlegen, löschen und Adresse ändern nur Admins |
+| **Kontaktseite** | Admin | Gruppen „Vorstand / Abteilungsleiter / Weitere Ansprechpartner“ (Tabelle `funktionen`). Jede Zeile besteht aus Person und Funktion, sortierbar | umgesetzt |
+| **News, Termine, Downloads** | siehe Abschnitt 5 | News mit Markdown-Text und Vorschau, Titelbild und Schalter „veröffentlicht“; manuelle Termine; Downloads als PDF-Upload | umgesetzt (vorgezogen aus Schritt 7) |
+| **Mein Zugang** (Entwurf: „Meine Geräte“) | alle | eigene Geräte sehen und abmelden, Passwort ändern | umgesetzt. „Gerät hinzufügen“ **ersetzt** (Abschnitt 6.6), „Telegram verbinden“ **offen** |
+| **Zugänge** | Admin | Liste aller Zugänge mit Rechten, Status, Geräten und letzter Anmeldung. Anlegen mit Einladungs-QR, Rechte und eigene Person ändern, zurücksetzen, deaktivieren, löschen, Geräte abmelden | umgesetzt. Telegram-Status, Bot-Modus und API-Schlüssel **offen** |
+| **Verlauf** | Admin | Wer hat wann was geändert und über welchen Weg, mit Vorher/Nachher; Filter nach Art und Zugang | umgesetzt als Ansicht. **Offen:** „Wiederherstellen“ und ein Verlauf für Spartenleitungen (eigene Sparte) |
+| **Einstellungen** | Admin | optional: „Trainingszeiten gültig ab“ (heute fest im Code: 01.12.2025) und die allgemeinen Kontaktdaten der Kontaktseite | **offen** |
 
 ---
 
-## 8) Datenmodell (umgesetzt am 03.10.2026)
+## 8) Datenmodell (umgesetzt am 03.10.2026 bzw. 20.10.2026)
 
-Die Inhaltstabellen sind umgesetzt: Schema in `lib/db/schema.ts`, Migration in
-`drizzle/0000_initial.sql`, ausführliche Beschreibung in `DATA_MODEL.md`. Die Verwaltungstabellen
-kommen mit Schritt 1 als weitere Migration dazu.
+Die Inhaltstabellen sind seit dem 03.10.2026 umgesetzt (Schema in `lib/db/schema.ts`, Migration
+`drizzle/0000_initial.sql`), die Verwaltungstabellen seit dem 20.10.2026 (Migration
+`drizzle/0001_verwaltung.sql`). Ausführliche Beschreibung: `DATA_MODEL.md`.
 
 ```mermaid
 erDiagram
@@ -385,23 +451,24 @@ Dateifelder enthalten den relativen Pfad im Medienordner.
 | `termine` | id, titel, datum, uhrzeit (Freitext), ort, beschreibung, bild, bereich, tags, sparte_id, mannschaft_id, **quelle** (manuell/fussball-de/click-tt), **externe_id** |
 | `downloads` | id, titel, beschreibung, kategorie, datei, datum, sparte_id (optional), reihenfolge |
 
-Für die Verwaltung kommen an den Inhaltstabellen noch hinzu: `version` (an Mannschaft, Gruppe,
-Trainingszeit und Person) und `geaendert_von`. Beides fehlt im aktuellen Schema und folgt mit
-Schritt 1.
+Geplant waren an den Inhaltstabellen außerdem `version` (an Mannschaft, Gruppe, Trainingszeit
+und Person) und `geaendert_von`. **Beides ist ersetzt:** Gleichzeitige Änderungen erkennt die
+Verwaltung am Feld `geaendert_am` (`DATA_MODEL.md`, Abschnitt 7.3), und wer etwas geändert hat,
+steht im Verlauf.
 
-### Verwaltungstabellen (geplant)
+### Verwaltungstabellen
 
-| Tabelle | Zweck |
-|---|---|
-| `zugaenge` | id, name, ist_admin, aktiv, person_id (optional: „das bin ich“, z. B. für „meine neue Nummer“ im Bot), telegram_user_id (optional), bot_modus (Bestätigung/Sofort), erstellt_von, letzter_login |
-| `zugang_bereiche` | zugang_id, sparte_id **oder** mannschaft_id **oder** gruppe_id |
-| `anmelde_codes` | zugang_id, Hash des Codes, Zweck (Einladung/Gerät/Telegram), laeuft_ab, verwendet_am, erstellt_von |
-| `geraete` | zugang_id, Hash der Sitzungs-ID, Gerätename (z. B. „iPhone · Safari“), angemeldet_am, zuletzt_aktiv, laeuft_ab |
-| `api_schluessel` | zugang_id, Name, Hash, sichtbarer Anfang (z. B. `svhs_7Kq…`), nur_lesen, laeuft_ab, zuletzt_benutzt |
-| `bot_vorschlaege` | zugang_id, Chat, Änderungen (JSON), Status (offen/übernommen/verworfen/abgelaufen), laeuft_ab, Originalnachricht |
-| `bot_gespraeche` | Chat, Gesprächsverlauf (JSON), zuletzt_aktiv |
-| `fehlversuche` | Hash der IP, Zeitpunkt. Dient der Begrenzung der Code-Eingabe |
-| `verlauf` | Zeitpunkt, zugang_id, **Quelle** (Verwaltung/API/Telegram), Aktion, Objekttyp und -ID, Bezeichnung, Vorher/Nachher (JSON), Notiz (z. B. die Telegram-Nachricht) |
+| Tabelle | Zweck | Stand 20.10.2026 |
+|---|---|---|
+| `zugaenge` | id, name, **benutzername**, **passwort_hash**, **totp_geheimnis**, totp_letzter_schritt, eingerichtet_am, ist_admin, aktiv, person_id (optional: „das bin ich“), erstellt_von, letzte_anmeldung | umgesetzt (fett: neu für die Zwei-Faktor-Anmeldung). **Offen** mit dem Bot: telegram_user_id, bot_modus (Bestätigung/Sofort) |
+| `zugang_bereiche` | zugang_id, sparte_id **oder** mannschaft_id **oder** gruppe_id | umgesetzt |
+| `anmelde_codes` | zugang_id, Hash des Codes, Zweck, laeuft_ab, verwendet_am, erstellt_von, dazu das App-Geheimnis während der Einrichtung | umgesetzt für Einladungen. Zweck „Gerät“ **ersetzt** (unbenutzt), „Telegram“ **offen** |
+| `geraete` | zugang_id, Hash der Sitzungs-ID, Gerätename (z. B. „iPhone · Safari“), angemeldet_am, zuletzt_aktiv, laeuft_ab | umgesetzt |
+| `fehlversuche` | Hash aus IP bzw. Benutzername und IP, Zeitpunkt. Begrenzung der Fehlversuche | umgesetzt |
+| `verlauf` | Zeitpunkt, zugang_id, zugang_name, **Quelle** (Verwaltung/API/Telegram/System), Aktion, Objekttyp und -ID, Bezeichnung, Vorher/Nachher (JSON) | umgesetzt. Eine Spalte „Notiz“ (z. B. für die Telegram-Nachricht) **offen** |
+| `api_schluessel` | zugang_id, Name, Hash, sichtbarer Anfang (z. B. `svhs_7Kq…`), nur_lesen, laeuft_ab, zuletzt_benutzt | **offen** (REST-API) |
+| `bot_vorschlaege` | zugang_id, Chat, Änderungen (JSON), Status (offen/übernommen/verworfen/abgelaufen), laeuft_ab, Originalnachricht | **offen** (Bot) |
+| `bot_gespraeche` | Chat, Gesprächsverlauf (JSON), zuletzt_aktiv | **offen** (Bot) |
 
 ### Was sich gegenüber Sanity ändert
 
@@ -415,15 +482,16 @@ Schritt 1.
   Rolle hatte. Das konnte die 13 Personen treffen, die in mehreren Mannschaften stehen.
 - **Die Uhrzeit wird strukturiert** gespeichert (`beginn`/`ende`). Die 93 Bestandswerte wurden
   automatisch umgewandelt, und die Sortierung nach Uhrzeit funktioniert richtig.
-- **Der Ort bleibt Text** (später mit Vorschlagsliste). Eine eigene Trainingsplatz-Verwaltung gibt
+- **Der Ort bleibt Text**, in der Verwaltung mit Vorschlägen aus den vorhandenen Orten. Eine eigene Trainingsplatz-Verwaltung gibt
   es nicht (in Sanity 0 Einträge). Ein Klammerzusatz wie „(ab Februar)“ gehört ins Feld `hinweis`.
 - **Der Jahrgang-Typ entfällt** (0 Einträge). Stattdessen gibt es ein Freitextfeld „Altersklasse“
   an Mannschaft und Gruppe.
 - **Kontaktseite = `funktionen`.** Vereinsfunktionen hängen an der Person, nicht an einer Mannschaft.
 - **News, Termine und Downloads haben echte Bezüge** (Fremdschlüssel) statt Sparten als Freitext.
   Der News-Text ist Markdown statt Portable Text.
-- **`version`** an Mannschaft, Gruppe, Trainingszeit und Person soll verhindern, dass sich
-  gleichzeitige Änderungen gegenseitig überschreiben (Verwaltung, API und Bot). Kommt mit Schritt 1.
+- **Gleichzeitige Änderungen** überschreiben sich nicht gegenseitig: Die Verwaltung prüft beim
+  Speichern `geaendert_am` (ersetzt die geplante Spalte `version`). Für API und Bot ist das noch
+  festzulegen.
 - **Kein eingebetteter Altbestand und keine Fallback-Felder mehr.**
 
 ---
@@ -431,7 +499,11 @@ Schritt 1.
 ## 9) Technische Architektur
 
 **Eine Service-Schicht, drei Eingänge.** Verwaltung, REST-API und Telegram-Bot nutzen dieselben
-Funktionen. Rechte, Prüfung und Verlauf sitzen damit an einer einzigen Stelle.
+Funktionen. Rechte, Prüfung und Verlauf sitzen damit an einer einzigen Stelle. Umgesetzt ist
+bisher der Eingang Verwaltung; REST-API und Bot sind **offen**. Die „Service-Schicht“ besteht aus
+Speicherfunktionen ohne Next.js-Abhängigkeit (`lib/verwaltung/*.ts`,
+`lib/verwaltung/inhalte/*.ts`, `app/verwaltung/(intern)/*/logik.ts`), die Rechte prüfen, in
+einer Transaktion speichern und den Verlauf schreiben.
 
 ```mermaid
 flowchart LR
@@ -454,42 +526,48 @@ flowchart LR
 | Datenbank | **SQLite** als Datei (`data/svhs.db`) über `better-sqlite3` ✅ umgesetzt | kein separater Datenbankdienst, Backup = Datei sichern, echte Verknüpfungen, Transaktionen und CHECK-Constraints; für unsere Datenmenge mehr als ausreichend |
 | DB-Zugriff | **Drizzle ORM**, Migrationen mit `drizzle-kit` ✅ umgesetzt | typsicher und schlank, das Schema liegt als TypeScript im Repo; Migrationen laufen beim ersten Zugriff automatisch |
 | Hosting | **eigener Server** (geplant: Hetzner), `next start` hinter nginx | SQLite und Medienordner brauchen ein dauerhaft beschreibbares Dateisystem; Vercel ist damit nicht nutzbar |
-| Service-Schicht | `lib/verwaltung/service.ts` | eine Stelle für Rechte, Prüfung und Verlauf, genutzt von Verwaltung, API und Bot |
-| Schemas | **zod** | ein Schema für Formularprüfung, API-Prüfung, OpenAPI-Beschreibung und Bot-Werkzeuge |
-| Fotos | **lokaler Medienordner** `data/medien`, ausgeliefert unter `/medien/<pfad>` ✅ umgesetzt | liegt neben der Datenbank auf dem Server, kein Fremddienst. Bilder werden vor dem Speichern verkleinert (max. 1600 px, WebP). Hochgeladene Dateien (auch PDFs) bekommen immer einen Inhalts-Hash im Namen (`<name>-<hash8>.<ext>`), weil `/medien` solche Namen ein Jahr lang cacht; beim Löschen eines Bildes den Bildcache von `next/image` leeren (`OPERATIONS.md`, Abschnitt 7.4) |
-| QR-Codes | Paket `qrcode` (erzeugt SVG auf dem Server) | Die Website braucht keinen eigenen Scanner, die Handykamera reicht |
-| Formulare | **Server Actions** | keine eigene API für die Oberfläche nötig |
+| Service-Schicht | Speicherfunktionen in `lib/verwaltung/` und `app/verwaltung/(intern)/*/logik.ts` ✅ umgesetzt (statt einer Datei `lib/verwaltung/service.ts`) | Rechte, Prüfung und Verlauf in jeder Funktion; ohne Next.js-Abhängigkeit, damit API und Bot sie später nutzen können |
+| Schemas | **zod** – **offen** | geplant: ein Schema für Formularprüfung, API-Prüfung, OpenAPI-Beschreibung und Bot-Werkzeuge. Die Verwaltung prüft bisher mit eigenen Hilfsfunktionen (`lib/verwaltung/pruefhilfen.ts`); zod kommt frühestens mit der REST-API |
+| Anmeldung | Passwort mit **scrypt**, App-Codes nach **TOTP** (RFC 6238), beides mit `node:crypto` ✅ umgesetzt | keine Fremdbibliothek und kein Fremddienst für den Login (Abschnitt 6) |
+| Fotos | **lokaler Medienordner** `data/medien`, ausgeliefert unter `/medien/<pfad>` ✅ umgesetzt | liegt neben der Datenbank auf dem Server, kein Fremddienst. Bilder verkleinert die Verwaltung mit **`sharp`** vor dem Speichern (max. 1600 px, WebP, ohne EXIF/GPS). Hochgeladene Dateien (auch PDFs) bekommen immer einen Inhalts-Hash im Namen (`<name>-<hash8>.<ext>`), weil `/medien` solche Namen ein Jahr lang cacht. Ersetzte Dateien löscht die Verwaltung, wenn nichts mehr darauf verweist; den Bildcache von `next/image` danach von Hand leeren (`OPERATIONS.md`, Abschnitt 7.4) |
+| QR-Codes | Paket `qrcode` (erzeugt SVG auf dem Server) ✅ umgesetzt | Die Website braucht keinen eigenen Scanner, die Handykamera reicht |
+| Formulare | **Server Actions** ✅ umgesetzt | keine eigene API für die Oberfläche nötig; Uploads bis 16 MB pro Anfrage (`next.config.js`) |
 | Aktualität | Seiten rendern dynamisch (`force-dynamic`) ✅ umgesetzt | Änderungen sind **sofort** sichtbar, auch über API und Bot. Ein `revalidateTag` ist nicht mehr nötig |
 | Zeitgesteuerte Aufgaben | **crontab** auf dem Server | ruft die Cron-Endpunkte (Spiele-Sync) per `curl` auf und startet das nächtliche Backup |
 | LLM | über **OpenRouter**, Modell noch offen | siehe Abschnitt 11 |
 | Testen | Kopie der Datenbankdatei (z. B. aus dem nächtlichen Backup) | Testen, ohne Live-Daten zu gefährden |
 
-### Ordnerstruktur (Vorschlag)
+### Ordnerstruktur (Stand 20.10.2026)
+
+Der ursprüngliche Vorschlag (`lib/auth.ts`, `lib/verwaltung/service.ts`, `schemas.ts`,
+`actions.ts`, `mannschaften/[id]`, `scripts/verwaltung-admin.mjs`) ist so umgesetzt:
 
 ```
 app/verwaltung/
-  layout.tsx                 ← Login-Prüfung, Navigation (ohne Website-Navbar/Footer)
-  login/page.tsx             ← Anmelde-Code eintippen
-  anmelden/page.tsx          ← Ziel des QR-Codes („Willkommen … [Anmelden]“)
-  page.tsx                   ← Übersicht
-  mannschaften/[id]/page.tsx
-  personen/  sparten/  kontakte/  geraete/  zugaenge/  verlauf/
-app/api/v1/…                 ← REST-API (Route Handler)
-app/api/telegram/route.ts    ← Webhook des Telegram-Bots
-app/medien/[...pfad]/route.ts ← liefert den Medienordner aus (vorhanden)
-lib/db/schema.ts             ← Tabellen (Drizzle, vorhanden)
-lib/db/index.ts              ← Verbindung (vorhanden)
-lib/medien.ts                ← Medienpfade und URLs (vorhanden)
-lib/auth.ts                  ← Codes, Geräte-Sitzungen, API-Schlüssel
-lib/verwaltung/service.ts    ← Service-Schicht: Rechte, Prüfung, Verlauf
-lib/verwaltung/schemas.ts    ← zod-Schemas
-lib/verwaltung/actions.ts    ← Server Actions der Oberfläche (rufen die Service-Schicht)
-lib/bot/                     ← Telegram-Anbindung, Werkzeuge, System-Prompt, Vorschläge
-lib/content.ts               ← liest aus der DB, mit gleichen Funktionsnamen (vorhanden)
-drizzle/                     ← SQL-Migrationen (vorhanden)
-scripts/verwaltung-admin.mjs ← ersten Admin anlegen, Notfall-Zugang
-scripts/sanity-export.mjs    ← einmaliger Export aus Sanity (vorhanden)
-scripts/import-aus-sanity.ts ← Import in die DB (vorhanden)
+  layout.tsx                 ← eigener Rahmen ohne Website-Navbar/Footer, noindex
+  aktionen.ts                ← Server-Aktionen: einrichten, anmelden, abmelden, Passwort ändern
+  login/                     ← Anmeldung: Benutzername + Passwort + App-Code
+  anmelden/                  ← Ziel des Einladungs-QR-Codes: Passwort festlegen, App koppeln
+  (intern)/                  ← alles, was eine Sitzung braucht
+    layout.tsx               ← Sitzung prüfen, Navigation nach Rechten
+    page.tsx                 ← Übersicht
+    teams/[art]/[id]/        ← Mannschaft bzw. Gruppe bearbeiten (Kernstück)
+    personen/  sparten/  kontakte/  news/  termine/  downloads/
+    zugaenge/  verlauf/  geraete/ („Mein Zugang“)
+    */aktionen.ts, */logik.ts ← Server-Aktionen bzw. Speicherlogik je Bereich
+components/verwaltung/       ← Formularbausteine, Navigation, Foto- und Personenauswahl
+lib/verwaltung/
+  anmeldung.ts               ← Einladung, Einrichtung, Anmeldung, Fehlversuche, Sitzungen
+  sitzung.ts                 ← Cookie, aktuelle Sitzung, Admin-Prüfung, Client-IP
+  rechte.ts                  ← wer darf was
+  passwort.ts  totp.ts  codes.ts  qr.ts
+  person-bearbeiten.ts  team-bearbeiten.ts  inhalte/ (News, Termine, Downloads)
+  medien-upload.ts           ← Bilder (sharp) und PDFs speichern, alte Dateien freigeben
+  verlauf.ts                 ← Einträge ins Änderungsprotokoll
+scripts/verwaltung-admin.ts  ← ersten Admin anlegen, Notfall-Zugang
+app/api/v1/…                 ← REST-API (offen)
+app/api/telegram/route.ts    ← Webhook des Telegram-Bots (offen)
+lib/bot/                     ← Telegram-Anbindung, Werkzeuge, System-Prompt, Vorschläge (offen)
 ```
 
 ### Auswirkungen auf die Website
@@ -504,15 +582,21 @@ Umgesetzt am 03.10.2026:
 - Bilder kommen vom eigenen Server (`/medien/…`); eine externe Bild-Domain in `next.config.js`
   ist nicht mehr nötig.
 
+Umgesetzt am 20.10.2026:
+
+- `components/SiteChrome.tsx` blendet Navbar, Footer und Cookie-Banner unter `/verwaltung` aus.
+
 Noch offen:
 
 - Hat eine Mannschaft oder Gruppe keine Personen, zeigt die Spartenseite die
   Ansprechpartner:innen der Sparte (klare Regel statt Heuristik). Mit der neuen Spartenseite prüfen.
-- `components/SiteChrome.tsx` blendet Navbar und Footer auch unter `/verwaltung` aus.
 
 ---
 
 ## 10) REST-API
+
+**Status (20.10.2026): offen.** Die Speicherfunktionen der Verwaltung sind so gebaut, dass die API
+sie nutzen kann (Abschnitt 9).
 
 Die REST-API stellt dieselben Funktionen wie die Verwaltung für Programme bereit: für den
 Telegram-Bot, für Skripte (statt der früheren Patch-Skripte) und später zum Beispiel für
@@ -530,7 +614,9 @@ n8n oder eine App.
 - **Dieselbe Service-Schicht** wie die Verwaltung: gleiche Prüfungen, gleiche Rechte. Jeder
   Schreibzugriff landet im Verlauf (Quelle „API“).
 - **Gleichzeitige Änderungen:** Jedes Objekt hat eine `version`. Wer mit einer veralteten Version
-  schreibt, bekommt `409 Konflikt` und überschreibt nichts.
+  schreibt, bekommt `409 Konflikt` und überschreibt nichts. (Offen: Die Verwaltung nutzt statt
+  `version` den Wert `geaendert_am`; ob die API dasselbe Feld nimmt, ist noch festzulegen. Das
+  Beispiel unten zeigt den ursprünglichen Entwurf.)
 - **Fehler** kommen als JSON mit deutscher Meldung und Feldangaben, mit den üblichen
   Statuscodes (400, 401, 403, 404, 409, 422, 429).
 - **Begrenzung:** zum Beispiel 60 Anfragen pro Minute und Schlüssel.
@@ -570,6 +656,9 @@ Die Antwort `200` enthält die geänderte Trainingszeit mit `"version": 13`. Im 
 ---
 
 ## 11) Telegram-Bot mit LLM
+
+**Status (20.10.2026): offen.** Modell, OpenRouter-Konto und Budget sind noch nicht festgelegt
+(Abschnitt 16).
 
 Trainer:innen und Spartenleitungen schreiben dem Vereinsbot in normaler Sprache, und der Bot
 pflegt die Website. Er versteht die Nachricht mit einem LLM (über OpenRouter) und sucht die richtige
@@ -630,11 +719,12 @@ Empfohlen ist eine Einführung in drei Stufen:
 
 ### Telegram verbinden
 
-1. In der Verwaltung: „Meine Geräte“ → „Telegram verbinden“. Es erscheint ein QR-Code, 10 Minuten gültig.
+1. In der Verwaltung: „Mein Zugang“ → „Telegram verbinden“. Es erscheint ein QR-Code, 10 Minuten gültig.
 2. Der Scan öffnet Telegram mit dem Vereinsbot (`t.me/<Bot>?start=<Einmal-Code>`). Dort „Starten“ tippen.
 3. Der Bot antwortet: „Hallo Max, du bist verbunden. Du darfst bearbeiten: U13 Junioren.“
 
-Das ist derselbe Einmal-Code wie beim Login. Unbekannte Telegram-Konten bekommen nur „Nicht
+Das funktioniert wie der Einladungs-Code: einmal gültig, nur als Hash gespeichert (Tabelle
+`anmelde_codes`, eigener Zweck „Telegram“). Unbekannte Telegram-Konten bekommen nur „Nicht
 freigeschaltet“ zurück. Dafür gibt es keinen LLM-Aufruf, also auch keine Kosten. Der Bot
 antwortet nur in Einzelchats, nicht in Gruppen.
 
@@ -679,15 +769,16 @@ Schätzung folgt mit der Modellwahl.
 
 ## 12) Sicherheit, Datenschutz, Backups
 
-- **Login und Geräte:** siehe Abschnitt 6.
-- **API-Schlüssel:** siehe Abschnitt 10.
-- **Bot:** siehe die Leitplanken in Abschnitt 11.
-- **Rechte** prüft die Service-Schicht bei jedem Zugriff (siehe Abschnitt 5).
+- **Login und Geräte:** Zwei-Faktor mit Passwort und Authenticator-App, siehe Abschnitt 6.
+  Betrieb (Cookie hinter nginx, Notfall-Zugang): `OPERATIONS.md`, Abschnitt 9.
+- **API-Schlüssel:** siehe Abschnitt 10 (offen).
+- **Bot:** siehe die Leitplanken in Abschnitt 11 (offen).
+- **Rechte** prüft jede Speicherfunktion bei jedem Zugriff selbst (siehe Abschnitt 5).
 - **Gleichzeitiges Bearbeiten:** Hat jemand anderes die Mannschaft inzwischen gespeichert,
   kommt der Hinweis „Bitte neu laden“, statt die Änderung stillschweigend zu überschreiben.
-  Das gilt auch für API und Bot.
-- **Verlauf:** Jede Änderung wird mit Person, Quelle, Zeitpunkt, Vorher und Nachher gespeichert
-  und kann wiederhergestellt werden.
+  Umgesetzt in der Verwaltung; für API und Bot noch offen.
+- **Verlauf:** Jede Änderung wird mit Person, Quelle, Zeitpunkt, Vorher und Nachher gespeichert.
+  „Wiederherstellen“ ist noch **offen**; bis dahin werden alte Werte von Hand übernommen.
 - **Backup:** Ein nächtlicher Cronjob (crontab) sichert die SQLite-Datei konsistent (`.backup`)
   und den Medienordner, bewahrt 30 Tage auf und kopiert die Sicherung außer Haus. Einrichtung und
   Wiederherstellung: `OPERATIONS.md`, Abschnitt 4.
@@ -699,9 +790,14 @@ Schätzung folgt mit der Modellwahl.
     OpenRouter (USA) und den Anbieter des gewählten Modells. Das kann Namen und Telefonnummern
     von Trainer:innen betreffen. Deshalb nutzen den Bot nur Vereinsverantwortliche, freiwillig,
     und es gehen keine Mitgliederlisten oder sensiblen Daten darüber.
-  - Die Datenschutzerklärung um Hosting (eigener Server), Telegram-Bot und LLM ergänzen. Heute
-    erwähnt `app/datenschutz/page.tsx` das Hosting nicht.
-  - Für Zugänge werden keine E-Mail-Adressen gebraucht, nur Name und Gerätename.
+  - Die Datenschutzerklärung um Hosting (eigener Server), die Verwaltung (Anmelde-Cookie,
+    Verlauf), Telegram-Bot und LLM ergänzen. Heute erwähnt `app/datenschutz/page.tsx` das
+    Hosting nicht.
+  - Für Zugänge werden keine E-Mail-Adressen gebraucht, nur Name, Benutzername und Gerätename.
+    IP-Adressen stehen nur gehasht und nur etwa einen Tag lang in `fehlversuche`.
+  - Der Verlauf hebt alte Stände dauerhaft auf, bei Personen auch Kontaktdaten und interne
+    Notizen. Eine Löschfrist dafür ist **offen** (Abschnitt 16).
+  - Hochgeladene Bilder verlieren ihre Metadaten (EXIF, GPS).
   - Im Formular steht der Hinweis, dass Kontaktdaten öffentlich erscheinen.
 
 ---
@@ -743,7 +839,10 @@ Studio-Handbuch, die Sanity-Pakete und die alten Skripte sind entfernt. Einen R�
 gibt es nicht mehr; Absicherung bieten der Export in `data/import/` und die Backups.
 
 **Achtung:** `npm run import:sanity` löscht und ersetzt Datenbank und Medienordner. Nach dem
-Beginn der Pflege in SQLite nur noch für frische Entwicklungsumgebungen verwenden.
+Beginn der Pflege in SQLite nur noch für frische Entwicklungsumgebungen verwenden. Seit dem
+20.10.2026 bricht der Import ab, sobald es Zugänge der Verwaltung gibt; nur mit
+`npm run import:sanity -- --alles-ueberschreiben` verwirft er trotzdem alles, auch Zugänge,
+Verlauf und Uploads.
 
 Offen bleibt: im Sanity-Projekt alle Tokens widerrufen (sie stehen in der öffentlichen
 Git-Historie) und das Projekt danach löschen (`OPERATIONS.md`, Abschnitt 8.1).
@@ -752,19 +851,23 @@ Git-Historie) und das Projekt danach löschen (`OPERATIONS.md`, Abschnitt 8.1).
 
 ## 14) Fahrplan
 
-| Schritt | Inhalt | Umfang | Status (03.10.2026) |
+| Schritt | Inhalt | Umfang | Status (20.10.2026) |
 |---|---|---|---|
-| **0 – Vorbereitung** | Hetzner-Server einrichten (Node.js, nginx, TLS), Env-Variablen, crontab für die Cronjobs, nächtliches Backup mit Kopie außer Haus (`OPERATIONS.md`) | klein | offen |
-| **1 – Fundament** | DB-Schema und Migrationen, Übernahmeskript; Service-Schicht (Rechte, Prüfung, Verlauf), Login per QR-/Anmelde-Code mit Geräteverwaltung, Skript für den ersten Admin, Grundlayout `/verwaltung` | mittel | teilweise: Schema, Migrationen und Übernahme ✅; Verwaltungstabellen und alles Weitere offen |
-| **2 – Kern** | „Mannschaft bearbeiten“ (auch für Gruppen) mit Trainingszeiten und Trainerteam, Personen, Foto-Upload, Verlauf. Website liest aus der DB, Spartenseite ohne Heuristik | mittel–groß | teilweise: Website liest aus der DB ✅, Spartenseite ohne Heuristik ✅; Verwaltungsseiten offen |
-| **3 – Abrunden** | Sparten, Kontaktseite, Zugänge mit QR-Einladungen, Einstellungen | mittel | offen |
-| **4 – Umstellung** | Übernahme, Sanity abschalten | klein | ✅ vorgezogen erledigt: direkt und vollständig umgestellt. Ein neues Handbuch folgt mit der Verwaltung |
-| **5 – REST-API** | Endpunkte v1, API-Schlüssel, OpenAPI-Beschreibung | mittel | offen |
-| **6 – Telegram-Bot** | Bot bei BotFather anlegen, OpenRouter-Schlüssel mit Ausgabenlimit, Modellwahl, „Telegram verbinden“. Dann Stufe 1 (Fragen), Stufe 2 (Änderungen mit Bestätigung), Stufe 3 („Sofort“ für einzelne Zugänge) | mittel | offen |
-| **7 – später** | News (Editor mit Fett, Kursiv, Zwischenüberschrift und Bild), Termine (Formular), Downloads (PDF-Upload), „Mit dem Handy anmelden“ am PC | groß | offen. Bereits erledigt: Die Cronjobs schreiben in die DB, und **Sanity ist komplett entfernt** (`/studio`, `sanity.config.ts`, `sanity.cli.ts`, `.sanity/`, Pakete `sanity`, `next-sanity`, `@sanity/image-url`, `styled-components`, alte Skripte). Partner entfallen |
+| **0 – Vorbereitung** | Hetzner-Server einrichten (Node.js, nginx, TLS), Env-Variablen, crontab für die Cronjobs, nächtliches Backup mit Kopie außer Haus, erster Admin (`OPERATIONS.md`) | klein | **offen** (Hetzner-Deployment) |
+| **1 – Fundament** | DB-Schema und Migrationen, Übernahmeskript; Service-Schicht (Rechte, Prüfung, Verlauf), Login mit Geräteverwaltung, Skript für den ersten Admin, Grundlayout `/verwaltung` | mittel | ✅ erledigt. Login als Zwei-Faktor mit Passwort und Authenticator-App statt QR-/Anmelde-Code (Abschnitt 6) |
+| **2 – Kern** | „Mannschaft bearbeiten“ (auch für Gruppen) mit Trainingszeiten und Trainerteam, Personen, Foto-Upload, Verlauf. Website liest aus der DB, Spartenseite ohne Heuristik | mittel–groß | ✅ erledigt; der Verlauf ist eine Ansicht, **„Wiederherstellen“ offen** |
+| **3 – Abrunden** | Sparten, Kontaktseite, Zugänge mit QR-Einladungen, Einstellungen | mittel | ✅ erledigt bis auf die Seite „Einstellungen“ (**offen**) |
+| **4 – Umstellung** | Übernahme, Sanity abschalten | klein | ✅ vorgezogen erledigt: direkt und vollständig umgestellt. Die Kurzanleitung steht im `README.md` („Inhalte pflegen“); ein eigenes Handbuch für die Redaktion ist **offen** |
+| **5 – REST-API** | Endpunkte v1, API-Schlüssel, OpenAPI-Beschreibung | mittel | **offen** |
+| **6 – Telegram-Bot** | Bot bei BotFather anlegen, OpenRouter-Schlüssel mit Ausgabenlimit, Modellwahl, „Telegram verbinden“. Dann Stufe 1 (Fragen), Stufe 2 (Änderungen mit Bestätigung), Stufe 3 („Sofort“ für einzelne Zugänge) | mittel | **offen** |
+| **7 – später** | News (Editor mit Fett, Kursiv, Zwischenüberschrift und Bild), Termine (Formular), Downloads (PDF-Upload), „Mit dem Handy anmelden“ am PC | groß | News, Termine und Downloads ✅ vorgezogen (News als Markdown-Textfeld mit Vorschau und Titelbild; Bilder im Text noch ohne Upload). „Mit dem Handy anmelden“ entfällt mit der Passwort-Anmeldung (Abschnitt 6.6). Bereits erledigt: Die Cronjobs schreiben in die DB, und **Sanity ist komplett entfernt** (`/studio`, `sanity.config.ts`, `sanity.cli.ts`, `.sanity/`, Pakete `sanity`, `next-sanity`, `@sanity/image-url`, `styled-components`, alte Skripte). Partner entfallen |
 
-Bis die Verwaltung steht, werden alle Inhalte per Drizzle Studio gepflegt (`npm run db:studio`,
-siehe `README.md` und `OPERATIONS.md`).
+**Offen, kurz zusammengefasst:** REST-API (5), Telegram-Bot über OpenRouter (6), „Wiederherstellen“
+im Verlauf (2), Betrieb auf dem Hetzner-Server (0), Seite „Einstellungen“ (3), Handbuch (4).
+
+Inhalte werden seit dem 20.10.2026 über die Verwaltung gepflegt. Drizzle Studio
+(`npm run db:studio`) bleibt für Technik und Notfälle; es umgeht Rechte und Verlauf (`README.md`,
+`OPERATIONS.md`, Abschnitt 9.5).
 
 ---
 
@@ -784,10 +887,28 @@ siehe `README.md` und `OPERATIONS.md`).
 
 ## 16) Entscheidungen
 
+### Entschieden (20.10.2026)
+
+- **Login per Zwei-Faktor für alle Zugänge:** Benutzername + Passwort + 6-stelliger Code aus einer
+  Authenticator-App (TOTP), statt Anmeldung per Einmal-Code bzw. QR-Code. Der **QR-Code** dient
+  jetzt der **Einladung** und der **Kopplung der App**. Mailversand und Fremdkonten bleiben
+  überflüssig (Abschnitt 6).
+- **Fristen:** Einladungs-Code 7 Tage und einmal; „angemeldet bleiben“ 30 Tage ohne Verlängerung,
+  sonst 12 Stunden. „Gerät hinzufügen“ und „Mit dem Handy anmelden“ entfallen (Abschnitt 6.6).
+- **Passwort vergessen / Handy verloren:** Ein Admin setzt den Zugang zurück und erstellt eine neue
+  Einladung; Notfall für ausgesperrte Admins ist `npm run verwaltung:admin`.
+- **Rechte** wie in Abschnitt 5: Admin oder Bereiche (Sparte, Mannschaft, Gruppe). Personen
+  bearbeiten Nicht-Admins nur, wenn alle Verwendungen der Person im eigenen Bereich liegen.
+- **News, Termine und Downloads** sind in der Verwaltung bearbeitbar (vorgezogen aus Schritt 7).
+- **Konfliktprüfung über `geaendert_am`** statt eigener `version`-Spalten; „wer hat geändert“
+  steht im Verlauf statt in `geaendert_von`.
+- **Adresse `/verwaltung`**, nicht in Suchmaschinen und ohne Link von der Website.
+
 ### Entschieden (03.10.2026)
 
-- **Login per QR-Code und Anmelde-Code** (Einmal-Token) statt E-Mail-Link. Damit entfallen
-  Mailversand, Resend und DNS-Einträge (Abschnitt 6).
+- ~~**Login per QR-Code und Anmelde-Code** (Einmal-Token) statt E-Mail-Link.~~ **Ersetzt am
+  20.10.2026** durch die Zwei-Faktor-Anmeldung (siehe oben). Weiterhin gilt: kein E-Mail-Link,
+  kein Mailversand, kein Resend, keine DNS-Einträge dafür.
 - **REST-API** für alle Kernfunktionen (Abschnitt 10).
 - **Telegram-Bot mit LLM**, der Inhalte selbstständig vorbereitet und ändert (Abschnitt 11).
 - **SQLite statt Postgres/Neon:** eine Datenbankdatei (`data/svhs.db`) mit Drizzle ORM, Bilder
@@ -804,19 +925,24 @@ siehe `README.md` und `OPERATIONS.md`).
 
 ### Offen
 
-1. **Fristen:** Einladungs-Code 7 Tage, Geräte-Code 10 Minuten, Anmeldung 180 Tage mit
-   Verlängerung bei Nutzung. Passt das?
+1. ~~**Fristen:** Einladungs-Code 7 Tage, Geräte-Code 10 Minuten, Anmeldung 180 Tage mit
+   Verlängerung bei Nutzung. Passt das?~~ **Entschieden am 20.10.2026** (siehe oben).
 2. **Bot-Modus zum Start:** Änderungen mit Bestätigung für alle (empfohlen), oder für manche
    Zugänge gleich „Sofort“?
 3. **Bot-Reichweite:** nur Einzelchats (empfohlen), oder auch Gruppen wie eine Trainergruppe?
 4. **LLM-Konto, Modell und Budget:** Wer legt das OpenRouter-Konto an, welches Modell nutzen wir,
    und welches Monatslimit setzen wir (z. B. 20 €)?
 5. **Trainer:innen-Zugänge** gleich zum Start (nur die eigene Mannschaft bzw. Gruppe) oder
-   zunächst nur Admins und Spartenleitungen?
+   zunächst nur Admins und Spartenleitungen? Technisch ist beides umgesetzt.
 6. Soll man **Telefonnummer und E-Mail pro Person ausblenden** können (öffentlich ja/nein)?
-7. **Zeitpunkt für Schritt 7** (Bearbeitung von News, Termine und Downloads in der Verwaltung)?
-   Bis dahin werden diese Inhalte per Drizzle Studio gepflegt.
-8. Adresse **`/verwaltung`** in Ordnung? Soll es einen Link im Footer geben („Login für
-   Vereinsmitglieder“) oder nur den direkten Aufruf?
+7. ~~**Zeitpunkt für Schritt 7** (Bearbeitung von News, Termine und Downloads in der
+   Verwaltung)?~~ **Erledigt am 20.10.2026:** vorgezogen und umgesetzt.
+8. Adresse **`/verwaltung`**: umgesetzt, ohne Link von der Website. Offen bleibt, ob es einen Link
+   im Footer geben soll („Login für Vereinsmitglieder“).
 9. **Server und Backups:** Servergröße, Umzug der Domain und Ziel für die Backups außer Haus
    (z. B. Hetzner Storage Box) festlegen.
+10. **Wiederherstellen im Verlauf:** nur eine einzelne Änderung zurücknehmen oder einen ganzen
+    alten Stand? Und darf eine Spartenleitung den Verlauf ihrer Sparte sehen?
+11. **Löschfrist für den Verlauf:** Er hebt alte Kontaktdaten und Notizen dauerhaft auf. Sollen
+    alte Einträge nach einer Frist gelöscht oder Personendaten darin bei einem Löschwunsch
+    entfernt werden?

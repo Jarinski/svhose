@@ -1,6 +1,6 @@
 # CONTENT FLOW – SV Holm-Seppensen
 
-Stand: 2026-10-03  
+Stand: 2026-10-20 (Pflege über die Verwaltung `/verwaltung`)  
 Scope: Datenflüsse nach dem Umzug von Sanity auf SQLite: Wie Inhalte in die Datenbank kommen und
 wie sie auf die Website gelangen.
 
@@ -11,8 +11,8 @@ wie sie auf die Website gelangen.
 - **Einzige Datenquelle der Website**: SQLite-Datei `data/svhs.db` (Pfad über `DATENBANK_PFAD`),
   Bilder und Dateien im Medienordner `data/medien` (Pfad über `MEDIEN_PFAD`).
 - **Wege in die Datenbank**:
-  1. manuelle Pflege, aktuell per **Drizzle Studio** (`npm run db:studio`), später über die eigene
-     Verwaltung `/verwaltung` (siehe `CMS_KONZEPT.md`),
+  1. manuelle Pflege über die eigene **Verwaltung `/verwaltung`** (seit 20.10.2026, mit Rechten
+     und Verlauf); **Drizzle Studio** (`npm run db:studio`) nur noch für Technik und Notfälle,
   2. **Cronjobs** für Spiele von fussball.de und click-tt → Tabelle `termine`,
   3. **einmalige Übernahme** aus Sanity (Export und Import, erledigt am 03.10.2026).
 - **Ausgabe**: Die Seiten lesen über `lib/content.ts` und rendern dynamisch (`force-dynamic`).
@@ -29,9 +29,11 @@ wie sie auf die Website gelangen.
 
 ```mermaid
 flowchart LR
-  DS["Drizzle Studio<br/>npm run db:studio"] --> DB[("SQLite<br/>data/svhs.db")]
-  VW["/verwaltung<br/>(geplant)"] -.-> DB
-  HAND["Dateien von Hand<br/>kopieren"] --> MED[("Medienordner<br/>data/medien")]
+  RED["Redaktion<br/>(Zwei-Faktor-Login)"] --> VW["/verwaltung<br/>Server-Aktionen"]
+  VW -->|"Rechte, Prüfung, Transaktion<br/>+ Eintrag in verlauf"| DB[("SQLite<br/>data/svhs.db")]
+  VW -->|"Uploads (sharp, WebP)"| MED[("Medienordner<br/>data/medien")]
+  DS["Drizzle Studio<br/>(Technik/Notfall)"] -.->|"ohne Rechte und Verlauf"| DB
+  HAND["Dateien von Hand<br/>kopieren"] -.-> MED
 
   CRON["crontab<br/>auf dem Server"] --> CF["/api/cron/sync-fussball"]
   CRON --> CT["/api/cron/sync-tischtennis"]
@@ -55,56 +57,84 @@ flowchart LR
 
 ---
 
-## 1) Manuelle Datenpflege (aktuell: Drizzle Studio)
+## 1) Manuelle Datenpflege (Verwaltung `/verwaltung`)
 
 ### Wie
 
-- `npm run db:studio` startet Drizzle Studio. Die Oberfläche öffnet sich im Browser unter
-  `https://local.drizzle.studio` und arbeitet direkt auf der Datenbankdatei.
-- Auf dem Server läuft Drizzle Studio nur lokal. Der Zugriff geht über einen SSH-Tunnel
-  (siehe `OPERATIONS.md`, Abschnitt 7.2). Drizzle Studio nie öffentlich erreichbar machen.
-- Bilder und Dateien werden von Hand in den Medienordner kopiert. In die Tabelle kommt nur der
-  relative Pfad (z. B. `personen/max-beispiel.webp`).
-- **Neue Fassung = neuer Dateiname**: Ein Bild oder Dokument nie unter gleichem Namen
-  überschreiben, sondern mit neuem Namen ablegen (z. B. mit Datum:
-  `downloads/beitragsordnung-2026-10.pdf`) und den Pfad in der Tabelle anpassen. Hintergrund:
-  Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legt der Import Bilder ab) gelten
-  als unveränderlich und werden ein Jahr lang gecacht; eine überschriebene Datei bliebe dann bei
-  Besucher:innen alt. Dateien ohne Hash werden zwar bei jedem Abruf nachgeprüft, ein neuer Name ist
-  aber auch dort der sichere Weg.
-- **Foto gelöscht oder ersetzt**: Der Bildoptimierer (`next/image`, z. B. Fotos auf
-  `/ansprechpartner` und in den News) hält eigene verkleinerte Kopien in `.next/cache/images` und
-  liefert sie auch dann weiter aus, wenn die Originaldatei fehlt. Nach dem Löschen eines Fotos
-  (z. B. bei Widerruf der Einwilligung) deshalb den Bildcache leeren, siehe `OPERATIONS.md`,
-  Abschnitt 7.4.
+- Seit dem 20.10.2026 werden alle Inhalte über die eigene Verwaltung unter **`/verwaltung`**
+  gepflegt. Sie läuft in derselben Next.js-Anwendung und schreibt direkt in `data/svhs.db`.
+- **Anmeldung** mit Zwei-Faktor: Benutzername + Passwort + 6-stelliger Code aus einer
+  Authenticator-App. Neue Zugänge bekommen vom Admin einen Einladungs-QR-Code (Ablauf:
+  `CMS_KONZEPT.md`, Abschnitt 6; Betrieb: `OPERATIONS.md`, Abschnitt 9).
+- **Rechte:** Admins dürfen alles. Alle anderen Zugänge bearbeiten nur ihre Bereiche (Sparten,
+  Mannschaften, Gruppen). Jede Server-Aktion prüft das selbst (`CMS_KONZEPT.md`, Abschnitt 5).
+- **Ablauf beim Speichern:** Formular (Server-Aktion) → Rechte prüfen → Eingaben prüfen →
+  Konfliktprüfung über `geaendert_am` → Speichern in **einer Transaktion** → Eintrag im
+  **Verlauf** (Tabelle `verlauf`, mit Stand vorher und nachher).
+- **Bilder und PDFs** werden im Formular hochgeladen. Bilder verkleinert die Verwaltung auf
+  höchstens 1600 px und speichert sie als WebP ohne Metadaten (EXIF, GPS); PDFs legt sie
+  unverändert ab. Dateinamen bekommen einen Inhalts-Hash (`…-1a2b3c4d.webp`). Ersetzte oder
+  entfernte Dateien löscht sie, sobald kein Datensatz mehr darauf verweist (`DATA_MODEL.md`,
+  Abschnitt 7.1).
 
 ### Typische Aufgaben
 
-| Aufgabe | Tabelle(n) |
-|---|---|
-| Trainingszeit ändern oder hinzufügen | `trainingszeiten` (mit `mannschaft_id` und/oder `gruppe_id`) |
-| Trainer:in einer Mannschaft oder Gruppe zuordnen | ggf. erst `personen`, dann `mannschaft_personen` bzw. `gruppe_personen` |
-| Ansprechpartner:in einer Sparte festlegen | `sparte_ansprechpartner` |
-| Kontaktseite pflegen (Vorstand usw.) | `funktionen` |
-| News veröffentlichen | `news` (Markdown in `inhalt`, `veroeffentlicht = true`) |
-| Termin anlegen | `termine` mit `quelle = manuell` |
-| Download hinzufügen | Datei nach `data/medien/…`, dann Zeile in `downloads` |
-| Bild oder Dokument ersetzen | neue Datei unter **neuem Namen** ablegen, dann Pfad in der jeweiligen Tabelle ändern |
-| Mannschaft oder Gruppe ausblenden | `sichtbar = false` |
+| Aufgabe | Seite in der Verwaltung | Tabelle(n) |
+|---|---|---|
+| Trainingszeit ändern oder hinzufügen | „Mannschaften & Gruppen“ → Team | `trainingszeiten` |
+| Trainer:in einer Mannschaft oder Gruppe zuordnen | „Mannschaften & Gruppen“ → Team → Trainerteam (neue Personen werden mitgespeichert) | `personen`, `mannschaft_personen` bzw. `gruppe_personen` |
+| Kontaktdaten oder Foto einer Person ändern | „Personen“ | `personen` |
+| Spartentext, -foto, Ansprechpartner:innen | „Sparten“ | `sparten`, `sparte_ansprechpartner` |
+| Kontaktseite pflegen (Vorstand usw.) | „Kontaktseite“ (nur Admins) | `funktionen` |
+| News schreiben und veröffentlichen | „News“ (Markdown-Text mit Vorschau, Schalter „veröffentlicht“) | `news` |
+| Termin anlegen | „Termine“ (nur manuelle Termine) | `termine` mit `quelle = manuell` |
+| Download hinzufügen oder ersetzen | „Downloads“ (PDF hochladen, nur Admins) | `downloads` |
+| Mannschaft oder Gruppe ausblenden | Team → Haken „Auf der Website anzeigen“ entfernen | `sichtbar = false` |
+| Zugang anlegen, zurücksetzen, deaktivieren | „Zugänge“ (nur Admins) | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete` |
+| Nachsehen, wer was geändert hat | „Verlauf“ (nur Admins) | `verlauf` |
 
 Regeln und Felder im Detail: `DATA_MODEL.md`.
 
 ### Wirkung
 
 - Jede gespeicherte Änderung ist **sofort live**, weil die Seiten bei jedem Aufruf frisch aus der
-  Datenbank lesen.
+  Datenbank lesen. Ausnahme: News erscheinen erst mit „veröffentlicht“.
 
-### Grenzen (bis die Verwaltung kommt)
+### Grenzen
 
-- Nur für technisch Verantwortliche geeignet; keine abgestuften Rechte.
-- **Kein Verlauf, kein Rückgängig.** Schutz bieten nur die nächtlichen Backups.
-- Prüfung nur über die Datenbank-Constraints (Pflichtfelder, CHECKs, Fremdschlüssel).
-- Bilder werden nicht automatisch verkleinert oder umbenannt.
+- **Kein „Wiederherstellen“-Knopf** im Verlauf. Alte Werte stehen dort und lassen sich von Hand
+  wieder eintragen; sonst helfen die nächtlichen Backups (`OPERATIONS.md`, Abschnitt 4.4).
+- Termine von fussball.de und click-tt sind in der Verwaltung schreibgeschützt (Abschnitt 2).
+- Bilder im Markdown-Text einer News lassen sich nicht hochladen, nur das Titelbild.
+- Den Bildcache von `next/image` leert die Verwaltung nicht (siehe unten).
+
+### Drizzle Studio (Technik und Notfälle)
+
+- `npm run db:studio` startet Drizzle Studio. Die Oberfläche öffnet sich im Browser unter
+  `https://local.drizzle.studio` und arbeitet direkt auf der Datenbankdatei.
+- Auf dem Server läuft Drizzle Studio nur lokal. Der Zugriff geht über einen SSH-Tunnel
+  (siehe `OPERATIONS.md`, Abschnitt 7.2). Drizzle Studio nie öffentlich erreichbar machen.
+- Drizzle Studio **umgeht Rechte, Prüfungen, Konfliktprüfung und Verlauf** der Verwaltung.
+  Änderungen hier stehen nirgends im Verlauf, und es gibt kein Rückgängig. Nur für Technik und
+  Notfälle verwenden (`OPERATIONS.md`, Abschnitt 9.5).
+- Bilder und Dateien müssen dabei von Hand in den Medienordner kopiert werden. In die Tabelle
+  kommt nur der relative Pfad (z. B. `personen/max-beispiel.webp`). Bilder werden dann nicht
+  verkleinert, und ersetzte Dateien bleiben liegen.
+
+### Medien von Hand ersetzen oder löschen
+
+- **Neue Fassung = neuer Dateiname**: Ein Bild oder Dokument nie unter gleichem Namen
+  überschreiben, sondern mit neuem Namen ablegen (z. B. mit Datum:
+  `downloads/beitragsordnung-2026-10.pdf`) und den Pfad in der Tabelle anpassen. Hintergrund:
+  Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen Import und Verwaltung
+  Dateien ab) gelten als unveränderlich und werden ein Jahr lang gecacht; eine überschriebene Datei
+  bliebe dann bei Besucher:innen alt. Dateien ohne Hash werden zwar bei jedem Abruf nachgeprüft,
+  ein neuer Name ist aber auch dort der sichere Weg. Die Verwaltung hält diese Regel automatisch ein.
+- **Foto gelöscht oder ersetzt**: Der Bildoptimierer (`next/image`, z. B. Fotos auf
+  `/ansprechpartner` und in den News) hält eigene verkleinerte Kopien in `.next/cache/images` und
+  liefert sie auch dann weiter aus, wenn die Originaldatei fehlt. Nach dem Löschen eines Fotos
+  (z. B. bei Widerruf der Einwilligung) deshalb den Bildcache leeren, siehe `OPERATIONS.md`,
+  Abschnitt 7.4. Das gilt auch, wenn das Foto in der Verwaltung entfernt wurde.
 
 ---
 
@@ -212,6 +242,9 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 > **Achtung:** `npm run import:sanity` **löscht und ersetzt Datenbank und Medienordner**. Seit die
 > Pflege in SQLite läuft, gingen dabei alle späteren Änderungen verloren. Den Import nur noch
 > für eine frische Entwicklungsumgebung nutzen, nie auf dem Server mit Live-Daten.
+> Als Schutz bricht er ab, sobald die Datenbank Zugänge der Verwaltung enthält. Nur mit
+> `npm run import:sanity -- --alles-ueberschreiben` läuft er dann trotzdem und verwirft alles,
+> auch Zugänge, Verlauf und hochgeladene Medien.
 
 ## 3.3 Danach
 
@@ -226,13 +259,21 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 
 ## 4.1 Datenverlust / Überschreiben
 
-- **`npm run import:sanity`** ersetzt Datenbank und Medienordner durch den Stand vom 03.10.2026.
-- **Drizzle Studio** hat kein Rückgängig. Löschen wirkt sofort und teils kaskadierend:
-  - Eine Person löschen entfernt sie aus allen Trainerteams, Sparten und Funktionen.
-  - Eine Mannschaft oder Gruppe löschen löscht ihre Trainingszeiten.
-- **Cron-Upserts** überschreiben Handänderungen an synchronisierten Terminen.
-- Gegenmittel: nächtliche Backups von Datenbank und Medienordner (`OPERATIONS.md`, Abschnitt 4),
-  Ausblenden statt Löschen.
+- **`npm run import:sanity`** ersetzt Datenbank und Medienordner durch den Stand vom 03.10.2026,
+  samt Verlust aller Zugänge und des Verlaufs. Er bricht ab, sobald es Zugänge gibt, außer mit
+  `--alles-ueberschreiben`.
+- **Löschen wirkt sofort und teils kaskadierend**, in der Verwaltung wie in Drizzle Studio:
+  - Eine Person löschen (in der Verwaltung nur Admins, mit Anzeige, wo sie vorkommt) entfernt sie
+    aus allen Trainerteams, Sparten und Funktionen.
+  - Eine Mannschaft oder Gruppe löschen löscht ihre Trainingszeiten und die Rechte von Zugängen
+    auf dieses Team.
+- **Verwaltung:** Jede Änderung steht im Verlauf, aber „Wiederherstellen“ gibt es noch nicht.
+  Ein ersetztes Foto ist dann schon aus dem Medienordner gelöscht.
+- **Drizzle Studio** hat weder Verlauf noch Rückgängig.
+- **Cron-Upserts** überschreiben Handänderungen an synchronisierten Terminen (die Verwaltung lässt
+  solche Termine deshalb gar nicht bearbeiten).
+- Gegenmittel: Verlauf, nächtliche Backups von Datenbank und Medienordner (`OPERATIONS.md`,
+  Abschnitt 4), Ausblenden statt Löschen.
 
 ## 4.2 Kritische Upstream-Abhängigkeiten
 
@@ -245,8 +286,10 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 
 - Die Datenbank prüft nicht, ob Mannschaft und Gruppe einer Trainingszeit (oder Sparte und
   Mannschaft einer News) zur selben Sparte gehören (`DATA_MODEL.md`, Abschnitt 5.4).
-- **Medienpfade** können ins Leere zeigen, wenn eine Datei fehlt oder falsch benannt ist.
-  Ungenutzte Dateien im Medienordner räumt niemand automatisch auf.
+- **Medienpfade** können ins Leere zeigen, wenn eine Datei fehlt oder falsch benannt ist (vor
+  allem bei Pflege in Drizzle Studio). Die Verwaltung löscht ersetzte Dateien, sobald kein
+  Datensatz mehr darauf verweist; Bilder, die nur im Markdown-Text einer News stehen, prüft sie
+  dabei nicht. Dateien, die in Drizzle Studio ersetzt wurden, bleiben liegen.
 - **Freitextfelder** (`trainingszeiten.ort`, `news.kategorie`, `termine.bereich`) können in
   Schreibvarianten auseinanderlaufen.
 
@@ -254,7 +297,12 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 
 - Datenbank und Medien liegen auf **einem** Server. Ohne Backup außer Haus ist ein Server-Ausfall
   ein Datenverlust.
-- `data/` enthält personenbezogene Daten und darf **nie** ins öffentliche Git-Repo.
+- `data/` enthält personenbezogene Daten und darf **nie** ins öffentliche Git-Repo. Dazu gehören
+  jetzt auch Passwort-Hashes und App-Geheimnisse der Zugänge.
+- Der **Verlauf** hebt alte Kontaktdaten und Notizen dauerhaft auf, auch von gelöschten Personen
+  (`OPERATIONS.md`, Abschnitt 8.2).
+- Sind **alle Admins ausgesperrt**, hilft nur der Notfall-Zugang per Skript auf dem Server
+  (`OPERATIONS.md`, Abschnitt 9.4).
 - Ohne gesetztes `CRON_SECRET` sind die Cron-Endpunkte für alle aufrufbar.
 
 ---
@@ -287,7 +335,9 @@ flowchart TD
   crontab auf dem Server (`OPERATIONS.md`)
 - **Externe Parser/Scraper**: `lib/fussball-de.ts`, `lib/click-tt.ts`
 - **Übernahme aus Sanity**: `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`
-- **Pflege**: Drizzle Studio (`npm run db:studio`), später `/verwaltung`
+- **Pflege**: Verwaltung `app/verwaltung/`, `lib/verwaltung/` (Rechte, Anmeldung, Uploads,
+  Verlauf), `components/verwaltung/`; Admin-Skript `scripts/verwaltung-admin.ts`; für Technik
+  Drizzle Studio (`npm run db:studio`)
 
 ---
 
@@ -297,7 +347,10 @@ Die Website hat jetzt **eine** Datenquelle: die SQLite-Datei. Von Hand gepflegte
 synchronisierte Spiele landen in denselben Tabellen, und die Seiten zeigen Änderungen sofort an.
 Die größten Risiken liegen in:
 
-1. **fehlendem Verlauf und Rückgängig**, solange per Drizzle Studio gepflegt wird (→ Backups),
+1. **fehlendem Wiederherstellen**: Die Verwaltung protokolliert jede Änderung, kann sie aber noch
+   nicht per Knopf zurücknehmen; Änderungen in Drizzle Studio stehen gar nicht im Verlauf
+   (→ Verlauf, Backups),
 2. **Scraper-Fragilität** gegenüber HTML-Änderungen bei fussball.de und click-tt,
-3. **dem Import-Skript**, das bei versehentlichem Aufruf alle Änderungen seit dem 03.10.2026 verwirft,
+3. **dem Import-Skript**, das mit `--alles-ueberschreiben` alle Änderungen seit dem 03.10.2026
+   samt Zugängen verwirft,
 4. **dem Betrieb auf einem einzelnen Server** (→ Backups außer Haus).

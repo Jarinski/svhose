@@ -338,6 +338,145 @@ export const downloads = sqliteTable(
   t => [index('downloads_sparte_idx').on(t.sparteId)],
 )
 
+// ─── Verwaltung: Zugänge, Anmeldung, Verlauf ────────────────────────────────
+
+export const CODE_ZWECKE = ['einladung'] as const
+export const VERLAUF_QUELLEN = ['verwaltung', 'api', 'telegram', 'system'] as const
+export const VERLAUF_AKTIONEN = ['angelegt', 'geaendert', 'geloescht', 'anmeldung', 'abmeldung'] as const
+
+/**
+ * Wer die Verwaltung unter /verwaltung benutzen darf. Angemeldet wird mit Zwei-Faktor:
+ * Benutzername + Passwort + 6-stelliger Code aus einer Authenticator-App (TOTP).
+ * Eingerichtet wird beides einmalig über einen Einladungs-Code (siehe anmelde_codes).
+ */
+export const zugaenge = sqliteTable('zugaenge', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  /** Anmeldename, klein geschrieben (a–z, 0–9, . - _). In der Datenbank nullable, in der App Pflicht. */
+  benutzername: text('benutzername').unique(),
+  /** scrypt-Hash des Passworts ("scrypt$N$r$p$salt$hash"); null = noch nicht eingerichtet oder zurückgesetzt. */
+  passwortHash: text('passwort_hash'),
+  /** Base32-Geheimnis der Authenticator-App; null = noch nicht gekoppelt. */
+  totpGeheimnis: text('totp_geheimnis'),
+  /** Zuletzt akzeptierter 30-Sekunden-Schritt – derselbe Code gilt nur einmal. */
+  totpLetzterSchritt: integer('totp_letzter_schritt'),
+  /** Wann Passwort und App zuletzt eingerichtet wurden; null = Einrichtung ausstehend. */
+  eingerichtetAm: text('eingerichtet_am'),
+  /** Admins dürfen alles, alle anderen nur ihre Bereiche (zugang_bereiche). */
+  istAdmin: integer('ist_admin', { mode: 'boolean' }).notNull().default(false),
+  /** Deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet. */
+  aktiv: integer('aktiv', { mode: 'boolean' }).notNull().default(true),
+  /** Optional: die eigene Person ("das bin ich"). */
+  personId: integer('person_id').references(() => personen.id, { onDelete: 'set null' }),
+  /** Zugang, der diesen angelegt hat (ohne Fremdschlüssel, damit Löschen nie blockiert). */
+  erstelltVon: integer('erstellt_von'),
+  letzteAnmeldung: text('letzte_anmeldung'),
+  ...zeitstempel(),
+})
+
+/** Was ein Zugang ohne Adminrechte bearbeiten darf: je Zeile genau eine Sparte, Mannschaft oder Gruppe. */
+export const zugangBereiche = sqliteTable(
+  'zugang_bereiche',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    zugangId: integer('zugang_id')
+      .notNull()
+      .references(() => zugaenge.id, { onDelete: 'cascade' }),
+    sparteId: integer('sparte_id').references(() => sparten.id, { onDelete: 'cascade' }),
+    mannschaftId: integer('mannschaft_id').references(() => mannschaften.id, { onDelete: 'cascade' }),
+    gruppeId: integer('gruppe_id').references(() => gruppen.id, { onDelete: 'cascade' }),
+  },
+  t => [
+    index('zugang_bereiche_zugang_idx').on(t.zugangId),
+    check(
+      'zugang_bereiche_genau_einer_check',
+      sql`(${t.sparteId} IS NOT NULL) + (${t.mannschaftId} IS NOT NULL) + (${t.gruppeId} IS NOT NULL) = 1`,
+    ),
+  ],
+)
+
+/**
+ * Einladungs-Codes (neuer Zugang oder Zurücksetzen): einmal verwendbar, damit werden Passwort und
+ * Authenticator-App eingerichtet. Gespeichert wird nur der SHA-256-Hash, nie der Code selbst.
+ */
+export const anmeldeCodes = sqliteTable(
+  'anmelde_codes',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    zugangId: integer('zugang_id')
+      .notNull()
+      .references(() => zugaenge.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull().unique(),
+    zweck: text('zweck', { enum: CODE_ZWECKE }).notNull(),
+    laeuftAb: text('laeuft_ab').notNull(),
+    verwendetAm: text('verwendet_am'),
+    /** Beim Öffnen der Einladung erzeugtes App-Geheimnis – wird erst mit Abschluss der Einrichtung übernommen. */
+    totpGeheimnis: text('totp_geheimnis'),
+    erstelltVon: integer('erstellt_von'),
+    erstelltAm: text('erstellt_am').notNull().default(jetzt),
+  },
+  t => [
+    index('anmelde_codes_zugang_idx').on(t.zugangId),
+    check('anmelde_codes_zweck_check', sql`${t.zweck} IN (${liste(CODE_ZWECKE)})`),
+  ],
+)
+
+/** Angemeldete Geräte (Sitzungen). Das Cookie enthält ein Zufallstoken, hier liegt nur dessen Hash. */
+export const geraete = sqliteTable(
+  'geraete',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    zugangId: integer('zugang_id')
+      .notNull()
+      .references(() => zugaenge.id, { onDelete: 'cascade' }),
+    sitzungHash: text('sitzung_hash').notNull().unique(),
+    /** Lesbarer Gerätename, z. B. "iPhone · Safari". */
+    name: text('name').notNull(),
+    angemeldetAm: text('angemeldet_am').notNull().default(jetzt),
+    zuletztAktiv: text('zuletzt_aktiv').notNull().default(jetzt),
+    laeuftAb: text('laeuft_ab').notNull(),
+  },
+  t => [index('geraete_zugang_idx').on(t.zugangId)],
+)
+
+/** Fehlversuche (Anmeldung, Einladung, Passwort ändern) – Grundlage für die Sperre pro IP bzw. pro Benutzername+IP (nur gehasht gespeichert). */
+export const fehlversuche = sqliteTable(
+  'fehlversuche',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    schluessel: text('schluessel').notNull(),
+    zeitpunkt: text('zeitpunkt').notNull().default(jetzt),
+  },
+  t => [index('fehlversuche_schluessel_idx').on(t.schluessel, t.zeitpunkt)],
+)
+
+/** Änderungsprotokoll: wer hat wann was geändert, mit Stand vorher und nachher. */
+export const verlauf = sqliteTable(
+  'verlauf',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    zeitpunkt: text('zeitpunkt').notNull().default(jetzt),
+    zugangId: integer('zugang_id').references(() => zugaenge.id, { onDelete: 'set null' }),
+    /** Name zum Zeitpunkt der Änderung – bleibt lesbar, auch wenn der Zugang später gelöscht wird. */
+    zugangName: text('zugang_name'),
+    quelle: text('quelle', { enum: VERLAUF_QUELLEN }).notNull().default('verwaltung'),
+    aktion: text('aktion', { enum: VERLAUF_AKTIONEN }).notNull(),
+    /** Tabellenname, z. B. "mannschaften". */
+    objektTyp: text('objekt_typ').notNull(),
+    objektId: integer('objekt_id'),
+    /** Lesbare Bezeichnung, z. B. "Fußball · U13". */
+    bezeichnung: text('bezeichnung').notNull(),
+    vorher: text('vorher', { mode: 'json' }),
+    nachher: text('nachher', { mode: 'json' }),
+  },
+  t => [
+    index('verlauf_zeitpunkt_idx').on(t.zeitpunkt),
+    index('verlauf_objekt_idx').on(t.objektTyp, t.objektId),
+    check('verlauf_quelle_check', sql`${t.quelle} IN (${liste(VERLAUF_QUELLEN)})`),
+    check('verlauf_aktion_check', sql`${t.aktion} IN (${liste(VERLAUF_AKTIONEN)})`),
+  ],
+)
+
 // ─── Beziehungen (für db.query … with) ──────────────────────────────────────
 
 export const personenRelations = relations(personen, ({ many }) => ({
@@ -410,4 +549,26 @@ export const termineRelations = relations(termine, ({ one }) => ({
 
 export const downloadsRelations = relations(downloads, ({ one }) => ({
   sparte: one(sparten, { fields: [downloads.sparteId], references: [sparten.id] }),
+}))
+
+export const zugaengeRelations = relations(zugaenge, ({ one, many }) => ({
+  person: one(personen, { fields: [zugaenge.personId], references: [personen.id] }),
+  bereiche: many(zugangBereiche),
+  geraete: many(geraete),
+  codes: many(anmeldeCodes),
+}))
+
+export const zugangBereicheRelations = relations(zugangBereiche, ({ one }) => ({
+  zugang: one(zugaenge, { fields: [zugangBereiche.zugangId], references: [zugaenge.id] }),
+  sparte: one(sparten, { fields: [zugangBereiche.sparteId], references: [sparten.id] }),
+  mannschaft: one(mannschaften, { fields: [zugangBereiche.mannschaftId], references: [mannschaften.id] }),
+  gruppe: one(gruppen, { fields: [zugangBereiche.gruppeId], references: [gruppen.id] }),
+}))
+
+export const anmeldeCodesRelations = relations(anmeldeCodes, ({ one }) => ({
+  zugang: one(zugaenge, { fields: [anmeldeCodes.zugangId], references: [zugaenge.id] }),
+}))
+
+export const geraeteRelations = relations(geraete, ({ one }) => ({
+  zugang: one(zugaenge, { fields: [geraete.zugangId], references: [zugaenge.id] }),
 }))
