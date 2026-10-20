@@ -1,17 +1,31 @@
 # SV Holm-Seppensen e.V. — Website
 
-Moderne Vereinswebsite gebaut mit **Next.js 14**, **Tailwind CSS** und dateibasiertem Content-Management.
+Vereinswebsite gebaut mit **Next.js 14** (App Router), **Tailwind CSS** und einer eigenen
+**SQLite-Datenbank** (Drizzle ORM). Inhalte liegen in `data/svhs.db`, Bilder und Dateien in
+`data/medien`. Ein externes CMS gibt es nicht mehr; Sanity wurde im Oktober 2026 abgelöst.
 
 ---
 
 ## 🚀 Schnellstart
 
+Voraussetzung: **Node.js 22 oder neuer** (wegen `better-sqlite3`).
+
 ```bash
 npm install
+npm run import:sanity   # nur, wenn data/import/sanity-export.json vorhanden ist
 npm run dev
 ```
 
 Öffne [http://localhost:3000](http://localhost:3000) im Browser.
+
+- **Mit Sanity-Export**: `npm run import:sanity` baut die Datenbank aus
+  `data/import/sanity-export.json` auf und kopiert die Bilder und Dateien in den Medienordner.
+  Achtung: Der Import **löscht und ersetzt Datenbank und Medienordner** komplett.
+- **Ohne Export**: einfach `npm run dev` starten. Die Datenbank `data/svhs.db` wird beim ersten
+  Zugriff automatisch mit allen Tabellen angelegt, ist dann aber leer. Inhalte lassen sich mit
+  `npm run db:studio` eintragen.
+- `data/` ist **nicht im Git**, weil es personenbezogene Daten enthält (das Repository ist
+  öffentlich). Export oder Datenbank gibt es bei den Webverantwortlichen, nicht über Git oder Chats.
 
 ---
 
@@ -19,136 +33,117 @@ npm run dev
 
 ```
 sv-holm-seppensen/
-├── app/                    ← Next.js Seiten (App Router)
-│   ├── page.tsx            ← Startseite
-│   ├── news/               ← News-Übersicht & Detailseiten
-│   ├── sparten/            ← Spartenübersicht & Detailseiten
-│   ├── termine/            ← Terminkalender
-│   ├── downloads/          ← Dokumente & PDFs
-│   ├── ansprechpartner/    ← Kontaktseite
-│   ├── trainingszeiten/    ← Trainingszeiten
-│   └── ueber-uns/          ← Über den Verein
+├── app/                        ← Next.js Seiten (App Router)
+│   ├── page.tsx                ← Startseite
+│   ├── news/                   ← News-Übersicht & Detailseiten
+│   ├── sparten/                ← Spartenübersicht & Detailseiten
+│   ├── termine/                ← Terminkalender
+│   ├── trainingszeiten/        ← Alle Trainingszeiten
+│   ├── ansprechpartner/        ← Kontaktseite (Vereinsfunktionen)
+│   ├── downloads/              ← Dokumente & PDFs
+│   ├── fussball/, tischtennis/ ← Spielpläne (live von fussball.de / click-tt)
+│   ├── ueber-uns/, kinderschutz/, impressum/, datenschutz/
+│   ├── medien/[...pfad]/       ← liefert Bilder & Dateien aus data/medien aus
+│   └── api/cron/               ← sync-fussball, sync-tischtennis (Spiele → Tabelle termine)
 │
-├── components/             ← Wiederverwendbare Komponenten
-│   ├── Navbar.tsx
-│   └── Footer.tsx
+├── components/                 ← Wiederverwendbare Komponenten (Navbar, Footer, …)
 │
-├── content/                ← 📝 HIER werden Inhalte gepflegt
-│   ├── news/               ← News-Artikel als .mdx Dateien
-│   │   └── YYYY-MM-DD-titel.mdx
-│   ├── sparten.json        ← Liste aller Sparten
-│   ├── termine.json        ← Termine & Events
-│   ├── downloads.json      ← Downloadbare Dokumente
-│   ├── ansprechpartner.json
-│   ├── trainingszeiten.json
-│   └── partner.json
+├── lib/
+│   ├── content.ts              ← Datenschicht: alle Seiten lesen hierüber
+│   ├── db/schema.ts            ← Datenmodell (Drizzle, SQLite)
+│   ├── db/index.ts             ← Datenbankverbindung, spielt Migrationen automatisch ein
+│   ├── medien.ts               ← Medienordner und /medien-URLs
+│   ├── fussball-de.ts          ← Spiele von fussball.de
+│   └── click-tt.ts             ← Spiele von click-tt
 │
-├── public/
-│   ├── pdfs/               ← PDF-Dateien hier ablegen
-│   └── images/             ← Bilder hier ablegen
+├── drizzle/                    ← SQL-Migrationen (erzeugt mit npm run db:generate)
+├── scripts/
+│   ├── sanity-export.mjs       ← einmaliger Export aus Sanity
+│   └── import-aus-sanity.ts    ← baut die Datenbank aus dem Export auf
 │
-└── lib/
-    └── content.ts          ← Hilfsfunktionen zum Lesen der Content-Dateien
+├── data/                       ← NICHT im Git (personenbezogene Daten)
+│   ├── svhs.db                 ← die Datenbank
+│   ├── medien/                 ← Bilder & Dateien
+│   └── import/                 ← Sanity-Export (nur für die Erstbefüllung)
+│
+└── public/                     ← statische Dateien (Logo, feste Bilder & PDFs)
 ```
 
 ---
 
-## ✏️ Inhalte pflegen (Workflow mit VS Code)
+## ✏️ Inhalte pflegen
 
-### Neuen News-Artikel erstellen
-
-Erstelle eine neue Datei in `content/news/` nach dem Schema `YYYY-MM-DD-titel.mdx`:
-
-```mdx
----
-title: "Spielbericht: 3:1 gegen HSV"
-date: "2026-03-20"
-category: "Fussball"
-sparte: "Fußball"
-image: "/images/news/spielbericht-hsv.jpg"
-excerpt: "Unsere Herren gewinnen souverän mit 3:1."
----
-
-Hier kommt der Fließtext des Artikels...
-```
-
-**Verfügbare Kategorien:** `Fussball`, `Aktionen`, `Allgemein`, `Darts`, `Interviews`, `Akrobatik`
-
----
-
-### Neuen Termin hinzufügen
-
-Öffne `content/termine.json` und füge einen Eintrag hinzu:
-
-```json
-{
-  "id": "4",
-  "titel": "Jahreshauptversammlung",
-  "datum": "2026-05-05",
-  "uhrzeit": "19:00",
-  "ort": "Vereinsheim, Holm-Seppensen",
-  "sparte": "Allgemein",
-  "beschreibung": "Jährliche Hauptversammlung aller Mitglieder.",
-  "bild": ""
-}
-```
-
----
-
-### Neues Dokument/Download hinzufügen
-
-1. PDF in `public/pdfs/` ablegen
-2. Eintrag in `content/downloads.json` hinzufügen:
-
-```json
-{
-  "id": "6",
-  "titel": "Trainingsplan Sommer 2026",
-  "beschreibung": "Trainingsplan für die Sommersaison.",
-  "datei": "/pdfs/Trainingsplan-Sommer-2026.pdf",
-  "kategorie": "Formulare",
-  "datum": "2026-03-01"
-}
-```
-
----
-
-### Ansprechpartner ändern
-
-Öffne `content/ansprechpartner.json` und bearbeite die Einträge.
-
----
-
-### Trainingszeiten aktualisieren
-
-Öffne `content/trainingszeiten.json`. Jede Sparte hat ein `gruppen`-Array mit Tag, Uhrzeit und Ort.
-
----
-
-## 🚢 Deployment auf Vercel
-
-### Erstmalig einrichten
-
-1. Repository auf GitHub pushen:
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/DEIN-USER/sv-holm-seppensen.git
-git push -u origin main
-```
-
-2. [vercel.com](https://vercel.com) → "Add New Project" → GitHub-Repo auswählen → Deploy
-
-### Änderungen deployen
+### Aktuell: Drizzle Studio
 
 ```bash
-git add .
-git commit -m "News: Spielbericht Heimspiel 20.03."
-git push
+npm run db:studio
 ```
 
-→ Vercel deployt automatisch in ~30 Sekunden. ✅
+Drizzle Studio öffnet sich im Browser unter `https://local.drizzle.studio` und zeigt alle Tabellen
+zum Bearbeiten. Jede gespeicherte Änderung ist **sofort** auf der Website sichtbar (Bilder und
+Dateien unter `/medien` werden dagegen gecacht, siehe Tabelle).
+Auf dem Server läuft das über einen SSH-Tunnel (siehe `OPERATIONS.md`, Abschnitt 7.2).
+
+| Ich möchte … | Tabelle |
+|---|---|
+| eine Trainingszeit ändern oder hinzufügen | `trainingszeiten` (Wochentag 1 = Montag … 7 = Sonntag, Uhrzeiten als `HH:MM`, gehört zu `mannschaft_id` und/oder `gruppe_id`) |
+| eine:n Trainer:in zuordnen | ggf. erst `personen`, dann `mannschaft_personen` bzw. `gruppe_personen` (mit Rolle) |
+| Ansprechpartner:innen einer Sparte festlegen | `sparte_ansprechpartner` |
+| Vorstand und Kontaktseite pflegen | `funktionen` (Gruppe `vorstand`, `abteilungsleitung` oder `weitere`) |
+| eine News veröffentlichen | `news`: `slug`, `titel`, `datum` (`YYYY-MM-DD`), Text als Markdown in `inhalt`, dann `veroeffentlicht` auf `true` |
+| einen Termin eintragen | `termine` mit `quelle` = `manuell` |
+| ein Bild oder Dokument einbinden | Datei nach `data/medien/<ordner>/` kopieren und den relativen Pfad (z. B. `downloads/satzung.pdf`) ins Feld eintragen |
+| ein Bild oder Dokument ersetzen | neue Fassung unter **neuem Dateinamen** ablegen (z. B. `downloads/satzung-2026-10.pdf`) und den Pfad im Feld ändern – nie unter gleichem Namen überschreiben, Medien werden gecacht (Details: `CONTENT_FLOW.md`, Abschnitt 1) |
+| eine Mannschaft oder Gruppe ausblenden | `sichtbar` auf `false` (besser als Löschen) |
+
+Wichtig:
+
+- **Es gibt kein Rückgängig.** Eine gelöschte Person verschwindet aus allen Trainerteams und
+  Funktionen, eine gelöschte Mannschaft nimmt ihre Trainingszeiten mit. Lieber ausblenden.
+- Spiele von fussball.de und click-tt kommen automatisch (nächtliche Cronjobs). Änderungen an
+  diesen Terminen werden beim nächsten Lauf überschrieben.
+- Alle Felder und Regeln: [`DATA_MODEL.md`](DATA_MODEL.md).
+
+### Später: eigene Verwaltung
+
+Unter `/verwaltung` entsteht eine eigene, handytaugliche Verwaltung mit Login per QR-Code,
+abgestuften Rechten und Verlauf. Konzept: [`CMS_KONZEPT.md`](CMS_KONZEPT.md).
+
+---
+
+## 🗄️ Datenbank
+
+| Befehl | Zweck |
+|---|---|
+| `npm run db:studio` | Tabellen-Editor im Browser (Drizzle Studio) |
+| `npm run db:generate` | erzeugt nach einer Änderung an `lib/db/schema.ts` eine neue Migration in `drizzle/` |
+| `npm run db:migrate` | spielt ausstehende Migrationen ein (passiert sonst automatisch beim ersten Zugriff) |
+| `npm run export:sanity` | einmaliger Export aus Sanity nach `data/import/` (braucht die Sanity-Variablen in `.env.local`) |
+| `npm run import:sanity` | baut Datenbank und Medienordner aus `data/import/sanity-export.json` neu auf (**überschreibt alles**; Bericht in `data/import/import-bericht.md`) |
+
+Pfade lassen sich über `DATENBANK_PFAD` (Standard `data/svhs.db`) und `MEDIEN_PFAD`
+(Standard `data/medien`) ändern. `npm run import:sanity` liest dafür keine Env-Datei, abweichende
+Pfade dort beim Aufruf setzen (siehe `OPERATIONS.md`, Abschnitt 2.2).
+
+---
+
+## 🚢 Betrieb & Deployment
+
+Die Website läuft künftig auf einem **eigenen Server** (geplant: Hetzner) mit `npm run build` und
+`npm run start` hinter nginx. Vercel ist mit SQLite nicht mehr nutzbar, weil die Datenbankdatei
+ein dauerhaft beschreibbares Dateisystem braucht.
+
+Kurzfassung für ein Update auf dem Server:
+
+```bash
+git pull
+npm ci
+npm run build
+sudo systemctl restart svhs
+```
+
+Einrichtung, Umgebungsvariablen, crontab für die Spiel-Synchronisation, Backups und
+Wiederherstellung: [`OPERATIONS.md`](OPERATIONS.md).
 
 ---
 
@@ -167,10 +162,25 @@ git push
 |------|-------|
 | [Next.js 14](https://nextjs.org) | Framework (App Router) |
 | [Tailwind CSS](https://tailwindcss.com) | Styling |
-| [MDX / gray-matter](https://github.com/jonschlinkert/gray-matter) | News-Artikel |
+| [SQLite](https://sqlite.org) über [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | Datenbank (eine Datei) |
+| [Drizzle ORM](https://orm.drizzle.team) + drizzle-kit | Schema, Abfragen, Migrationen, Drizzle Studio |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | News-Text (Markdown) |
 | [date-fns](https://date-fns.org) | Datumsformatierung |
 | [Lucide React](https://lucide.dev) | Icons |
-| [Vercel](https://vercel.com) | Hosting |
+| [tsx](https://github.com/privatenumber/tsx) | TypeScript-Skripte (z. B. Import) |
+| eigener Server (geplant: Hetzner) | Hosting mit Node.js und nginx |
+
+---
+
+## 📚 Weitere Dokumentation
+
+| Dokument | Inhalt |
+|---|---|
+| [`DATA_MODEL.md`](DATA_MODEL.md) | Tabellen, Beziehungen, Constraints, Zuordnungsregeln |
+| [`CONTENT_FLOW.md`](CONTENT_FLOW.md) | Wie Inhalte in die Datenbank und auf die Website kommen |
+| [`OPERATIONS.md`](OPERATIONS.md) | Betrieb, Cronjobs, Backups, Deployment, Sicherheit |
+| [`ARCHITECTURE_DECISIONS.md`](ARCHITECTURE_DECISIONS.md) | Architekturentscheidungen, u. a. Wechsel von Sanity zu SQLite |
+| [`CMS_KONZEPT.md`](CMS_KONZEPT.md) | Konzept der eigenen Verwaltung, REST-API und Telegram-Bot |
 
 ---
 
@@ -178,8 +188,8 @@ git push
 
 - **Prettier** installieren für automatische Formatierung
 - **Tailwind CSS IntelliSense** Extension für Autocomplete
-- **MDX** Extension für Syntax-Highlighting in .mdx Dateien
 - Terminal → `npm run dev` laufen lassen während du arbeitest
+- In einem zweiten Terminal `npm run db:studio`, um Daten nachzusehen oder zu ändern
 
 ---
 

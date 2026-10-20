@@ -7,7 +7,9 @@ import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'News' }
-export const revalidate = 60
+
+// Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen erscheinen sofort
+export const dynamic = 'force-dynamic'
 
 export default async function NewsPage() {
   const news = await getAllNews()

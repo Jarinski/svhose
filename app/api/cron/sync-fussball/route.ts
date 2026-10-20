@@ -1,62 +1,42 @@
 /**
  * app/api/cron/sync-fussball/route.ts
  *
- * Cron-Endpunkt: Synchronisiert Spiele von fussball.de als Termine in Sanity.
+ * Cron-Endpunkt: Synchronisiert Spiele von fussball.de als Termine in die
+ * SQLite-Datenbank (Tabelle termine, quelle = 'fussball-de').
  *
- * Wird täglich via Vercel Cron aufgerufen (vercel.json).
+ * Wird täglich auf dem eigenen Server per crontab aufgerufen, z. B.:
+ *   0 4 * * *  curl -fsS -H "Authorization: Bearer <CRON_SECRET>" https://<domain>/api/cron/sync-fussball
  * Manueller Aufruf: GET /api/cron/sync-fussball
  *   → Header: Authorization: Bearer <CRON_SECRET>
  *
  * Umgebungsvariablen:
- *   CRON_SECRET              – schützt den Endpunkt vor unautorisierten Aufrufen
- *   SANITY_API_WRITE_TOKEN   – Sanity-Token mit Editor/Admin-Rechten
- *   NEXT_PUBLIC_SANITY_PROJECT_ID
- *   NEXT_PUBLIC_SANITY_DATASET
- *   NEXT_PUBLIC_SANITY_API_VERSION
+ *   CRON_SECRET – schützt den Endpunkt vor unautorisierten Aufrufen
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from 'next-sanity'
+import { and, eq, gt, inArray, lt } from 'drizzle-orm'
+import { datenbank, type Datenbank } from '@/lib/db'
+import { sparten, termine } from '@/lib/db/schema'
 import {
   getFussballKommendeSpiele,
   getFussballVergangeneSpiele,
   type FussballSpiel,
 } from '@/lib/fussball-de'
 
-// ── Sanity-Client (mit Schreib-Token) ──────────────────────────────────────
-function buildWriteClient() {
-  return createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2024-01-01',
-    useCdn: false,
-    token: process.env.SANITY_API_WRITE_TOKEN,
-  })
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-// ── Hilfsfunktionen ────────────────────────────────────────────────────────
+// ─── Konstanten ──────────────────────────────────────────────────────────────
 
-/** Normalisiert einen Wert zu einem Sanity-sicheren ID-Bestandteil */
-function toSanityIdPart(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/ä/g, 'ae')
-    .replace(/ö/g, 'oe')
-    .replace(/ü/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+const QUELLE = 'fussball-de' as const
+const SPARTE_SLUG = 'fussball'
 
-/** Baut einen deterministischen Sanity-Dokument-ID aus der fussball.de Spiel-ID */
-function toDocId(spielId: string): string {
-  return `fussball-de-${toSanityIdPart(spielId)}`
-}
+/** Transaktions-Handle von Drizzle (better-sqlite3, synchron). */
+type Transaktion = Parameters<Parameters<Datenbank['transaction']>[0]>[0]
 
-/** Konvertiert ein FussballSpiel in ein Sanity-Termin-Dokument */
+// ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
+
+/** Konvertiert ein FussballSpiel in die Felder eines Termins (ohne quelle/externe_id). */
 function spielToTermin(spiel: FussballSpiel) {
   const gegner = spiel.heimspiel ? spiel.gast : spiel.heim
   const prefix = spiel.heimspiel ? 'Heimspiel' : 'Auswärtsspiel'
@@ -67,20 +47,17 @@ function spielToTermin(spiel: FussballSpiel) {
   const beschreibung = beschreibungsZeilen.join('\n')
 
   return {
-    _id: toDocId(spiel.id),
-    _type: 'termin' as const,
     titel,
-    datum: spiel.datum, // ISO-8601 "YYYY-MM-DD" – passt zum Sanity date-Typ
+    datum: spiel.datum, // ISO-8601 "YYYY-MM-DD"
     uhrzeit: spiel.uhrzeit,
-    sparte: spiel.mannschaftsart,
     ort: spiel.heimspiel ? 'Sportplatz Holm-Seppensen' : 'Auswärtsspiel',
     beschreibung,
+    bereich: spiel.mannschaftsart,
     tags: [
       'Fußball',
       spiel.mannschaftsart,
       spiel.heimspiel ? 'Heimspiel' : 'Auswärtsspiel',
     ],
-    fussballDeId: spiel.id,
   }
 }
 
@@ -89,20 +66,23 @@ function spielToTermin(spiel: FussballSpiel) {
  *
  * Die beiden AJAX-Endpunkte liefern jeweils nur die nächsten bzw. letzten zehn
  * Spiele. "Nicht in der Antwort" heißt also nicht "existiert nicht mehr" – die
- * meisten Termine in Sanity liegen schlicht außerhalb dieses Fensters.
+ * meisten Termine in der Datenbank liegen schlicht außerhalb dieses Fensters.
  *
  * Verlässlich ist nur der Bereich *zwischen* den beiden Rändern: der älteste Tag
  * der vergangenen und der jüngste Tag der kommenden Spiele sind durch die
  * Zehnerkappung angeschnitten (von einem Spieltag mit zehn Partien schafft es
  * womöglich nur ein Teil in die Liste). Beide Randtage bleiben deshalb außen vor,
  * und ohne beide Ränder wird gar nicht gelöscht.
+ *
+ * Liefert externe_ids (= fussball.de-Spiel-IDs). Muss vor dem Upsert laufen, damit
+ * die >50%-Notbremse den Stand vor diesem Lauf bewertet.
  */
-async function findeVeralteteTermine(
-  sanity: ReturnType<typeof buildWriteClient>,
+function findeVeralteteTermine(
+  tx: Transaktion,
   kommende: FussballSpiel[],
   vergangene: FussballSpiel[],
   allSpiele: FussballSpiel[],
-): Promise<{ ids: string[]; uebersprungen: boolean }> {
+): { ids: string[]; uebersprungen: boolean } {
   const nichts = { ids: [], uebersprungen: false }
   if (kommende.length === 0 || vergangene.length === 0) return nichts
 
@@ -110,17 +90,18 @@ async function findeVeralteteTermine(
   const bis = kommende.reduce((max, s) => (s.datum > max ? s.datum : max), kommende[0].datum)
   if (von >= bis) return nichts
 
-  // datum ist ein ISO-Datum ("YYYY-MM-DD") und damit lexikografisch vergleichbar.
-  const vorhandeneIds: string[] = await sanity.fetch(
-    `*[_type == "termin"
-       && defined(fussballDeId)
-       && !(_id in path("drafts.**"))
-       && datum > $von
-       && datum < $bis]._id`,
-    { von, bis },
-  )
+  // datum ist ein ISO-Datum ("YYYY-MM-DD") und damit lexikografisch vergleichbar –
+  // in SQLite genauso wie in JavaScript. Manuell gepflegte Termine (quelle 'manuell')
+  // werden nie angefasst.
+  const vorhandeneIds = tx
+    .select({ externeId: termine.externeId })
+    .from(termine)
+    .where(and(eq(termine.quelle, QUELLE), gt(termine.datum, von), lt(termine.datum, bis)))
+    .all()
+    .map((t) => t.externeId)
+    .filter((id): id is string => id !== null)
 
-  const aktuelleIds = new Set(allSpiele.map((s) => toDocId(s.id)))
+  const aktuelleIds = new Set(allSpiele.map((s) => s.id))
   const veraltet = vorhandeneIds.filter((id) => !aktuelleIds.has(id))
 
   // Notbremse: Ändert sich das ID-Schema oder bricht der Parser, wirken auf einmal
@@ -137,7 +118,7 @@ async function findeVeralteteTermine(
   return { ids: veraltet, uebersprungen: false }
 }
 
-// ── GET-Handler ────────────────────────────────────────────────────────────
+// ─── GET-Handler ─────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
   // 1. Authentifizierung prüfen
@@ -149,18 +130,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 2. Konfiguration prüfen
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-  const writeToken = process.env.SANITY_API_WRITE_TOKEN
-  if (!projectId || !writeToken) {
-    return NextResponse.json(
-      { error: 'Sanity nicht konfiguriert – NEXT_PUBLIC_SANITY_PROJECT_ID oder SANITY_API_WRITE_TOKEN fehlt.' },
-      { status: 500 },
-    )
-  }
-
   try {
-    // 3. Spiele von fussball.de laden (kommende + vergangene)
+    // 2. Spiele von fussball.de laden (kommende + vergangene)
     const [kommende, vergangene] = await Promise.all([
       getFussballKommendeSpiele(),
       getFussballVergangeneSpiele(),
@@ -180,21 +151,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Keine Spiele gefunden.', synced: 0 })
     }
 
-    // 4. Alle Spiele als Termine in Sanity schreiben (createOrReplace = upsert)
-    const sanity = buildWriteClient()
-    const transaction = sanity.transaction()
+    // 3. Abgleich in einer Transaktion: veraltete Termine ermitteln, alle Spiele
+    //    upserten (quelle + externe_id eindeutig), verlegte/abgesagte löschen.
+    //    better-sqlite3 arbeitet synchron – der Callback darf nicht async sein.
+    const geaendertAm = new Date().toISOString()
+    const veraltet = datenbank().transaction(
+      (tx) => {
+        const ergebnis = findeVeralteteTermine(tx, kommende, vergangene, allSpiele)
 
-    for (const spiel of allSpiele) {
-      transaction.createOrReplace(spielToTermin(spiel))
-    }
+        const sparteId =
+          tx.select({ id: sparten.id }).from(sparten).where(eq(sparten.slug, SPARTE_SLUG)).get()?.id ?? null
 
-    // 5. Verlegte/abgesagte Spiele entfernen
-    const veraltet = await findeVeralteteTermine(sanity, kommende, vergangene, allSpiele)
-    for (const id of veraltet.ids) {
-      transaction.delete(id)
-    }
+        for (const spiel of allSpiele) {
+          const termin = { ...spielToTermin(spiel), sparteId, geaendertAm }
+          // mannschaft_id und bild bleiben beim Update unangetastet (manuell pflegbar).
+          tx.insert(termine)
+            .values({ ...termin, quelle: QUELLE, externeId: spiel.id })
+            .onConflictDoUpdate({ target: [termine.quelle, termine.externeId], set: termin })
+            .run()
+        }
 
-    await transaction.commit()
+        if (ergebnis.ids.length > 0) {
+          tx.delete(termine)
+            .where(and(eq(termine.quelle, QUELLE), inArray(termine.externeId, ergebnis.ids)))
+            .run()
+        }
+
+        return ergebnis
+      },
+      { behavior: 'immediate' },
+    )
 
     console.log(
       `[sync-fussball] ${allSpiele.length} Spiele synchronisiert, ${veraltet.ids.length} veraltete Termine gelöscht.`,

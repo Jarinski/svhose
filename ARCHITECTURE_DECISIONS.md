@@ -1,7 +1,7 @@
 # ARCHITECTURE DECISIONS – SV Holm-Seppensen
 
-Stand: 2026-05-10  
-Scope: Analyse der **aktuellen** Projektstruktur (Code + bestehende Doku), ohne funktionale Änderungen.
+Stand: 2026-10-03 (Abschnitt 0 neu; Abschnitte 1–9 historisch, Stand 2026-05-10)  
+Scope: Wesentliche Architekturentscheidungen des Projekts, zuletzt der Wechsel von Sanity zu SQLite.
 
 ---
 
@@ -17,7 +17,89 @@ Zusätzlich werden erkennbare **historische Architekturwechsel** dokumentiert.
 
 ---
 
-## 1) Warum Sanity als zentrale Content-Quelle genutzt wird
+## 0) Oktober 2026: Wechsel von Sanity zu SQLite
+
+### Entscheidung
+Sanity wird **direkt und vollständig** durch eine eigene **SQLite-Datenbank** ersetzt
+(`data/svhs.db`, Zugriff über Drizzle ORM, Schema in `lib/db/schema.ts`). Bilder und Dateien liegen
+in einem lokalen Medienordner (`data/medien`) und werden unter `/medien/<pfad>` ausgeliefert.
+Betrieben wird künftig auf einem **eigenen Server** (geplant: Hetzner) statt auf Vercel.
+
+Da die Website noch nicht produktiv ist, gibt es keinen Parallelbetrieb und keinen Umschalter:
+Sanity, `/studio` und das Studio-Handbuch (`/handbuch`) sind entfernt. Die Inhalte wurden am
+03.10.2026 einmalig exportiert (`scripts/sanity-export.mjs`) und importiert (`npm run import:sanity`).
+Gepflegt wird bis zur eigenen Verwaltung `/verwaltung` per Drizzle Studio (`npm run db:studio`).
+
+### Gründe
+- **Registrierung und Bedienung zu kompliziert**: Jede Person brauchte ein eigenes Sanity-Konto
+  und eine Einladung über manage.sanity.io. Es gab keine abgestuften Rechte, dafür die
+  Entwurf/Publish-Reihenfolge-Falle bei neuen Personen und eine halb englische Oberfläche.
+  Details: `CMS_KONZEPT.md`, Abschnitt 2.
+- **Eigener Server**: Mit einem eigenen Server liegt eine Datenbank als Datei direkt neben der
+  Anwendung. Es braucht keinen zusätzlichen Datenbankdienst und kein Fremdkonto.
+- **Kleine Datenmenge**: Der Export vom 03.10.2026 umfasst gut 400 Datensätze (davon 177 Termine)
+  und 32 Dateien mit ca. 17 MB. Dafür ist ein externes CMS oder ein Datenbankserver überdimensioniert.
+- **Altlasten im Sanity-Modell**: eingebettete Mannschaften neben zentralen Dokumenten,
+  Fallback-Felder, Sparten als Freitext, Stichwort-Heuristik auf der Spartenseite (Abschnitte 6 und 7.3).
+  Ein relationales Schema mit Fremdschlüsseln und CHECKs löst das an der Wurzel.
+
+### Betrachtete Alternativen
+
+| Option | Bewertung |
+|---|---|
+| **Sanity behalten** (ggf. mit eigener Oberfläche davor) | Löst die Abhängigkeit, die Altlasten und die Kontenfrage nicht. Verworfen. |
+| **JSON-Dateien** (im Repo oder auf dem Server) | Sehr einfach, keine Abhängigkeit. Aber keine Beziehungen und keine Integritätsprüfung, also genau die Probleme des früheren `content/`-Modells. Gleichzeitiges Schreiben ist heikel. Im Repo wären personenbezogene Kontaktdaten öffentlich, und jede Änderung bräuchte ein Deployment. Verworfen. |
+| **Postgres** (Neon über Vercel oder selbst betrieben) | Voller Funktionsumfang und war im ersten Konzept vorgesehen. Auf dem eigenen Server aber ein zusätzlicher Dienst, der betrieben, gesichert und aktualisiert werden muss; als Neon ein weiteres Fremdkonto mit Auftragsverarbeitung. Für unsere Datenmenge unnötig. |
+| **SQLite** ✅ | Eine Datei, kein Serverprozess, Transaktionen, Fremdschlüssel und CHECK-Constraints. Ein Backup ist eine Dateikopie. Drizzle liefert typsichere Abfragen und Migrationen. Grenze: nur ein Server, keine Serverless-Plattform. |
+
+### Einordnung
+✅ **Gute Entscheidung**
+
+### Folgen
+- **Positiv**
+  - Keine externe CMS-Abhängigkeit und keine Tokens für das Lesen von Inhalten.
+  - Änderungen sind sofort sichtbar: Die Datenbank-Seiten rendern dynamisch (`force-dynamic`),
+    ISR und Revalidate-Fenster entfallen.
+  - Strenges Datenmodell: Mannschaften und Gruppen als eigene Tabellen, Trainingszeiten fest an
+    Mannschaft und/oder Gruppe, Trainerteams mit Rolle pro Zuordnung, Vereinsfunktionen getrennt,
+    News, Termine und Downloads mit echten Bezügen statt Freitext (`DATA_MODEL.md`).
+  - `lib/content.ts` behält die Funktionsnamen; die Seiten mussten kaum angepasst werden.
+  - Weniger Ballast: Pakete `sanity`, `next-sanity`, `@sanity/image-url`, `styled-components`
+    sowie alle Patch- und Migrationsskripte sind entfernt.
+- **Negativ / Aufwand**
+  - Bis zur Verwaltung `/verwaltung` können nur technisch Verantwortliche pflegen (Drizzle Studio),
+    ohne Rechte, Verlauf und Rückgängig.
+  - Betrieb, Updates, TLS und **Backups** liegen in eigener Verantwortung (`OPERATIONS.md`).
+  - Vercel ist mit SQLite nicht mehr nutzbar. Die Cronjobs laufen per crontab auf dem Server.
+  - Bilder werden nicht mehr von einem CDN skaliert und ausgeliefert.
+- **Auswirkungen auf frühere Entscheidungen**
+
+| Abschnitt | Status |
+|---|---|
+| 1) Sanity als zentrale Content-Quelle | abgelöst durch SQLite |
+| 2) Next.js App Router | gilt weiter |
+| 3) ISR / Revalidation | abgelöst: Datenbank-Seiten rendern dynamisch; nur `/fussball` und `/tischtennis` behalten `revalidate = 3600` |
+| 4) Scraping externer Sportsysteme | gilt weiter; Ziel ist jetzt die Tabelle `termine` (Upsert über `quelle` + `externe_id`), Aufruf per crontab |
+| 5) Patch-Skripte | erledigt: Skripte entfernt; Korrekturen laufen direkt in der Datenbank |
+| 6) Referenziert vs. embedded | abgelöst durch das relationale Schema |
+| 7) Historische Architekturwechsel | ergänzt um diesen Wechsel |
+| 8) und 9) Gesamtklassifikation, Fazit | historisch |
+
+Weitere Folgeentscheidungen: News-Text als Markdown statt Portable Text, Partner entfallen
+(wurden nirgends angezeigt), Jahrgänge und Trainingsplätze entfallen (keine Einträge). Für den
+späteren Telegram-Bot ist OpenRouter statt der direkten Anthropic-API vorgesehen
+(`CMS_KONZEPT.md`).
+
+---
+
+> **Historisch (Stand 2026-05-10):** Die folgenden Abschnitte 1–9 beschreiben die Architektur zur
+> Sanity-Zeit. Sie bleiben zur Nachvollziehbarkeit erhalten. Was davon heute noch gilt, steht in
+> der Tabelle in Abschnitt 0. Genannte Dateien wie `sanity/lib/queries.ts`, `vercel.json`-Crons oder
+> `scripts/patch-*.mjs` gibt es teils nicht mehr.
+
+---
+
+## 1) Warum Sanity als zentrale Content-Quelle genutzt wird (historisch)
 
 ### Entscheidung
 Sanity wurde als zentraler Content-Hub etabliert; das Frontend liest Inhalte über einen einheitlichen Content-Layer (`lib/content.ts`) und GROQ-Queries (`sanity/lib/queries.ts`).
@@ -41,7 +123,7 @@ Sanity wurde als zentraler Content-Hub etabliert; das Frontend liest Inhalte üb
 
 ---
 
-## 2) Warum Next.js App Router verwendet wird
+## 2) Warum Next.js App Router verwendet wird (historisch)
 
 ### Entscheidung
 Das Projekt setzt auf den Next.js App Router (`app/`-Struktur mit serverseitigen, asynchronen Seiten, `generateStaticParams`, segmentbasierte Routen).
@@ -65,7 +147,7 @@ Das Projekt setzt auf den Next.js App Router (`app/`-Struktur mit serverseitigen
 
 ---
 
-## 3) Warum ISR / Revalidation genutzt wird
+## 3) Warum ISR / Revalidation genutzt wird (historisch)
 
 ### Entscheidung
 Seiten werden statisch vorgerendert und regelmäßig erneuert (z. B. `export const revalidate = 60` in mehreren Seiten).
@@ -89,7 +171,7 @@ Seiten werden statisch vorgerendert und regelmäßig erneuert (z. B. `export con
 
 ---
 
-## 4) Warum externe Sportsysteme via Scraping integriert wurden
+## 4) Warum externe Sportsysteme via Scraping integriert wurden (historisch)
 
 ### Entscheidung
 Spieldaten von fussball.de und click-tt werden via HTML/AJAX-Parsing erfasst und als `termin`-Dokumente in Sanity synchronisiert.
@@ -119,7 +201,7 @@ Spieldaten von fussball.de und click-tt werden via HTML/AJAX-Parsing erfasst und
 
 ---
 
-## 5) Warum Patch-Skripte entstanden sind
+## 5) Warum Patch-Skripte entstanden sind (historisch)
 
 ### Entscheidung
 Patch-/Migrationsskripte wurden genutzt, um große Altbestände, Medienzuordnungen und datenqualitative Korrekturen effizient in Sanity zu überführen bzw. nachzuziehen.
@@ -146,7 +228,7 @@ Patch-/Migrationsskripte wurden genutzt, um große Altbestände, Medienzuordnung
 
 ---
 
-## 6) Warum bestimmte Datenmodelle referenziert statt embedded sind (oder umgekehrt)
+## 6) Warum bestimmte Datenmodelle referenziert statt embedded sind (oder umgekehrt) (historisch)
 
 ## 6.1 Referenzierte Modelle (normalisiert)
 
@@ -241,7 +323,21 @@ Patch-/Migrationsskripte wurden genutzt, um große Altbestände, Medienzuordnung
 
 ---
 
-## 8) Gesamtklassifikation der aktuellen Architektur
+## 7.4 Sanity-first → eigene SQLite-Datenbank (Oktober 2026)
+
+### Vorher
+- Sanity-Dataset mit Studio, GROQ-Queries und Mischmodell aus Referenzen, eingebetteten Daten und Fallback-Feldern.
+
+### Heute
+- SQLite-Datei mit relationalem Schema (Drizzle), lokaler Medienordner, eigener Server.
+- Einmalige Übernahme am 03.10.2026; Sanity, Studio und Altskripte sind entfernt.
+
+### Einordnung
+✅ **Gute Entscheidung**. Begründung und Folgen: Abschnitt 0.
+
+---
+
+## 8) Gesamtklassifikation der Architektur (historisch, Stand 2026-05-10)
 
 ## Gute Entscheidungen
 - Sanity als zentrale Content-Plattform.
@@ -260,7 +356,7 @@ Patch-/Migrationsskripte wurden genutzt, um große Altbestände, Medienzuordnung
 
 ---
 
-## 9) Fazit
+## 9) Fazit (historisch, Stand 2026-05-10)
 
 Die Architektur ist klar in Richtung **Sanity-first + Next.js App Router + ISR** ausgerichtet und für den Vereinskontext sehr gut geeignet. 
 

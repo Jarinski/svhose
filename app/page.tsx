@@ -1,12 +1,18 @@
 import Link from 'next/link'
 import { getAllNews, getTermine, getSparten } from '@/lib/content'
-
-export const revalidate = 60
-import { ArrowRight, Calendar, MapPin, Shield } from 'lucide-react'
+import { ArrowRight, MapPin } from 'lucide-react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import HeroBanner from '@/components/HeroBanner'
 import NewsThumbnail from '@/components/NewsThumbnail'
+
+// Liest bei jedem Aufruf direkt aus der Datenbank – neue News und Termine sind sofort sichtbar.
+export const dynamic = 'force-dynamic'
+
+/** "18:30" → "18:30 Uhr"; Freitext wie "ganztägig" bleibt unverändert. */
+function uhrzeitLabel(uhrzeit: string) {
+  return /^\d/.test(uhrzeit) && !/uhr/i.test(uhrzeit) ? `${uhrzeit} Uhr` : uhrzeit
+}
 
 export default async function HomePage() {
   const [newsAll, termine, sparten] = await Promise.all([
@@ -16,7 +22,7 @@ export default async function HomePage() {
   ])
   const news = newsAll.slice(0, 3)
   const heuteStr = new Date().toISOString().slice(0, 10)
-  const termineSliced = termine.filter((t: any) => t.datum >= heuteStr).slice(0, 3)
+  const termineSliced = termine.filter(t => t.datum >= heuteStr).slice(0, 3)
 
   return (
     <>
@@ -26,9 +32,9 @@ export default async function HomePage() {
       {/* SPARTEN TICKER */}
       <section className="bg-[#0a0a0a] border-t border-[#f5f5f0]/10 overflow-hidden py-4">
         <div className="animate-ticker flex gap-12 whitespace-nowrap">
-          {[...sparten, ...sparten].map((s: any, i: number) => (
+          {[...sparten, ...sparten].map((s, i) => (
             <span key={i} className="font-display text-lg text-[#f5f5f0]/40 tracking-widest uppercase shrink-0">
-              {s.icon} {s.name}
+              {s.icon ? `${s.icon} ${s.name}` : s.name}
             </span>
           ))}
         </div>
@@ -83,7 +89,7 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-px">
-            {termineSliced.map((t: any) => (
+            {termineSliced.map(t => (
               <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-6 border-b border-[#f5f5f0]/10 group">
                 <div className="shrink-0 w-16">
                   <div className="font-display text-3xl leading-none">
@@ -96,16 +102,20 @@ export default async function HomePage() {
                 <div className="w-px h-10 bg-[#f5f5f0]/10 hidden sm:block shrink-0" />
                 <div className="flex-1">
                   <h3 className="font-medium text-[#f5f5f0] mb-1">{t.titel}</h3>
-                  <div className="flex items-center gap-1 text-xs text-[#6b6b6b]">
-                    <MapPin size={11} />
-                    {t.ort}
+                  {t.ort && (
+                    <div className="flex items-center gap-1 text-xs text-[#6b6b6b]">
+                      <MapPin size={11} />
+                      {t.ort}
+                    </div>
+                  )}
+                </div>
+                {t.uhrzeit && (
+                  <div className="shrink-0">
+                    <span className="text-xs tracking-[0.15em] uppercase border border-[#f5f5f0]/20 px-3 py-1 text-[#6b6b6b]">
+                      {uhrzeitLabel(t.uhrzeit)}
+                    </span>
                   </div>
-                </div>
-                <div className="shrink-0">
-                  <span className="text-xs tracking-[0.15em] uppercase border border-[#f5f5f0]/20 px-3 py-1 text-[#6b6b6b]">
-                    {t.uhrzeit} Uhr
-                  </span>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -119,13 +129,18 @@ export default async function HomePage() {
           <h2 className="font-display text-5xl md:text-7xl tracking-tight">SPARTEN</h2>
         </div>
         <div className="flex flex-wrap">
-          {sparten.map((s: any) => (
+          {sparten.map(s => (
             <Link
               key={s.slug}
               href={`/sparten/${s.slug}`}
               className="bg-[#f5f5f0] outline outline-1 outline-[#0a0a0a]/10 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200 flex flex-col items-center text-center gap-2 py-6 px-4 w-1/2 sm:w-1/3 md:w-1/4 lg:w-[14.285%]"
             >
-              <span className="text-2xl">{s.icon}</span>
+              {s.icon
+                ? <span className="text-2xl">{s.icon}</span>
+                : /* Ohne gepflegtes Icon: Vereinswappen als Platzhalter */
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src="/SV_Holm_Seppensen_Logo.svg" alt="" aria-hidden="true" className="w-8 h-8 object-contain opacity-30" />
+              }
               <span className="text-[11px] tracking-[0.1em] uppercase font-medium">{s.name}</span>
             </Link>
           ))}

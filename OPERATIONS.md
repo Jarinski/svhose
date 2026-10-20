@@ -6,263 +6,485 @@ Technische Betriebs- und Wartungsdokumentation für das Projekt **sv-holm-seppen
 
 ## Ziel / Scope
 
-Dieses Dokument beschreibt den produktiven Betrieb auf Vercel, die relevanten Umgebungsvariablen, automatisierte Synchronisationen (Cronjobs), externe Abhängigkeiten, typische Deployment-Risiken sowie Recovery-/Wartungsabläufe.
+Dieses Dokument beschreibt den Betrieb auf einem **eigenen Server** (geplant: Hetzner): Aufbau,
+Umgebungsvariablen, Cronjobs, Backups und Wiederherstellung, Deployment, Recovery und Sicherheit.
 
-Stand der Analyse: auf Basis der aktuellen Repository-Konfiguration (u. a. `vercel.json`, `app/api/cron/*`, `lib/*`, `sanity/lib/client.ts`, `scripts/*`).
+Stand: 2026-10-03. Die Website ist noch **nicht produktiv**; der Server ist noch nicht eingerichtet.
+Pfade, Dienst- und Benutzernamen in den Beispielen (`/srv/sv-holm-seppensen`, `svhs`) sind
+Vorschläge und bei der Einrichtung festzulegen.
 
 ---
 
 ## 1) Hosting
 
-### 1.1 Vercel Setup
+### 1.1 Zielbild
 
-- **Framework**: Next.js (`vercel.json` → `"framework": "nextjs"`)
-- **Build Command**: `next build`
-- **Output Directory**: `.next`
-- **Automatische Deployments**: über Git-Push (gemäß README-Workflow)
+- **Ein Linux-Server** (z. B. Hetzner Cloud mit Ubuntu LTS) für Website, Datenbank, Medien und Cronjobs.
+- **Node.js 22 oder neuer.** `better-sqlite3` 13 setzt Node ≥ 22 voraus.
+- **Next.js im Produktionsmodus**: `npm run build` und `npm run start` (= `next start`), als
+  systemd-Dienst, nur auf `127.0.0.1:3000` erreichbar.
+- **nginx** davor als Reverse Proxy mit TLS (Let's Encrypt).
+- **Eine** Instanz der Anwendung (kein Cluster-Modus): SQLite verträgt viele Leser, aber
+  Schreibzugriffe und das automatische Einspielen der Migrationen sollen aus einem Prozess kommen.
 
-### 1.2 Wichtige Build-Einstellungen
+```mermaid
+flowchart LR
+  B["Besucher:innen"] -->|"HTTPS 443"| N["nginx"]
+  N -->|"127.0.0.1:3000"| A["next start<br/>(systemd-Dienst)"]
+  A --> DB[("data/svhs.db")]
+  A --> M[("data/medien")]
+  C["crontab"] -->|"curl 127.0.0.1:3000/api/cron/…"| A
+  C --> BK["Backup-Skript"]
+  BK --> DB
+  BK --> M
+  BK --> EXT[("Backup außer Haus")]
+```
 
-- In `vercel.json` sind Build-Env-Werte gesetzt für:
-  - `NEXT_PUBLIC_SANITY_PROJECT_ID`
-  - `NEXT_PUBLIC_SANITY_DATASET`
-  - `NEXT_PUBLIC_SANITY_API_VERSION`
-- `next.config.js`:
-  - `transpilePackages`: `sanity`, `@sanity/ui`, `next-sanity`, `styled-components`
-  - `images.remotePatterns`: erlaubt `https://cdn.sanity.io/**`
+### 1.2 Warum nicht mehr Vercel
 
-### 1.3 ISR / Revalidation
+- SQLite braucht ein **dauerhaft beschreibbares Dateisystem**. Vercel-Funktionen haben das nicht:
+  Ihr Dateisystem ist schreibgeschützt bzw. flüchtig, und jede Instanz hätte ihre eigene Kopie.
+- Dasselbe gilt für den Medienordner.
+- Die Cronjobs aus `vercel.json` laufen auf dem eigenen Server per crontab (Abschnitt 3).
 
-Projekt nutzt ISR auf mehreren Ebenen:
+### 1.3 Rendering und Aktualität
 
-1. **Page-Level ISR** per `export const revalidate = ...`
-   - Viele Seiten: `revalidate = 60` (z. B. `app/news/page.tsx`, `app/page.tsx`, `app/termine/page.tsx`)
-   - Fußball/Tischtennis-Seiten: `revalidate = 3600`
+- Alle Seiten, die aus der Datenbank lesen, rendern dynamisch (`export const dynamic = 'force-dynamic'`).
+  Es gibt kein ISR und kein Revalidate-Fenster mehr: Eine Änderung in der Datenbank ist beim
+  nächsten Seitenaufruf sichtbar.
+- Ausnahme: `/fussball` und `/tischtennis` laden Spiele direkt bei fussball.de bzw. click-tt und
+  werden höchstens stündlich neu erzeugt (`revalidate = 3600`).
 
-2. **Fetch-Level ISR**
-   - `lib/fussball-de.ts`: `fetch(..., { next: { revalidate: 3600 } })`
+### 1.4 Arbeitsverzeichnis und persistente Daten
 
-3. **Sanity Query Revalidation**
-   - `sanity/lib/client.ts`: `sanityFetch(..., revalidate = 60)` als Standard
+- Die Anwendung muss **im Projektverzeichnis** gestartet werden. Der Migrationsordner `drizzle/`
+  und die Standardpfade `data/svhs.db` und `data/medien` werden relativ zum Arbeitsverzeichnis
+  aufgelöst (`lib/db/index.ts`, `lib/medien.ts`). Im systemd-Dienst also `WorkingDirectory` setzen.
+- Persistent und zu sichern ist der Ordner `data/`:
 
-4. **Sonderfall Studio**
-   - `app/studio/[[...tool]]/page.tsx`: `dynamic = 'force-dynamic'`
+| Pfad | Inhalt | Hinweis |
+|---|---|---|
+| `data/svhs.db` | die Datenbank | dazu im Betrieb `svhs.db-wal` und `svhs.db-shm` (WAL-Modus) |
+| `data/medien/` | Bilder und Dateien, ausgeliefert unter `/medien/<pfad>` | |
+| `data/backup/` | nächtliche Datenbank-Kopien (Vorschlag) | zusätzlich außer Haus sichern |
+| `data/import/` | Sanity-Export vom 03.10.2026 | nur für die Erstbefüllung; enthält personenbezogene Daten |
 
-Hinweis: `click-tt`-Datenzugriffe verwenden POST + `cache: 'no-store'`; Aktualität wird dort primär über Page-Level-ISR und Cron-Sync nach Sanity erreicht.
+- `data/` steht in `.gitignore`. `git pull` fasst den Ordner nicht an.
+- Wer die Daten außerhalb des Checkouts ablegen will (z. B. `/var/lib/svhs`), setzt
+  `DATENBANK_PFAD` und `MEDIEN_PFAD` (Abschnitt 2).
 
 ---
 
-## 2) Environment-Variablen
+## 2) Umgebungsvariablen
 
-Quelle: `.env.local.example`, Cron-Routen, Sanity-Client, Scripts.
+### 2.1 Übersicht
 
-### 2.1 Variablenübersicht
+| Variable | Pflicht | Standard | Zweck | Sensibilität |
+|---|---|---|---|---|
+| `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>` | **hoch** |
+| `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
+| `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
+| `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>` | niedrig |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET` | nur für `npm run export:sanity` | – | einmaliger Export aus Sanity | niedrig |
+| `SANITY_API_READ_TOKEN` bzw. `SANITY_API_WRITE_TOKEN` | nur für `npm run export:sanity` | – | Lesezugriff für den Export | **kritisch** – nach dem Umzug widerrufen und löschen |
 
-1. `NEXT_PUBLIC_SANITY_PROJECT_ID`
-   - Zweck: Sanity-Projektidentifikation (Read + Write-Client-Konfiguration)
-   - Sensibilität: **niedrig bis mittel** (public-prefix)
+Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter hinzu (siehe
+`CMS_KONZEPT.md`). Die Namen der Variablen sind noch offen.
 
-2. `NEXT_PUBLIC_SANITY_DATASET`
-   - Zweck: Dataset-Auswahl (i. d. R. `production`)
-   - Sensibilität: **niedrig**
+### 2.2 Wo die Variablen stehen
 
-3. `NEXT_PUBLIC_SANITY_API_VERSION`
-   - Zweck: API-Versionierung für Sanity-Requests
-   - Sensibilität: **niedrig**
-
-4. `SANITY_API_WRITE_TOKEN`
-   - Zweck: Schreibzugriff auf Sanity (Cron-Upserts, Migrationen, Patch-/Upload-Skripte)
-   - Sensibilität: **kritisch / hochsensibel**
-
-5. `CRON_SECRET`
-   - Zweck: Absicherung von `/api/cron/*` via `Authorization: Bearer <secret>`
-   - Sensibilität: **kritisch / hochsensibel**
-
-### 2.2 Kritische Hinweise
-
-- `SANITY_API_WRITE_TOKEN` und `CRON_SECRET` dürfen nur in sicherem Secret-Store (Vercel Env, lokale `.env.local`) liegen.
-- Public-Variablen mit `NEXT_PUBLIC_` sind clientseitig sichtbar und **nicht** für Geheimnisse geeignet.
+- **Next.js** liest `.env` und `.env.local` aus dem Projektverzeichnis, auch im Produktionsmodus.
+- **drizzle-kit** (`npm run db:studio`, `db:migrate`, `db:generate`) liest nur `.env`, nicht
+  `.env.local`. Abweichende Pfade deshalb in `.env` eintragen oder beim Aufruf mitgeben:
+  `DATENBANK_PFAD=/var/lib/svhs/svhs.db npm run db:studio`.
+- `scripts/sanity-export.mjs` liest `.env.local` selbst ein.
+- `npm run import:sanity` (tsx) liest **keine** Env-Datei. Abweichende Pfade beim Aufruf mitgeben:
+  `DATENBANK_PFAD=/var/lib/svhs/svhs.db MEDIEN_PFAD=/var/lib/svhs/medien npm run import:sanity`.
+  Sonst baut der Import `./data/svhs.db` und `./data/medien` auf, während die Website den
+  konfigurierten Pfad liest.
+- `.env` und `.env*.local` sind gitignored. Geheimnisse gehören **nie** in versionierte Dateien.
+- Die crontab braucht `CRON_SECRET` ebenfalls (Abschnitt 3.1). Bei einem Wechsel des Secrets
+  beide Stellen gleichzeitig ändern.
 
 ---
 
 ## 3) Cronjobs
 
-Quelle: `vercel.json`, `app/api/cron/*`.
+### 3.1 crontab einrichten
 
-### 3.1 Existierende Cronjobs
+Die Cron-Endpunkte werden lokal per `curl` aufgerufen. Beispiel für die crontab des Dienstbenutzers
+(`crontab -e`):
 
-1. `GET /api/cron/sync-fussball`
-   - Schedule: `0 4,5 * * *`
-   - Läuft täglich um **04:00** und **05:00** (Server-/Vercel-Zeitzone beachten)
-   - Funktion:
-     - lädt kommende + vergangene Spiele von fussball.de
-     - dedupliziert
-     - schreibt per `createOrReplace` als `termin`-Dokumente nach Sanity
-     - löscht verlegte/abgesagte Spiele, allerdings nur im verlässlich abgedeckten
-       Datumsfenster (siehe `findeVeralteteTermine`); die Antwort enthält
-       `geloescht` und `geloeschteIds`
+```cron
+CRON_SECRET=hier-das-secret-aus-der-env-datei
+0 4 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-fussball
+0 5 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-tischtennis
+30 3 * * * /usr/local/bin/svhs-backup.sh
+```
 
-2. `GET /api/cron/sync-tischtennis`
-   - Schedule: `0 4,5 * * *`
-   - Läuft täglich um **04:00** und **05:00**
-   - Funktion:
-     - lädt Saison-/Vergangenheitsdaten aus click-tt
-     - dedupliziert
-     - schreibt per `createOrReplace` als `termin`-Dokumente nach Sanity
-     - löscht verlegte/abgesagte Spiele im gelieferten Datumsbereich
-       (siehe `findeVeralteteTermine`)
+- Die Zeiten gelten in der **Zeitzone des Servers**. Empfohlen:
+  `timedatectl set-timezone Europe/Berlin`.
+- `curl -fsS` meldet HTTP-Fehler auf stderr. Mit `MAILTO=…` in der crontab oder einer Umleitung in
+  eine Logdatei (`>> /var/log/svhs-cron.log 2>&1`) bleiben Fehler sichtbar.
+- In der crontab hat `%` eine Sonderbedeutung. Befehle mit `date +%F` deshalb in ein Skript
+  auslagern (wie beim Backup in Abschnitt 4.2).
 
-### 3.2 Authentifizierung / Sicherheit
+### 3.2 Was die Jobs tun
 
-- Beide Endpunkte prüfen optional `CRON_SECRET`.
-- Bei gesetztem Secret wird ein exakter Bearer-Vergleich erzwungen.
-- Falscher/missing Token ⇒ `401 Unauthorized`.
+1. `GET /api/cron/sync-fussball` (täglich 04:00)
+   - lädt kommende und vergangene Spiele von fussball.de, dedupliziert
+   - schreibt sie per Upsert über (`quelle`, `externe_id`) in die Tabelle `termine`
+   - löscht verlegte oder abgesagte Spiele, aber nur im verlässlich abgedeckten Datumsfenster
+     (`findeVeralteteTermine`)
 
-### 3.3 Betriebsverhalten bei Fehlern
+2. `GET /api/cron/sync-tischtennis` (täglich 05:00)
+   - lädt die Spiele der kommenden sechs Monate und der letzten sieben Tage aus click-tt, dedupliziert
+   - Upsert in `termine` wie oben
+   - löscht verlegte oder abgesagte Spiele im gelieferten Datumsbereich
 
-- Fehlende Sanity-Konfiguration/Write-Token ⇒ `500`.
-- Externe Fetch-/Parser-Fehler werden geloggt; Route liefert Fehler-JSON.
+Beide Jobs löschen gar nichts, wenn mehr als die Hälfte der Termine im Fenster verschwinden würde.
+Die JSON-Antwort enthält dann `loeschenUebersprungen: true`, und das Log zeigt eine Warnung.
+Details: `CONTENT_FLOW.md`, Abschnitt 2.
+
+### 3.3 Authentifizierung
+
+- Bei gesetztem `CRON_SECRET` wird ein exakter Bearer-Vergleich erzwungen. Falscher oder fehlender
+  Header ⇒ `401 Unauthorized`.
+- **Ohne** `CRON_SECRET` sind die Endpunkte offen. In Produktion daher immer setzen.
+- Optional zusätzlich in nginx sperren, da crontab ohnehin über `127.0.0.1:3000` aufruft:
+
+```nginx
+location /api/cron/ {
+  deny all;
+}
+```
+
+### 3.4 Manuell auslösen
+
+```bash
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-fussball
+```
 
 ---
 
-## 4) Externe Abhängigkeiten
+## 4) Backups und Wiederherstellung
 
-### 4.1 fussball.de
+### 4.1 Was gesichert wird
+
+| Was | Wie | Warum |
+|---|---|---|
+| `data/svhs.db` | täglich konsistente Kopie per SQLite-Backup (nicht per `cp`) | alle Inhalte |
+| `data/medien/` | täglich per `rsync` | Bilder und Dateien |
+| `.env` / `.env.local` | einmalig und nach Änderungen, getrennt und zugriffsgeschützt | Secrets |
+| Code | liegt im Git | – |
+
+Die Datenbank läuft im WAL-Modus. Ein einfaches `cp` während des Betriebs kann eine inkonsistente
+Kopie erzeugen. Deshalb die Backup-Funktion von SQLite nutzen.
+
+### 4.2 Nächtliches Backup (Beispiel)
+
+`/usr/local/bin/svhs-backup.sh`:
+
+```sh
+#!/bin/sh
+set -eu
+cd /srv/sv-holm-seppensen
+mkdir -p data/backup
+
+# Konsistente Kopie der Datenbank
+sqlite3 data/svhs.db ".backup data/backup/svhs-$(date +%F).db"
+
+# 30 Tage aufbewahren
+find data/backup -name 'svhs-*.db' -mtime +30 -delete
+
+# Außer Haus kopieren, z. B. auf eine Hetzner Storage Box (Ziel anpassen)
+# rsync -a data/backup data/medien <benutzer>@<storage-box>:svhs/
+```
+
+Ohne das `sqlite3`-Kommandozeilenwerkzeug geht dasselbe mit Node und `better-sqlite3`:
+
+```sh
+node -e "require('better-sqlite3')('data/svhs.db').backup('data/backup/svhs-' + new Date().toISOString().slice(0, 10) + '.db').then(() => console.log('Backup ok'))"
+```
+
+Empfehlungen:
+
+- Backups **außer Haus** halten (anderer Server oder Storage Box). Ein Backup auf demselben Server
+  hilft nicht, wenn der Server ausfällt.
+- Backups enthalten personenbezogene Daten: Zugriff beschränken, außer Haus möglichst verschlüsselt.
+- Die Wiederherstellung regelmäßig testen (z. B. vierteljährlich lokal).
+
+### 4.3 Wiederherstellung (komplett)
+
+```sh
+sudo systemctl stop svhs
+cd /srv/sv-holm-seppensen
+mv data/svhs.db data/svhs.db.defekt          # aktuellen Stand aufheben …
+if [ -f data/svhs.db-wal ]; then mv data/svhs.db-wal data/svhs.db.defekt-wal; fi   # … samt WAL (enthält die letzten Änderungen)
+rm -f data/svhs.db-shm                        # Index-Datei wird neu angelegt
+cp data/backup/svhs-2026-10-02.db data/svhs.db
+sudo systemctl start svhs
+```
+
+- Die WAL-Datei **nicht löschen**: Beim Stoppen schließt die Anwendung die Datenbank nicht
+  ausdrücklich, die letzten bestätigten Änderungen können deshalb noch in `svhs.db-wal` stehen.
+  Nur zusammen mit `svhs.db.defekt-wal` ist die aufgehobene Kopie vollständig.
+
+- Ist das Backup älter als die aktuelle Code-Version, spielt die Anwendung fehlende Migrationen
+  beim ersten Zugriff automatisch ein.
+- Danach Startseite, Sparten, Trainingszeiten, Kontaktseite und News prüfen.
+- Medien bei Bedarf per `rsync` aus der Sicherung zurückholen.
+
+### 4.4 Einzelne Daten zurückholen
+
+Für einen versehentlich gelöschten Eintrag nicht die ganze Datenbank zurückspielen. Stattdessen
+das Backup getrennt öffnen und die Werte von Hand übertragen:
+
+```sh
+DATENBANK_PFAD=data/backup/svhs-2026-10-02.db npm run db:studio
+```
+
+Die bei einer Wiederherstellung aufgehobene Kopie (Abschnitt 4.3) lässt sich genauso öffnen:
+`DATENBANK_PFAD=data/svhs.db.defekt npm run db:studio`. SQLite liest `svhs.db.defekt-wal` dabei
+automatisch mit ein.
+
+---
+
+## 5) Deployment
+
+### 5.1 Ersteinrichtung (grob)
+
+1. **Server anlegen** (z. B. Hetzner Cloud, Ubuntu LTS). Firewall nur für SSH, HTTP und HTTPS
+   öffnen, SSH nur mit Schlüssel, Zeitzone `Europe/Berlin`, automatische Sicherheitsupdates.
+2. **Pakete installieren**: Node.js 22 LTS (oder neuer), git, nginx, certbot, sqlite3.
+   Build-Werkzeuge (`build-essential`, `python3`) nur, falls `better-sqlite3` kein fertiges
+   Binary für die Plattform findet.
+3. **Dienstbenutzer** anlegen (z. B. `svhs`) und das Repository nach `/srv/sv-holm-seppensen` klonen.
+4. **Umgebung**: `.env` bzw. `.env.local` anlegen (mindestens `CRON_SECRET`, siehe Abschnitt 2).
+5. **Abhängigkeiten und Build**: `npm ci` und `npm run build`.
+6. **Daten**: die gepflegte `data/svhs.db` und `data/medien/` per `scp`/`rsync` auf den Server
+   kopieren. Alternativ einmalig `npm run import:sanity`, falls `data/import/` dort liegt
+   (bei abweichenden Pfaden diese beim Aufruf setzen, siehe Abschnitt 2.2).
+   Ab dann wird **nur noch auf dem Server** gepflegt.
+7. **systemd-Dienst** einrichten (Beispiel unten), aktivieren und starten.
+8. **nginx** als Reverse Proxy einrichten (Beispiel unten) und TLS mit `certbot --nginx` holen.
+9. **crontab** und Backup-Skript einrichten (Abschnitte 3 und 4).
+10. **Domain** auf den Server zeigen lassen, `SEITEN_URL` in der Env-Datei auf die öffentliche
+    Adresse setzen (Abschnitt 2.1; mit oder ohne „www“ vorher klären), Dienst neu starten und alle
+    Seiten prüfen.
+
+systemd-Dienst `/etc/systemd/system/svhs.service` (Beispiel):
+
+```ini
+[Unit]
+Description=SV Holm-Seppensen Website
+After=network.target
+
+[Service]
+User=svhs
+WorkingDirectory=/srv/sv-holm-seppensen
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start -- -H 127.0.0.1 -p 3000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+nginx (Beispiel, TLS-Teil ergänzt certbot):
+
+```nginx
+server {
+  server_name www.example.de;
+
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
+
+### 5.2 Update einspielen
+
+```sh
+cd /srv/sv-holm-seppensen
+git pull
+npm ci
+npm run build
+sudo systemctl restart svhs
+```
+
+- **Vorher ein Backup ziehen**, wenn neue Dateien in `drizzle/` dabei sind (Schemaänderung).
+  Migrationen werden beim ersten Datenbankzugriff nach dem Neustart automatisch eingespielt.
+- `next build` überschreibt `.next/`, während die alte Instanz noch läuft. In dieser Zeit können
+  einzelne Seiten kurz fehlschlagen. Updates daher zu ruhigen Zeiten einspielen.
+- **Zurückrollen**: vorherigen Commit auschecken, `npm ci`, `npm run build`, neu starten. Wurde
+  dabei schon eine Migration eingespielt, zusätzlich das Backup von vor dem Update zurückspielen
+  (Drizzle-Migrationen haben keinen Rückwärtsschritt).
+
+---
+
+## 6) Externe Abhängigkeiten
+
+### 6.1 fussball.de
 
 - Modul: `lib/fussball-de.ts`
 - Zugriff auf öffentliche AJAX-Endpunkte:
   - `https://www.fussball.de/ajax.club.next.games/...`
   - `https://www.fussball.de/ajax.club.prev.games/...`
 - Parsing über HTML/Regex (struktursensitiv)
-- Risiko: HTML-Strukturänderungen brechen Extraktion.
+- Risiko: HTML-Strukturänderungen brechen die Extraktion.
 
-### 4.2 click-tt (nuLiga/TTVN)
+### 6.2 click-tt (nuLiga/TTVN)
 
 - Modul: `lib/click-tt.ts`
-- Zugriff via POST auf:
+- Zugriff per POST auf:
   - `https://ttvn.click-tt.de/cgi-bin/WebObjects/nuLigaTTDE.woa/wa/clubMeetings`
-- Parsing aus HTML-Tabelle (`result-set`)
-- Risiko: Markup- oder Formularänderungen brechen Parsing.
+- Parsing aus der HTML-Tabelle (`result-set`)
+- Risiko: Markup- oder Formularänderungen brechen das Parsing.
 
-### 4.3 Sanity APIs
+### 6.3 Keine weiteren Laufzeitdienste
 
-- Read/Fetch: `next-sanity` Client (`sanity/lib/client.ts`)
-- Write: Cron-Routen + diverse Node-Skripte via `@sanity/client`
-- Abhängigkeit von:
-  - gültiger Project-ID / Dataset
-  - API-Version
-  - gültigem Write-Token
+- Sanity wird nicht mehr genutzt. Die Website braucht zur Laufzeit außer fussball.de und click-tt
+  keinen externen Dienst.
+- Später kommen Telegram und OpenRouter für den Bot dazu (`CMS_KONZEPT.md`).
 
 ---
 
-## 5) Deployment-Risiken
+## 7) Recovery / Wartung
 
-### 5.1 Build-Failures
+### 7.1 Typische Störungen
 
-- Falsche/fehlende Env-Konfiguration (insb. Sanity-Parameter) kann zu Funktionseinschränkungen führen.
-- `sanity/lib/client.ts` hat Fallback `projectId: 'placeholder'`, wodurch Build nicht zwingend failt, aber Datenzugriffe leer laufen können.
-- Änderungen an `next.config.js` (`transpilePackages`, image-remotePatterns) können Runtime-/Build-Probleme verursachen.
+| Symptom | Mögliche Ursache | Vorgehen |
+|---|---|---|
+| Website liefert 500 | Datenbankdatei fehlt, ist nicht lesbar oder falsches Arbeitsverzeichnis | `journalctl -u svhs -n 100`; Pfad und Rechte von `data/` prüfen; `WorkingDirectory` prüfen |
+| Fehler beim ersten Seitenaufruf nach einem Update | Migration schlägt fehl (sie läuft beim ersten Datenbankzugriff) | Log lesen; Backup zurückspielen (Abschnitt 4.3); Migration korrigieren |
+| `database is locked` | lange Schreibtransaktion (z. B. offenes Drizzle Studio mit großem Vorgang) | kurz warten (Timeout 5 s), Drizzle Studio schließen, ggf. Dienst neu starten |
+| Cron liefert `401` | `CRON_SECRET` in crontab und Env-Datei unterschiedlich | beide angleichen |
+| Cron liefert 0 Spiele oder `loeschenUebersprungen: true` | Parser passt nicht mehr zur Quelle | `lib/fussball-de.ts` bzw. `lib/click-tt.ts` prüfen; Bestand bleibt erhalten |
+| Bild oder Download liefert 404 | Datei fehlt im Medienordner oder Pfad in der Datenbank falsch | Datei unter `data/medien/<pfad>` prüfen; Pfad ohne `/medien/`-Präfix eintragen |
+| Inhalt versehentlich gelöscht oder geändert | Pflegefehler | Einzelwerte aus dem Backup übertragen (Abschnitt 4.4) |
+| Platte voll | Backups, Logs, WAL-Datei | alte Backups und Logs löschen; Dienst neu starten |
 
-### 5.2 Token-Probleme
+### 7.2 Inhalte auf dem Server pflegen (Drizzle Studio per SSH-Tunnel)
 
-- Ungültiges/abgelaufenes `SANITY_API_WRITE_TOKEN` ⇒ Cron-/Patch-/Migrationsskripte schlagen fehl.
-- Falsches `CRON_SECRET` ⇒ Cron-Aufrufe liefern 401.
-- Token-Rotation ohne gleichzeitige Anpassung in Vercel + lokal führt zu partiellen Ausfällen.
+Bis die Verwaltung `/verwaltung` existiert, ist Drizzle Studio der Weg, Inhalte zu pflegen.
+Drizzle Studio lauscht nur lokal (Port 4983) und darf **nie** öffentlich erreichbar sein.
 
-### 5.3 Scraper-/Datenquellenprobleme
+1. Vom eigenen Rechner einen Tunnel öffnen: `ssh -L 4983:127.0.0.1:4983 svhs@<server>`
+2. In dieser SSH-Sitzung: `cd /srv/sv-holm-seppensen && npm run db:studio`
+3. Im lokalen Browser `https://local.drizzle.studio` öffnen.
+4. Nach der Arbeit Drizzle Studio beenden (`Strg+C`) und den Tunnel schließen.
 
-- HTML-Änderungen bei fussball.de / click-tt führen zu `0` Treffern oder fehlerhaften Daten.
-- Netzwerk-/Rate-Limit-/bot-protection-Effekte möglich.
-- Parser sind nicht API-contract-basiert, sondern markupsensitiv.
-- Ein verändertes ID-Schema lässt alle Termine im Löschfenster veraltet wirken. Beide Cronjobs
-  brechen deshalb ab, wenn mehr als die Hälfte des Fensters zum Löschen anstünde – die Antwort
-  enthält dann `loeschenUebersprungen: true` und das Log eine Warnung.
+Alternative für Einzelkorrekturen: `sqlite3 data/svhs.db`, dann zuerst
+`PRAGMA foreign_keys = ON;`. Sonst greifen die Lösch- und Fremdschlüsselregeln nicht.
+
+### 7.3 Neu aufbauen aus dem Sanity-Export
+
+`npm run import:sanity` löscht Datenbank und Medienordner und baut beide aus `data/import/sanity-export.json` neu auf.
+Das ist **nur** für eine frische Entwicklungsumgebung gedacht. Auf dem Server würde es alle
+Änderungen seit dem 03.10.2026 verwerfen.
+
+### 7.4 Medien ersetzen oder löschen (Cache)
+
+`/medien/<pfad>` wird gecacht (`app/medien/[...pfad]/route.ts`):
+
+- Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legt der Import Bilder ab) gelten
+  als unveränderlich: `Cache-Control: public, max-age=31536000, immutable`.
+- Alle anderen Dateien (z. B. `downloads/satzung.pdf`) werden bei jedem Abruf nachgeprüft
+  (`max-age=0, must-revalidate` mit ETag und Last-Modified, unverändert ⇒ `304`).
+
+Daraus folgt:
+
+- **Ersetzen**: neue Fassung immer unter **neuem Dateinamen** ablegen (z. B. mit Datum oder Hash im
+  Namen) und den Pfad in der Tabelle anpassen. Eine unter gleichem Namen überschriebene Datei mit
+  Hash-Suffix bliebe bei Besucher:innen bis zu ein Jahr alt.
+- **Foto löschen oder ersetzen** (z. B. Widerruf einer Einwilligung): `next/image` hält verkleinerte
+  Kopien in `.next/cache/images` (der Ordner übersteht auch `npm run build`) und liefert einen
+  abgelaufenen Eintrag weiter aus, selbst wenn das Original fehlt. Deshalb danach den Bildcache
+  leeren:
+
+  ```sh
+  cd /srv/sv-holm-seppensen
+  rm -rf .next/cache/images
+  sudo systemctl restart svhs
+  ```
+
+  Kopien in den Browsern der Besucher:innen lassen sich serverseitig nicht zurückholen.
 
 ---
 
-## 6) Recovery / Wartung
+## 8) Sicherheit
 
-### 6.1 Vorhandene Reparatur-/Patch-Skripte
+### 8.1 Sofortmaßnahme: Sanity-Tokens widerrufen
 
-Wichtige Skripte im Ordner `scripts/`:
+- In der **Git-Historie dieses öffentlichen Repositorys** stehen Sanity-Schreibtokens. Sie waren
+  früher in `scripts/patch-*.mjs` hart kodiert. Das Löschen der Skripte entfernt sie **nicht** aus
+  der Historie, und vorhandene Klone oder Forks behalten sie.
+- Deshalb in der Sanity-Verwaltung (sanity.io/manage) im Projekt **alle API-Tokens widerrufen**,
+  auch die aus `.env.local` und Vercel.
+- Nach erfolgreichem Umzug das **Sanity-Projekt löschen**. Dann sind auch unbekannte Kopien der
+  Tokens wertlos.
+- Die Sanity-Variablen anschließend aus `.env.local` entfernen. Im Vercel-Projekt hinterlegte
+  Variablen ebenfalls löschen bzw. das Vercel-Projekt nach dem Umzug abschalten.
 
-- `migrate-to-sanity.mjs`
-  - Initiale oder erneute Übernahme lokaler Inhaltsdaten nach Sanity
-- `sync-trainingszeiten-from-json.mjs`
-  - Abgleich/Korrektur von Trainingszeiten
-  - unterstützt Dry-Run und `--apply` für echte Updates
-- `dump-sanity-tz.mjs`
-  - Export/Inspection der Trainingszeit-Datensätze
-- `upload-pdfs-to-sanity.mjs`
-  - Upload + Verknüpfung von Download-PDFs
-- `patch-*.mjs` (z. B. Fußball, Tischtennis, Akrobatik, Uhrzeiten)
-  - gezielte Korrekturen einzelner Inhalte/Assets
+### 8.2 Personenbezogene Daten
 
-### 6.2 Typischer Recovery-Ablauf bei Datenfehlern
+- `data/` (Datenbank, Medien, Sanity-Export, Backups) ist gitignored und darf **nie** committet
+  oder in versionierte Dateien kopiert werden. Das Repository ist öffentlich.
+- Kontaktdaten erscheinen öffentlich auf der Website: nur mit Einverständnis der Personen eintragen.
+- Alles im Medienordner ist über `/medien/<pfad>` öffentlich abrufbar. Interne Dokumente gehören
+  nicht dorthin. Die Route lässt keine Pfade außerhalb des Medienordners zu (`medienDatei()`).
+- Wird ein Foto gelöscht (z. B. Widerruf der Einwilligung), reicht das Entfernen von Datei und
+  Datenbankeintrag nicht: zusätzlich den Bildcache leeren (Abschnitt 7.4).
+- Für die spätere Verwaltung: beim Hochladen immer einen Inhalts-Hash in den Dateinamen schreiben
+  und beim Löschen eines Bildes den Bildcache leeren (`CMS_KONZEPT.md`).
+- Die Datenschutzerklärung (`app/datenschutz/page.tsx`) um das Hosting auf dem eigenen Server
+  ergänzen, später um Telegram-Bot und LLM.
 
-1. **Fehlerbild eingrenzen** (welcher Content-Type, welche Quelle).
-2. **Ist-Stand prüfen** (Sanity Studio + ggf. `dump-sanity-tz.mjs`).
-3. **Dry-Run** bei unterstützten Skripten (ohne `--apply`).
-4. **Gezielten Patch/Migration ausführen**.
-5. **Ergebnis validieren** (Studio + Frontend-Seite nach Revalidation).
+### 8.3 Server
 
-### 6.3 Manuelle Datenkorrekturen
+- SSH nur mit Schlüssel, kein Passwort-Login; Firewall nur für 22, 80 und 443.
+- Node.js lauscht nur auf `127.0.0.1`; von außen ist nur nginx erreichbar.
+- `data/` und die Env-Dateien gehören dem Dienstbenutzer und sind für andere nicht lesbar.
+- Automatische Sicherheitsupdates einschalten; Node.js und npm-Abhängigkeiten regelmäßig aktualisieren.
 
-- Kleinere Korrekturen direkt in Sanity Studio möglich.
-- Wiederholbare technische Korrekturen bevorzugt als Skript (Nachvollziehbarkeit).
+### 8.4 Cron-Endpunkte
 
----
+- `CRON_SECRET` lang und zufällig wählen (z. B. `openssl rand -base64 32`).
+- Optional `/api/cron/` in nginx von außen sperren (Abschnitt 3.3).
 
-## 7) Sicherheitsbewertung
+### 8.5 Priorisierte Risiken
 
-### 7.1 Umgang mit Tokens (Ist-Stand)
+1. **Hoch**: Sanity-Tokens in der öffentlichen Git-Historie, solange sie nicht widerrufen sind.
+2. **Hoch**: Datenverlust ohne Backup außer Haus (ein Server, eine Datei).
+3. **Mittel-Hoch**: Scraper-Abhängigkeit von externem HTML (fussball.de, click-tt).
+4. **Mittel**: Pflegefehler in Drizzle Studio ohne Verlauf und Rückgängig.
+5. **Mittel**: offene Cron-Endpunkte, falls `CRON_SECRET` fehlt.
 
-- Positiv:
-  - Hauptpfad nutzt Env-Variablen (`.env.local`, Vercel Env).
-  - Cron-Endpunkte mit Bearer-Secret absicherbar.
+### 8.6 Empfehlungen
 
-- Kritisch:
-  - In mehreren Patch-Skripten sind **harte Sanity-Tokens im Quellcode hinterlegt** (Fallback oder direkt gesetzt).
-  - Das ist ein erhebliches Geheimnis-Leak-Risiko (Repository, Logs, lokale Kopien).
-
-### 7.2 Aktuelle Risiken (Priorisiert)
-
-1. **Hoch**: Hardcoded Write-Token in `scripts/patch-fussball.mjs`, `scripts/patch-tischtennis-mannschaften.mjs`, `scripts/patch-akrobatik-bilder.mjs`.
-2. **Mittel-Hoch**: Scraper-Abhängigkeit von externem HTML (fussball.de/click-tt).
-3. **Mittel**: Cron-Ausfälle bei Secret-Mismatch oder Token-Rotation.
-4. **Mittel**: Silent Data Staleness durch ISR/Caching bei ausbleibender Cron-Synchronisation.
-
-### 7.3 Empfehlungen
-
-1. **Sofortmaßnahme**
-   - Hardcoded Tokens entfernen und kompromittierte Tokens rotieren.
-   - Nur `process.env.SANITY_API_WRITE_TOKEN` erlauben; bei Fehlen hart abbrechen.
-
-2. **Secret-Management härten**
-   - Vercel Environment Variables als Single Source of Truth.
-   - Regelmäßige Token-Rotation + dokumentierter Rollout-Prozess.
-
-3. **Monitoring verbessern**
-   - Cron-Responses überwachen (Statuscodes, synced counts).
-   - Alerts bei `synced = 0` über mehrere Läufe oder bei 5xx.
-
-4. **Scraper-Robustheit**
-   - Parser-Healthchecks (z. B. Mindestanzahl Spiele).
-   - Fail-safe Verhalten mit klaren Logs und unveränderten Bestandsdaten.
-
-5. **Runbooks ergänzen**
-   - Operative Checklisten für „Token-Rotation“, „Cron defekt“, „Scraper defekt“, „Sanity write fail“.
+1. **Sofort**: Sanity-Tokens widerrufen (Abschnitt 8.1).
+2. **Vor dem Livegang**: Backups außer Haus einrichten und eine Wiederherstellung testen.
+3. **Monitoring**: Cron-Ergebnisse per Mail oder Log prüfen; Alarm bei Fehlern oder wiederholt
+   0 synchronisierten Spielen; optional ein externer Uptime-Check der Startseite.
+4. **Mittelfristig**: die Verwaltung `/verwaltung` mit Rechten, Verlauf und Wiederherstellen
+   (`CMS_KONZEPT.md`) ersetzt die Pflege per Drizzle Studio.
 
 ---
 
 ## Anhang: Relevante Betriebsdateien
 
-- `vercel.json`
+- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`)
 - `next.config.js`
-- `.env.local.example`
+- `drizzle.config.ts`, `drizzle/`
+- `lib/db/index.ts`, `lib/db/schema.ts`
+- `lib/medien.ts`, `app/medien/[...pfad]/route.ts`
 - `app/api/cron/sync-fussball/route.ts`
 - `app/api/cron/sync-tischtennis/route.ts`
 - `lib/fussball-de.ts`
 - `lib/click-tt.ts`
-- `sanity/lib/client.ts`
-- `scripts/*.mjs`
+- `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`
+- `.env.local.example`

@@ -7,28 +7,34 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "node scripts/migrate-to-sanity.mjs",
-    "studio": "sanity dev"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "export:sanity": "node scripts/sanity-export.mjs",
+    "import:sanity": "tsx scripts/import-aus-sanity.ts"
   },
   "dependencies": {
-    "@sanity/image-url": "^2.0.3",
+    "better-sqlite3": "^13.0.3",
     "date-fns": "^3.6.0",
+    "drizzle-orm": "^0.45.3",
     "lucide-react": "^0.400.0",
     "next": "14.2.5",
-    "next-sanity": "^9.12.3",
     "react": "^18",
     "react-dom": "^18",
-    "sanity": "^3.99.0",
-    "styled-components": "^6.3.11"
+    "react-markdown": "^10.1.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",
     "dotenv": "^17.3.1",
+    "drizzle-kit": "^0.31.11",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

@@ -1,18 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Sanity Studio und UI-Pakete müssen transpiliert werden
-  transpilePackages: ['sanity', '@sanity/ui', 'next-sanity', 'styled-components'],
-
-  images: {
-    remotePatterns: [
-      {
-        // Sanity CDN für Bilder und Dateien
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+  experimental: {
+    // better-sqlite3 ist ein natives Node-Modul (.node-Binary) und darf nicht
+    // von webpack gebündelt werden – es wird zur Laufzeit direkt aus node_modules geladen.
+    serverComponentsExternalPackages: ['better-sqlite3'],
   },
 }
 

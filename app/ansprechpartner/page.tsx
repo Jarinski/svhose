@@ -1,10 +1,10 @@
-import { getAnsprechpartner } from '@/lib/content'
+import { getAnsprechpartner, type AnsprechpartnerEintrag } from '@/lib/content'
 import { Mail, Phone } from 'lucide-react'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 
-// Seite alle 60 Sekunden neu generieren (ISR) → Sanity-Änderungen erscheinen zeitnah
-export const revalidate = 60
+// Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen erscheinen sofort
+export const dynamic = 'force-dynamic'
 
 /** Gibt true zurück, wenn die Nummer eine deutsche Mobilnummer ist (015x, 016x, 017x) */
 function isMobileNumber(tel: string): boolean {
@@ -27,23 +27,20 @@ function toWhatsAppNumber(tel: string): string {
 
 export const metadata: Metadata = { title: 'Ansprechpartner' }
 
-const GRUPPEN_REIHENFOLGE = ['Vorstand', 'Abteilungsleiter', 'Weitere Ansprechpartner']
+const GRUPPEN_REIHENFOLGE: readonly AnsprechpartnerEintrag['gruppe'][] = [
+  'Vorstand',
+  'Abteilungsleiter',
+  'Weitere Ansprechpartner',
+]
 
 export default async function AnsprechpartnerPage() {
   const personen = await getAnsprechpartner()
 
-  // Gruppieren nach "gruppe"-Feld (Fallback auf "sparte" für ältere Einträge)
-  const grouped = GRUPPEN_REIHENFOLGE.reduce<Record<string, any[]>>((acc, g) => {
-    const members = personen.filter((p: any) => (p.gruppe || p.sparte) === g)
-    if (members.length > 0) acc[g] = members
-    return acc
-  }, {})
-
-  // Einträge, die keiner bekannten Gruppe zugeordnet sind
-  const ungrouped = personen.filter(
-    (p: any) => !GRUPPEN_REIHENFOLGE.includes(p.gruppe || p.sparte)
-  )
-  if (ungrouped.length > 0) grouped['Sonstige'] = ungrouped
+  // Nach Gruppe zusammenfassen – leere Gruppen werden nicht angezeigt
+  const grouped = GRUPPEN_REIHENFOLGE.map(gruppe => ({
+    gruppe,
+    mitglieder: personen.filter(p => p.gruppe === gruppe),
+  })).filter(g => g.mitglieder.length > 0)
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-4xl mx-auto">
@@ -72,11 +69,11 @@ export default async function AnsprechpartnerPage() {
       </div>
 
       {/* Ansprechpartner nach Gruppen */}
-      {Object.entries(grouped).map(([gruppenName, mitglieder]) => (
+      {grouped.map(({ gruppe: gruppenName, mitglieder }) => (
         <div key={gruppenName} className="mb-12">
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">{gruppenName}</div>
           <div className="space-y-px bg-[#0a0a0a]/10">
-            {mitglieder.map((p: any) => (
+            {mitglieder.map(p => (
               <div key={p.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
                 {/* Foto */}
                 {p.foto && (

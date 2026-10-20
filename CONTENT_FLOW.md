@@ -1,261 +1,303 @@
 # CONTENT FLOW – SV Holm-Seppensen
 
-Stand: 2026-05-10  
-Scope: Analyse der Datenflüsse in diesem Repository (ohne Code-/Datenänderungen).
+Stand: 2026-10-03  
+Scope: Datenflüsse nach dem Umzug von Sanity auf SQLite: Wie Inhalte in die Datenbank kommen und
+wie sie auf die Website gelangen.
 
 ---
 
 ## Zielbild (Kurzfassung)
 
-- **Primäres Zielsystem**: Sanity (`production` Dataset) als zentrale Content-Quelle für das Frontend.
-- **Datenquellen**: 
-  1) manuelle Pflege im Sanity Studio,  
-  2) externe Spielplandaten (fussball.de, click-tt) via Cron/API,  
-  3) lokale Importquellen (historisch: JSON/MDX, Excel→JSON, PDFs/Bilder aus `public`).
-- **Ausgabe**: Next.js Seiten lesen über `lib/content.ts` + `sanity/lib/queries.ts` ausschließlich aus Sanity.
+- **Einzige Datenquelle der Website**: SQLite-Datei `data/svhs.db` (Pfad über `DATENBANK_PFAD`),
+  Bilder und Dateien im Medienordner `data/medien` (Pfad über `MEDIEN_PFAD`).
+- **Wege in die Datenbank**:
+  1. manuelle Pflege, aktuell per **Drizzle Studio** (`npm run db:studio`), später über die eigene
+     Verwaltung `/verwaltung` (siehe `CMS_KONZEPT.md`),
+  2. **Cronjobs** für Spiele von fussball.de und click-tt → Tabelle `termine`,
+  3. **einmalige Übernahme** aus Sanity (Export und Import, erledigt am 03.10.2026).
+- **Ausgabe**: Die Seiten lesen über `lib/content.ts` und rendern dynamisch (`force-dynamic`).
+  Änderungen in der Datenbank sind sofort sichtbar, für die Seiten gibt es kein ISR und keinen Cache mehr.
+- **Medien**: werden unter `/medien/<pfad>` ausgeliefert (`app/medien/[...pfad]/route.ts`) und
+  anders als die Seiten **gecacht**: Dateinamen mit Hash-Suffix (`…-1a2b3c4d.webp`) dauerhaft, alle
+  anderen werden bei jedem Abruf nachgeprüft. Regeln zum Ersetzen und Löschen: Abschnitt 1.
+- **Ausnahme**: Die Spielplanseiten `/fussball` und `/tischtennis` lesen weiterhin **direkt**
+  bei fussball.de bzw. click-tt (Cache 1 Stunde), nicht aus der Datenbank.
 
 ---
 
-## 0) End-to-End Überblick
+## 0) End-to-End-Überblick
 
 ```mermaid
 flowchart LR
-  A[Sanity Studio
-  manuelle Pflege] --> S[(Sanity Dataset: production)]
-  B[fussball.de HTML/AJAX] --> C[/api/cron/sync-fussball]
-  D[click-tt HTML POST] --> E[/api/cron/sync-tischtennis]
-  C --> S
-  E --> S
-  F[Legacy content/*.json + content/news/*.mdx] --> G[scripts/migrate-to-sanity.mjs]
-  H[Excel .xlsx] --> I[scripts/read-excel.py]
-  I --> J[scripts/trainingszeiten-with-times.json]
-  J --> K[sync/patch trainingszeiten scripts]
-  K --> S
-  L[public/pdfs + public/images] --> M[upload/create/patch scripts]
-  M --> S
-  S --> Q[sanity/lib/queries.ts]
-  Q --> R[lib/content.ts]
-  R --> U[Next.js Pages]
+  DS["Drizzle Studio<br/>npm run db:studio"] --> DB[("SQLite<br/>data/svhs.db")]
+  VW["/verwaltung<br/>(geplant)"] -.-> DB
+  HAND["Dateien von Hand<br/>kopieren"] --> MED[("Medienordner<br/>data/medien")]
+
+  CRON["crontab<br/>auf dem Server"] --> CF["/api/cron/sync-fussball"]
+  CRON --> CT["/api/cron/sync-tischtennis"]
+  FD["fussball.de<br/>HTML/AJAX"] --> CF
+  TT["click-tt<br/>HTML POST"] --> CT
+  CF -->|"Upsert termine"| DB
+  CT -->|"Upsert termine"| DB
+
+  SAN[("Sanity<br/>(abgelöst)")] --> EX["scripts/sanity-export.mjs"]
+  EX --> IMP["data/import/<br/>sanity-export.json + assets"]
+  IMP --> IM["scripts/import-aus-sanity.ts"]
+  IM -->|"einmalig, überschreibt alles"| DB
+  IM --> MED
+
+  DB --> CL["lib/content.ts"]
+  CL --> P["Seiten<br/>(force-dynamic)"]
+  MED --> MR["/medien/[...pfad]"]
+  FD --> SP["/fussball"]
+  TT --> SPT["/tischtennis"]
 ```
 
 ---
 
-## 1) Manuelle Datenpflege (direkt im Sanity Studio)
+## 1) Manuelle Datenpflege (aktuell: Drizzle Studio)
 
-### Wo sichtbar/strukturiert
-- Studio-Konfiguration: `sanity.config.ts`
-  - Navigation: News-Beiträge, Termine, Sparten, Trainingszeiten, Ansprechpartner, Downloads, Partner
+### Wie
 
-### Typische manuelle Inhalte
-- `newsPost` (`sanity/schemas/newsPost.ts`): Titel, Datum, Kategorie, Sparte, Bild, Textinhalt.
-- `sparte` (`sanity/schemas/sparte.ts`): Stammdaten, Teamfoto, embedded Mannschaften, embedded Ansprechpartner, embedded Downloads.
-- `trainingszeit` (`sanity/schemas/trainingszeit.ts`): Wochentag/Uhrzeit, entweder Referenzmodell (`mannschaft`,`trainingsplatz`) oder Legacy-Fallback (`sparte`,`gruppe`,`ort`, Kontaktfelder).
-- `ansprechpartner` (`sanity/schemas/ansprechpartner.ts`): globale Ansprechpartner.
-- `download` (`sanity/schemas/download.ts`): Datei-Asset oder `dateiUrl`-Fallback.
-- `termin` (`sanity/schemas/termin.ts`): manuelle Termine + automatisierte Fußball-/TT-Termine.
+- `npm run db:studio` startet Drizzle Studio. Die Oberfläche öffnet sich im Browser unter
+  `https://local.drizzle.studio` und arbeitet direkt auf der Datenbankdatei.
+- Auf dem Server läuft Drizzle Studio nur lokal. Der Zugriff geht über einen SSH-Tunnel
+  (siehe `OPERATIONS.md`, Abschnitt 7.2). Drizzle Studio nie öffentlich erreichbar machen.
+- Bilder und Dateien werden von Hand in den Medienordner kopiert. In die Tabelle kommt nur der
+  relative Pfad (z. B. `personen/max-beispiel.webp`).
+- **Neue Fassung = neuer Dateiname**: Ein Bild oder Dokument nie unter gleichem Namen
+  überschreiben, sondern mit neuem Namen ablegen (z. B. mit Datum:
+  `downloads/beitragsordnung-2026-10.pdf`) und den Pfad in der Tabelle anpassen. Hintergrund:
+  Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legt der Import Bilder ab) gelten
+  als unveränderlich und werden ein Jahr lang gecacht; eine überschriebene Datei bliebe dann bei
+  Besucher:innen alt. Dateien ohne Hash werden zwar bei jedem Abruf nachgeprüft, ein neuer Name ist
+  aber auch dort der sichere Weg.
+- **Foto gelöscht oder ersetzt**: Der Bildoptimierer (`next/image`, z. B. Fotos auf
+  `/ansprechpartner` und in den News) hält eigene verkleinerte Kopien in `.next/cache/images` und
+  liefert sie auch dann weiter aus, wenn die Originaldatei fehlt. Nach dem Löschen eines Fotos
+  (z. B. bei Widerruf der Einwilligung) deshalb den Bildcache leeren, siehe `OPERATIONS.md`,
+  Abschnitt 7.4.
 
-### Wichtige Studio-Spezifika
-- `termin.fussballDeId` ist read-only und als automatisch markiert (`sanity/schemas/termin.ts`), nur für Admin sichtbar.
-- Mehrere Schemas haben explizite Legacy-/Fallback-Felder, die weiterhin aktiv sind.
+### Typische Aufgaben
+
+| Aufgabe | Tabelle(n) |
+|---|---|
+| Trainingszeit ändern oder hinzufügen | `trainingszeiten` (mit `mannschaft_id` und/oder `gruppe_id`) |
+| Trainer:in einer Mannschaft oder Gruppe zuordnen | ggf. erst `personen`, dann `mannschaft_personen` bzw. `gruppe_personen` |
+| Ansprechpartner:in einer Sparte festlegen | `sparte_ansprechpartner` |
+| Kontaktseite pflegen (Vorstand usw.) | `funktionen` |
+| News veröffentlichen | `news` (Markdown in `inhalt`, `veroeffentlicht = true`) |
+| Termin anlegen | `termine` mit `quelle = manuell` |
+| Download hinzufügen | Datei nach `data/medien/…`, dann Zeile in `downloads` |
+| Bild oder Dokument ersetzen | neue Datei unter **neuem Namen** ablegen, dann Pfad in der jeweiligen Tabelle ändern |
+| Mannschaft oder Gruppe ausblenden | `sichtbar = false` |
+
+Regeln und Felder im Detail: `DATA_MODEL.md`.
+
+### Wirkung
+
+- Jede gespeicherte Änderung ist **sofort live**, weil die Seiten bei jedem Aufruf frisch aus der
+  Datenbank lesen.
+
+### Grenzen (bis die Verwaltung kommt)
+
+- Nur für technisch Verantwortliche geeignet; keine abgestuften Rechte.
+- **Kein Verlauf, kein Rückgängig.** Schutz bieten nur die nächtlichen Backups.
+- Prüfung nur über die Datenbank-Constraints (Pflichtfelder, CHECKs, Fremdschlüssel).
+- Bilder werden nicht automatisch verkleinert oder umbenannt.
 
 ---
 
 ## 2) Automatische Datenflüsse
 
-## 2.1 Cronjobs (Vercel)
+## 2.1 Cronjobs (crontab auf dem eigenen Server)
 
-Quelle: `vercel.json`
-- `0 4,5 * * *` → `/api/cron/sync-fussball`
-- `0 4,5 * * *` → `/api/cron/sync-tischtennis`
+Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERATIONS.md`, Abschnitt 3):
+
+- `0 4 * * *` → `/api/cron/sync-fussball`
+- `0 5 * * *` → `/api/cron/sync-tischtennis`
 
 ### A) Fußball-Sync
-- Endpoint: `app/api/cron/sync-fussball/route.ts`
+
+- Endpunkt: `app/api/cron/sync-fussball/route.ts`
 - Externe Quelle: `lib/fussball-de.ts`
-  - Ruft AJAX-Endpunkte von fussball.de ab (`next.games`, `prev.games`)
-  - Parsed HTML via Regex/Heuristik in `FussballSpiel`
-- Transformation:
+  - ruft die AJAX-Endpunkte von fussball.de ab (`next.games`, `prev.games`)
+  - parst das HTML per Regex/Heuristik in `FussballSpiel`
+- Umwandlung:
   - Dedup nach Spiel-ID
-  - Mapping `FussballSpiel -> termin`
-  - `_id = fussball-de-<spielId>`
-  - Upsert via `transaction.createOrReplace(...)`
+  - Abbildung `FussballSpiel → termine` mit `quelle = fussball-de` und `externe_id` = Spiel-ID
+  - Upsert über den eindeutigen Schlüssel (`quelle`, `externe_id`)
 - Aufräumen: Termine, die fussball.de nicht mehr listet (verlegt/abgesagt), werden gelöscht.
   Weil die Endpunkte nur je zehn Spiele liefern, gilt das ausschließlich für den Bereich
-  *zwischen* ältestem vergangenen und jüngstem kommenden Spieltag – beide Randtage sind
-  durch die Kappung angeschnitten und bleiben ausgenommen.
-- Ziel in Sanity: Dokumenttyp `termin`
+  *zwischen* ältestem vergangenen und jüngstem kommenden Spieltag. Beide Randtage sind durch die
+  Kappung angeschnitten und bleiben ausgenommen.
 
 ### B) Tischtennis-Sync
-- Endpoint: `app/api/cron/sync-tischtennis/route.ts`
+
+- Endpunkt: `app/api/cron/sync-tischtennis/route.ts`
 - Externe Quelle: `lib/click-tt.ts`
   - POST auf click-tt/nuLiga (`clubMeetings`), HTML-Parsing
-  - saisonweite + vergangene Spiele kombiniert, dedupliziert
-- Transformation:
-  - Mapping `TischtennisSpiel -> termin`
-  - `_id = click-tt-<spielId>`
-  - Upsert via `transaction.createOrReplace(...)`
-- Aufräumen: Termine, die click-tt nicht mehr listet, werden gelöscht – begrenzt auf den
-  Bereich zwischen erstem und letztem gelieferten Spieltag. Die Abfrage deckt nur kommende
-  sechs Monate plus letzte sieben Tage ab; ältere Spiele (Vorsaison) liegen außerhalb und
-  bleiben erhalten.
-- Ziel in Sanity: Dokumenttyp `termin`
+  - Spiele der kommenden sechs Monate und der letzten sieben Tage kombiniert, dedupliziert
+    (nicht die ganze Saison)
+- Umwandlung: `TischtennisSpiel → termine` mit `quelle = click-tt`, Upsert wie oben
+- Aufräumen: Termine, die click-tt nicht mehr listet, werden gelöscht, begrenzt auf den Bereich
+  zwischen erstem und letztem gelieferten Spieltag. Die Abfrage deckt nur die kommenden sechs
+  Monate plus die letzten sieben Tage ab. Ältere Spiele (Vorsaison) liegen außerhalb und bleiben
+  erhalten.
 
-### Sicherheit / Betrieb
-- Beide Cron-Endpoints prüfen `Authorization: Bearer <CRON_SECRET>` (falls gesetzt).
-- Schreibzugriff über `SANITY_API_WRITE_TOKEN`.
+### Gemeinsame Regeln
 
-## 2.2 API/Scraper-Charakter
-- **fussball.de** und **click-tt** sind HTML-/AJAX-basierte Scrapes, keine stabile offiziell versionierte JSON-API im Code.
-- Parsing ist regex-/strukturabhängig (`lib/fussball-de.ts`, `lib/click-tt.ts`).
+- **Notbremse**: Würde mehr als die Hälfte der Termine im Löschfenster gelöscht, löscht der Lauf
+  gar nichts und meldet `loeschenUebersprungen: true`. Das schützt vor einem kaputten Parser
+  oder einem geänderten ID-Schema.
+- **Manuelle Termine** (`quelle = manuell`) fassen die Cronjobs nie an.
+- **Synchronisierte Termine** werden bei jedem Lauf neu geschrieben (Titel, Datum, Uhrzeit, Ort,
+  Beschreibung, Bereich, Tags und Sparte – die mit dem Slug `fussball` bzw. `tischtennis`). Von
+  Hand geänderte Werte in diesen Feldern gehen dabei verloren.
+- **Absicherung**: Beide Endpunkte prüfen `Authorization: Bearer <CRON_SECRET>`, sofern
+  `CRON_SECRET` gesetzt ist. Ein Sanity-Token wird nicht mehr gebraucht.
 
----
+## 2.2 Scraper-Charakter
 
-## 3) Import-/Migrationsprozesse
+- fussball.de und click-tt werden über HTML- bzw. AJAX-Antworten ausgelesen, nicht über eine
+  versionierte JSON-API.
+- Das Parsing hängt an Regex und Seitenstruktur (`lib/fussball-de.ts`, `lib/click-tt.ts`).
 
-## 3.0 Zentrale CRUD-Normalisierung im Sanity Studio
-- Script: `scripts/migrate-to-central-crud-models.mjs`
-- Ziel: Migration in echte zentrale CRUD-Dokumenttypen für `person`, `sparte`, `mannschaft`, `trainingszeit`, `termin` und `newsPost`.
-- Quelle:
-  - `sparte.mannschaften[]` für zentrale `mannschaft`-Dokumente,
-  - eingebettete Trainer/Ansprechpartner und globale `ansprechpartner` für zentrale `person`-Dokumente,
-  - eindeutige `trainingszeit.sparte + trainingszeit.gruppe`-Matches für `trainingszeit.mannschaft`.
-- Sicherheitsregeln:
-  - Dry-Run standardmäßig; Apply nur mit `--apply`.
-  - Kein hardcodiertes Secret; `SANITY_API_WRITE_TOKEN` nur aus `process.env` und im Apply-Modus zwingend.
-  - Keine Legacy-Felder und kein `sparte.mannschaften[]` werden gelöscht.
-  - Keine Mannschaften werden nur aus `trainingszeit.gruppe` erzeugt.
-  - Bestehende Inhalte werden nicht überschrieben, außer fehlende Referenzen/Felder werden gezielt gesetzt.
-- Output im Dry-Run: Zählwerte zu Sparten, eingebetteten/geplanten/vorhandenen Mannschaften, geplanten/vorhandenen Personen, Trainingszeit-Matches, kaputten Referenzen, unsicheren Matches und potenziellen Duplikaten.
+## 2.3 Spielplanseiten (ohne Datenbank)
 
-## 3.1 Legacy JSON + MDX → Sanity (Initialmigration)
-- Script: `scripts/migrate-to-sanity.mjs`
-- Eingang:
-  - `content/*.json` (sparten, termine, trainingszeiten, ansprechpartner, downloads, partner)
-  - `content/news/*.mdx`
-- Transformation:
-  - IDs via `makeId(...)`
-  - MDX Frontmatter + Textblöcke → `newsPost` Portable-Text-Blöcke (vereinfacht)
-  - Downloads initial als `dateiUrl`-Fallback
-- Ziel:
-  - `sparte`, `termin`, `trainingszeit`, `ansprechpartner`, `download`, `partner`, `newsPost`
-- Charakter:
-  - klar als **einmalige Initialmigration** dokumentiert.
-
-## 3.2 Excel → JSON → Trainingszeiten-Korrektur
-- Excel-Extraktion: `scripts/read-excel.py`
-  - Quelle: lokale Datei `C:/Users/jarig/Desktop/Trainingszeiten angepasst.xlsx`
-  - Ziel: `scripts/trainingszeiten-with-times.json`
-- Weiterverarbeitung/Abgleich:
-  - `scripts/sync-trainingszeiten-from-json.mjs` (Dry-Run/`--apply`, Matching-Logik mit Scores)
-  - `scripts/patch-trainingszeiten-uhrzeiten.mjs` (direkter Patch nach Feld-Match)
-  - `scripts/patch-uhrzeiten-final.mjs` (harte ID-basierte Korrekturen + Neuanlagen)
-
-## 3.3 PDFs → Sanity Assets + Dokumentverknüpfung
-- Script: `scripts/upload-pdfs-to-sanity.mjs`
-- Eingang: `public/pdfs/*.pdf` (explizites Mapping `docId -> localFile`)
-- Transformation:
-  - Upload als Sanity File Asset
-  - Patch `download.datei` mit Asset-Ref
-- Ziel: bestehende `download`-Dokumente
-
-## 3.4 Legacy-Content Charakter
-- README beschreibt noch dateibasiertes `content/`-Pflegebild, produktiv ist aber Sanity-first (`lib/content.ts`: „alle Inhalte kommen aus Sanity CMS“).
+- `/fussball` und `/tischtennis` laden Spiele direkt bei der Quelle (`revalidate = 3600`).
+- Dieselben Spiele stehen nach dem nächtlichen Lauf zusätzlich in `termine` und erscheinen auf
+  `/termine` und der Startseite.
 
 ---
 
-## 4) Patch-/Korrekturprozesse (Klassifikation)
+## 3) Einmalige Übernahme aus Sanity (erledigt am 03.10.2026)
 
-## 4.1 Einmalaktionen / kampagnenartige Skripte
-- `scripts/migrate-to-sanity.mjs` – Initialmigration.
-- `scripts/patch-fussball.mjs` – punktuelle Nachpflege Fußball (Kontakt + 2 Bilder).
-- `scripts/patch-akrobatik-bilder.mjs` – spezifische Bild-/Textzuordnung Akrobatik.
-- `scripts/patch-tischtennis-mannschaften.mjs` – spezifisches Ergänzen + Bilder für TT-Jugendteams.
-- `scripts/patch-uhrzeiten-final.mjs` – große, konkrete ID-Liste inkl. Neuanlagen.
-- `scripts/create-news-schiris-2026.mjs` – einmalige News-Erstellung.
-- `scripts/create-news-ostern-2026.mjs` – einmalige News-Erstellung.
+## 3.1 Export
 
-## 4.2 Wiederholt nutzbare operative Skripte
-- `scripts/sync-trainingszeiten-from-json.mjs` – wiederholbarer Diff-/Patch-Prozess mit Dry-Run.
-- `scripts/patch-trainingszeiten-uhrzeiten.mjs` – wiederholbares Match-basiertes Setzen von `uhrzeit`.
-- `scripts/upload-pdfs-to-sanity.mjs` – wiederholbar, sofern Mapping gepflegt wird.
-- `scripts/dump-sanity-tz.mjs` – Analyse/Export, read-oriented.
-- `scripts/read-excel.py` – wiederholbarer Extraktionsschritt (bei neuer Excel-Version).
+- Skript: `scripts/sanity-export.mjs` (`npm run export:sanity`). Es nutzt kein Sanity-Paket, nur
+  `fetch`.
+- Benötigt `NEXT_PUBLIC_SANITY_PROJECT_ID` und `SANITY_API_READ_TOKEN` (oder
+  `SANITY_API_WRITE_TOKEN`) in `.env.local`.
+- Ergebnis in `data/import/` (nicht im Git):
+  - `sanity-export.json` mit `dokumente` (alle veröffentlichten Dokumente, roh), `entwuerfe`
+    (offene Entwürfe) und `assets` (Metadaten inkl. `lokaleDatei`)
+  - `assets/` mit allen referenzierten Bildern und Dateien
+- Umfang beim Export am 03.10.2026: 15 Sparten, 49 Mannschafts-Dokumente, 51 Personen,
+  93 Trainingszeiten, 16 Kontaktseiten-Einträge, 4 News, 177 Termine, 5 Downloads, 4 Partner;
+  32 Assets (27 Bilder, 5 Dateien, ca. 17 MB); 2 offene Entwürfe.
 
-## 4.3 Regelmäßig automatisiert
-- Nur die beiden Cron-APIs (`sync-fussball`, `sync-tischtennis`) sind eindeutig als regelmäßige Automation konfiguriert.
+## 3.2 Import
+
+- Skript: `scripts/import-aus-sanity.ts` (`npm run import:sanity`). Arbeitet nur mit dem Export,
+  ohne Netzwerk und ohne Sanity-Paket.
+- Ablauf:
+  1. Export lesen und den ganzen Import im Speicher planen und prüfen, bevor etwas gelöscht wird.
+  2. `data/svhs.db` und den **Medienordner löschen**, Datenbank neu anlegen.
+  3. Alle Zeilen in **einer Transaktion** einfügen.
+  4. Bilder und Dateien in den Medienordner kopieren.
+  5. Bericht nach `data/import/import-bericht.md` schreiben (Zuordnungen, Auffälligkeiten).
+  Schlägt Schritt 3 oder 4 fehl, werden Datenbank und Medienordner wieder entfernt.
+- Grundlage sind die veröffentlichten Dokumente. Offene Entwürfe von Sparten werden nur für die
+  Kontaktdaten mit ausgewertet; andere Entwürfe nennt der Bericht, übernommen werden sie nicht.
+- Wesentliche Umwandlungen (Übersicht in `DATA_MODEL.md`, Abschnitt 10):
+  - Sanity-`mannschaft` → `mannschaften` (Fußball-Teams, Tischtennis-Ligateams) oder `gruppen`
+    (alles andere, inkl. Fußball-Torwarttraining und Tischtennis-Trainingsgruppe)
+  - Uhrzeit-Text → `beginn`/`ende`; Klammerzusatz am Ort → `hinweis`
+  - `ansprechpartner` → `funktionen`, Abteilungsleitungen zusätzlich → `sparte_ansprechpartner`
+  - News-Text: Portable Text → Markdown
+  - Termine: `fussballDeId` bzw. `clickTtId` → `quelle` + `externe_id`
+  - Partner entfallen
+
+> **Achtung:** `npm run import:sanity` **löscht und ersetzt Datenbank und Medienordner**. Seit die
+> Pflege in SQLite läuft, gingen dabei alle späteren Änderungen verloren. Den Import nur noch
+> für eine frische Entwicklungsumgebung nutzen, nie auf dem Server mit Live-Daten.
+
+## 3.3 Danach
+
+- Sanity wird nicht mehr gebraucht: `/studio`, das Studio-Handbuch, die Sanity-Pakete und die
+  alten Patch- und Migrationsskripte sind entfernt.
+- Im Sanity-Projekt alle Tokens widerrufen und das Projekt nach dem Umzug löschen (siehe
+  `OPERATIONS.md`, Abschnitt 8.1).
 
 ---
 
-## 5) Risiken
+## 4) Risiken
 
-## 5.1 Potenzielle Datenverluste / Überschreiben
-- **Cron-Upserts überschreiben Termin-Dokumente deterministisch** (`createOrReplace` mit fixer `_id`).
-  - Manuelle Änderungen an solchen Terminen können beim nächsten Sync verloren gehen.
-- **Patch-Skripte mit `createOrReplace`/direkten `patch`** können Inhalte überschreiben, wenn ID/Mapping falsch ist.
+## 4.1 Datenverlust / Überschreiben
 
-## 5.2 Kritische Upstream-Abhängigkeiten
-- **HTML-Strukturänderungen bei fussball.de / click-tt** können Parser brechen (`lib/fussball-de.ts`, `lib/click-tt.ts`).
-- IDs werden aus geparsten Strings erzeugt; Struktur-/Textänderungen können neue IDs erzeugen (Duplikatrisiko statt Update).
+- **`npm run import:sanity`** ersetzt Datenbank und Medienordner durch den Stand vom 03.10.2026.
+- **Drizzle Studio** hat kein Rückgängig. Löschen wirkt sofort und teils kaskadierend:
+  - Eine Person löschen entfernt sie aus allen Trainerteams, Sparten und Funktionen.
+  - Eine Mannschaft oder Gruppe löschen löscht ihre Trainingszeiten.
+- **Cron-Upserts** überschreiben Handänderungen an synchronisierten Terminen.
+- Gegenmittel: nächtliche Backups von Datenbank und Medienordner (`OPERATIONS.md`, Abschnitt 4),
+  Ausblenden statt Löschen.
 
-## 5.3 Inkonsistenzrisiken im Modell
-- Mischmodell aus Referenzen und Legacy-Fallback in `trainingszeit` (`sanity/schemas/trainingszeit.ts`, `sanity/lib/queries.ts` mit `coalesce`).
-- Doppelpflege-Pfade:
-  - `sparte.mannschaften[]` (embedded) vs. eigener Typ `mannschaft`
-  - `sparte.ansprechpartner[]` (embedded) vs. eigener Typ `ansprechpartner`/`person`
-  - `sparte.downloads[]` (embedded) vs. eigener Typ `download`
-- Stringbasierte Sparte in `termin`/`newsPost` statt Referenz → keine referentielle Integrität bei Umbenennungen.
-- Frontend-Matching-Heuristik in `app/sparten/[slug]/page.tsx` (Keyword-Match Gruppe↔Mannschaft) kann falsch zuordnen.
+## 4.2 Kritische Upstream-Abhängigkeiten
 
-## 5.4 Betriebs-/Security-Risiken
-- Mehrere Scripts enthalten Hardcoded-Token-Fallbacks (z. B. `patch-fussball.mjs`, `patch-akrobatik-bilder.mjs`, `patch-tischtennis-mannschaften.mjs`) → hohes Secret-Leak-Risiko.
-- Einige Importpfade sind lokal/hart kodiert (`read-excel.py` Desktop-Pfad) → geringe Portabilität, hoher Bedienfehlerfaktor.
+- **HTML-Änderungen bei fussball.de oder click-tt** können die Parser brechen
+  (`lib/fussball-de.ts`, `lib/click-tt.ts`).
+- Ändert sich die Spiel-ID einer Quelle, entstehen neue Zeilen statt Updates (Duplikatrisiko). Die
+  Notbremse verhindert dann das Leerräumen des Kalenders, alte Einträge bleiben aber stehen.
+
+## 4.3 Konsistenzrisiken
+
+- Die Datenbank prüft nicht, ob Mannschaft und Gruppe einer Trainingszeit (oder Sparte und
+  Mannschaft einer News) zur selben Sparte gehören (`DATA_MODEL.md`, Abschnitt 5.4).
+- **Medienpfade** können ins Leere zeigen, wenn eine Datei fehlt oder falsch benannt ist.
+  Ungenutzte Dateien im Medienordner räumt niemand automatisch auf.
+- **Freitextfelder** (`trainingszeiten.ort`, `news.kategorie`, `termine.bereich`) können in
+  Schreibvarianten auseinanderlaufen.
+
+## 4.4 Betriebs- und Datenschutzrisiken
+
+- Datenbank und Medien liegen auf **einem** Server. Ohne Backup außer Haus ist ein Server-Ausfall
+  ein Datenverlust.
+- `data/` enthält personenbezogene Daten und darf **nie** ins öffentliche Git-Repo.
+- Ohne gesetztes `CRON_SECRET` sind die Cron-Endpunkte für alle aufrufbar.
 
 ---
 
-## 6) Detailfluss: Termine-Automation
+## 5) Detailfluss: Termine-Automation
 
 ```mermaid
 flowchart TD
-  V[vercel.json crons] --> F[/api/cron/sync-fussball]
-  V --> T[/api/cron/sync-tischtennis]
-  F --> F1[lib/fussball-de.ts: fetch + parse HTML]
-  T --> T1[lib/click-tt.ts: POST + parse HTML]
-  F1 --> M1[Mapping auf termin-Dokument]
-  T1 --> M2[Mapping auf termin-Dokument]
-  M1 --> S[(Sanity: _type=termin)]
-  M2 --> S
-  S --> Q[sanity/lib/queries.ts termineQuery]
-  Q --> FE[app/termine/* Frontend]
+  CR["crontab: 04:00 und 05:00"] --> F["/api/cron/sync-fussball"]
+  CR --> T["/api/cron/sync-tischtennis"]
+  F --> F1["lib/fussball-de.ts: fetch + HTML parsen"]
+  T --> T1["lib/click-tt.ts: POST + HTML parsen"]
+  F1 --> M1["Abbildung auf termine<br/>quelle = fussball-de"]
+  T1 --> M2["Abbildung auf termine<br/>quelle = click-tt"]
+  M1 --> U["Upsert über (quelle, externe_id)<br/>+ Löschfenster mit Notbremse"]
+  M2 --> U
+  U --> DB[("SQLite: termine")]
+  DB --> C["lib/content.ts: getTermine()"]
+  C --> FE["/termine und Startseite"]
 ```
 
 ---
 
-## 7) Relevante Dateien (Index)
+## 6) Relevante Dateien (Index)
 
-- **Datenzugriff Frontend**: `lib/content.ts`, `sanity/lib/queries.ts`
-- **Cron-Automation**: `vercel.json`, `app/api/cron/sync-fussball/route.ts`, `app/api/cron/sync-tischtennis/route.ts`
+- **Datenbank**: `lib/db/schema.ts`, `lib/db/index.ts`, `drizzle/`, `drizzle.config.ts`
+- **Datenzugriff Frontend**: `lib/content.ts`
+- **Medien**: `lib/medien.ts`, `app/medien/[...pfad]/route.ts`
+- **Cron-Automation**: `app/api/cron/sync-fussball/route.ts`, `app/api/cron/sync-tischtennis/route.ts`,
+  crontab auf dem Server (`OPERATIONS.md`)
 - **Externe Parser/Scraper**: `lib/fussball-de.ts`, `lib/click-tt.ts`
-- **Migration/Import/Patches**: 
-  - `scripts/migrate-to-sanity.mjs`
-  - `scripts/read-excel.py`
-  - `scripts/trainingszeiten-with-times.json`
-  - `scripts/sync-trainingszeiten-from-json.mjs`
-  - `scripts/patch-trainingszeiten-uhrzeiten.mjs`
-  - `scripts/patch-uhrzeiten-final.mjs`
-  - `scripts/upload-pdfs-to-sanity.mjs`
-  - `scripts/patch-fussball.mjs`
-  - `scripts/patch-akrobatik-bilder.mjs`
-  - `scripts/patch-tischtennis-mannschaften.mjs`
-  - `scripts/create-news-schiris-2026.mjs`
-  - `scripts/create-news-ostern-2026.mjs`
-- **Schema-/Studio-Modellierung**: `sanity.config.ts`, `sanity/schemas/*.ts`
+- **Übernahme aus Sanity**: `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`
+- **Pflege**: Drizzle Studio (`npm run db:studio`), später `/verwaltung`
 
 ---
 
-## 8) Fazit
+## 7) Fazit
 
-Das Projekt ist operativ **Sanity-zentriert**, mit zwei klaren, regelmäßigen externen Syncs (Fußball/Tischtennis) und mehreren historischen bzw. kampagnenartigen Import-/Patch-Skripten. Die größten Risiken liegen in:
+Die Website hat jetzt **eine** Datenquelle: die SQLite-Datei. Von Hand gepflegte Inhalte und
+synchronisierte Spiele landen in denselben Tabellen, und die Seiten zeigen Änderungen sofort an.
+Die größten Risiken liegen in:
 
-1. **Scraper-Fragilität** gegenüber Upstream-HTML-Änderungen,  
-2. **Mischmodell aus Legacy + Referenzdaten**,  
-3. **überschreibenden Upserts** bei automatisierten Terminflüssen,  
-4. **harten Mappings/IDs/Secrets** in Einmal-Skripten.
+1. **fehlendem Verlauf und Rückgängig**, solange per Drizzle Studio gepflegt wird (→ Backups),
+2. **Scraper-Fragilität** gegenüber HTML-Änderungen bei fussball.de und click-tt,
+3. **dem Import-Skript**, das bei versehentlichem Aufruf alle Änderungen seit dem 03.10.2026 verwirft,
+4. **dem Betrieb auf einem einzelnen Server** (→ Backups außer Haus).

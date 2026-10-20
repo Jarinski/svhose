@@ -4,18 +4,7 @@ import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { MapPin, Clock, Tag, X } from 'lucide-react'
-
-interface Termin {
-  id: string
-  titel: string
-  datum: string
-  uhrzeit: string
-  ort: string
-  sparte: string
-  beschreibung: string
-  bild?: string
-  tags?: string[]
-}
+import type { Termin } from '@/lib/content'
 
 const FUSSBALL_DE_URL_REGEX = /https:\/\/www\.fussball\.de\/spiel\/\S+/i
 
