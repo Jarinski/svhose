@@ -1,0 +1,158 @@
+/* Footer Design A – dunkel mit Outline-Schriftzug */
+
+.footer {
+  border-top: 1px solid var(--a-line);
+  /* Unten Platz für den Umschalter der Design-Vorschau */
+  padding: 72px 0 110px;
+  margin-top: 56px;
+  overflow: hidden;
+  background: var(--a-bg);
+  color: var(--a-text);
+}
+
+/* Großer Schriftzug passt sich der Breite an */
+.innen {
+  container-type: inline-size;
+}
+
+.foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 40px;
+}
+
+.titel {
+  font-size: 12px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--a-muted);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.foot ul {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--a-soft);
+}
+
+.foot ul a {
+  overflow-wrap: anywhere;
+  transition: color .15s;
+}
+
+.foot a:hover {
+  color: var(--a-text);
+}
+
+.foot p {
+  color: var(--a-muted);
+  font-size: 14px;
+  max-width: 320px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.brand img {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.brand b {
+  display: block;
+  font-stretch: 72%;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.brand small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--a-soft);
+  margin-top: 3px;
+}
+
+.legal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--a-line);
+  font-size: 13px;
+  color: var(--a-muted);
+  flex-wrap: wrap;
+}
+
+.siegel {
+  display: block;
+  border-radius: 6px;
+}
+
+.siegel img {
+  display: block;
+  width: 120px;
+  height: auto;
+  border-radius: 6px;
+}
+
+.rechtliches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+
+.rechtliches a,
+.rechtliches button {
+  color: var(--a-muted);
+  transition: color .15s;
+}
+
+.rechtliches a:hover,
+.rechtliches button:hover {
+  color: var(--a-text);
+}
+
+.mark {
+  margin-top: 56px;
+  font-stretch: 62%;
+  font-weight: 800;
+  font-size: 13vw;
+  font-size: 15cqi;
+  line-height: .8;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  text-align: center;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .16);
+  user-select: none;
+}
+
+@media (max-width: 1100px) {
+  .foot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .foot { grid-template-columns: minmax(0, 1fr); }
+  .footer { padding-top: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foot ul a,
+  .rechtliches a,
+  .rechtliches button { transition: none; }
+}

@@ -1,8 +1,14 @@
 import type { Metadata } from 'next'
 import { Bebas_Neue, DM_Sans } from 'next/font/google'
 import './globals.css'
+import './vorschau.css'
+import './vorschau-a.css'
+import './vorschau-b.css'
 import SiteChrome from '@/components/SiteChrome'
 import Footer from '@/components/Footer'
+import FooterA from '@/components/vorschau/a/FooterA'
+import FooterB from '@/components/vorschau/b/FooterB'
+import { designSkript } from '@/lib/vorschau'
 
 /**
  * Öffentliche Adresse der Website aus SEITEN_URL (z. B. https://www.<vereinsdomain>.de).
@@ -50,9 +56,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="de" className={`${bebasNeue.variable} ${dmSans.variable}`}>
+    // suppressHydrationWarning: data-design setzt das Vorschau-Skript schon vor React (lib/vorschau.ts)
+    <html lang="de" className={`${bebasNeue.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: designSkript() }} />
+      </head>
       <body>
-        <SiteChrome footer={<Footer />}>{children}</SiteChrome>
+        <SiteChrome footer={<Footer />} vorschauFooter={{ a: <FooterA />, b: <FooterB /> }}>
+          {children}
+        </SiteChrome>
       </body>
     </html>
   )

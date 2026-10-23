@@ -303,6 +303,16 @@ export async function getSparten(): Promise<SparteUebersicht[]> {
   return sparten.sort(nachReihenfolgeUndName).map(sparteUebersicht)
 }
 
+/** Anzahl sichtbarer Mannschaften in sichtbaren Sparten (für Kennzahlen auf der Startseite). */
+export async function getMannschaftenAnzahl(): Promise<number> {
+  const mannschaften = await datenbank().query.mannschaften.findMany({
+    columns: { id: true },
+    where: (m, { eq }) => eq(m.sichtbar, true),
+    with: { sparte: { columns: { sichtbar: true } } },
+  })
+  return mannschaften.filter(m => m.sparte.sichtbar).length
+}
+
 export async function getSpartenSlugs(): Promise<{ slug: string }[]> {
   const sparten = await datenbank().query.sparten.findMany({
     columns: { slug: true, name: true, reihenfolge: true },

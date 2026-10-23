@@ -1,10 +1,14 @@
 import Link from 'next/link'
-import { getAllNews, getTermine, getSparten } from '@/lib/content'
+import { getAllNews, getTermine, getSparten, getMannschaftenAnzahl } from '@/lib/content'
 import { ArrowRight, MapPin } from 'lucide-react'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import HeroBanner from '@/components/HeroBanner'
 import NewsThumbnail from '@/components/NewsThumbnail'
+import StartseiteA from '@/components/vorschau/a/StartseiteA'
+import StartseiteB from '@/components/vorschau/b/StartseiteB'
+import { heuteInBerlin } from '@/lib/vorschau'
+import { vorschauDesign } from '@/lib/vorschau-server'
 
 // Liest bei jedem Aufruf direkt aus der Datenbank – neue News und Termine sind sofort sichtbar.
 export const dynamic = 'force-dynamic'
@@ -15,11 +19,26 @@ function uhrzeitLabel(uhrzeit: string) {
 }
 
 export default async function HomePage() {
-  const [newsAll, termine, sparten] = await Promise.all([
+  const [newsAll, termine, sparten, design] = await Promise.all([
     getAllNews(),
     getTermine(),
     getSparten(),
+    vorschauDesign(),
   ])
+
+  // Design-Vorschau (lib/vorschau.ts): eigene Startseite für Design A bzw. B
+  if (design) {
+    const heute = heuteInBerlin()
+    const daten = {
+      news: newsAll,
+      termine: termine.filter(t => t.datum >= heute),
+      sparten,
+      zahlen: { sparten: sparten.length, mannschaften: await getMannschaftenAnzahl() },
+      heute,
+    }
+    return design === 'a' ? <StartseiteA daten={daten} /> : <StartseiteB daten={daten} />
+  }
+
   const news = newsAll.slice(0, 3)
   const heuteStr = new Date().toISOString().slice(0, 10)
   const termineSliced = termine.filter(t => t.datum >= heuteStr).slice(0, 3)
