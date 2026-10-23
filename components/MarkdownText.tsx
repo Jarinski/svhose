@@ -57,28 +57,56 @@ export const MARKDOWN_ELEMENTE: Components = {
   ),
   pre: ({ children }) => <pre className="mb-6 overflow-x-auto bg-[#e9e9e2] p-4 rounded-sm text-sm">{children}</pre>,
   hr: () => <hr className="my-12 border-0 h-px bg-[#0a0a0a]/10" />,
-  // Bilder im Text liegen im Medienordner (/medien/…) – normales <img>, volle Breite, Höhe nach Proportion.
+  // Bilder im Text liegen im Medienordner (/medien/…) – normales <img>, zentriert, höchstens so breit
+  // wie der Text und nie größer als die Datei selbst; Hochformate höchstens drei Viertel der Fensterhöhe.
   img: ({ src, alt }) =>
     src ? (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt={alt ?? ''} loading="lazy" className="block w-full h-auto rounded-sm my-2" />
+      <img
+        src={src}
+        alt={alt ?? ''}
+        loading="lazy"
+        className="block w-auto max-w-full h-auto max-h-[75vh] mx-auto rounded-sm my-2"
+      />
     ) : null,
 }
 
 /**
  * Macht eingefügte Adressen klickbar: Ohne GFM-Erweiterung verlinkt Markdown nur "<https://…>".
  * Nackte http(s)-Adressen bekommen deshalb spitze Klammern – außer sie stehen schon in einem
- * Link ("[Text](https://…)", "<https://…>") oder in Code (`…` bzw. ```…```).
+ * Link ("[Text](https://…)", auch als Linktext, oder "<https://…>") oder in Code (`…` bzw. ```…```).
+ * Sternchen oder Unterstriche direkt am Ende gehören zur Hervorhebung, nicht zur Adresse ("**https://…**").
  */
 export function linksErgaenzen(text: string): string {
   return text
-    .split(/(```[\s\S]*?```|`[^`\n]*`)/)
+    .split(/(```[\s\S]*?```|`[^`\n]*`|!?\[[^\]\n]*\]\([^)\n]*\)|<https?:\/\/[^>\s]*>)/)
     .map((teil, i) =>
       i % 2 === 1
         ? teil
-        : teil.replace(/(^|[^(<[\]"'=/\w])(https?:\/\/[^\s<>()[\]]*[^\s<>()[\].,;:!?"'])/g, '$1<$2>'),
+        : teil.replace(/(^|[^(<[\]"'=/\w])(https?:\/\/[^\s<>()[\]]*[^\s<>()[\].,;:!?"'*_])/g, '$1<$2>'),
     )
     .join('')
+}
+
+/** Text ohne Markdown, Satzzeichen und Akzente – nur zum Vergleichen. */
+function vergleichstext(markdown: string): string {
+  return markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9ß]+/g, '')
+}
+
+/**
+ * Wiederholt der Teaser nur den Anfang des Textes (etwa bei übernommenen News)? Dann zeigt die
+ * Detailseite ihn nicht zusätzlich als Einleitung, sonst stünde derselbe Text zweimal untereinander.
+ */
+export function teaserWiederholtText(teaser: string, markdown: string): boolean {
+  const kurz = vergleichstext(teaser.replace(/\s*…\s*$/, ''))
+  if (!kurz) return false
+  return vergleichstext(markdown).slice(0, kurz.length + 400).includes(kurz)
 }
 
 /** Markdown-Fließtext mit den Stilen der Website. */

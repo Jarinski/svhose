@@ -105,6 +105,8 @@ Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter h
   `DATENBANK_PFAD=/var/lib/svhs/svhs.db MEDIEN_PFAD=/var/lib/svhs/medien npm run import:sanity`.
   Sonst baut der Import `./data/svhs.db` und `./data/medien` auf, während die Website den
   konfigurierten Pfad liest.
+- `npm run import:wordpress` (tsx) liest ebenfalls **keine** Env-Datei. Auf dem Server deshalb
+  `DATENBANK_PFAD=… MEDIEN_PFAD=… npm run import:wordpress` aufrufen.
 - `npm run verwaltung:admin` (tsx) liest ebenfalls **keine** Env-Datei. `SEITEN_URL` und einen
   abweichenden `DATENBANK_PFAD` deshalb beim Aufruf mitgeben (Abschnitt 9.1). Sonst landet der
   Admin-Zugang in `./data/svhs.db`, und der Link im QR-Code zeigt auf `http://localhost:3000`.
@@ -686,7 +688,7 @@ SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname N
 
 ## Anhang: Relevante Betriebsdateien
 
-- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`, `verwaltung:admin`)
+- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`, `import:wordpress`, `verwaltung:admin`)
 - `next.config.js` (externe Pakete `better-sqlite3` und `sharp`, Upload-Grenze der Server-Aktionen)
 - `drizzle.config.ts`, `drizzle/`
 - `lib/db/index.ts`, `lib/db/schema.ts`

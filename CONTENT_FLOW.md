@@ -246,7 +246,20 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 > `npm run import:sanity -- --alles-ueberschreiben` läuft er dann trotzdem und verwirft alles,
 > auch Zugänge, Verlauf und hochgeladene Medien.
 
-## 3.3 Danach
+## 3.3 News von der alten WordPress-Seite
+
+- Skript: `scripts/import-wordpress-news.ts` (`npm run import:wordpress`). Liest die Beiträge über die
+  öffentliche WordPress-Schnittstelle von www.sv-holm-seppensen.de (`/wp-json/wp/v2/posts`).
+- Ergänzt nur: Vorhandene News (gleiche Überschrift oder ein gemeinsamer längerer Satz) werden
+  übersprungen, nichts wird geändert oder gelöscht. Erneut ausführen holt nur neue Beiträge.
+- Umwandlung: HTML → Markdown; Titelbild und Bilder im Text werden wie ein Upload gespeichert (WebP,
+  höchstens 1600 px). Sport-Kategorien werden zur Sparte, sonst Vereins-News. Die News sind sofort
+  veröffentlicht und stehen im Verlauf als „angelegt“ mit Quelle System.
+- Erst übernommen am 23.10.2026: alle Beiträge seit 01.01.2026 (27 neue; 3 waren schon da).
+- `-- --probelauf` schreibt nichts, sondern legt die umgewandelten Texte zur Kontrolle unter
+  `data/import/wordpress-probelauf/` ab.
+
+## 3.4 Danach
 
 - Sanity wird nicht mehr gebraucht: `/studio`, das Studio-Handbuch, die Sanity-Pakete und die
   alten Patch- und Migrationsskripte sind entfernt.

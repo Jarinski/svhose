@@ -647,7 +647,7 @@ einlösen.
 | `zeitpunkt` | text | ja | jetzt | Zeitpunkt der Änderung |
 | `zugang_id` | integer | nein | – | → `zugaenge.id`; leer bei Änderungen durch das System (Skript) |
 | `zugang_name` | text | nein | – | Name zum Zeitpunkt der Änderung; bleibt lesbar, auch wenn der Zugang gelöscht wird |
-| `quelle` | text | ja | `verwaltung` | Werteliste `VERLAUF_QUELLEN`; heute genutzt: `verwaltung` und `system` (`npm run verwaltung:admin`) |
+| `quelle` | text | ja | `verwaltung` | Werteliste `VERLAUF_QUELLEN`; heute genutzt: `verwaltung` und `system` (`npm run verwaltung:admin`, `npm run import:wordpress`) |
 | `aktion` | text | ja | – | Werteliste `VERLAUF_AKTIONEN` |
 | `objekt_typ` | text | ja | – | Tabellenname, z. B. `mannschaften`, `personen`, `zugaenge` oder `geraete` (An- und Abmeldungen) |
 | `objekt_id` | integer | nein | – | ID des Datensatzes, **ohne** Fremdschlüssel (der Eintrag bleibt nach dem Löschen stehen) |

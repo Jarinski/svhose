@@ -5,7 +5,7 @@ import { de } from 'date-fns/locale'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
-import MarkdownText from '@/components/MarkdownText'
+import MarkdownText, { teaserWiederholtText } from '@/components/MarkdownText'
 import type { Metadata } from 'next'
 
 // Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen erscheinen sofort
@@ -61,7 +61,9 @@ export default async function NewsDetailPage(props: { params: Promise<{ slug: st
       <div className="w-16 h-px bg-[#0a0a0a] mb-12" />
 
       <div className="text-[#0a0a0a] leading-relaxed">
-        {post.excerpt && <p className="text-lg text-[#6b6b6b] font-light mb-8">{post.excerpt}</p>}
+        {post.excerpt && !teaserWiederholtText(post.excerpt, post.body) && (
+          <p className="text-lg text-[#6b6b6b] font-light mb-8">{post.excerpt}</p>
+        )}
 
         {/* Fließtext ist Markdown; rohes HTML im Text wird nicht gerendert */}
         {post.body.trim() && <MarkdownText text={post.body} />}

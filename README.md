@@ -71,6 +71,7 @@ sv-holm-seppensen/
 ├── scripts/
 │   ├── sanity-export.mjs       ← einmaliger Export aus Sanity
 │   ├── import-aus-sanity.ts    ← baut die Datenbank aus dem Export auf
+│   ├── import-wordpress-news.ts ← News von der alten WordPress-Seite übernehmen (npm run import:wordpress)
 │   └── verwaltung-admin.ts     ← ersten Admin anlegen bzw. Notfall-Zugang (npm run verwaltung:admin)
 │
 ├── data/                       ← NICHT im Git (personenbezogene Daten)
@@ -159,6 +160,7 @@ Wichtig:
 | `npm run export:sanity` | einmaliger Export aus Sanity nach `data/import/` (braucht die Sanity-Variablen in `.env.local`) |
 | `npm run import:sanity` | baut Datenbank und Medienordner aus `data/import/sanity-export.json` neu auf (**überschreibt alles**, auch Zugänge und Verlauf; bricht ab, sobald es Zugänge gibt – dann nur mit `-- --alles-ueberschreiben`; Bericht in `data/import/import-bericht.md`) |
 | `npm run verwaltung:admin -- "Name"` | legt einen Admin-Zugang an bzw. setzt ihn zurück und zeigt den Einladungs-QR-Code |
+| `npm run import:wordpress` | übernimmt News mit Bildern von der alten WordPress-Seite (Standard: seit 1. Januar; `-- --seit 2025-06-01`, `-- --anzahl 10`, `-- --probelauf`). Vorhandene News werden übersprungen, das Skript kann also erneut laufen und holt dann nur Neues |
 
 Pfade lassen sich über `DATENBANK_PFAD` (Standard `data/svhs.db`) und `MEDIEN_PFAD`
 (Standard `data/medien`) ändern. `npm run import:sanity` liest dafür keine Env-Datei, abweichende
