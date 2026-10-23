@@ -168,6 +168,27 @@ Pfade dort beim Aufruf setzen (siehe `OPERATIONS.md`, Abschnitt 2.2).
 
 ## 🚢 Betrieb & Deployment
 
+### Vorerst: auf dem eigenen Rechner
+
+Solange es noch keinen Server gibt, läuft die Website auf einem PC im Vereins- bzw. Heimnetz:
+
+```bash
+npm run lokal                # baut die Seite und startet sie auf Port 3000
+npm run termine:abgleichen   # Spiele von fussball.de/click-tt holen (zweites Terminal, z. B. 1× täglich)
+```
+
+- Erreichbar unter `http://localhost:3000` und – für Handys im selben WLAN – unter
+  `http://<IP-des-PCs>:3000` (IP z. B. mit `ipconfig` nachsehen). Beim ersten Start fragt die
+  Windows-Firewall, ob Node.js im **privaten** Netzwerk erreichbar sein darf: zulassen.
+- Die Verwaltung am PC am besten auch über `http://<IP-des-PCs>:3000/verwaltung` öffnen. Dann zeigen
+  die Einladungs-QR-Codes auf eine Adresse, die das Handy erreicht. Alternativ in `.env.local`
+  `SEITEN_URL=http://<IP-des-PCs>:3000` setzen (gilt auch für `npm run verwaltung:admin`).
+- Nach Code-Änderungen erneut `npm run lokal`. Die Daten in `data/` bleiben dabei erhalten.
+- Die Seite ist nur erreichbar, solange der PC läuft, und nur im eigenen Netz. Für einen
+  öffentlichen Betrieb siehe unten.
+
+### Später: eigener Server
+
 Die Website läuft künftig auf einem **eigenen Server** (geplant: Hetzner) mit `npm run build` und
 `npm run start` hinter nginx. Vercel ist mit SQLite nicht mehr nutzbar, weil die Datenbankdatei
 ein dauerhaft beschreibbares Dateisystem braucht.

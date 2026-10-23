@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lokal": "next build && next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "export:sanity": "node scripts/sanity-export.mjs",
     "import:sanity": "tsx scripts/import-aus-sanity.ts",
-    "verwaltung:admin": "tsx scripts/verwaltung-admin.ts"
+    "verwaltung:admin": "tsx scripts/verwaltung-admin.ts",
+    "termine:abgleichen": "node scripts/termine-abgleichen.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
