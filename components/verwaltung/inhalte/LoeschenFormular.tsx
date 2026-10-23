@@ -1,11 +1,11 @@
 'use client'
 
+import { useActionState } from 'react'
 /** Löschen-Knopf mit Rückfrage; zeigt eine Fehlermeldung der Server-Aktion an (z. B. fehlende Rechte). */
 
-import { useFormState } from 'react-dom'
 import { Trash2 } from 'lucide-react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 
 export default function LoeschenFormular({
   aktion,
@@ -19,9 +19,9 @@ export default function LoeschenFormular({
   frage: string
   children: React.ReactNode
 }) {
-  const [ergebnis, absenden] = useFormState(aktion, LEER)
+  const [ergebnis, absenden] = useActionState(aktion, LEER)
   return (
-    <form action={absenden} className="space-y-3">
+    <form action={absenden} onReset={eingabenBehalten} className="space-y-3">
       <input type="hidden" name="id" value={id} />
       <FormMeldung ergebnis={ergebnis} />
       <SpeichernKnopf art="gefahr" bestaetigen={frage}>

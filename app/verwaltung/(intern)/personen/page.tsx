@@ -11,8 +11,8 @@ import PersonenListe from './PersonenListe'
 
 export const metadata: Metadata = { title: 'Personen' }
 
-export default function PersonenSeite() {
-  const { rechte } = sitzungErzwingen()
+export default async function PersonenSeite() {
+  const { rechte } = await sitzungErzwingen()
   const personen = personenListe(datenbank(), rechte).map(p => ({
     id: p.id,
     name: p.name,

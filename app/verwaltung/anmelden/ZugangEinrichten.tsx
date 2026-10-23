@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useActionState, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { useFormState } from 'react-dom'
 import { einrichten, einrichtungLaden, type EinrichtungsDaten } from '../aktionen'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { eingabeKlasse, Feld, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
 
 type Zustand = { art: 'start' } | { art: 'eingabe' } | { art: 'fehler'; text: string } | { art: 'bereit'; code: string; daten: Extract<EinrichtungsDaten, { name: string }> }
@@ -26,7 +25,7 @@ export default function ZugangEinrichten() {
   const [zustand, setZustand] = useState<Zustand>({ art: 'start' })
   const [eingabe, setEingabe] = useState('')
   const [laeuft, starten] = useTransition()
-  const [ergebnis, aktion] = useFormState(einrichten, LEER)
+  const [ergebnis, aktion] = useActionState(einrichten, LEER)
 
   function laden(code: string) {
     starten(async () => {
@@ -106,7 +105,7 @@ export default function ZugangEinrichten() {
   return (
     <>
       {kopf}
-      <form action={aktion} className="space-y-5">
+      <form action={aktion} onReset={eingabenBehalten} className="space-y-5">
         <input type="hidden" name="code" value={code} />
 
         <Schritt nummer={1} titel="Dein Benutzername">

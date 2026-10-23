@@ -1,6 +1,6 @@
 # SV Holm-Seppensen e.V. — Website
 
-Vereinswebsite gebaut mit **Next.js 14** (App Router), **Tailwind CSS** und einer eigenen
+Vereinswebsite gebaut mit **Next.js 16** (App Router), **Tailwind CSS** und einer eigenen
 **SQLite-Datenbank** (Drizzle ORM). Inhalte liegen in `data/svhs.db`, Bilder und Dateien in
 `data/medien`. Ein externes CMS gibt es nicht mehr; Sanity wurde im Oktober 2026 abgelöst.
 
@@ -220,7 +220,7 @@ Wiederherstellung: [`OPERATIONS.md`](OPERATIONS.md).
 
 | Tool | Zweck |
 |------|-------|
-| [Next.js 14](https://nextjs.org) | Framework (App Router) |
+| [Next.js 16](https://nextjs.org) | Framework (App Router) |
 | [Tailwind CSS](https://tailwindcss.com) | Styling |
 | [SQLite](https://sqlite.org) über [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) | Datenbank (eine Datei) |
 | [Drizzle ORM](https://orm.drizzle.team) + drizzle-kit | Schema, Abfragen, Migrationen, Drizzle Studio |

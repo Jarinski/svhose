@@ -30,7 +30,7 @@ function kontaktFelder(formData: FormData): Record<string, unknown> {
 
 /** Speichert eine Person. Felder: id, name, email, telefon, whatsapp, notiz, foto, fotoEntfernen, geaendertAm. */
 export async function personSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler(UNGUELTIG)
   const foto = formData.get('foto')
@@ -50,7 +50,7 @@ export async function personSpeichernAktion(_vorher: FormErgebnis, formData: For
  * team ("mannschaft-6" / "gruppe-3") mit rolle.
  */
 export async function personAnlegenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const team = textOderNull(formData.get('team'))
   let zuordnung: { art: 'mannschaft' | 'gruppe'; id: number; rolle: string | null } | null = null
@@ -71,7 +71,7 @@ export async function personAnlegenAktion(_vorher: FormErgebnis, formData: FormD
 
 /** Löscht eine Person samt aller Zuordnungen (nur Admins). Felder: id. */
 export async function personLoeschenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler(UNGUELTIG)
   const ergebnis = personLoeschen(datenbank(), rechte, id)

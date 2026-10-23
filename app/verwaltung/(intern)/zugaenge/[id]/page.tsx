@@ -15,8 +15,9 @@ import ZugangZuruecksetzen from './ZugangZuruecksetzen'
 
 export const metadata: Metadata = { title: 'Zugang bearbeiten' }
 
-export default function ZugangSeite({ params }: { params: { id: string } }) {
-  const { rechte, geraetId } = adminErzwingen()
+export default async function ZugangSeite(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+  const { rechte, geraetId } = await adminErzwingen()
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()
   const db = datenbank()

@@ -15,8 +15,10 @@ import PersonLoeschen from './PersonLoeschen'
 
 export const metadata: Metadata = { title: 'Person bearbeiten' }
 
-export default function PersonSeite({ params, searchParams }: { params: { id: string }; searchParams: { neu?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function PersonSeite(props: { params: Promise<{ id: string }>; searchParams: Promise<{ neu?: string }> }) {
+  const params = await props.params
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()
   const db = datenbank()

@@ -50,8 +50,9 @@ function einzeln(wert: string | string[] | undefined): string {
 
 type Suche = { seite?: string | string[]; typ?: string | string[]; zugang?: string | string[] }
 
-export default function VerlaufSeite({ searchParams }: { searchParams: Suche }) {
-  adminErzwingen()
+export default async function VerlaufSeite(props: { searchParams: Promise<Suche> }) {
+  const searchParams = await props.searchParams
+  await adminErzwingen()
   const db = datenbank()
   const typ = einzeln(searchParams.typ)
   const zugang = einzeln(searchParams.zugang)

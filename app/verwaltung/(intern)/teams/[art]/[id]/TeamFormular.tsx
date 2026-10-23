@@ -7,8 +7,7 @@
  * Stand vom Server und das Formular startet frisch (key = Stand).
  */
 
-import { useEffect, useRef, useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, Plus, Trash2, X } from 'lucide-react'
 import type { AuswahlPerson } from '@/lib/verwaltung/person-bearbeiten'
@@ -16,6 +15,7 @@ import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import type { TeamArt, TeamEingabe } from '@/lib/verwaltung/team-bearbeiten'
 import { WOCHENTAGE } from '@/lib/verwaltung/text'
 import FotoFeld from '@/components/verwaltung/FotoFeld'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import PersonAuswahl, { type NeuePersonDaten } from '@/components/verwaltung/PersonAuswahl'
 import RollenAuswahl from '@/components/verwaltung/RollenAuswahl'
@@ -116,7 +116,7 @@ function fuerServer(f: Formular, art: TeamArt): TeamEingabe {
 // ─── Hülle: hält das Ergebnis der Server-Aktion über den Neustart des Formulars hinweg ──
 
 export default function TeamBearbeiten(props: Props) {
-  const [ergebnis, aktion] = useFormState(teamSpeichernAktion, LEER)
+  const [ergebnis, aktion] = useActionState(teamSpeichernAktion, LEER)
   return <TeamFormular key={props.stand} {...props} ergebnis={ergebnis} aktion={aktion} />
 }
 
@@ -236,6 +236,7 @@ function TeamFormular({
   return (
     <form
       action={aktion}
+      onReset={eingabenBehalten}
       onSubmit={() => {
         abgeschickt.current = { zeiten: f.zeiten.map(z => z.schluessel), trainer: f.trainer.map(t => t.schluessel) }
       }}

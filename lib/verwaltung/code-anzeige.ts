@@ -19,7 +19,7 @@ export async function anmeldeCodeMitQr(
   erstelltVon: number | null,
 ): Promise<AnmeldeCodeDaten> {
   const { code, laeuftAb } = anmeldeCodeErstellen(db, zugang.id, zweck, erstelltVon)
-  const link = anmeldeLink(basisUrl(), code)
+  const link = anmeldeLink(await basisUrl(), code)
   return {
     name: zugang.name,
     code,

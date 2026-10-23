@@ -78,7 +78,7 @@ export function verstaendlicheMeldung(e: unknown, kontext: FehlerKontext = {}): 
   return 'Da ist leider etwas schiefgegangen. Bitte noch einmal versuchen – und falls es wieder passiert, dem Vorstand Bescheid geben.'
 }
 
-/** Fehler als Rückgabe für useFormState (inkl. Feldfehlern bei MeldungsFehler). */
+/** Fehler als Rückgabe für useActionState (inkl. Feldfehlern bei MeldungsFehler). */
 export function fehlerErgebnis(e: unknown, kontext?: FehlerKontext): FormErgebnis {
   return fehler(verstaendlicheMeldung(e, kontext), istMeldungsFehler(e) ? e.felder : undefined)
 }

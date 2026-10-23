@@ -18,7 +18,7 @@ import { adminErzwingen } from '@/lib/verwaltung/sitzung'
 import { textOderNull } from '@/lib/verwaltung/text'
 
 export async function downloadSichern(_vorher: AktionsErgebnis, formData: FormData): Promise<AktionsErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
 
   const roh = (name: string) => {
     const wert = formData.get(name)
@@ -66,7 +66,7 @@ export async function downloadSichern(_vorher: AktionsErgebnis, formData: FormDa
 }
 
 export async function downloadEntfernen(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Dieser Download wurde nicht gefunden.')
   const ergebnis = downloadLoeschen(datenbank(), rechte, id)

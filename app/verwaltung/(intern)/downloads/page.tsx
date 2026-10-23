@@ -12,8 +12,9 @@ export const metadata: Metadata = { title: 'Downloads' }
 
 const OHNE_KATEGORIE = 'Ohne Kategorie'
 
-export default function DownloadsListe({ searchParams }: { searchParams: { geloescht?: string } }) {
-  adminErzwingen()
+export default async function DownloadsListe(props: { searchParams: Promise<{ geloescht?: string }> }) {
+  const searchParams = await props.searchParams
+  await adminErzwingen()
   const db = datenbank()
   const namen = namensVerzeichnis(db)
 

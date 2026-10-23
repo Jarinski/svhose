@@ -6,13 +6,12 @@
  * über den die Person Passwort und Authenticator-App einrichtet.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useFormState } from 'react-dom'
 import { ChevronDown, ChevronRight, Search, X } from 'lucide-react'
 import { LEER } from '@/lib/verwaltung/formular'
 import AnmeldeCodeKarte from '@/components/verwaltung/AnmeldeCodeKarte'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
 import { eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
 import { benutzernameVorschlagAktion, zugangAnlegenAktion, zugangSpeichernAktion, type ZugangErgebnis } from './aktionen'
@@ -47,7 +46,7 @@ const LEER_ERGEBNIS: ZugangErgebnis = LEER
 
 export default function ZugangFormular({ modus, zugang, istSelbst = false, personen, baum }: Props) {
   const speichern: (vorher: ZugangErgebnis, formData: FormData) => Promise<ZugangErgebnis> = modus === 'neu' ? zugangAnlegenAktion : zugangSpeichernAktion
-  const [ergebnis, aktion] = useFormState(speichern, LEER_ERGEBNIS)
+  const [ergebnis, aktion] = useActionState(speichern, LEER_ERGEBNIS)
   const [name, setName] = useState(zugang?.name ?? '')
   const automatischerName = useRef<string | null>(null)
   const [person, setPerson] = useState<PersonKurz | null>(
@@ -122,7 +121,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
   }
 
   return (
-    <form action={aktion} className="space-y-6">
+    <form action={aktion} onReset={eingabenBehalten} className="space-y-6">
       {zugang && <input type="hidden" name="id" value={zugang.id} />}
 
       <Karte titel="Wer?">

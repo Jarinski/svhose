@@ -19,8 +19,9 @@ function mehrzahl(n: number, eins: string, viele: string) {
   return `${n} ${n === 1 ? eins : viele}`
 }
 
-export default function SparteSeite({ params }: { params: { id: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function SparteSeite(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+  const { rechte } = await sitzungErzwingen()
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()
   if (!kannSparte(rechte, id)) redirect('/verwaltung')

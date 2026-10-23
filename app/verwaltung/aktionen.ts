@@ -41,7 +41,7 @@ export type EinrichtungsDaten =
  */
 export async function einrichtungLaden(code: string): Promise<EinrichtungsDaten> {
   const db = datenbank()
-  const ip = anfrageIp()
+  const ip = await anfrageIp()
   if (istGesperrt(db, ip)) return { fehler: GESPERRT }
   const geheimnis = totpGeheimnisErzeugen()
   const zugang = einrichtungVorbereiten(db, code, geheimnis)
@@ -61,21 +61,21 @@ export async function einrichtungLaden(code: string): Promise<EinrichtungsDaten>
 
 export async function einrichten(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
   const db = datenbank()
-  const ip = anfrageIp()
+  const ip = await anfrageIp()
   if (istGesperrt(db, ip)) return fehler(GESPERRT)
   const ergebnis = await einrichtungAbschliessen(db, {
     code: text(formData, 'code'),
     passwort: text(formData, 'passwort'),
     passwortWdh: text(formData, 'passwortWdh'),
     totpCode: text(formData, 'totpCode'),
-    geraetName: geraetNameAusUserAgent(headers().get('user-agent')),
+    geraetName: geraetNameAusUserAgent((await headers()).get('user-agent')),
     merken: formData.get('merken') === 'ja',
   })
   if (!ergebnis.ok) {
     if (ergebnis.feld === 'totpCode' || ergebnis.codeUngueltig) fehlversuchMerken(db, ip)
     return fehler(ergebnis.meldung, ergebnis.feld ? { [ergebnis.feld]: ergebnis.meldung } : undefined)
   }
-  sitzungsCookieSetzen(ergebnis.token, formData.get('merken') === 'ja')
+  await sitzungsCookieSetzen(ergebnis.token, formData.get('merken') === 'ja')
   redirect('/verwaltung')
 }
 
@@ -87,8 +87,8 @@ export async function anmelden(_vorher: FormErgebnis, formData: FormData): Promi
     benutzername: text(formData, 'benutzername'),
     passwort: text(formData, 'passwort'),
     totpCode: text(formData, 'totpCode'),
-    ip: anfrageIp(),
-    geraetName: geraetNameAusUserAgent(headers().get('user-agent')),
+    ip: await anfrageIp(),
+    geraetName: geraetNameAusUserAgent((await headers()).get('user-agent')),
     merken,
   })
   if (!ergebnis.ok) {
@@ -98,20 +98,20 @@ export async function anmelden(_vorher: FormErgebnis, formData: FormData): Promi
         : 'Anmeldung fehlgeschlagen. Benutzername, Passwort oder App-Code stimmen nicht. Hinweis: Jeder App-Code gilt nur einmal – ggf. auf den nächsten warten.',
     )
   }
-  sitzungsCookieSetzen(ergebnis.token, merken)
+  await sitzungsCookieSetzen(ergebnis.token, merken)
   redirect('/verwaltung')
 }
 
 /** Meldet das aktuelle Gerät ab. */
 export async function abmelden(): Promise<void> {
-  const sitzung = aktuelleSitzung()
+  const sitzung = await aktuelleSitzung()
   if (sitzung) {
     const db = datenbank()
     const geraet = db.select().from(schema.geraete).where(eq(schema.geraete.id, sitzung.geraetId)).get()
     db.delete(schema.geraete).where(eq(schema.geraete.id, sitzung.geraetId)).run()
     protokollieren(db, sitzung.rechte, { aktion: 'abmeldung', objektTyp: 'geraete', bezeichnung: geraet?.name ?? 'Gerät' })
   }
-  sitzungsCookieLoeschen()
+  await sitzungsCookieLoeschen()
   redirect('/verwaltung/login')
 }
 
@@ -119,7 +119,7 @@ export async function abmelden(): Promise<void> {
 
 /** Meldet ein eigenes (anderes) Gerät ab. */
 export async function geraetAbmelden(formData: FormData): Promise<void> {
-  const { rechte, geraetId } = sitzungErzwingen()
+  const { rechte, geraetId } = await sitzungErzwingen()
   const id = Number(formData.get('geraetId'))
   if (!Number.isInteger(id) || id === geraetId) return
   const db = datenbank()
@@ -135,8 +135,8 @@ export async function geraetAbmelden(formData: FormData): Promise<void> {
 }
 
 export async function passwortAendernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte, geraetId } = sitzungErzwingen()
-  const ergebnis = await passwortAendern(datenbank(), rechte.zugangId, geraetId, anfrageIp(), {
+  const { rechte, geraetId } = await sitzungErzwingen()
+  const ergebnis = await passwortAendern(datenbank(), rechte.zugangId, geraetId, await anfrageIp(), {
     altesPasswort: text(formData, 'altesPasswort'),
     totpCode: text(formData, 'totpCode'),
     neuesPasswort: text(formData, 'neuesPasswort'),

@@ -43,7 +43,7 @@ function eingabeLesen(formData: FormData): ZugangEingabe {
 }
 
 export async function zugangAnlegenAktion(_vorher: ZugangErgebnis, formData: FormData): Promise<ZugangErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const db = datenbank()
   let zugang: { id: number; name: string; benutzername: string }
   try {
@@ -67,7 +67,7 @@ export async function zugangAnlegenAktion(_vorher: ZugangErgebnis, formData: For
 }
 
 export async function zugangSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diesen Zugang gibt es nicht. Bitte die Seite neu laden.')
   let geaendert: boolean
@@ -82,7 +82,7 @@ export async function zugangSpeichernAktion(_vorher: FormErgebnis, formData: For
 }
 
 export async function zugangStatusAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diesen Zugang gibt es nicht. Bitte die Seite neu laden.')
   const aktiv = formData.get('aktiv') === '1'
@@ -100,7 +100,7 @@ export async function zugangStatusAktion(_vorher: FormErgebnis, formData: FormDa
 }
 
 export async function zugangLoeschenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diesen Zugang gibt es nicht. Bitte die Seite neu laden.')
   try {
@@ -114,7 +114,7 @@ export async function zugangLoeschenAktion(_vorher: FormErgebnis, formData: Form
 
 /** Vorschlag für den Benutzernamen aus dem Namen (eindeutig gemacht), z. B. "max.beispiel". */
 export async function benutzernameVorschlagAktion(name: string): Promise<string> {
-  adminErzwingen()
+  await adminErzwingen()
   if (typeof name !== 'string' || !name.trim()) return ''
   return benutzernameVorschlag(datenbank(), name.slice(0, 80))
 }
@@ -126,7 +126,7 @@ export async function benutzernameVorschlagAktion(name: string): Promise<string>
 export async function zugangZuruecksetzenAktion(
   zugangId: number,
 ): Promise<{ daten?: AnmeldeCodeDaten; fehler?: string; selbstAbgemeldet?: boolean }> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   if (!Number.isInteger(zugangId)) return { fehler: 'Diesen Zugang gibt es nicht. Bitte die Seite neu laden.' }
   const db = datenbank()
   let zugang: { id: number; name: string }
@@ -149,7 +149,7 @@ export async function zugangZuruecksetzenAktion(
 
 /** Meldet ein Gerät eines Zugangs ab (nie das Gerät, an dem gerade gearbeitet wird). */
 export async function zugangGeraetAbmeldenAktion(formData: FormData): Promise<void> {
-  const { rechte, geraetId } = adminErzwingen()
+  const { rechte, geraetId } = await adminErzwingen()
   const zugangId = zahlFeld(formData, 'zugangId')
   const id = zahlFeld(formData, 'geraetId')
   if (zugangId == null || id == null) return
@@ -163,7 +163,7 @@ export async function zugangGeraetAbmeldenAktion(formData: FormData): Promise<vo
 
 /** Meldet alle Geräte eines Zugangs ab (beim eigenen Zugang: alle außer diesem). */
 export async function zugangAlleGeraeteAbmeldenAktion(formData: FormData): Promise<void> {
-  const { rechte, geraetId } = adminErzwingen()
+  const { rechte, geraetId } = await adminErzwingen()
   const zugangId = zahlFeld(formData, 'zugangId')
   if (zugangId == null) return
   try {

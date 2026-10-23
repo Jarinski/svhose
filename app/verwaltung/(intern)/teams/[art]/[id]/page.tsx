@@ -15,8 +15,9 @@ import TeamLoeschen from './TeamLoeschen'
 
 export const metadata: Metadata = { title: 'Mannschaft / Gruppe bearbeiten' }
 
-export default function TeamSeite({ params }: { params: { art: string; id: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function TeamSeite(props: { params: Promise<{ art: string; id: string }> }) {
+  const params = await props.params
+  const { rechte } = await sitzungErzwingen()
   const art = params.art
   const id = Number(params.id)
   if (!istTeamArt(art) || !Number.isInteger(id)) notFound()

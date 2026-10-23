@@ -1,10 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
 import { auswahlKlasse, eingabeKlasse, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
@@ -38,9 +37,9 @@ interface Props {
 }
 
 export default function KontakteFormular(props: Props) {
-  const [ergebnis, aktion] = useFormState(kontakteSpeichernAktion, LEER)
+  const [ergebnis, aktion] = useActionState(kontakteSpeichernAktion, LEER)
   return (
-    <form action={aktion}>
+    <form action={aktion} onReset={eingabenBehalten}>
       {/* Nach dem Speichern ändert sich der Stand → der Editor startet mit den frisch gespeicherten Zeilen (inkl. neuer ids). */}
       <Editor key={props.stand} {...props} ergebnis={ergebnis} />
     </form>

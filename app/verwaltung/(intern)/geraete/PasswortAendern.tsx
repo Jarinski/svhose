@@ -1,16 +1,16 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { passwortAendernAktion } from '../../aktionen'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { eingabeKlasse, Feld, Karte } from '@/components/verwaltung/ui'
 
 export default function PasswortAendern({ benutzername }: { benutzername: string }) {
-  const [ergebnis, aktion] = useFormState(passwortAendernAktion, LEER)
+  const [ergebnis, aktion] = useActionState(passwortAendernAktion, LEER)
   return (
     <Karte titel="Passwort ändern" beschreibung="Zur Sicherheit mit dem aktuellen Passwort und einem Code aus der App. Danach werden alle anderen Geräte abgemeldet.">
-      <form action={aktion} className="grid gap-4 sm:grid-cols-2" key={ergebnis.ok ? 'gespeichert' : 'offen'}>
+      <form action={aktion} onReset={eingabenBehalten} className="grid gap-4 sm:grid-cols-2" key={ergebnis.ok ? 'gespeichert' : 'offen'}>
         <input type="text" name="benutzername" autoComplete="username" value={benutzername} readOnly hidden />
         <Feld label="Aktuelles Passwort" htmlFor="altesPasswort" fehler={ergebnis.felder?.altesPasswort}>
           <input id="altesPasswort" name="altesPasswort" type="password" required autoComplete="current-password" className={eingabeKlasse} />

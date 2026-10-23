@@ -39,8 +39,9 @@ function nachMonat(termine: Termin[]): { monat: string; termine: Termin[] }[] {
   return gruppen
 }
 
-export default function TermineListe({ searchParams }: { searchParams: { quelle?: string; vergangene?: string; geloescht?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function TermineListe(props: { searchParams: Promise<{ quelle?: string; vergangene?: string; geloescht?: string }> }) {
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const heute = heuteBerlin()
   const quelle: QuellenFilter = FILTER.some(f => f.wert === searchParams.quelle) ? (searchParams.quelle as QuellenFilter) : 'alle'

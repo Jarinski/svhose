@@ -1,9 +1,9 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { LEER } from '@/lib/verwaltung/formular'
 import type { TeamArt } from '@/lib/verwaltung/team-bearbeiten'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { auswahlKlasse, eingabeKlasse, Feld, Karte } from '@/components/verwaltung/ui'
 import { teamAnlegenAktion } from '../aktionen'
 
@@ -18,13 +18,13 @@ export default function TeamAnlegenFormular({
   sparteId: number | null
   bereiche: string[]
 }) {
-  const [ergebnis, aktion] = useFormState(teamAnlegenAktion, LEER)
+  const [ergebnis, aktion] = useActionState(teamAnlegenAktion, LEER)
   const felder = ergebnis.felder ?? {}
   const feste = sparteId != null ? sparten.find(s => s.id === sparteId) : sparten.length === 1 ? sparten[0] : undefined
 
   return (
     <Karte>
-      <form action={aktion} className="space-y-5 max-w-xl">
+      <form action={aktion} onReset={eingabenBehalten} className="space-y-5 max-w-xl">
         <input type="hidden" name="art" value={art} />
         {feste ? (
           <>

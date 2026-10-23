@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useState } from 'react'
 import type { AuswahlGruppe } from '@/lib/verwaltung/inhalte/gemeinsam'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
 import { slugify } from '@/lib/verwaltung/text'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
 import MarkdownFeld from '@/components/verwaltung/inhalte/MarkdownFeld'
@@ -45,7 +44,7 @@ export default function NewsFormular({
   /** Erfolgsmeldung nach dem Anlegen (bis zum nächsten Speichern) */
   hinweis?: string
 }) {
-  const [ergebnis, speichern] = useFormState(newsSichern, LEER_ERGEBNIS)
+  const [ergebnis, speichern] = useActionState(newsSichern, LEER_ERGEBNIS)
   const [titel, setTitel] = useState(news?.titel ?? '')
   const f = ergebnis.felder ?? {}
   const ersteZuordnung = zuordnungen[0]?.optionen[0]?.wert ?? ''
@@ -53,7 +52,7 @@ export default function NewsFormular({
   return (
     <div className="space-y-6">
       {/* key: nach dem Speichern (neue Daten vom Server) zeigt das Formular wieder genau den gespeicherten Stand */}
-      <form key={news?.geaendertAm ?? 'neu'} action={speichern} className="space-y-6">
+      <form key={news?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
         {news && <input type="hidden" name="id" value={news.id} />}
         <input type="hidden" name="stand" value={neuererStand(news?.geaendertAm, ergebnis.stand)} />
 

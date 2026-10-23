@@ -8,8 +8,8 @@ import ZugangFormular from '../ZugangFormular'
 
 export const metadata: Metadata = { title: 'Neuer Zugang' }
 
-export default function NeuerZugangSeite() {
-  adminErzwingen()
+export default async function NeuerZugangSeite() {
+  await adminErzwingen()
   const db = datenbank()
   const personen = db.select({ id: schema.personen.id, name: schema.personen.name }).from(schema.personen).orderBy(asc(schema.personen.name)).all()
   return (

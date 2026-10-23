@@ -9,8 +9,8 @@ import TeamListe, { type TeamListenSparte } from './TeamListe'
 
 export const metadata: Metadata = { title: 'Mannschaften & Gruppen' }
 
-export default function TeamsSeite() {
-  const { rechte } = sitzungErzwingen()
+export default async function TeamsSeite() {
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const teams = bearbeitbareTeams(db, rechte)
 

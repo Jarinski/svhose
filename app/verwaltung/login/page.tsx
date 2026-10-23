@@ -7,8 +7,8 @@ import LoginFormular from './LoginFormular'
 export const metadata: Metadata = { title: 'Anmelden' }
 export const dynamic = 'force-dynamic'
 
-export default function LoginSeite() {
-  if (aktuelleSitzung()) redirect('/verwaltung')
+export default async function LoginSeite() {
+  if (await aktuelleSitzung()) redirect('/verwaltung')
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">

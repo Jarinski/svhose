@@ -1,8 +1,8 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { Karte } from '@/components/verwaltung/ui'
 import { zugangLoeschenAktion, zugangStatusAktion } from '../aktionen'
 
@@ -19,8 +19,8 @@ export default function ZugangStatus({
   /** Warum Deaktivieren/Löschen nicht geht (eigener Zugang, letzter Admin) – oder null. */
   sperrGrund: string | null
 }) {
-  const [statusErgebnis, statusAktion] = useFormState(zugangStatusAktion, LEER)
-  const [loeschErgebnis, loeschAktion] = useFormState(zugangLoeschenAktion, LEER)
+  const [statusErgebnis, statusAktion] = useActionState(zugangStatusAktion, LEER)
+  const [loeschErgebnis, loeschAktion] = useActionState(zugangLoeschenAktion, LEER)
 
   return (
     <>
@@ -32,7 +32,7 @@ export default function ZugangStatus({
             : 'Der Zugang ist deaktiviert. Nach dem Aktivieren kann sich die Person wieder mit Benutzername, Passwort und App anmelden.'
         }
       >
-        <form action={statusAktion} className="space-y-3">
+        <form action={statusAktion} onReset={eingabenBehalten} className="space-y-3">
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="aktiv" value={aktiv ? '0' : '1'} />
           {aktiv && sperrGrund ? (
@@ -50,7 +50,7 @@ export default function ZugangStatus({
       </Karte>
 
       <Karte titel="Zugang löschen" beschreibung="Löscht den Zugang mit allen Geräten, Passwort und App-Kopplung. Im Verlauf bleibt der Name bei früheren Änderungen stehen.">
-        <form action={loeschAktion} className="space-y-3">
+        <form action={loeschAktion} onReset={eingabenBehalten} className="space-y-3">
           <input type="hidden" name="id" value={id} />
           {sperrGrund ? (
             <p className="text-sm text-[#6b6b6b]">{sperrGrund}</p>

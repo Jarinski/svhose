@@ -12,7 +12,7 @@ import { adminErzwingen } from '@/lib/verwaltung/sitzung'
 import { funktionenAbgleichen, type KontakteEingabe } from './logik'
 
 export async function kontakteSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const eingabe = jsonFeld<KontakteEingabe>(formData, 'daten')
   if (!eingabe || typeof eingabe !== 'object') return fehler('Die Eingaben konnten nicht gelesen werden. Bitte die Seite neu laden.')
 

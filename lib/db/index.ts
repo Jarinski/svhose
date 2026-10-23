@@ -16,7 +16,8 @@ import * as schema from './schema'
 /** Drizzle-Instanz; über $client ist die rohe better-sqlite3-Verbindung erreichbar. */
 export type Datenbank = BetterSQLite3Database<typeof schema> & { $client: Database.Database }
 
-export const DATENBANK_PFAD = path.resolve(process.env.DATENBANK_PFAD ?? path.join('data', 'svhs.db'))
+// turbopackIgnore: Der Pfad steht erst zur Laufzeit fest; der Build soll nicht das ganze Projekt einsammeln.
+export const DATENBANK_PFAD = path.resolve(/* turbopackIgnore: true */ process.env.DATENBANK_PFAD ?? path.join('data', 'svhs.db'))
 const MIGRATIONEN_PFAD = path.resolve('drizzle')
 
 function verbinden(): Datenbank {

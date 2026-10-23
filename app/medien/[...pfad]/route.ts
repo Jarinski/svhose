@@ -125,10 +125,10 @@ async function antwort(anfrage: Request, pfad: string[] | undefined, mitInhalt: 
 
 // ─── Route ───────────────────────────────────────────────────────────────────
 
-export async function GET(anfrage: Request, { params }: { params: { pfad?: string[] } }) {
-  return antwort(anfrage, params.pfad, true)
+export async function GET(anfrage: Request, { params }: { params: Promise<{ pfad?: string[] }> }) {
+  return antwort(anfrage, (await params).pfad, true)
 }
 
-export async function HEAD(anfrage: Request, { params }: { params: { pfad?: string[] } }) {
-  return antwort(anfrage, params.pfad, false)
+export async function HEAD(anfrage: Request, { params }: { params: Promise<{ pfad?: string[] }> }) {
+  return antwort(anfrage, (await params).pfad, false)
 }

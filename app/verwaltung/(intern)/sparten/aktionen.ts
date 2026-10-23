@@ -20,7 +20,7 @@ import { sparteAnlegen, sparteLoeschen, sparteSpeichern, type AnsprechpartnerEin
 const EINDEUTIG = 'Diese Adresse hat schon eine andere Sparte. Bitte eine andere wählen.'
 
 export async function sparteAnlegenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   let id: number
   try {
     id = sparteAnlegen(datenbank(), rechte, String(formData.get('name') ?? '')).id
@@ -32,7 +32,7 @@ export async function sparteAnlegenAktion(_vorher: FormErgebnis, formData: FormD
 }
 
 export async function sparteSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diese Sparte gibt es nicht. Bitte die Seite neu laden.')
   if (!kannSparte(rechte, id)) return fehler('Dafür fehlen dir die Rechte.')
@@ -87,7 +87,7 @@ export async function sparteSpeichernAktion(_vorher: FormErgebnis, formData: For
 }
 
 export async function sparteLoeschenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = adminErzwingen()
+  const { rechte } = await adminErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diese Sparte gibt es nicht. Bitte die Seite neu laden.')
   let foto: string | null

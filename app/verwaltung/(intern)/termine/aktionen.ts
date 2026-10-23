@@ -19,7 +19,7 @@ import { kannSparte } from '@/lib/verwaltung/rechte'
 import { textOderNull } from '@/lib/verwaltung/text'
 
 export async function terminSichern(_vorher: AktionsErgebnis, formData: FormData): Promise<AktionsErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
 
   const roh = (name: string) => {
     const wert = formData.get(name)
@@ -77,7 +77,7 @@ export async function terminSichern(_vorher: AktionsErgebnis, formData: FormData
 }
 
 export async function terminEntfernen(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Dieser Termin wurde nicht gefunden.')
   const ergebnis = terminLoeschen(datenbank(), rechte, id)

@@ -11,7 +11,8 @@ import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
 export const dynamic = 'force-dynamic'
 
 /* ── Metadaten ─────────────────────────────────────────────── */
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params
   const sparte = await getSparteBySlug(params.slug)
   return { title: sparte ? `${sparte.name} – SV Holm-Seppensen` : 'Sparte' }
 }
@@ -81,7 +82,8 @@ function mannschaftenNachBereich(mannschaften: TeamKarte[]) {
 }
 
 /* ── Seite ─────────────────────────────────────────────────── */
-export default async function SparteDetailPage({ params }: { params: { slug: string } }) {
+export default async function SparteDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const sparte = await getSparteBySlug(params.slug)
   if (!sparte) notFound()
 

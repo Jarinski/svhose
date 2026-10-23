@@ -1,8 +1,8 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
 import { auswahlKlasse, eingabeKlasse, Feld, Karte, Meldung } from '@/components/verwaltung/ui'
@@ -42,12 +42,12 @@ export default function TerminFormular({
   tags: string[]
   hinweis?: string
 }) {
-  const [ergebnis, speichern] = useFormState(terminSichern, LEER_ERGEBNIS)
+  const [ergebnis, speichern] = useActionState(terminSichern, LEER_ERGEBNIS)
   const f = ergebnis.felder ?? {}
 
   return (
     <div className="space-y-6">
-      <form key={termin?.geaendertAm ?? 'neu'} action={speichern} className="space-y-6">
+      <form key={termin?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
         {termin && <input type="hidden" name="id" value={termin.id} />}
         <input type="hidden" name="stand" value={neuererStand(termin?.geaendertAm, ergebnis.stand)} />
 

@@ -5,10 +5,10 @@
  * vom Server und das Formular startet frisch (key = Stand).
  */
 
-import { useEffect, useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useEffect, useState } from 'react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import FotoFeld from '@/components/verwaltung/FotoFeld'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import { eingabeKlasse, Feld, Karte, Meldung } from '@/components/verwaltung/ui'
 import { useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
@@ -30,7 +30,7 @@ interface Props {
 }
 
 export default function PersonBearbeiten(props: Props) {
-  const [ergebnis, aktion] = useFormState(personSpeichernAktion, LEER)
+  const [ergebnis, aktion] = useActionState(personSpeichernAktion, LEER)
   return <PersonFormular key={props.stand} {...props} ergebnis={ergebnis} aktion={aktion} />
 }
 
@@ -61,7 +61,7 @@ function PersonFormular({ id, stand, start, fotoUrl, ergebnis, aktion }: Props &
   })
 
   return (
-    <form action={aktion} className="space-y-6" noValidate>
+    <form action={aktion} onReset={eingabenBehalten} className="space-y-6" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="geaendertAm" value={stand} />
 

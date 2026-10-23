@@ -1,21 +1,21 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { Karte } from '@/components/verwaltung/ui'
 import { personLoeschenAktion } from '../aktionen'
 
 export default function PersonLoeschen({ id, name, verwendung }: { id: number; name: string; verwendung: string[] }) {
-  const [ergebnis, aktion] = useFormState(personLoeschenAktion, LEER)
+  const [ergebnis, aktion] = useActionState(personLoeschenAktion, LEER)
   const rueckfrage = verwendung.length
     ? `„${name}“ wirklich löschen? Die Person wird dabei auch an ${verwendung.length} Stelle${verwendung.length === 1 ? '' : 'n'} entfernt:\n\n– ${verwendung.join('\n– ')}\n\nDas lässt sich nicht rückgängig machen.`
     : `„${name}“ wirklich löschen? Das lässt sich nicht rückgängig machen.`
 
   return (
     <Karte titel="Person löschen">
-      <form action={aktion} className="space-y-4">
+      <form action={aktion} onReset={eingabenBehalten} className="space-y-4">
         <input type="hidden" name="id" value={id} />
         {verwendung.length > 0 ? (
           <div className="text-sm text-[#4a4a4a] leading-relaxed">

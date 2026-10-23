@@ -9,7 +9,8 @@
 
 import path from 'node:path'
 
-export const MEDIEN_PFAD = path.resolve(process.env.MEDIEN_PFAD ?? path.join('data', 'medien'))
+// turbopackIgnore: Der Pfad steht erst zur Laufzeit fest; der Build soll nicht das ganze Projekt einsammeln.
+export const MEDIEN_PFAD = path.resolve(/* turbopackIgnore: true */ process.env.MEDIEN_PFAD ?? path.join('data', 'medien'))
 
 /** Öffentliche URL zu einem relativen Medienpfad – oder null, wenn kein Pfad gesetzt ist. */
 export function medienUrl(pfad: string | null | undefined): string | null {

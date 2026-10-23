@@ -11,8 +11,10 @@ import DownloadFormular from '../DownloadFormular'
 
 export const metadata: Metadata = { title: 'Download bearbeiten' }
 
-export default function DownloadBearbeiten({ params, searchParams }: { params: { id: string }; searchParams: { neu?: string } }) {
-  adminErzwingen()
+export default async function DownloadBearbeiten(props: { params: Promise<{ id: string }>; searchParams: Promise<{ neu?: string }> }) {
+  const params = await props.params
+  const searchParams = await props.searchParams
+  await adminErzwingen()
   const db = datenbank()
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()

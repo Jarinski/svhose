@@ -12,8 +12,10 @@ import TerminFormular from '../TerminFormular'
 
 export const metadata: Metadata = { title: 'Termin' }
 
-export default function TerminSeite({ params, searchParams }: { params: { id: string }; searchParams: { neu?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function TerminSeite(props: { params: Promise<{ id: string }>; searchParams: Promise<{ neu?: string }> }) {
+  const params = await props.params
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()

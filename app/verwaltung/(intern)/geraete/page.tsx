@@ -9,8 +9,8 @@ import PasswortAendern from './PasswortAendern'
 
 export const metadata: Metadata = { title: 'Mein Zugang' }
 
-export default function MeinZugangSeite() {
-  const { rechte, geraetId } = sitzungErzwingen()
+export default async function MeinZugangSeite() {
+  const { rechte, geraetId } = await sitzungErzwingen()
   const db = datenbank()
   const zugang = db.select().from(schema.zugaenge).where(eq(schema.zugaenge.id, rechte.zugangId)).get()
   const geraete = db

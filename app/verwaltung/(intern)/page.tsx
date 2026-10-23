@@ -10,8 +10,8 @@ import { Badge, Karte, LeerHinweis, Seitenkopf } from '@/components/verwaltung/u
 
 export const metadata: Metadata = { title: 'Übersicht' }
 
-export default function Uebersicht() {
-  const { rechte } = sitzungErzwingen()
+export default async function Uebersicht() {
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const teams = bearbeitbareTeams(db, rechte)
 

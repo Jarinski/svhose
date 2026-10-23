@@ -17,8 +17,8 @@ function bereicheKurz(bereiche: string[]): string {
   return `${bereiche.slice(0, 3).join(', ')} und ${bereiche.length - 3} weitere`
 }
 
-export default function ZugaengeSeite() {
-  const { rechte } = adminErzwingen()
+export default async function ZugaengeSeite() {
+  const { rechte } = await adminErzwingen()
   const db = datenbank()
   const zugaenge = db
     .select()

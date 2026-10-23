@@ -1,7 +1,7 @@
 /**
  * lib/verwaltung/formular.ts
  *
- * Gemeinsames Rückgabeformat aller Server-Aktionen der Verwaltung (für useFormState).
+ * Gemeinsames Rückgabeformat aller Server-Aktionen der Verwaltung (für useActionState).
  */
 
 export interface FormErgebnis {

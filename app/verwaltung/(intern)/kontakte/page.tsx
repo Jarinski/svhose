@@ -9,8 +9,8 @@ import { funktionenLaden, kontakteStand } from './logik'
 
 export const metadata: Metadata = { title: 'Kontaktseite' }
 
-export default function KontakteSeite() {
-  adminErzwingen()
+export default async function KontakteSeite() {
+  await adminErzwingen()
   const db = datenbank()
   const funktionen = funktionenLaden(db)
   const personen = db.select({ id: schema.personen.id, name: schema.personen.name }).from(schema.personen).orderBy(asc(schema.personen.name)).all()

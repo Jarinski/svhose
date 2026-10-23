@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useEffect, useState } from 'react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { slugify } from '@/lib/verwaltung/text'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
 import { eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
@@ -46,9 +45,9 @@ function gross(text: string) {
 }
 
 export default function SparteFormular(props: Props) {
-  const [ergebnis, aktion] = useFormState(sparteSpeichernAktion, LEER)
+  const [ergebnis, aktion] = useActionState(sparteSpeichernAktion, LEER)
   return (
-    <form action={aktion} className="space-y-6">
+    <form action={aktion} onReset={eingabenBehalten} className="space-y-6">
       <input type="hidden" name="id" value={props.sparte.id} />
       {/* Optimistische Sperre: Stand beim Laden. Kommt nach dem Speichern frisch vom Server. */}
       <input type="hidden" name="geaendertAm" value={props.sparte.geaendertAm} />

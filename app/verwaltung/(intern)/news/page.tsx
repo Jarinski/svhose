@@ -12,8 +12,9 @@ import { Badge, Karte, knopfKlassen, LeerHinweis, Meldung, Seitenkopf } from '@/
 
 export const metadata: Metadata = { title: 'News' }
 
-export default function NewsListe({ searchParams }: { searchParams: { geloescht?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function NewsListe(props: { searchParams: Promise<{ geloescht?: string }> }) {
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
 
   const alle = db.select().from(schema.news).orderBy(desc(schema.news.datum), desc(schema.news.id)).all()

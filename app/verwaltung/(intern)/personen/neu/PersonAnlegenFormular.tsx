@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useState } from 'react'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import RollenAuswahl from '@/components/verwaltung/RollenAuswahl'
 import { auswahlKlasse, eingabeKlasse, Feld, Karte, Meldung } from '@/components/verwaltung/ui'
 import { personAnlegenAktion } from '../aktionen'
@@ -20,14 +19,14 @@ export default function PersonAnlegenFormular({
   vorauswahl: string | null
   rollen: string[]
 }) {
-  const [ergebnis, aktion] = useFormState(personAnlegenAktion, LEER)
+  const [ergebnis, aktion] = useActionState(personAnlegenAktion, LEER)
   const felder = ergebnis.felder ?? {}
   const [team, setTeam] = useState(vorauswahl ?? (teamPflicht && teams.length === 1 ? teams[0].wert : ''))
   const [rolle, setRolle] = useState(rollen[0] ?? 'Trainer:in')
 
   return (
     <Karte>
-      <form action={aktion} className="space-y-5 max-w-xl" noValidate>
+      <form action={aktion} onReset={eingabenBehalten} className="space-y-5 max-w-xl" noValidate>
         <Feld label="Name" htmlFor="name" fehler={felder.name}>
           <input id="name" name="name" required autoFocus maxLength={100} className={eingabeKlasse} autoComplete="off" />
         </Feld>

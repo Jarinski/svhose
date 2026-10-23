@@ -8,8 +8,8 @@ import NewsFormular from '../NewsFormular'
 
 export const metadata: Metadata = { title: 'Neue News' }
 
-export default function NeueNews() {
-  const { rechte } = sitzungErzwingen()
+export default async function NeueNews() {
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
   const zuordnungen = zuordnungsOptionen(db, rechte)
   if (zuordnungen.length === 0) redirect('/verwaltung/news')

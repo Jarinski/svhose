@@ -20,7 +20,7 @@ import { kannZuordnung } from '@/lib/verwaltung/rechte'
 import { textOderNull } from '@/lib/verwaltung/text'
 
 export async function newsSichern(_vorher: AktionsErgebnis, formData: FormData): Promise<AktionsErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const db = datenbank()
 
   const roh = (name: string) => {
@@ -85,7 +85,7 @@ export async function newsSichern(_vorher: AktionsErgebnis, formData: FormData):
 }
 
 export async function newsEntfernen(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Diese News wurde nicht gefunden.')
   const ergebnis = newsLoeschen(datenbank(), rechte, id)

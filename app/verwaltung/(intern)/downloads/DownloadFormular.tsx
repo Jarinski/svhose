@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useActionState, useState } from 'react'
 import { ExternalLink, FileUp } from 'lucide-react'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
 import { auswahlKlasse, eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
 import { downloadEntfernen, downloadSichern } from './aktionen'
@@ -36,13 +35,13 @@ export default function DownloadFormular({
   kategorien: string[]
   hinweis?: string
 }) {
-  const [ergebnis, speichern] = useFormState(downloadSichern, LEER_ERGEBNIS)
+  const [ergebnis, speichern] = useActionState(downloadSichern, LEER_ERGEBNIS)
   const [dateiname, setDateiname] = useState<string | null>(null)
   const f = ergebnis.felder ?? {}
 
   return (
     <div className="space-y-6">
-      <form key={download?.geaendertAm ?? 'neu'} action={speichern} className="space-y-6">
+      <form key={download?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
         {download && <input type="hidden" name="id" value={download.id} />}
         <input type="hidden" name="stand" value={neuererStand(download?.geaendertAm, ergebnis.stand)} />
 

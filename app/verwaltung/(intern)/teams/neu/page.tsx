@@ -10,8 +10,9 @@ import TeamAnlegenFormular from './TeamAnlegenFormular'
 
 export const metadata: Metadata = { title: 'Neu anlegen' }
 
-export default function TeamNeuSeite({ searchParams }: { searchParams: { art?: string; sparte?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function TeamNeuSeite(props: { searchParams: Promise<{ art?: string; sparte?: string }> }) {
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const art = istTeamArt(searchParams.art) ? searchParams.art : 'mannschaft'
 
   // Anlegen dürfen nur Admins und die Spartenleitung (Recht auf die ganze Sparte).

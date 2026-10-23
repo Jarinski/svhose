@@ -2,13 +2,22 @@
 
 /**
  * Formular-Bausteine mit Client-Logik: Speichern-Knopf mit Ladezustand und Rückmeldung
- * aus der Server-Aktion (useFormState-Ergebnis).
+ * aus der Server-Aktion (useActionState-Ergebnis).
  */
 
 import { useFormStatus } from 'react-dom'
 import { Loader2 } from 'lucide-react'
 import type { FormErgebnis } from '@/lib/verwaltung/formular'
 import { knopfKlassen, Meldung } from './ui'
+
+/**
+ * Für onReset an Formularen mit Server-Aktion: React 19 setzt solche Formulare nach jedem Absenden
+ * zurück – bei einer Fehlermeldung wären die Eingaben dann weg. Formulare, die nach dem Speichern
+ * leer sein sollen, bekommen stattdessen einen neuen key.
+ */
+export function eingabenBehalten(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault()
+}
 
 export function SpeichernKnopf({
   children = 'Speichern',

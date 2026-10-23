@@ -5,8 +5,8 @@ import NeueSparteFormular from './NeueSparteFormular'
 
 export const metadata: Metadata = { title: 'Neue Sparte' }
 
-export default function NeueSparteSeite() {
-  adminErzwingen()
+export default async function NeueSparteSeite() {
+  await adminErzwingen()
   return (
     <>
       <Seitenkopf titel="NEUE SPARTE" zurueck={{ href: '/verwaltung/sparten', text: 'Alle Sparten' }} />

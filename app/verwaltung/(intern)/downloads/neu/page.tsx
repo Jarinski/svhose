@@ -7,8 +7,8 @@ import DownloadFormular from '../DownloadFormular'
 
 export const metadata: Metadata = { title: 'Neuer Download' }
 
-export default function NeuerDownload() {
-  adminErzwingen()
+export default async function NeuerDownload() {
+  await adminErzwingen()
   return (
     <>
       <Seitenkopf titel="NEUER DOWNLOAD" untertitel="Erscheint nach dem Speichern auf der Download-Seite." zurueck={{ href: '/verwaltung/downloads', text: 'Alle Downloads' }} />

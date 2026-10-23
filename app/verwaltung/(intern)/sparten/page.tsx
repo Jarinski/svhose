@@ -14,8 +14,8 @@ function mehrzahl(n: number, eins: string, viele: string) {
   return `${n} ${n === 1 ? eins : viele}`
 }
 
-export default function SpartenSeite() {
-  const { rechte } = sitzungErzwingen()
+export default async function SpartenSeite() {
+  const { rechte } = await sitzungErzwingen()
   if (!rechte.istAdmin && rechte.sparten.length === 0) redirect('/verwaltung')
 
   const db = datenbank()

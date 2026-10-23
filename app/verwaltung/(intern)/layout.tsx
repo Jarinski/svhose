@@ -8,8 +8,8 @@ import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 // Seite und jede Server-Aktion selbst – das Layout blendet nur passende Menüpunkte ein.
 export const dynamic = 'force-dynamic'
 
-export default function InternLayout({ children }: { children: React.ReactNode }) {
-  const { rechte } = sitzungErzwingen()
+export default async function InternLayout({ children }: { children: React.ReactNode }) {
+  const { rechte } = await sitzungErzwingen()
   const admin = rechte.istAdmin
   const hatSparte = admin || rechte.sparten.length > 0
   const hatTeams = admin || bearbeitbareTeams(datenbank(), rechte).length > 0

@@ -1,15 +1,15 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { anmelden } from '../aktionen'
 import { LEER } from '@/lib/verwaltung/formular'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { eingabeKlasse, Feld } from '@/components/verwaltung/ui'
 
 export default function LoginFormular() {
-  const [ergebnis, aktion] = useFormState(anmelden, LEER)
+  const [ergebnis, aktion] = useActionState(anmelden, LEER)
   return (
-    <form action={aktion} className="space-y-5">
+    <form action={aktion} onReset={eingabenBehalten} className="space-y-5">
       <Feld label="Benutzername" htmlFor="benutzername">
         <input
           id="benutzername"

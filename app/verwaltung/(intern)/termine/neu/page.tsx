@@ -8,8 +8,8 @@ import TerminFormular from '../TerminFormular'
 
 export const metadata: Metadata = { title: 'Neuer Termin' }
 
-export default function NeuerTermin() {
-  const { rechte } = sitzungErzwingen()
+export default async function NeuerTermin() {
+  const { rechte } = await sitzungErzwingen()
   if (!darfTermineAnlegen(rechte)) redirect('/verwaltung/termine')
   const daten = terminFormularDaten(datenbank(), rechte)
 

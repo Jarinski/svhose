@@ -1,19 +1,19 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { LEER } from '@/lib/verwaltung/formular'
 import type { TeamArt } from '@/lib/verwaltung/team-bearbeiten'
-import { FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
 import { Karte } from '@/components/verwaltung/ui'
 import { teamLoeschenAktion } from '../../aktionen'
 
 export default function TeamLoeschen({ art, id, name }: { art: TeamArt; id: number; name: string }) {
-  const [ergebnis, aktion] = useFormState(teamLoeschenAktion, LEER)
+  const [ergebnis, aktion] = useActionState(teamLoeschenAktion, LEER)
   const was = art === 'mannschaft' ? 'Mannschaft' : 'Gruppe'
   return (
     <Karte titel={`${was} löschen`}>
-      <form action={aktion} className="space-y-4">
+      <form action={aktion} onReset={eingabenBehalten} className="space-y-4">
         <input type="hidden" name="art" value={art} />
         <input type="hidden" name="id" value={id} />
         <p className="text-sm text-[#4a4a4a] leading-relaxed">

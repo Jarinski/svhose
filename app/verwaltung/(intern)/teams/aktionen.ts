@@ -21,7 +21,7 @@ const UNGUELTIG = 'Die Anfrage war unvollständig. Bitte die Seite neu laden und
  * Felder: art, id, daten (JSON), foto (Datei, optional), fotoEntfernen ("1"), geaendertAm (Stand beim Laden).
  */
 export async function teamSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const art = formData.get('art')
   const id = zahlFeld(formData, 'id')
   const daten = jsonFeld<unknown>(formData, 'daten')
@@ -42,7 +42,7 @@ export async function teamSpeichernAktion(_vorher: FormErgebnis, formData: FormD
 
 /** Legt eine Mannschaft oder Gruppe an und öffnet sie zum Bearbeiten. Felder: art, sparteId, name, bereich. */
 export async function teamAnlegenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const art = formData.get('art')
   if (!istTeamArt(art)) return fehler(UNGUELTIG)
   const ergebnis = teamAnlegen(datenbank(), rechte, {
@@ -58,7 +58,7 @@ export async function teamAnlegenAktion(_vorher: FormErgebnis, formData: FormDat
 
 /** Löscht eine Mannschaft oder Gruppe (nur Admins und Spartenleitung). Felder: art, id. */
 export async function teamLoeschenAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = sitzungErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const art = formData.get('art')
   const id = zahlFeld(formData, 'id')
   if (!istTeamArt(art) || id == null) return fehler(UNGUELTIG)

@@ -8,8 +8,9 @@ import PersonAnlegenFormular from './PersonAnlegenFormular'
 
 export const metadata: Metadata = { title: 'Neue Person' }
 
-export default function PersonNeuSeite({ searchParams }: { searchParams: { team?: string } }) {
-  const { rechte } = sitzungErzwingen()
+export default async function PersonNeuSeite(props: { searchParams: Promise<{ team?: string }> }) {
+  const searchParams = await props.searchParams
+  const { rechte } = await sitzungErzwingen()
   const teams = bearbeitbareTeams(datenbank(), rechte).map(t => ({
     wert: `${t.art}-${t.id}`,
     text: `${t.sparte} · ${t.name}`,
