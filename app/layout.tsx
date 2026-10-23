@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Bebas_Neue, DM_Sans } from 'next/font/google'
 import './globals.css'
 import SiteChrome from '@/components/SiteChrome'
 import Footer from '@/components/Footer'
@@ -19,6 +20,20 @@ function seitenUrl(): URL | undefined {
   }
 }
 
+/**
+ * Schriften: next/font lädt sie beim Build und liefert sie von der eigenen Domain aus –
+ * Besucher*innen rufen nichts bei Google ab. (Der frühere @import in globals.css kam seit
+ * Next 16/Turbopack nicht mehr im CSS an.) Genutzt über --font-display/--font-body in globals.css.
+ */
+const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas-neue', display: 'swap' })
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  axes: ['opsz'],
+  style: ['normal', 'italic'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   metadataBase: seitenUrl(),
   title: {
@@ -35,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="de">
+    <html lang="de" className={`${bebasNeue.variable} ${dmSans.variable}`}>
       <body>
         <SiteChrome footer={<Footer />}>{children}</SiteChrome>
       </body>
