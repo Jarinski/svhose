@@ -1,0 +1,80 @@
+/*
+ * Design-Vorschau – gemeinsame Regeln (siehe lib/vorschau.ts).
+ * data-design am <html>-Element: "a", "b" oder "aktuell"; fehlt es, ist die Vorschau aus.
+ * Die Gestaltung der einzelnen Designs steht in vorschau-a.css und vorschau-b.css.
+ */
+
+/* ── Navigation und Footer je Design ein- bzw. ausblenden ── */
+.chrome-standard { display: contents; }
+.chrome-a,
+.chrome-b { display: none; }
+
+html[data-design="a"] .chrome-standard,
+html[data-design="b"] .chrome-standard { display: none; }
+html[data-design="a"] .chrome-a,
+html[data-design="b"] .chrome-b { display: contents; }
+
+/* ── Umschalter ── */
+.design-umschalter { display: none; }
+
+html[data-design] .design-umschalter {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  /* unter dem Cookie-Banner (z-index 10000), damit dessen Knöpfe immer erreichbar bleiben */
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, .85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25), 0 0 0 1px rgba(255, 255, 255, .08);
+  font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  scrollbar-width: none;
+}
+
+.design-umschalter .du-titel {
+  padding: 0 8px 0 10px;
+  color: rgba(255, 255, 255, .5);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.design-umschalter .du-link,
+.design-umschalter .du-aus {
+  padding: 9px 12px;
+  border-radius: 999px;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s;
+}
+
+.design-umschalter .du-link:hover,
+.design-umschalter .du-aus:hover { background: rgba(255, 255, 255, .12); }
+
+.design-umschalter .du-aus {
+  padding: 9px 11px;
+  color: rgba(255, 255, 255, .6);
+  font-size: 15px;
+}
+
+html[data-design="a"] .du-a,
+html[data-design="b"] .du-b,
+html[data-design="aktuell"] .du-aktuell {
+  background: #fff;
+  color: #111;
+}
+
+@media (max-width: 480px) {
+  .design-umschalter .du-titel { display: none; }
+  .design-umschalter .du-link { padding: 9px 10px; }
+}

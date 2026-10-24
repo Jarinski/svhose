@@ -364,7 +364,7 @@ export default function KinderschutzPage() {
               Selbstverpflichtungserklärung für einen respektvollen Umgang mit Minderjährigen.
             </p>
             <a
-              href="/pdfs/Selbstverpflichtungserklaerung.pdf"
+              href="/pdfs/Positionierung_Selbstverpflichtungserklaerung_SVHOSE.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-3 text-xs tracking-[0.1em] uppercase hover:bg-[#1a1a1a] transition-colors self-start"

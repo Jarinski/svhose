@@ -1,20 +1,31 @@
-import { getNewsBySlug, getNewsSlugs } from '@/lib/content'
+import { getNewsBySlug } from '@/lib/content'
 import { notFound } from 'next/navigation'
-
-export const revalidate = 60
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
-import { PortableText } from '@portabletext/react'
+import MarkdownText, { teaserWiederholtText } from '@/components/MarkdownText'
+import type { Metadata } from 'next'
 
-export async function generateStaticParams() {
-  const slugs = await getNewsSlugs()
-  return slugs.map(s => ({ slug: s.slug }))
+// Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen erscheinen sofort
+export const dynamic = 'force-dynamic'
+
+// ─── Seite ──────────────────────────────────────────────────────────────────
+
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params
+  const post = await getNewsBySlug(params.slug)
+  if (!post) return {}
+  return {
+    title: post.title,
+    description: post.excerpt || undefined,
+    openGraph: post.image ? { images: [post.image.url] } : undefined,
+  }
 }
 
-export default async function NewsDetailPage({ params }: { params: { slug: string } }) {
+export default async function NewsDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const post = await getNewsBySlug(params.slug)
   if (!post) notFound()
 
@@ -27,7 +38,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
       <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">
         {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
       </div>
-      <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight mb-12">{post.title}</h1>
+      <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight break-words hyphens-auto mb-12">{post.title}</h1>
 
       {post.image && (
         <div
@@ -49,14 +60,13 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
 
       <div className="w-16 h-px bg-[#0a0a0a] mb-12" />
 
-      <div className="prose prose-lg max-w-none text-[#0a0a0a] leading-relaxed">
-        <p className="text-lg text-[#6b6b6b] font-light mb-8">{post.excerpt}</p>
-
-        {/* Sanity Portable Text */}
-        {post.body && post.body.length > 0 && (
-          <PortableText value={post.body} />
+      <div className="text-[#0a0a0a] leading-relaxed">
+        {post.excerpt && !teaserWiederholtText(post.excerpt, post.body) && (
+          <p className="text-lg text-[#6b6b6b] font-light mb-8">{post.excerpt}</p>
         )}
 
+        {/* Fließtext ist Markdown; rohes HTML im Text wird nicht gerendert */}
+        {post.body.trim() && <MarkdownText text={post.body} />}
       </div>
     </div>
   )

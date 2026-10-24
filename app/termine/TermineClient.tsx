@@ -1,21 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { MapPin, Clock, Tag, X } from 'lucide-react'
-
-interface Termin {
-  id: string
-  titel: string
-  datum: string
-  uhrzeit: string
-  ort: string
-  sparte: string
-  beschreibung: string
-  bild?: string
-  tags?: string[]
-}
+import type { Termin } from '@/lib/content'
 
 const FUSSBALL_DE_URL_REGEX = /https:\/\/www\.fussball\.de\/spiel\/\S+/i
 
@@ -177,6 +167,25 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
                   <span className="max-w-[200px]">{t.ort}</span>
                 </span>
               </div>
+
+              {/* Bild (oft ein Plakat im Hochformat): ganz zeigen statt beschneiden, Klick öffnet die volle Größe */}
+              {t.bild && (
+                <a
+                  href={t.bild}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Bild in voller Größe öffnen"
+                  className="relative block w-40 md:w-28 aspect-[3/4] shrink-0 overflow-hidden bg-[#e9e9e2] hover:opacity-80 transition-opacity"
+                >
+                  <Image
+                    src={t.bild}
+                    alt={`Bild zum Termin: ${t.titel}`}
+                    fill
+                    sizes="(min-width: 768px) 112px, 160px"
+                    className="object-contain"
+                  />
+                </a>
+              )}
             </div>
           ))}
           {kommend.length === 0 && (

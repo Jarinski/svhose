@@ -1,0 +1,655 @@
+/*
+ * Design-Vorschau B – Anpassung der Unterseiten (siehe lib/vorschau.ts).
+ * Alle Regeln gelten nur unter html[data-design="b"] .site, damit weder das bisherige
+ * Design noch die Verwaltung betroffen sind.
+ *
+ * Bento: heller Grund (#f3f3f2), weiße Karten mit großen Radien und weichen Schatten,
+ * Bricolage Grotesque für Überschriften, Plus Jakarta Sans für Text.
+ * Vereinsfarben: nur Schwarz, Weiß und neutrale Grautöne – Spartenfarben werden entsättigt,
+ * Fotos bleiben farbig. Die Unterseiten sind mit festen Tailwind-Klassen gebaut; die Regeln
+ * hier greifen deshalb gezielt diese Klassen (escaped) und Inline-Styles auf.
+ */
+
+/* ── Grundlage: Farben, Schriften, Hintergrund ───────────────────────────── */
+html[data-design="b"] .site {
+  --b-bg: #f3f3f2;
+  --b-karte: #ffffff;
+  --b-ink: #111111;
+  --b-muted: #6b6b6b;
+  --b-line: rgba(0, 0, 0, .08);
+  --b-grau: #e9e9e8;
+  --b-grau-2: #dededd;
+  --b-schatten: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .04);
+  --b-schatten-hoch: 0 2px 4px rgba(0, 0, 0, .04), 0 20px 40px rgba(0, 0, 0, .09);
+  --b-emoji: grayscale(1) contrast(1.1);
+  --b-emoji-stark: grayscale(1) brightness(.55) contrast(1.35);
+  --b-r: 28px;
+  --b-schrift: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --b-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  /* Bisherige Schriftvariablen umbiegen – damit greifen font-display und font-body überall */
+  --font-display: var(--b-display);
+  --font-body: var(--b-schrift);
+
+  min-height: 100vh;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  font-family: var(--b-schrift);
+  line-height: 1.6;
+}
+
+html[data-design="b"] .site ::selection {
+  background: var(--b-ink);
+  color: #fff;
+}
+
+/* Rausch-Overlay des bisherigen Designs (globals.css) – der helle Bento-Look kommt ohne aus */
+html[data-design="b"] body::before { display: none; }
+
+/* Fokusrahmen mit niedriger Spezifität (:where), damit Komponenten ihn anpassen können –
+ * z. B. weiß in den schwarzen Kacheln der Startseite (StartseiteB.module.css) */
+:where(html[data-design="b"] .site main) :focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: 3px;
+}
+
+/* In schwarzen Flächen ist der Fokusrahmen weiß */
+:where(html[data-design="b"] .site) .bg-\[\#0a0a0a\] :focus-visible { outline-color: #fff; }
+
+/* Beschriftung "Vorschau" im Umschalter: mehr Kontrast über dem hellen Grund (≥ 4,5 : 1) */
+html[data-design="b"] .design-umschalter .du-titel { color: rgba(255, 255, 255, .62); }
+
+/* Die Navigation läuft im Seitenfluss mit (sticky) – oben genügt ein kleiner Abstand */
+html[data-design="b"] .site main > .pt-32 { padding-top: 24px; }
+html[data-design="b"] .site main > .pb-24 { padding-bottom: 8px; }
+
+@media (min-width: 768px) {
+  html[data-design="b"] .site main > .pt-32 { padding-top: 40px; }
+}
+
+/* ── Überschriften: Bricolage statt Bebas ─────────────────────────────────
+ * Bricolage läuft breiter als die schmale Bebas, deshalb kleinere Grade. Wo die Seiten
+ * Versalien fest im Text haben, bleiben sie – Bricolage wirkt darin trotzdem freundlich. */
+html[data-design="b"] .site .font-display {
+  font-family: var(--b-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+html[data-design="b"] .site .font-display.text-xl { font-size: 1.2rem; line-height: 1.2; }
+html[data-design="b"] .site .font-display.text-2xl { font-size: 1.35rem; line-height: 1.2; }
+html[data-design="b"] .site .font-display.text-3xl { font-size: 1.5rem; line-height: 1.15; }
+html[data-design="b"] .site .font-display.text-4xl { font-size: clamp(1.5rem, 6vw, 2.1rem); line-height: 1.1; }
+html[data-design="b"] .site .font-display.text-5xl { font-size: clamp(1.6rem, 6.2vw, 2.75rem); line-height: 1.08; }
+
+@media (min-width: 768px) {
+  html[data-design="b"] .site .font-display.md\:text-3xl { font-size: 1.6rem; }
+  html[data-design="b"] .site .font-display.md\:text-4xl { font-size: 1.85rem; }
+  html[data-design="b"] .site .font-display.md\:text-5xl { font-size: clamp(1.6rem, 4.4vw, 2.75rem); line-height: 1.08; }
+}
+
+/* Seitentitel (h1): groß, aber so, dass auch "TRAININGSZEITEN" mobil in eine Zeile passt */
+html[data-design="b"] .site main h1.font-display[class] {
+  font-size: clamp(1.85rem, 9vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -.025em;
+  overflow-wrap: break-word;
+}
+
+/* Lange Titel (News-Beitrag, Impressum, Datenschutz) etwas kleiner */
+html[data-design="b"] .site main > .pt-32 > h1.font-display[class] {
+  font-size: clamp(1.85rem, 5vw, 3.4rem);
+  line-height: 1.08;
+}
+
+/* ── Kleine Beschriftungen ──────────────────────────────────────────────── */
+
+/* Überzeile über dem Seitentitel – mit Strich wie auf der Startseite */
+html[data-design="b"] .site main .text-\[11px\].tracking-\[0\.25em\] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+html[data-design="b"] .site main .text-\[11px\].tracking-\[0\.25em\]::before {
+  content: '';
+  flex: none;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--b-ink);
+}
+
+html[data-design="b"] .site main svg + .text-\[11px\].tracking-\[0\.25em\]::before { display: none; }
+
+html[data-design="b"] .site main .bg-\[\#0a0a0a\] .text-\[11px\].tracking-\[0\.25em\]::before { background: #fff; }
+
+/* Abschnitts-Beschriftungen ("Kommende Termine", "Vorstand") */
+html[data-design="b"] .site main .text-\[11px\].tracking-\[0\.2em\],
+html[data-design="b"] .site main .text-xs.tracking-\[0\.22em\],
+html[data-design="b"] .site main .text-\[11px\].tracking-\[0\.22em\],
+html[data-design="b"] .site main .text-\[11px\].tracking-\[0\.18em\],
+html[data-design="b"] .site main .text-sm.tracking-\[0\.18em\] {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+/* Knöpfe, Links, Pillen und Metazeilen in normaler Schreibweise – freundlicher als Versalien */
+html[data-design="b"] .site main :is(a, button).uppercase,
+html[data-design="b"] .site main span.uppercase:not(.tracking-\[0\.2em\].text-\[11px\]),
+html[data-design="b"] .site main .text-\[10px\].uppercase {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+html[data-design="b"] .site main .text-\[10px\] {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+html[data-design="b"] .site main .text-\[10px\].tracking-\[0\.2em\] {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Karten statt Linienraster ──────────────────────────────────────────── */
+
+/* Raster mit 1-px-Linien (gap-px auf dunklem Grund) werden zu Kachelrastern */
+html[data-design="b"] .site main .gap-px.bg-\[\#0a0a0a\]\/10 {
+  gap: 16px;
+  background: transparent;
+}
+
+html[data-design="b"] .site main .space-y-px.bg-\[\#0a0a0a\]\/10 { background: transparent; }
+
+html[data-design="b"] .site main .space-y-px > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+
+/* Helle Flächen werden weiße Karten */
+html[data-design="b"] .site main .bg-\[\#f5f5f0\] {
+  background: var(--b-karte);
+  border-radius: 20px;
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site main .gap-px > .bg-\[\#f5f5f0\] {
+  border-radius: var(--b-r);
+  overflow: hidden;
+}
+
+html[data-design="b"] .site main .bg-\[\#fafaf8\] {
+  background: var(--b-karte);
+  border-color: transparent;
+  border-radius: 24px;
+  box-shadow: var(--b-schatten);
+}
+
+/* Umrandete Kästen (Hinweise, Aufgaben, Kontakt) */
+html[data-design="b"] .site main .border.border-\[\#0a0a0a\]\/10:is(.p-5, .p-6, .p-8) {
+  background: var(--b-karte);
+  border-color: transparent;
+  border-radius: var(--b-r);
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site main .border.border-\[\#0a0a0a\]\/10.overflow-hidden {
+  border-color: transparent;
+  border-radius: 20px;
+}
+
+/* Kleine Kontaktkarten innerhalb weißer Mannschaftskarten */
+html[data-design="b"] .site main .bg-white {
+  background: var(--b-bg);
+  border-color: transparent;
+  border-radius: 18px;
+}
+
+/* bg-white ist im Projekt #f5f5f0 – beim Hover auf Karten echtes Weiß und etwas Höhe */
+html[data-design="b"] .site main .hover\:bg-white:hover {
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten-hoch);
+}
+
+html[data-design="b"] .site main .bg-\[\#0a0a0a\]\/5 {
+  background: var(--b-grau);
+  border-color: transparent;
+  border-radius: 20px;
+}
+
+html[data-design="b"] .site main span.bg-\[\#0a0a0a\]\/5 {
+  border-radius: 999px;
+  color: var(--b-ink);
+}
+
+/* Platzhalterflächen (#e9e9e2 ist leicht gelblich) in neutralem Grau */
+html[data-design="b"] .site main .bg-\[\#e9e9e2\],
+html[data-design="b"] .site main .bg-\[\#e8e8e3\] { background: var(--b-grau); }
+
+/* News-Vorschaubild mit Rand wie auf der Startseite */
+html[data-design="b"] .site main .aspect-\[16\/9\].bg-\[\#e9e9e2\] {
+  width: auto;
+  margin: 10px 10px 0;
+  border-radius: 20px;
+}
+
+/* Bild im News-Beitrag */
+html[data-design="b"] .site main > .pt-32 > .relative.rounded-sm { border-radius: var(--b-r); }
+
+/* ── Schwarze Flächen ───────────────────────────────────────────────────── */
+html[data-design="b"] .site .bg-\[\#0a0a0a\] { background: var(--b-ink); }
+html[data-design="b"] .site .hover\:bg-\[\#0a0a0a\]:hover { background: var(--b-ink); }
+
+html[data-design="b"] .site main .bg-\[\#0a0a0a\].text-\[\#f5f5f0\] { border-radius: var(--b-r); }
+
+/* Datums-Kästchen in Terminen und Spielplänen */
+html[data-design="b"] .site main .bg-\[\#0a0a0a\].w-20 { border-radius: 18px; }
+
+/* Vollbreite dunkle Bänder werden zu abgerundeten Blöcken wie der Footer */
+html[data-design="b"] .site main .bg-\[\#0a0a0a\].px-6:is(.py-16, .py-20, .py-24) {
+  margin-left: max(14px, calc((100% - 1280px) / 2));
+  margin-right: max(14px, calc((100% - 1280px) / 2));
+  border-radius: 36px;
+}
+
+/* Kacheln in dunklen Bändern (Zahlen, Versprechen, Grundsätze) */
+html[data-design="b"] .site main .gap-px.bg-\[\#f5f5f0\]\/10 {
+  gap: 12px;
+  background: transparent;
+}
+
+html[data-design="b"] .site main .gap-px.bg-\[\#f5f5f0\]\/10 > .bg-\[\#0a0a0a\] {
+  background: rgba(255, 255, 255, .07);
+  border-radius: 20px;
+}
+
+/* Gedämpfter Text auf Schwarz: #6b6b6b wäre zu kontrastarm */
+html[data-design="b"] .site .bg-\[\#0a0a0a\] .text-\[\#6b6b6b\] { color: rgba(255, 255, 255, .68); }
+html[data-design="b"] .site .bg-\[\#0a0a0a\] .text-\[\#8b8b8b\] { color: rgba(255, 255, 255, .8); }
+html[data-design="b"] .site main .bg-\[\#0a0a0a\] .text-\[\#f5f5f0\]\/40 { color: rgba(255, 255, 255, .6); }
+
+/* Aufzählungsnummern (Kinderschutz) waren fast unsichtbar – gedämpft, aber lesbar */
+html[data-design="b"] .site main .text-\[\#0a0a0a\]\/20 { color: var(--b-muted); }
+html[data-design="b"] .site main .text-\[\#f5f5f0\]\/20 { color: rgba(255, 255, 255, .55); }
+
+/* ── Knöpfe als Pillen ──────────────────────────────────────────────────── */
+html[data-design="b"] .site main a.inline-flex:is(.px-5, .px-6, .px-8),
+html[data-design="b"] .site main a.inline-flex.px-3.border {
+  border-radius: 999px;
+  box-shadow: none;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+html[data-design="b"] .site main a.inline-flex:is(.px-5, .px-6, .px-8) { font-size: 14px; }
+
+html[data-design="b"] .site main a.inline-flex:is(.px-5, .px-6, .px-8):hover { transform: translateY(-2px); }
+
+/* Filter-Knöpfe (Termine, Spielpläne): weiße Pillen, aktiv schwarz */
+html[data-design="b"] .site main button.border {
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+html[data-design="b"] .site main button.border.bg-transparent {
+  background: var(--b-karte);
+  border-color: var(--b-line);
+  color: var(--b-ink);
+}
+
+html[data-design="b"] .site main button.border.bg-transparent:hover { border-color: rgba(17, 17, 17, .35); }
+
+/* Schlagwort-Gruppen dürfen umbrechen statt rechts aus der Karte zu laufen */
+html[data-design="b"] .site main .flex-wrap.shrink-0 {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Schlagwörter in Terminen */
+html[data-design="b"] .site main :is(span, button, div).px-2.py-0\.5 {
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+html[data-design="b"] .site main span.border.px-2.py-0\.5:not(.text-emerald-700),
+html[data-design="b"] .site main div.border.px-2.py-0\.5 {
+  background: var(--b-grau);
+  border-color: transparent;
+  color: var(--b-ink);
+}
+
+/* ── Spartenfarben und bunte Akzente entsättigen ───────────────────────────
+ * Die Seiten färben per Inline-Style (style="background:…; color:…"). Bilder sind ausgenommen:
+ * next/image setzt selbst style="color:transparent" (versteckt den Alt-Text beim Laden). */
+html[data-design="b"] .site main [style*="color"]:not(img):not(button):not(button *) { color: var(--b-ink) !important; }
+html[data-design="b"] .site main [style*="background"]:not(img):not(button) { background: var(--b-grau) !important; }
+
+/* Tages-Kürzel und Initialen: schwarz mit weißer Schrift */
+html[data-design="b"] .site main [style*="background"].text-white { background: var(--b-ink) !important; }
+html[data-design="b"] .site main .rounded-sm.text-white[style*="background"] { border-radius: 10px; }
+
+/* Punkte vor Abschnittsnamen, Linien dahinter, Balken über Spartenkarten */
+html[data-design="b"] .site main .rounded-full.w-1\.5[style*="background"] { background: var(--b-ink) !important; }
+html[data-design="b"] .site main .h-px[style*="background"] { background: var(--b-line) !important; }
+html[data-design="b"] .site main .h-1[style*="background"] { display: none; }
+
+/* Saison- und Zähl-Badges als graue Pillen */
+html[data-design="b"] .site main span[style*="background"]:not(.text-white) {
+  border-radius: 999px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Linke Farbkante: im Spartenkopf weiße Karte, in den Trainingszeiten weg */
+html[data-design="b"] .site main .space-y-px[style*="border-left"] { border-left: 0 !important; }
+
+html[data-design="b"] .site main .pl-6[style*="border-left"] {
+  border-left: 0 !important;
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: var(--b-r);
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site main .pl-6[style*="border-left"] > h1.font-display[class] { font-size: clamp(1.6rem, 8vw, 4.5rem); }
+
+/* Emoji der Sparte als graues Quadrat */
+html[data-design="b"] .site main .pl-6[style*="border-left"] > .text-5xl {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  background: var(--b-grau);
+  font-size: 38px;
+  filter: var(--b-emoji);
+}
+
+/* Icon-Quadrat der Spartenkarten */
+html[data-design="b"] .site main .w-16.h-16[style*="background"] {
+  border-radius: 18px;
+  filter: var(--b-emoji);
+}
+
+/* Teamfoto bzw. Platzhalter: abgerundet, auf schmalen Bildschirmen unter dem Text */
+html[data-design="b"] .site main .w-\[512px\].h-\[320px\] {
+  width: min(512px, 42%);
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 18px;
+}
+
+html[data-design="b"] .site main .w-\[512px\] > span {
+  font-size: 48px;
+  filter: var(--b-emoji);
+}
+
+@media (max-width: 640px) {
+  html[data-design="b"] .site main .flex:has(> .w-\[512px\]) { flex-direction: column; }
+  html[data-design="b"] .site main .w-\[512px\].h-\[320px\] { width: 100%; }
+  /* Ohne Teamfoto reicht ein flacher Platzhalter */
+  html[data-design="b"] .site main .w-\[512px\].h-\[320px\]:not(:has(> img:not([aria-hidden]))) {
+    aspect-ratio: auto;
+    height: 96px;
+  }
+  html[data-design="b"] .site main .w-\[512px\] > span { font-size: 36px; }
+}
+
+/* Zurück-Links oben auf Detailseiten als kleine weiße Pille */
+html[data-design="b"] .site main > .pt-32 > a.inline-flex:first-child {
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+  color: var(--b-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+html[data-design="b"] .site main > .pt-32 > a.inline-flex:first-child:hover { box-shadow: var(--b-schatten-hoch); }
+
+/* Filter mit Inline-Farben (Trainingszeiten): weiße Pillen, aktiv schwarz */
+html[data-design="b"] .site main button[style] {
+  border-radius: 999px;
+  background: var(--b-karte) !important;
+  border-color: var(--b-line) !important;
+  color: var(--b-ink) !important;
+  font-weight: 600 !important;
+}
+
+html[data-design="b"] .site main button[style]:not([style*="transparent"]) {
+  background: var(--b-ink) !important;
+  border-color: var(--b-ink) !important;
+  color: #fff !important;
+}
+
+html[data-design="b"] .site main button[style]:not([style*="transparent"]) span { color: rgba(255, 255, 255, .7) !important; }
+
+/* Grün (WhatsApp, Heimspiel, Häkchen) wird Schwarz */
+html[data-design="b"] .site main :is(.text-emerald-600, .text-emerald-700, .text-\[\#16a34a\]),
+html[data-design="b"] .site main :is(.hover\:text-\[\#15803d\], .hover\:text-\[\#16a34a\]):hover { color: var(--b-ink); }
+
+/* Heimspiel-Badge im Spielplan schwarz, Auswärts bleibt grau */
+html[data-design="b"] .site main span.text-emerald-700.border {
+  background: var(--b-ink);
+  border-color: var(--b-ink);
+  color: #fff;
+}
+
+/* Linie mit ungültiger Farbklasse (Tailwind-Grau wäre leicht bläulich) */
+html[data-design="b"] .site main .border-\[\#0a0a0a\]\/8 { border-color: var(--b-line); }
+
+/* Fotos bleiben in B farbig – auch dort, wo das Markup "grayscale" setzt (Ansprechpartner*innen) */
+html[data-design="b"] .site main img.grayscale { filter: none; }
+
+/* "Mehr erfahren" auf den Spartenkarten in normaler Schreibweise wie die übrigen Links */
+html[data-design="b"] .site main a > .uppercase.tracking-\[0\.16em\] {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Nichts abschneiden ─────────────────────────────────────────────────── */
+
+/* Trainingszeiten und E-Mail-Adressen in den Mannschaftskarten (/sparten/…) umbrechen statt kürzen */
+html[data-design="b"] .site main .flex-1.min-w-0.text-sm > .truncate {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+html[data-design="b"] .site main span.truncate.min-w-0 {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Trainer*innen in der mobilen Zeile der Trainingszeiten */
+html[data-design="b"] .site main .sm\:hidden span.truncate.max-w-\[200px\] {
+  white-space: normal;
+  max-width: none;
+}
+
+/* ── Vergangene Termine und Spiele: flache, umrandete Zeilen statt Transparenz ──
+ * opacity-50/-60 aus dem Markup wäre auf dem hellen Grund zu kontrastarm */
+html[data-design="b"] .site main .space-y-px:is(.opacity-50, .opacity-60) { opacity: 1; }
+
+html[data-design="b"] .site main .space-y-px:is(.opacity-50, .opacity-60) > .bg-\[\#f5f5f0\] {
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid rgba(0, 0, 0, .1);
+}
+
+/* ── Filterknöpfe mobil als waagerecht scrollbare Reihe (/termine, /trainingszeiten) ──
+ * sonst füllen die Pillen den ganzen ersten Bildschirm */
+@media (max-width: 640px) {
+  html[data-design="b"] .site main .mb-10 > .flex-wrap.gap-2,
+  html[data-design="b"] .site main .mb-12 .flex-wrap.gap-2 {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    margin-inline: -24px;
+    padding: 5px 24px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 24px), transparent);
+  }
+
+  html[data-design="b"] .site main .mb-10 > .flex-wrap.gap-2::-webkit-scrollbar,
+  html[data-design="b"] .site main .mb-12 .flex-wrap.gap-2::-webkit-scrollbar { display: none; }
+
+  html[data-design="b"] .site main :is(.mb-10, .mb-12) .flex-wrap.gap-2 > button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  /* Wochentag und Saison stehen untereinander – die Reihen dürfen nicht breiter als die Seite werden */
+  html[data-design="b"] .site main .mb-12 .flex-wrap:has(> div > .flex-wrap.gap-2) > div {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ── Emojis im Text entsättigen (Titel, Teaser, Beiträge) – Absätze mit Bildern bleiben farbig ── */
+html[data-design="b"] .site main :is(h1, h2, h3, h4, p, li, blockquote):not(:has(img, picture, video)) {
+  filter: grayscale(1);
+}
+
+/* ── Textseiten, News-Beitrag, Markdown ─────────────────────────────────── */
+
+/* Fließtext des News-Beitrags in einer weißen Karte */
+html[data-design="b"] .site main > .pt-32 > .text-\[\#0a0a0a\].leading-relaxed {
+  padding: clamp(22px, 5vw, 48px);
+  border-radius: var(--b-r);
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+}
+
+/* Impressum und Datenschutz in einer weißen Karte */
+html[data-design="b"] .site main > .pt-32.max-w-2xl > .space-y-10 {
+  padding: clamp(22px, 5vw, 44px);
+  border-radius: var(--b-r);
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site main .text-\[\#0a0a0a\] { color: var(--b-ink); }
+
+html[data-design="b"] .site main code.rounded-sm,
+html[data-design="b"] .site main pre.rounded-sm { border-radius: 10px; }
+
+html[data-design="b"] .site main img.rounded-sm { border-radius: 18px; }
+
+html[data-design="b"] .site main blockquote { border-left-color: var(--b-ink); }
+
+/* Tabellen (z. B. aus eingefügten Inhalten) */
+html[data-design="b"] .site main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+  font-size: 14px;
+}
+
+html[data-design="b"] .site main :is(th, td) {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--b-line);
+}
+
+html[data-design="b"] .site main th {
+  background: var(--b-grau);
+  font-weight: 700;
+}
+
+html[data-design="b"] .site main tr:last-child > td { border-bottom: 0; }
+
+/* Formular-Elemente */
+html[data-design="b"] .site main :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, .14);
+  border-radius: 14px;
+  background: var(--b-karte);
+  color: var(--b-ink);
+  font: inherit;
+}
+
+html[data-design="b"] .site main :is(input, select, textarea):focus-visible { border-color: var(--b-ink); }
+html[data-design="b"] .site :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--b-ink); }
+
+/* ── 404-Seite: eine weiße Kachel mit großer "404" ── */
+html[data-design="b"] .site main > .min-h-screen {
+  min-height: 0;
+  width: calc(100% - 28px);
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: clamp(36px, 8vw, 72px) clamp(20px, 5vw, 48px);
+  border-radius: var(--b-r);
+  background: var(--b-karte);
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site main > .min-h-screen > .font-display:first-child {
+  font-size: clamp(5.5rem, 26vw, 11rem);
+  letter-spacing: -.05em;
+  color: var(--b-ink);
+}
+
+html[data-design="b"] .site main > .min-h-screen h1.font-display[class] {
+  margin-top: 8px;
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+}
+
+@media (min-width: 768px) {
+  html[data-design="b"] .site main > .min-h-screen { margin-top: 40px; }
+}
+
+/* ── Cookie-Banner: schwarzer, runder Block mit Pillen-Knöpfen ── */
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] {
+  padding-bottom: 84px;
+}
+
+/* Unten 84 px Platz für den Vorschau-Umschalter – damit die Box mit aufgeklappten
+ * Einstellungen nicht oben aus dem Bildschirm läuft, scrollt sie in sich */
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] > div {
+  max-height: calc(100vh - 116px);
+  max-height: calc(100dvh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--b-r);
+  border-color: rgba(255, 255, 255, .08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+}
+
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] h2.font-display {
+  font-size: 1.35rem;
+  letter-spacing: -.01em;
+}
+
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] .rounded-lg {
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] span[aria-hidden="true"] { filter: var(--b-emoji); }
+
+html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-design="b"] .site main a.inline-flex:hover { transform: none; }
+}

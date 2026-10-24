@@ -244,7 +244,10 @@ export async function getTischtennisVergangeneSpiele(): Promise<TischtennisSpiel
   return games.filter(g => g.datum < today || g.ergebnis !== '')
 }
 
-/** All games for cron sync (upcoming 6 months + last 7 days, deduplicated). */
+/**
+ * Alle Spiele für den Cron-Sync: kommende sechs Monate + letzte sieben Tage, dedupliziert.
+ * Der Name ist historisch – die ganze Saison ("13-6349") wird nicht abgefragt.
+ */
 export async function getTischtennisAlleSaison(): Promise<TischtennisSpiel[]> {
   const [upcoming, past] = await Promise.all([
     fetchGames('5'),

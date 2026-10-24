@@ -1,0 +1,246 @@
+/* Spielplan der Startseite A – Filter und Kartenreihe */
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--a-line);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--a-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+
+.chip:hover {
+  color: var(--a-text);
+  border-color: var(--a-line-strong);
+}
+
+.chipAktiv,
+.chipAktiv:hover {
+  background: var(--a-paper);
+  color: var(--a-ink);
+  border-color: var(--a-paper);
+}
+
+/* Höchstens vier Karten nebeneinander, der Rest per Scrollen – schmale neutrale Scrollleiste */
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, calc((100% - 48px) / 4));
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 6px;
+  /* Platz für Fokusrahmen und Hover-Anheben; contain hält den Überhang aus der Seitenbreite heraus */
+  padding: 6px 6px 18px;
+  margin: -6px -6px 0;
+  contain: paint;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .3) transparent;
+}
+
+.zelle {
+  display: flex;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.game {
+  flex: 1;
+  min-width: 0;
+  background: var(--a-surface);
+  border: 1px solid var(--a-line);
+  border-radius: 22px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--a-text);
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.game:hover,
+.game:focus-visible {
+  border-color: rgba(255, 255, 255, .35);
+  transform: translateY(-3px);
+}
+
+.gameTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--a-muted);
+}
+
+.sport {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Mannschaft bzw. Sparte darf umbrechen statt gekürzt zu werden */
+.kopf {
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+/* Liga unter der Kopfzeile, über die volle Kartenbreite */
+.liga {
+  margin-top: -10px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--a-muted);
+  overflow-wrap: break-word;
+}
+
+.pill {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 1px solid var(--a-line-strong);
+  color: var(--a-soft);
+}
+
+.pillHeim {
+  background: var(--a-paper);
+  color: var(--a-ink);
+  border-color: var(--a-paper);
+}
+
+.gameDate {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.gameDate b {
+  font-stretch: 66%;
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.gameDate span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--a-muted);
+}
+
+.titel {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.titel small {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--a-muted);
+  margin-bottom: 4px;
+  letter-spacing: .02em;
+}
+
+.gameFoot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--a-line);
+  font-size: 13px;
+  color: var(--a-muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wann {
+  flex: none;
+}
+
+/* Heutiges Spiel: invertierte Karte */
+.heute {
+  background: var(--a-paper);
+  color: var(--a-ink);
+  border-color: var(--a-paper);
+}
+
+.heute:hover,
+.heute:focus-visible {
+  border-color: var(--a-paper);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .6);
+}
+
+.heute .gameTop,
+.heute .liga,
+.heute .gameDate span,
+.heute .titel small,
+.heute .gameFoot {
+  color: var(--a-ink-muted);
+}
+
+.heute .gameFoot {
+  border-top-color: rgba(0, 0, 0, .12);
+}
+
+.heute .wann {
+  color: var(--a-ink);
+  font-weight: 700;
+}
+
+.heute .pill {
+  border-color: rgba(0, 0, 0, .3);
+  color: var(--a-ink-soft);
+}
+
+.heute .pillHeim {
+  background: var(--a-ink);
+  color: var(--a-paper);
+  border-color: var(--a-ink);
+}
+
+.heute:focus-visible {
+  outline-color: var(--a-paper);
+}
+
+.leer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px dashed var(--a-line-strong);
+  color: var(--a-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .game { transition: none; }
+  .game:hover,
+  .game:focus-visible { transform: none; }
+}
