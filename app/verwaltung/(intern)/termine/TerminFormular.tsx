@@ -1,11 +1,14 @@
 'use client'
 
 import { useActionState } from 'react'
+import { erfolg } from '@/lib/verwaltung/formular'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
-import { auswahlKlasse, eingabeKlasse, Feld, Karte, Meldung } from '@/components/verwaltung/ui'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
+import { auswahlKlasse, eingabeKlasse, Feld, Karte } from '@/components/verwaltung/ui'
+import { useFormularGeaendert, useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { terminEntfernen, terminSichern } from './aktionen'
 
 export interface TerminFormDaten {
@@ -43,13 +46,16 @@ export default function TerminFormular({
   hinweis?: string
 }) {
   const [ergebnis, speichern] = useActionState(terminSichern, LEER_ERGEBNIS)
+  const stand = neuererStand(termin?.geaendertAm, ergebnis.stand)
+  const [geaendert, merken] = useFormularGeaendert(stand)
+  useUngespeichertWarnung(geaendert)
   const f = ergebnis.felder ?? {}
 
   return (
     <div className="space-y-6">
-      <form key={termin?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
+      <form key={termin?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} onChange={merken} className="space-y-6">
         {termin && <input type="hidden" name="id" value={termin.id} />}
-        <input type="hidden" name="stand" value={neuererStand(termin?.geaendertAm, ergebnis.stand)} />
+        <input type="hidden" name="stand" value={stand} />
 
         <Karte titel="Termin">
           <div className="grid gap-5 sm:grid-cols-2">
@@ -113,13 +119,11 @@ export default function TerminFormular({
         </Karte>
 
         <Karte titel="Bild" beschreibung="Optional, zum Beispiel ein Plakat oder Foto.">
-          <BildFeld aktuell={termin?.bildUrl ?? null} />
+          <BildFeld aktuell={termin?.bildUrl ?? null} onAenderung={merken} />
           {f.bild && <p className="mt-2 text-sm text-red-700">{f.bild}</p>}
         </Karte>
 
-        {hinweis && !ergebnis.meldung && <Meldung art="erfolg">{hinweis}</Meldung>}
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf className="w-full sm:w-auto py-3">Speichern</SpeichernKnopf>
+        <SpeicherLeiste geaendert={geaendert} ergebnis={hinweis && !ergebnis.meldung ? erfolg(hinweis) : ergebnis} />
       </form>
 
       {termin && (

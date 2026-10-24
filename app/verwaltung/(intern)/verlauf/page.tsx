@@ -188,17 +188,18 @@ export default async function VerlaufSeite(props: { searchParams: Promise<Suche>
                           {felder.map((f, i) => (
                             <div key={i} className="text-sm">
                               <div className="font-medium mb-1">{f.feld}</div>
-                              <div className={`grid gap-2 ${ohneVorher || ohneNachher ? '' : 'sm:grid-cols-2'}`}>
+                              {/* grid-cols-* = minmax(0, 1fr): lange Werte ohne Leerzeichen dürfen die Kästen nicht verbreitern */}
+                              <div className={`grid grid-cols-1 gap-2 ${ohneVorher || ohneNachher ? '' : 'sm:grid-cols-2'}`}>
                                 {!ohneVorher && (
-                                  <div className="rounded-sm bg-red-50 border border-red-200 px-3 py-2">
+                                  <div className="min-w-0 rounded-sm bg-red-50 border border-red-200 px-3 py-2">
                                     <div className="text-[10px] uppercase tracking-[0.14em] text-red-800 mb-1">{ohneNachher ? 'Vor dem Löschen' : 'Vorher'}</div>
-                                    <pre className="whitespace-pre-wrap break-words font-sans text-[13px] leading-relaxed max-h-72 overflow-y-auto">{f.vorher}</pre>
+                                    <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] font-sans text-[13px] leading-relaxed max-h-72 overflow-y-auto">{f.vorher}</pre>
                                   </div>
                                 )}
                                 {!ohneNachher && (
-                                  <div className="rounded-sm bg-emerald-50 border border-emerald-200 px-3 py-2">
+                                  <div className="min-w-0 rounded-sm bg-emerald-50 border border-emerald-200 px-3 py-2">
                                     <div className="text-[10px] uppercase tracking-[0.14em] text-emerald-800 mb-1">{ohneVorher ? 'Angelegt mit' : 'Nachher'}</div>
-                                    <pre className="whitespace-pre-wrap break-words font-sans text-[13px] leading-relaxed max-h-72 overflow-y-auto">{f.nachher}</pre>
+                                    <pre className="whitespace-pre-wrap [overflow-wrap:anywhere] font-sans text-[13px] leading-relaxed max-h-72 overflow-y-auto">{f.nachher}</pre>
                                   </div>
                                 )}
                               </div>

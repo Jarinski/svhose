@@ -3,10 +3,12 @@
 import { useActionState, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import { auswahlKlasse, eingabeKlasse, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
+import { useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { kontakteSpeichernAktion } from './aktionen'
 
 type Gruppe = 'vorstand' | 'abteilungsleitung' | 'weitere'
@@ -34,6 +36,11 @@ interface Props {
   zeilen: Zeilen
   personen: PersonKurz[]
   sparten: { id: number; name: string }[]
+}
+
+/** Vergleichbarer Stand der Zeilen – Bezeichnungen ohne Leerzeichen am Rand, so wie sie gespeichert werden. */
+function vergleichsStand(zeilen: Zeilen): string {
+  return JSON.stringify(ABSCHNITTE.map(({ gruppe }) => zeilen[gruppe].map(z => [z.id, z.personId, z.bezeichnung.trim(), z.sparteId])))
 }
 
 export default function KontakteFormular(props: Props) {
@@ -71,6 +78,9 @@ function Editor({ stand, zeilen: start, personen, sparten, ergebnis }: Props & {
   ABSCHNITTE.forEach(({ gruppe }) => {
     daten[gruppe] = zeilen[gruppe].map(z => ({ id: z.id, personId: z.personId, bezeichnung: z.bezeichnung, sparteId: z.sparteId }))
   })
+  // Vergleich mit dem Stand beim Laden – nach dem Speichern startet der Editor ohnehin neu (key).
+  const geaendert = vergleichsStand(zeilen) !== vergleichsStand(start)
+  useUngespeichertWarnung(geaendert)
   const ohnePerson = ABSCHNITTE.reduce((n, a) => n + zeilen[a.gruppe].filter(z => z.personId == null).length, 0)
 
   return (
@@ -172,16 +182,19 @@ function Editor({ stand, zeilen: start, personen, sparten, ergebnis }: Props & {
         </Karte>
       ))}
 
-      <div className="sticky bottom-0 z-10 py-3 bg-[#f5f5f0]/95 backdrop-blur-sm border-t border-[#0a0a0a]/10 space-y-3">
-        {ohnePerson > 0 && (
-          <Meldung art="hinweis">
-            {ohnePerson === 1 ? 'Bei einer Funktion fehlt noch die Person.' : `Bei ${ohnePerson} Funktionen fehlt noch die Person.`} Bitte auswählen oder die Zeile
-            entfernen.
-          </Meldung>
-        )}
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf className="w-full sm:w-auto">Kontaktseite speichern</SpeichernKnopf>
-      </div>
+      <SpeicherLeiste
+        geaendert={geaendert}
+        ergebnis={ergebnis}
+        knopfText="Kontaktseite speichern"
+        zusatz={
+          ohnePerson > 0 && (
+            <Meldung art="hinweis">
+              {ohnePerson === 1 ? 'Bei einer Funktion fehlt noch die Person.' : `Bei ${ohnePerson} Funktionen fehlt noch die Person.`} Bitte auswählen oder die
+              Zeile entfernen.
+            </Meldung>
+          )
+        }
+      />
     </div>
   )
 }

@@ -8,9 +8,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ImagePlus, Trash2, Undo2 } from 'lucide-react'
+import { MAX_UPLOAD_BYTES } from '@/lib/verwaltung/upload-grenze'
 import { knopfKlassen } from './ui'
-
-const MAX_BYTES = 15 * 1024 * 1024
 
 export default function FotoFeld({
   aktuell,
@@ -50,7 +49,7 @@ export default function FotoFeld({
       setNeu(null)
       return
     }
-    if (datei.size > MAX_BYTES) {
+    if (datei.size > MAX_UPLOAD_BYTES) {
       e.target.value = ''
       setNeu(null)
       setHinweis('Das Bild ist größer als 15 MB. Bitte ein kleineres Bild wählen.')

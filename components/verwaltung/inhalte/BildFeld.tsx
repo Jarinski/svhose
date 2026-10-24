@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ImagePlus, Trash2, Undo2 } from 'lucide-react'
+import { MAX_UPLOAD_BYTES } from '@/lib/verwaltung/upload-grenze'
 import { knopfKlassen } from '@/components/verwaltung/ui'
 
 export default function BildFeld({
@@ -15,16 +16,20 @@ export default function BildFeld({
   name = 'bild',
   entfernenName = 'bildEntfernen',
   id,
+  onAenderung,
 }: {
   /** URL des gespeicherten Bildes oder null */
   aktuell: string | null
   name?: string
   entfernenName?: string
   id?: string
+  /** Meldet Änderungen ohne Eingabe-Ereignis ("Bild entfernen", "Rückgängig") – z. B. für useFormularGeaendert. */
+  onAenderung?: () => void
 }) {
   const eingabe = useRef<HTMLInputElement>(null)
   const [vorschau, setVorschau] = useState<string | null>(null)
   const [entfernt, setEntfernt] = useState(false)
+  const [hinweis, setHinweis] = useState<string | null>(null)
 
   // Lokale Vorschau-Adresse wieder freigeben
   useEffect(() => {
@@ -38,6 +43,21 @@ export default function BildFeld({
   function auswahlLeeren() {
     if (eingabe.current) eingabe.current.value = ''
     setVorschau(null)
+  }
+
+  function dateiGewaehlt(ev: React.ChangeEvent<HTMLInputElement>) {
+    const datei = ev.target.files?.[0]
+    setHinweis(null)
+    // Größere Dateien nimmt der Server nicht an – sofort verwerfen statt beim Speichern abzubrechen
+    if (datei && datei.size > MAX_UPLOAD_BYTES) {
+      ev.target.value = ''
+      setVorschau(null)
+      setHinweis('Das Bild ist größer als 15 MB. Bitte ein kleineres Bild wählen.')
+      // Verworfene Datei zählt nicht als Änderung (das Formular hört auf onChange)
+      ev.stopPropagation()
+      return
+    }
+    setVorschau(datei ? URL.createObjectURL(datei) : null)
   }
 
   return (
@@ -64,10 +84,7 @@ export default function BildFeld({
             name={name}
             accept="image/*"
             className="sr-only"
-            onChange={ev => {
-              const datei = ev.target.files?.[0]
-              setVorschau(datei ? URL.createObjectURL(datei) : null)
-            }}
+            onChange={dateiGewaehlt}
           />
         </label>
         {angezeigt && (
@@ -76,14 +93,23 @@ export default function BildFeld({
             className={knopfKlassen.leise}
             onClick={() => {
               auswahlLeeren()
+              setHinweis(null)
               if (aktuell) setEntfernt(true)
+              onAenderung?.()
             }}
           >
             <Trash2 size={15} /> Bild entfernen
           </button>
         )}
         {entfernt && !vorschau && aktuell && (
-          <button type="button" className={knopfKlassen.leise} onClick={() => setEntfernt(false)}>
+          <button
+            type="button"
+            className={knopfKlassen.leise}
+            onClick={() => {
+              setEntfernt(false)
+              onAenderung?.()
+            }}
+          >
             <Undo2 size={15} /> Rückgängig
           </button>
         )}
@@ -91,6 +117,7 @@ export default function BildFeld({
 
       {vorschau && <p className="text-xs text-[#6b6b6b]">Neues Bild – wird beim Speichern hochgeladen.</p>}
       {entfernt && !vorschau && aktuell && <p className="text-xs text-[#6b6b6b]">Das Bild wird beim Speichern entfernt.</p>}
+      {hinweis && <p className="text-sm text-red-700">{hinweis}</p>}
     </div>
   )
 }

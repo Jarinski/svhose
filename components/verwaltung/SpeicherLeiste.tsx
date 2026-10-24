@@ -5,16 +5,15 @@
  * Änderungen") und der Rückmeldung der Server-Aktion. Muss innerhalb des <form> stehen – der
  * Knopf sendet das Formular ab.
  *
- * Fest positioniert statt "sticky": html und body haben global overflow-x: hidden (globals.css),
- * dadurch greift position: sticky nicht. Ein Platzhalter am Seitenende in Höhe der Leiste sorgt
- * dafür, dass am Ende der Seite nichts verdeckt wird.
+ * Fest positioniert statt "sticky": So bleibt die Leiste auch über Karten unterhalb des Formulars
+ * sichtbar (z. B. "Löschen"). Ein Platzhalter am Seitenende in Höhe der Leiste sorgt dafür, dass
+ * am Ende der Seite nichts verdeckt wird.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { RotateCw } from 'lucide-react'
 import type { FormErgebnis } from '@/lib/verwaltung/formular'
-import { KONFLIKT_MELDUNG } from '@/lib/verwaltung/pruefhilfen'
 import { FormMeldung, SpeichernKnopf } from './FormularTeile'
 import { knopfKlassen } from './ui'
 
@@ -22,10 +21,16 @@ export default function SpeicherLeiste({
   geaendert,
   ergebnis,
   knopfText = 'Speichern',
+  bestaetigen,
+  zusatz,
 }: {
   geaendert: boolean
   ergebnis: FormErgebnis
   knopfText?: string
+  /** Rückfrage vor dem Absenden, z. B. wenn sich eine Adresse ändert. */
+  bestaetigen?: string
+  /** Hinweis über der Statuszeile, der beim Speichern im Blick sein soll. */
+  zusatz?: React.ReactNode
 }) {
   const leiste = useRef<HTMLDivElement>(null)
   const [hoehe, setHoehe] = useState(0)
@@ -44,6 +49,8 @@ export default function SpeicherLeiste({
 
   // Erfolgsmeldung ausblenden, sobald wieder etwas geändert wird; Fehler bleiben stehen.
   const zeigeMeldung = !!ergebnis.meldung && (!ergebnis.ok || !geaendert)
+  // Konflikte (KONFLIKT_MELDUNG und die eigenen Texte z. B. der Kontaktseite) enden alle so.
+  const neuLaden = !ergebnis.ok && !!ergebnis.meldung?.endsWith('Bitte Seite neu laden.')
 
   return (
     <>
@@ -52,22 +59,26 @@ export default function SpeicherLeiste({
           {zeigeMeldung && (
             <div className="space-y-2 max-h-[40vh] overflow-y-auto">
               <FormMeldung ergebnis={ergebnis} />
-              {ergebnis.meldung === KONFLIKT_MELDUNG && (
+              {neuLaden && (
                 <button type="button" className={knopfKlassen.sekundaer} onClick={() => window.location.reload()}>
                   <RotateCw size={15} /> Seite neu laden
                 </button>
               )}
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <p className="flex-1 text-sm" aria-live="polite">
+          {zusatz}
+          {/* Lange Knopftexte rutschen auf schmalen Bildschirmen in eine eigene Zeile */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <p className="flex-1 min-w-[10rem] text-sm" aria-live="polite">
               {geaendert ? (
                 <span className="font-medium text-amber-800">Ungespeicherte Änderungen</span>
               ) : (
                 <span className="text-[#6b6b6b]">Alles gespeichert.</span>
               )}
             </p>
-            <SpeichernKnopf className="px-8 py-3 text-base">{knopfText}</SpeichernKnopf>
+            <SpeichernKnopf bestaetigen={bestaetigen} className="px-8 py-3 text-base">
+              {knopfText}
+            </SpeichernKnopf>
           </div>
         </div>
       </div>

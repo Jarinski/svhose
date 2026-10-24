@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, Clock, FileText, Download } from 'lucide-react'
 import { getSparteBySlug, type Kontakt, type TeamKarte, type WochentagName } from '@/lib/content'
 import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
+import { whatsappLink } from '@/lib/whatsapp'
 
 /* ── Rendering ─────────────────────────────────────────────── */
 // Die Seite liest bei jedem Aufruf direkt aus der Datenbank –
@@ -55,11 +56,6 @@ function saisonBadge(j: string) {
 
 function initials(name: string) {
   return (name || '?').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '?'
-}
-
-function whatsappHref(phone: string) {
-  const num = phone.replace(/\D/g, '').replace(/^0/, '49')
-  return `https://wa.me/${num}`
 }
 
 function istBereich(bereich: string | null): bereich is Bereich {
@@ -361,10 +357,11 @@ function MannschaftCard({
     <div className="border border-[#0a0a0a]/[0.08] bg-[#fafaf8] overflow-hidden">
 
       {/* ── Kartenkopf ── */}
-      <div className="p-5 flex gap-4">
-        {/* Teambild: 512×320 px (16:10) */}
+      <div className="p-5 flex flex-col lg:flex-row gap-4">
+        {/* Teambild 512×320 px (16:10), unter lg über dem Text und höchstens kartenbreit.
+            w-[512px]/h-[320px] bleiben stehen – die Design-Vorschau (app/vorschau-*.css) knüpft daran an. */}
         <div
-          className="w-[512px] h-[320px] shrink-0 flex items-center justify-center text-2xl overflow-hidden"
+          className="w-[512px] max-w-full h-[320px] max-lg:h-auto aspect-[16/10] shrink-0 flex items-center justify-center text-2xl overflow-hidden"
           style={{ background: `${farbe}12` }}
         >
           {team.foto
@@ -436,7 +433,8 @@ function MannschaftCard({
                         {TAG_SHORT[z.tag] ?? z.tag}
                       </span>
                       <div className="flex-1 min-w-0 text-sm text-[#4a4a4a]">
-                        <div className="truncate">
+                        {/* Auf dem Handy umbrechen, sonst fallen Uhrzeit und Rhythmus weg */}
+                        <div className="truncate max-sm:whitespace-normal">
                           {z.ort && (
                             <span className="inline-flex items-center gap-1">
                               <MapPin size={9} className="shrink-0 text-[#6b6b6b]" />
@@ -491,9 +489,7 @@ function KontaktKarte({ person, farbe, compact = false }: { person: Kontakt; far
   const displayName = person.name || 'Kontakt'
   const ini = initials(displayName)
   const telefon = person.telefon
-  const waHref = person.whatsapp
-    ? whatsappHref(person.whatsapp)
-    : telefon ? whatsappHref(telefon) : null
+  const waHref = whatsappLink(person)
 
   if (compact) {
     return (

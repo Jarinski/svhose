@@ -14,8 +14,8 @@ import sharp from 'sharp'
 import { datenbank } from '@/lib/db'
 import { medienDatei } from '@/lib/medien'
 import { slugify } from './text'
+import { MAX_UPLOAD_BYTES } from './upload-grenze'
 
-const MAX_BYTES = 15 * 1024 * 1024
 const MAX_KANTE = 1600
 
 export class UploadFehler extends Error {}
@@ -39,7 +39,7 @@ export function hatDatei(wert: FormDataEntryValue | null): wert is File {
 
 /** Speichert ein Bild als WebP unter <kategorie>/<name>-<hash>.webp und liefert den relativen Pfad. */
 export async function bildSpeichern(datei: File, kategorie: string, name: string): Promise<{ pfad: string; breite: number; hoehe: number }> {
-  if (datei.size > MAX_BYTES) throw new UploadFehler('Das Bild ist größer als 15 MB.')
+  if (datei.size > MAX_UPLOAD_BYTES) throw new UploadFehler('Das Bild ist größer als 15 MB.')
   if (!datei.type.startsWith('image/')) throw new UploadFehler('Bitte eine Bilddatei (JPG, PNG oder WebP) hochladen.')
   let ausgabe: { data: Buffer; info: { width: number; height: number } }
   try {
@@ -58,7 +58,7 @@ export async function bildSpeichern(datei: File, kategorie: string, name: string
 
 /** Speichert ein PDF unter downloads/<name>-<hash>.pdf und liefert den relativen Pfad. */
 export async function pdfSpeichern(datei: File, name: string): Promise<string> {
-  if (datei.size > MAX_BYTES) throw new UploadFehler('Die Datei ist größer als 15 MB.')
+  if (datei.size > MAX_UPLOAD_BYTES) throw new UploadFehler('Die Datei ist größer als 15 MB.')
   const inhalt = Buffer.from(await datei.arrayBuffer())
   if (inhalt.subarray(0, 5).toString('latin1') !== '%PDF-') throw new UploadFehler('Bitte eine PDF-Datei hochladen.')
   return schreiben(`downloads/${slugify(name) || 'dokument'}-${hash8(inhalt)}.pdf`, inhalt)

@@ -38,7 +38,7 @@ export default async function NewsDetailPage(props: { params: Promise<{ slug: st
       <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-4">
         {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
       </div>
-      <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight mb-12">{post.title}</h1>
+      <h1 className="font-display text-5xl md:text-7xl tracking-tight leading-tight break-words hyphens-auto mb-12">{post.title}</h1>
 
       {post.image && (
         <div

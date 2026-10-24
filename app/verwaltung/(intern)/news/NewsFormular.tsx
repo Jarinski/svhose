@@ -1,15 +1,18 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { erfolg } from '@/lib/verwaltung/formular'
 import type { AuswahlGruppe } from '@/lib/verwaltung/inhalte/gemeinsam'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
 import { slugify } from '@/lib/verwaltung/text'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
 import MarkdownFeld from '@/components/verwaltung/inhalte/MarkdownFeld'
 import Schalter from '@/components/verwaltung/inhalte/Schalter'
-import { auswahlKlasse, eingabeKlasse, Feld, Karte, Meldung } from '@/components/verwaltung/ui'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
+import { auswahlKlasse, eingabeKlasse, Feld, Karte } from '@/components/verwaltung/ui'
+import { useFormularGeaendert, useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { newsEntfernen, newsSichern } from './aktionen'
 
 export interface NewsFormDaten {
@@ -41,20 +44,23 @@ export default function NewsFormular({
   heute: string
   zuordnungen: AuswahlGruppe[]
   kategorien: string[]
-  /** Erfolgsmeldung nach dem Anlegen (bis zum nächsten Speichern) */
+  /** Erfolgsmeldung nach dem Anlegen (bis zur nächsten Änderung) */
   hinweis?: string
 }) {
   const [ergebnis, speichern] = useActionState(newsSichern, LEER_ERGEBNIS)
   const [titel, setTitel] = useState(news?.titel ?? '')
+  const stand = neuererStand(news?.geaendertAm, ergebnis.stand)
+  const [geaendert, merken] = useFormularGeaendert(stand)
+  useUngespeichertWarnung(geaendert)
   const f = ergebnis.felder ?? {}
   const ersteZuordnung = zuordnungen[0]?.optionen[0]?.wert ?? ''
 
   return (
     <div className="space-y-6">
       {/* key: nach dem Speichern (neue Daten vom Server) zeigt das Formular wieder genau den gespeicherten Stand */}
-      <form key={news?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
+      <form key={news?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} onChange={merken} className="space-y-6">
         {news && <input type="hidden" name="id" value={news.id} />}
-        <input type="hidden" name="stand" value={neuererStand(news?.geaendertAm, ergebnis.stand)} />
+        <input type="hidden" name="stand" value={stand} />
 
         <Karte titel="Text">
           <div className="space-y-5">
@@ -137,7 +143,7 @@ export default function NewsFormular({
         </Karte>
 
         <Karte titel="Beitragsbild" beschreibung="Optional. Wird oben in der News und in der Übersicht gezeigt.">
-          <BildFeld aktuell={news?.bildUrl ?? null} />
+          <BildFeld aktuell={news?.bildUrl ?? null} onAenderung={merken} />
           {f.bild && <p className="mt-2 text-sm text-red-700">{f.bild}</p>}
         </Karte>
 
@@ -151,9 +157,7 @@ export default function NewsFormular({
           />
         </Karte>
 
-        {hinweis && !ergebnis.meldung && <Meldung art="erfolg">{hinweis}</Meldung>}
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf className="w-full sm:w-auto py-3">Speichern</SpeichernKnopf>
+        <SpeicherLeiste geaendert={geaendert} ergebnis={hinweis && !ergebnis.meldung ? erfolg(hinweis) : ergebnis} />
       </form>
 
       {news && (

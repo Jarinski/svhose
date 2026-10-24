@@ -2,10 +2,14 @@
 
 import { useActionState, useState } from 'react'
 import { ExternalLink, FileUp } from 'lucide-react'
+import { erfolg } from '@/lib/verwaltung/formular'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { MAX_UPLOAD_BYTES } from '@/lib/verwaltung/upload-grenze'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import LoeschenFormular from '@/components/verwaltung/inhalte/LoeschenFormular'
-import { auswahlKlasse, eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
+import { auswahlKlasse, eingabeKlasse, Feld, Karte, knopfKlassen } from '@/components/verwaltung/ui'
+import { useFormularGeaendert, useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { downloadEntfernen, downloadSichern } from './aktionen'
 
 export interface DownloadFormDaten {
@@ -36,44 +40,19 @@ export default function DownloadFormular({
   hinweis?: string
 }) {
   const [ergebnis, speichern] = useActionState(downloadSichern, LEER_ERGEBNIS)
-  const [dateiname, setDateiname] = useState<string | null>(null)
+  const stand = neuererStand(download?.geaendertAm, ergebnis.stand)
+  const [geaendert, merken] = useFormularGeaendert(stand)
+  useUngespeichertWarnung(geaendert)
   const f = ergebnis.felder ?? {}
 
   return (
     <div className="space-y-6">
-      <form key={download?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} className="space-y-6">
+      <form key={download?.geaendertAm ?? 'neu'} action={speichern} onReset={eingabenBehalten} onChange={merken} className="space-y-6">
         {download && <input type="hidden" name="id" value={download.id} />}
-        <input type="hidden" name="stand" value={neuererStand(download?.geaendertAm, ergebnis.stand)} />
+        <input type="hidden" name="stand" value={stand} />
 
         <Karte titel="PDF-Datei">
-          <div className="space-y-3">
-            {download && (
-              <a href={download.dateiUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 break-all">
-                {download.dateiName} <ExternalLink size={13} className="shrink-0" />
-              </a>
-            )}
-            <div className="flex flex-wrap items-center gap-3">
-              <label className={`${knopfKlassen.sekundaer} cursor-pointer focus-within:ring-2 focus-within:ring-[#0a0a0a]`}>
-                <FileUp size={15} />
-                {download ? 'Datei ersetzen' : 'PDF auswählen'}
-                <input
-                  type="file"
-                  name="datei"
-                  accept="application/pdf,.pdf"
-                  className="sr-only"
-                  onChange={e => setDateiname(e.target.files?.[0]?.name ?? null)}
-                />
-              </label>
-              {dateiname && <span className="text-sm text-[#4a4a4a] break-all">{dateiname}</span>}
-            </div>
-            {f.datei ? (
-              <p className="text-sm text-red-700">{f.datei}</p>
-            ) : (
-              <p className="text-xs text-[#6b6b6b]">
-                {download ? 'Die neue Datei ersetzt die bisherige beim Speichern.' : 'Nur PDF, höchstens 15 MB.'}
-              </p>
-            )}
-          </div>
+          <PdfFeld download={download} fehler={f.datei} />
         </Karte>
 
         <Karte titel="Angaben">
@@ -108,9 +87,7 @@ export default function DownloadFormular({
           </div>
         </Karte>
 
-        {hinweis && !ergebnis.meldung && <Meldung art="erfolg">{hinweis}</Meldung>}
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf className="w-full sm:w-auto py-3">Speichern</SpeichernKnopf>
+        <SpeicherLeiste geaendert={geaendert} ergebnis={hinweis && !ergebnis.meldung ? erfolg(hinweis) : ergebnis} />
       </form>
 
       {download && (
@@ -119,6 +96,52 @@ export default function DownloadFormular({
             Download löschen
           </LoeschenFormular>
         </div>
+      )}
+    </div>
+  )
+}
+
+/** PDF wählen oder ersetzen. Steht im Formular und startet mit ihm nach dem Speichern frisch (key). */
+function PdfFeld({ download, fehler }: { download: DownloadFormDaten | null; fehler?: string }) {
+  const [dateiname, setDateiname] = useState<string | null>(null)
+  const [hinweis, setHinweis] = useState<string | null>(null)
+
+  function dateiGewaehlt(e: React.ChangeEvent<HTMLInputElement>) {
+    const datei = e.target.files?.[0]
+    setHinweis(null)
+    // Größere Dateien nimmt der Server nicht an – sofort verwerfen statt beim Speichern abzubrechen
+    if (datei && datei.size > MAX_UPLOAD_BYTES) {
+      e.target.value = ''
+      setDateiname(null)
+      setHinweis('Die Datei ist größer als 15 MB. Bitte eine kleinere Datei wählen.')
+      // Verworfene Datei zählt nicht als Änderung (das Formular hört auf onChange)
+      e.stopPropagation()
+      return
+    }
+    setDateiname(datei?.name ?? null)
+  }
+
+  return (
+    <div className="space-y-3">
+      {download && (
+        <a href={download.dateiUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 break-all">
+          {download.dateiName} <ExternalLink size={13} className="shrink-0" />
+        </a>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <label className={`${knopfKlassen.sekundaer} cursor-pointer focus-within:ring-2 focus-within:ring-[#0a0a0a]`}>
+          <FileUp size={15} />
+          {download ? 'Datei ersetzen' : 'PDF auswählen'}
+          <input type="file" name="datei" accept="application/pdf,.pdf" className="sr-only" onChange={dateiGewaehlt} />
+        </label>
+        {dateiname && <span className="text-sm text-[#4a4a4a] break-all">{dateiname}</span>}
+      </div>
+      {hinweis || fehler ? (
+        <p className="text-sm text-red-700">{hinweis ?? fehler}</p>
+      ) : (
+        <p className="text-xs text-[#6b6b6b]">
+          {download ? 'Die neue Datei ersetzt die bisherige beim Speichern.' : 'Nur PDF, höchstens 15 MB.'}
+        </p>
       )}
     </div>
   )

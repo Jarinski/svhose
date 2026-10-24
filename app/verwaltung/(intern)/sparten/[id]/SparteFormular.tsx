@@ -3,10 +3,13 @@
 import { useActionState, useEffect, useState } from 'react'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { slugify } from '@/lib/verwaltung/text'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { MAX_UPLOAD_BYTES } from '@/lib/verwaltung/upload-grenze'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import { eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
+import { useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { sparteSpeichernAktion } from '../aktionen'
 import { CRON_SLUGS, SPARTEN_ROLLEN, STANDARD_ROLLE } from '../konstanten'
 
@@ -44,6 +47,41 @@ function gross(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+interface Werte {
+  name: string
+  icon: string
+  farbe: string
+  kurz: string
+  beschreibung: string
+  sichtbar: boolean
+  reihenfolge: string
+  slug: string
+  ap: AnsprechpartnerZeile[]
+}
+
+/** Textarea-Inhalt ohne Ränder – gespeichert steht ein Umbruch ggf. als \r\n, im Browser immer als \n. */
+function mehrzeilig(text: string): string {
+  return text.replace(/\r\n?/g, '\n').trim()
+}
+
+/**
+ * Vergleichbarer Stand der Eingaben – vereinheitlicht wie beim Speichern (eingabePruefen in ../logik):
+ * Leerzeichen am Rand, Zeilenumbrüche, Farbe in Kleinbuchstaben, leere Rolle = Standardrolle.
+ */
+function vergleichsStand(w: Werte): string {
+  return JSON.stringify([
+    w.name.trim(),
+    w.icon.trim(),
+    w.farbe.trim().toLowerCase(),
+    mehrzeilig(w.kurz),
+    mehrzeilig(w.beschreibung),
+    w.sichtbar,
+    Number(w.reihenfolge) || 0,
+    slugify(w.slug),
+    w.ap.map(a => [a.personId, a.rolle.trim() || STANDARD_ROLLE]),
+  ])
+}
+
 export default function SparteFormular(props: Props) {
   const [ergebnis, aktion] = useActionState(sparteSpeichernAktion, LEER)
   return (
@@ -70,11 +108,30 @@ function Felder({ sparte, ansprechpartner, personen, istAdmin, ergebnis }: Props
   const [ap, setAp] = useState<AnsprechpartnerZeile[]>(ansprechpartner)
   const [vorschau, setVorschau] = useState<string | null>(null)
   const [fotoEntfernen, setFotoEntfernen] = useState(false)
+  const [fotoHinweis, setFotoHinweis] = useState<string | null>(null)
 
   // Vorschau-URL des gewählten Fotos wieder freigeben
   useEffect(() => () => {
     if (vorschau) URL.revokeObjectURL(vorschau)
   }, [vorschau])
+
+  // Vergleich mit dem Stand beim Laden – nach dem Speichern starten die Felder ohnehin neu (key).
+  const geaendert =
+    vorschau !== null ||
+    fotoEntfernen ||
+    vergleichsStand({ name, icon, farbe, kurz, beschreibung, sichtbar, reihenfolge, slug, ap }) !==
+      vergleichsStand({
+        name: sparte.name,
+        icon: sparte.icon ?? '',
+        farbe: sparte.farbe ?? '',
+        kurz: sparte.kurzbeschreibung ?? '',
+        beschreibung: sparte.beschreibung ?? '',
+        sichtbar: sparte.sichtbar,
+        reihenfolge: String(sparte.reihenfolge),
+        slug: sparte.slug,
+        ap: ansprechpartner,
+      })
+  useUngespeichertWarnung(geaendert)
 
   const slugNeu = slugify(slug)
   const slugGeaendert = istAdmin && slugNeu !== sparte.slug
@@ -145,7 +202,12 @@ function Felder({ sparte, ansprechpartner, personen, istAdmin, ergebnis }: Props
           ) : (
             <p className="text-sm text-[#6b6b6b]">{sparte.fotoUrl && fotoEntfernen ? 'Das Foto wird beim Speichern entfernt.' : 'Noch kein Foto.'}</p>
           )}
-          <Feld label={sparte.fotoUrl ? 'Neues Foto hochladen' : 'Foto hochladen'} htmlFor="foto" fehler={f.foto} hinweis="JPG, PNG oder WebP bis 15 MB. Wird automatisch verkleinert.">
+          <Feld
+            label={sparte.fotoUrl ? 'Neues Foto hochladen' : 'Foto hochladen'}
+            htmlFor="foto"
+            fehler={fotoHinweis ?? f.foto}
+            hinweis="JPG, PNG oder WebP bis 15 MB. Wird automatisch verkleinert."
+          >
             <input
               id="foto"
               name="foto"
@@ -153,6 +215,14 @@ function Felder({ sparte, ansprechpartner, personen, istAdmin, ergebnis }: Props
               accept="image/*"
               onChange={e => {
                 const datei = e.target.files?.[0]
+                setFotoHinweis(null)
+                // Zu große Dateien gar nicht erst absenden – der Server nimmt nur bis 16 MB an.
+                if (datei && datei.size > MAX_UPLOAD_BYTES) {
+                  e.target.value = ''
+                  setVorschau(null)
+                  setFotoHinweis('Das Bild ist größer als 15 MB. Bitte ein kleineres Bild wählen.')
+                  return
+                }
                 setVorschau(datei ? URL.createObjectURL(datei) : null)
                 if (datei) setFotoEntfernen(false)
               }}
@@ -270,12 +340,7 @@ function Felder({ sparte, ansprechpartner, personen, istAdmin, ergebnis }: Props
         </Karte>
       )}
 
-      <div className="sticky bottom-0 z-10 py-3 bg-[#f5f5f0]/95 backdrop-blur-sm border-t border-[#0a0a0a]/10 space-y-3">
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf bestaetigen={rueckfrage} className="w-full sm:w-auto">
-          Speichern
-        </SpeichernKnopf>
-      </div>
+      <SpeicherLeiste geaendert={geaendert} ergebnis={ergebnis} bestaetigen={rueckfrage} />
     </>
   )
 }

@@ -11,9 +11,11 @@ import Link from 'next/link'
 import { ChevronDown, ChevronRight, Search, X } from 'lucide-react'
 import { LEER } from '@/lib/verwaltung/formular'
 import AnmeldeCodeKarte from '@/components/verwaltung/AnmeldeCodeKarte'
-import { eingabenBehalten, FormMeldung, SpeichernKnopf } from '@/components/verwaltung/FormularTeile'
+import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import PersonSuche, { type PersonKurz } from '@/components/verwaltung/PersonSuche'
+import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import { eingabeKlasse, Feld, Karte, knopfKlassen, Meldung } from '@/components/verwaltung/ui'
+import { useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import { benutzernameVorschlagAktion, zugangAnlegenAktion, zugangSpeichernAktion, type ZugangErgebnis } from './aktionen'
 import type { SparteMitTeams } from './logik'
 import { BENUTZERNAME_HINWEIS, einladungsHinweis } from './texte'
@@ -44,6 +46,37 @@ interface Props {
 
 const LEER_ERGEBNIS: ZugangErgebnis = LEER
 
+interface Werte {
+  name: string
+  benutzername: string
+  personId: number | null
+  rolle: 'admin' | 'bereiche'
+  auswahl: string[]
+}
+
+function auswahlAus(zugang?: ZugangFormDaten): string[] {
+  return zugang ? zugang.sparten.map(id => `s${id}`).concat(zugang.mannschaften.map(id => `m${id}`), zugang.gruppen.map(id => `g${id}`)) : []
+}
+
+/**
+ * Vergleichbarer Stand der Eingaben – vereinheitlicht wie beim Speichern (eingabePruefen in ./logik):
+ * Leerzeichen im Namen, keine Bereiche für Admins, keine einzelnen Teams einer ganz gewählten Sparte.
+ */
+function vergleichsStand(w: Werte, baum: SparteMitTeams[]): string {
+  const bereiche: string[] = []
+  if (w.rolle === 'bereiche') {
+    baum.forEach(sp => {
+      if (w.auswahl.indexOf(`s${sp.id}`) >= 0) {
+        bereiche.push(`s${sp.id}`)
+        return
+      }
+      sp.mannschaften.forEach(m => w.auswahl.indexOf(`m${m.id}`) >= 0 && bereiche.push(`m${m.id}`))
+      sp.gruppen.forEach(g => w.auswahl.indexOf(`g${g.id}`) >= 0 && bereiche.push(`g${g.id}`))
+    })
+  }
+  return JSON.stringify([w.name.trim().replace(/\s+/g, ' '), w.benutzername.trim().toLowerCase(), w.personId, w.rolle, bereiche])
+}
+
 export default function ZugangFormular({ modus, zugang, istSelbst = false, personen, baum }: Props) {
   const speichern: (vorher: ZugangErgebnis, formData: FormData) => Promise<ZugangErgebnis> = modus === 'neu' ? zugangAnlegenAktion : zugangSpeichernAktion
   const [ergebnis, aktion] = useActionState(speichern, LEER_ERGEBNIS)
@@ -53,9 +86,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
     zugang?.personId != null ? { id: zugang.personId, name: zugang.personName ?? `Person Nr. ${zugang.personId}` } : null,
   )
   const [rolle, setRolle] = useState<'admin' | 'bereiche'>(zugang?.istAdmin ? 'admin' : 'bereiche')
-  const [auswahl, setAuswahl] = useState<string[]>(
-    zugang ? zugang.sparten.map(id => `s${id}`).concat(zugang.mannschaften.map(id => `m${id}`), zugang.gruppen.map(id => `g${id}`)) : [],
-  )
+  const [auswahl, setAuswahl] = useState<string[]>(() => auswahlAus(zugang))
   const [benutzername, setBenutzername] = useState(zugang?.benutzername ?? '')
   // Beim Anlegen folgt der Benutzername dem Namen, bis er von Hand geändert wird.
   const benutzernameVonHand = useRef(modus === 'bearbeiten')
@@ -80,9 +111,28 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
     return () => clearTimeout(zeit)
   }, [name, modus])
 
+  // Verglichen wird mit dem gespeicherten Stand aus den Props. Das Formular startet nach dem Speichern
+  // nicht neu, aber die Seite lädt den neuen Stand vom Server – dann ist alles wieder "gespeichert".
+  // Nach dem Anlegen steht statt des Formulars der Einladungs-Code da: nichts mehr zu speichern.
+  const angelegt = modus === 'neu' && !!ergebnis.ok && !!ergebnis.zugangId
+  const geaendert =
+    !angelegt &&
+    vergleichsStand({ name, benutzername, personId: person?.id ?? null, rolle, auswahl }, baum) !==
+      vergleichsStand(
+        {
+          name: zugang?.name ?? '',
+          benutzername: zugang?.benutzername ?? '',
+          personId: zugang?.personId ?? null,
+          rolle: zugang?.istAdmin ? 'admin' : 'bereiche',
+          auswahl: auswahlAus(zugang),
+        },
+        baum,
+      )
+  useUngespeichertWarnung(geaendert)
+
   // ─── Nach dem Anlegen: Einladungs-Code anzeigen ───
   const erg = ergebnis
-  if (modus === 'neu' && erg.ok && erg.zugangId) {
+  if (angelegt) {
     return (
       <div className="space-y-6">
         <Meldung art="erfolg">
@@ -217,10 +267,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
         </div>
       </Karte>
 
-      <div className="sticky bottom-0 z-10 py-3 bg-[#f5f5f0]/95 backdrop-blur-sm border-t border-[#0a0a0a]/10 space-y-3">
-        <FormMeldung ergebnis={ergebnis} />
-        <SpeichernKnopf className="w-full sm:w-auto">{modus === 'neu' ? 'Zugang anlegen und Einladungs-Code erstellen' : 'Speichern'}</SpeichernKnopf>
-      </div>
+      <SpeicherLeiste geaendert={geaendert} ergebnis={ergebnis} knopfText={modus === 'neu' ? 'Zugang anlegen und Einladungs-Code erstellen' : 'Speichern'} />
     </form>
   )
 }

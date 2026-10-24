@@ -107,6 +107,7 @@ export interface AnsprechpartnerEintrag {
   gruppe: 'Vorstand' | 'Abteilungsleiter' | 'Weitere Ansprechpartner'
   email: string | null
   telefon: string | null
+  whatsapp: string | null
   foto: string | null
 }
 
@@ -119,6 +120,7 @@ export interface Termin {
   /** Anzeige- und Filterlabel: Bereich, sonst Spartenname, sonst 'Allgemein' */
   sparte: string
   beschreibung: string
+  /** Bild-URL, z. B. ein Plakat – die Bildmaße sind für Termine nicht gespeichert */
   bild?: string
   tags: string[]
 }
@@ -460,6 +462,7 @@ export async function getAnsprechpartner(): Promise<AnsprechpartnerEintrag[]> {
       gruppe: FUNKTIONS_GRUPPEN_NAMEN[f.gruppe] ?? 'Weitere Ansprechpartner',
       email: wert(f.person.email),
       telefon: wert(f.person.telefon),
+      whatsapp: wert(f.person.whatsapp),
       foto: medienUrl(f.person.foto),
     }))
 }
