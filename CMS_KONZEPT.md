@@ -857,13 +857,13 @@ Git-Historie) und das Projekt danach löschen (`OPERATIONS.md`, Abschnitt 8.1).
 | **1 – Fundament** | DB-Schema und Migrationen, Übernahmeskript; Service-Schicht (Rechte, Prüfung, Verlauf), Login mit Geräteverwaltung, Skript für den ersten Admin, Grundlayout `/verwaltung` | mittel | ✅ erledigt. Login als Zwei-Faktor mit Passwort und Authenticator-App statt QR-/Anmelde-Code (Abschnitt 6) |
 | **2 – Kern** | „Mannschaft bearbeiten“ (auch für Gruppen) mit Trainingszeiten und Trainerteam, Personen, Foto-Upload, Verlauf. Website liest aus der DB, Spartenseite ohne Heuristik | mittel–groß | ✅ erledigt; der Verlauf ist eine Ansicht, **„Wiederherstellen“ offen** |
 | **3 – Abrunden** | Sparten, Kontaktseite, Zugänge mit QR-Einladungen, Einstellungen | mittel | ✅ erledigt bis auf die Seite „Einstellungen“ (**offen**) |
-| **4 – Umstellung** | Übernahme, Sanity abschalten | klein | ✅ vorgezogen erledigt: direkt und vollständig umgestellt. Die Kurzanleitung steht im `README.md` („Inhalte pflegen“); ein eigenes Handbuch für die Redaktion ist **offen** |
+| **4 – Umstellung** | Übernahme, Sanity abschalten | klein | ✅ vorgezogen erledigt: direkt und vollständig umgestellt. Die Kurzanleitung steht im `README.md` („Inhalte pflegen“); das Handbuch für die Redaktion ist ✅ als „Hilfe“ in der Verwaltung umgesetzt (`/verwaltung/hilfe`: Übungen mit nachgebauten Formularen und Anleitungen, je nach Rechten) |
 | **5 – REST-API** | Endpunkte v1, API-Schlüssel, OpenAPI-Beschreibung | mittel | **offen** |
 | **6 – Telegram-Bot** | Bot bei BotFather anlegen, OpenRouter-Schlüssel mit Ausgabenlimit, Modellwahl, „Telegram verbinden“. Dann Stufe 1 (Fragen), Stufe 2 (Änderungen mit Bestätigung), Stufe 3 („Sofort“ für einzelne Zugänge) | mittel | **offen** |
 | **7 – später** | News (Editor mit Fett, Kursiv, Zwischenüberschrift und Bild), Termine (Formular), Downloads (PDF-Upload), „Mit dem Handy anmelden“ am PC | groß | News, Termine und Downloads ✅ vorgezogen (News als Markdown-Textfeld mit Vorschau und Titelbild; Bilder im Text noch ohne Upload). „Mit dem Handy anmelden“ entfällt mit der Passwort-Anmeldung (Abschnitt 6.6). Bereits erledigt: Die Cronjobs schreiben in die DB, und **Sanity ist komplett entfernt** (`/studio`, `sanity.config.ts`, `sanity.cli.ts`, `.sanity/`, Pakete `sanity`, `next-sanity`, `@sanity/image-url`, `styled-components`, alte Skripte). Partner entfallen |
 
 **Offen, kurz zusammengefasst:** REST-API (5), Telegram-Bot über OpenRouter (6), „Wiederherstellen“
-im Verlauf (2), Betrieb auf dem Hetzner-Server (0), Seite „Einstellungen“ (3), Handbuch (4).
+im Verlauf (2), Betrieb auf dem Hetzner-Server (0), Seite „Einstellungen“ (3).
 
 Inhalte werden seit dem 20.10.2026 über die Verwaltung gepflegt. Drizzle Studio
 (`npm run db:studio`) bleibt für Technik und Notfälle; es umgeht Rechte und Verlauf (`README.md`,

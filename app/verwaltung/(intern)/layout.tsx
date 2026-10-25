@@ -29,6 +29,7 @@ export default async function InternLayout({ children }: { children: React.React
           { href: '/verwaltung/verlauf', text: 'Verlauf' },
         ]
       : []),
+    { href: '/verwaltung/hilfe', text: 'Hilfe' },
     { href: '/verwaltung/geraete', text: 'Mein Zugang' },
   ]
 

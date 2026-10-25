@@ -114,6 +114,11 @@ Authenticator-App (z. B. Google Authenticator, Microsoft Authenticator, Aegis).
 
 Jede Änderung landet im **Verlauf** (wer, wann, vorher/nachher).
 
+**Hilfe:** Der Menüpunkt „Hilfe“ in der Verwaltung hat für jedes Thema eine Übung: kleine Aufgaben in
+nachgebauten Formularen mit Rückmeldung und Website-Vorschau – gespeichert wird dabei nichts. Dazu gibt es je
+Thema eine ausführliche Anleitung zum Nachlesen. Jede:r sieht nur die Themen, die zu den eigenen Rechten
+passen (Übungen: `app/verwaltung/(intern)/hilfe/uebung/lektionen/`, Anleitungen: `…/hilfe/inhalte/`).
+
 ### Für Technik: Drizzle Studio
 
 ```bash
