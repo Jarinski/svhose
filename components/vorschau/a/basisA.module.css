@@ -3,7 +3,7 @@
  * Farben kommen als Variablen aus app/vorschau-a.css (html[data-design="a"] .site).
  */
 
-.wrap {
+:where(.wrap) {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
@@ -11,7 +11,7 @@
 }
 
 /* Archivo kondensiert in Versalien – Überschriften und große Zahlen */
-.cond {
+:where(.cond) {
   font-family: 'Archivo', system-ui, sans-serif;
   font-stretch: 66%;
   font-weight: 800;
@@ -20,7 +20,7 @@
   letter-spacing: -.005em;
 }
 
-.eyebrow {
+:where(.eyebrow) {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -31,7 +31,7 @@
   color: var(--a-text);
 }
 
-.eyebrow::before {
+:where(.eyebrow)::before {
   content: '';
   width: 22px;
   height: 2px;
@@ -45,7 +45,7 @@
 }
 
 /* ── Knöpfe ── */
-.btn {
+:where(.btn) {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -59,7 +59,7 @@
   transition: transform .2s, background .2s, color .2s, border-color .2s, box-shadow .2s;
 }
 
-.btn svg {
+:where(.btn) svg {
   width: 16px;
   height: 16px;
 }
@@ -121,11 +121,11 @@
 }
 
 @media (max-width: 760px) {
-  .wrap { padding: 0 16px; }
+  :where(.wrap) { padding: 0 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn,
+  :where(.btn),
   .more { transition: none; }
   .btnAccent:hover { transform: none; }
 }

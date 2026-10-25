@@ -4,13 +4,13 @@
  * Vereinsfarben: nur Schwarz, Weiß und neutrale Grautöne.
  */
 
-.wrap {
+:where(.wrap) {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-.karte {
+:where(.karte) {
   background: var(--b-karte);
   border-radius: var(--b-r);
   box-shadow: var(--b-schatten);
@@ -44,7 +44,7 @@
 }
 
 /* ── Knöpfe ── */
-.btn {
+:where(.btn) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -59,7 +59,7 @@
   transition: transform .2s, background .2s, box-shadow .2s;
 }
 
-.btn svg {
+:where(.btn) svg {
   width: 16px;
   height: 16px;
   flex: none;
@@ -93,7 +93,7 @@
 }
 
 /* ── Kleine Pille ── */
-.tag {
+:where(.tag) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -105,7 +105,7 @@
 }
 
 /* ── Überzeile mit Strich – der Strich steht vor der ersten Zeile, auch wenn der Text umbricht ── */
-.eyebrow {
+:where(.eyebrow) {
   display: inline-flex;
   align-items: flex-start;
   gap: 10px;
@@ -118,7 +118,7 @@
   color: var(--b-muted);
 }
 
-.eyebrow::before {
+:where(.eyebrow)::before {
   content: '';
   flex: none;
   width: 20px;
@@ -129,7 +129,7 @@
 }
 
 /* ── Textlink mit dezenter Unterstreichung ── */
-.link {
+:where(.link) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -143,7 +143,7 @@
   transition: text-decoration-color .2s;
 }
 
-.link:hover { text-decoration-color: currentColor; }
+:where(.link):hover { text-decoration-color: currentColor; }
 
 /* ── Vereinsname mit Wappen ── */
 .marke {
@@ -176,15 +176,15 @@
 }
 
 @media (max-width: 720px) {
-  .wrap { padding: 0 14px; }
+  :where(.wrap) { padding: 0 14px; }
   .marke { gap: 10px; }
   .marke img { width: 38px; height: 38px; }
   .marke b { font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn,
-  .link { transition: none; }
+  :where(.btn),
+  :where(.link) { transition: none; }
   .btnDunkel:hover,
   .btnHell:hover { transform: none; }
 }
