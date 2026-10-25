@@ -14,27 +14,30 @@ html[data-design="b"] .chrome-standard { display: none; }
 html[data-design="a"] .chrome-a,
 html[data-design="b"] .chrome-b { display: contents; }
 
-/* ── Umschalter ── */
-.design-umschalter { display: none; }
+/* ── Umschalter: Leiste ganz oben, auf jeder Seite der Website immer sichtbar (Präsentation) ──
+ * --du-hoehe schiebt die Seite und die drei Navigationen (Navbar.tsx, NavbarA/B.module.css)
+ * um die Höhe der Leiste nach unten. In der Verwaltung gibt es kein .site, dort bleibt sie 0. */
+.site {
+  --du-hoehe: 44px;
+  padding-top: var(--du-hoehe);
+}
 
-html[data-design] .design-umschalter {
+.design-umschalter {
   position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  /* unter dem Cookie-Banner (z-index 10000), damit dessen Knöpfe immer erreichbar bleiben */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--du-hoehe);
+  /* über allen Navigationen, unter dem Cookie-Banner (z-index 10000), damit dessen Knöpfe erreichbar bleiben */
   z-index: 9998;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  max-width: calc(100vw - 24px);
+  padding: 0 8px;
   overflow-x: auto;
-  padding: 6px;
-  border-radius: 999px;
-  background: rgba(20, 20, 20, .85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .25), 0 0 0 1px rgba(255, 255, 255, .08);
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
   font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
   scrollbar-width: none;
 }
@@ -48,33 +51,29 @@ html[data-design] .design-umschalter {
   white-space: nowrap;
 }
 
-.design-umschalter .du-link,
-.design-umschalter .du-aus {
-  padding: 9px 12px;
+.design-umschalter .du-link {
+  padding: 8px 12px;
   border-radius: 999px;
-  color: #fff;
+  color: rgba(255, 255, 255, .8);
   text-decoration: none;
   white-space: nowrap;
-  transition: background .15s;
+  transition: background .15s, color .15s;
 }
 
-.design-umschalter .du-link:hover,
-.design-umschalter .du-aus:hover { background: rgba(255, 255, 255, .12); }
+.design-umschalter .du-link:hover { background: rgba(255, 255, 255, .12); color: #fff; }
 
-.design-umschalter .du-aus {
-  padding: 9px 11px;
-  color: rgba(255, 255, 255, .6);
-  font-size: 15px;
-}
+.design-umschalter .du-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
+/* Aktives Design – ohne data-design (Vorschau aus) ist es das aktuelle */
+html:not([data-design]) .du-aktuell,
+html[data-design="aktuell"] .du-aktuell,
 html[data-design="a"] .du-a,
-html[data-design="b"] .du-b,
-html[data-design="aktuell"] .du-aktuell {
+html[data-design="b"] .du-b {
   background: #fff;
   color: #111;
 }
 
 @media (max-width: 480px) {
   .design-umschalter .du-titel { display: none; }
-  .design-umschalter .du-link { padding: 9px 10px; }
+  .design-umschalter .du-link { padding: 8px 10px; }
 }

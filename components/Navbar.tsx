@@ -73,7 +73,7 @@ export default function Navbar() {
   const [spielplaeneOpen, setSpieleplaeneOpen] = useState(false)
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#f5f5f0]/90 backdrop-blur-md border-b border-[#0a0a0a]/10">
+    <header className="fixed top-[var(--du-hoehe,0px)] left-0 right-0 z-50 bg-[#f5f5f0]/90 backdrop-blur-md border-b border-[#0a0a0a]/10">
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">

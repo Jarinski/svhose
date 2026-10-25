@@ -2,7 +2,8 @@
 
 .nav {
   position: fixed;
-  top: 14px;
+  /* --du-hoehe: Umschaltleiste der Design-Vorschau ganz oben (app/vorschau.css) */
+  top: calc(14px + var(--du-hoehe, 0px));
   left: 0;
   right: 0;
   z-index: 50;
@@ -266,7 +267,7 @@
 }
 
 @media (max-width: 760px) {
-  .nav { padding: 0 10px; top: 10px; }
+  .nav { padding: 0 10px; top: calc(10px + var(--du-hoehe, 0px)); }
   .panel { left: 10px; right: 10px; }
   .cta .mitglied { display: none; }
   .brand small { display: none; }

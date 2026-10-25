@@ -18,7 +18,7 @@ export default function VorschauPage() {
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">DESIGN-VORSCHAU</h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#6b6b6b]">
           Zwei Entwürfe in unseren Vereinsfarben Schwarz-Weiß. Wähle ein Design und klick dich durch die ganze
-          Website – mit allen echten Inhalten. Unten auf jeder Seite kannst du jederzeit zwischen den Entwürfen und
+          Website – mit allen echten Inhalten. Oben auf jeder Seite kannst du jederzeit zwischen den Entwürfen und
           dem aktuellen Design wechseln. Für alle anderen Besucher*innen ändert sich nichts.
         </p>
       </div>

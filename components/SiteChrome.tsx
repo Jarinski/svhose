@@ -43,6 +43,7 @@ export default function SiteChrome({
 
   return (
     <div className="site">
+      <DesignUmschalter pfad={pathname ?? '/'} />
       <div className="chrome-standard"><Navbar /></div>
       <div className="chrome-a"><NavbarA /></div>
       <div className="chrome-b"><NavbarB /></div>
@@ -51,7 +52,6 @@ export default function SiteChrome({
       <div className="chrome-a">{vorschauFooter.a}</div>
       <div className="chrome-b">{vorschauFooter.b}</div>
       <CookieBanner />
-      <DesignUmschalter pfad={pathname ?? '/'} />
     </div>
   )
 }
