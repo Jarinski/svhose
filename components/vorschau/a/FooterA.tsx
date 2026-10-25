@@ -18,6 +18,7 @@ const SPORT = [
 
 const VEREIN = [
   { href: '/ueber-uns', label: 'Über uns' },
+  { href: '/foerderverein', label: 'Förderverein' },
   { href: '/news', label: 'News' },
   { href: '/ansprechpartner', label: 'Ansprechpartner*innen' },
   { href: '/downloads', label: 'Downloads' },

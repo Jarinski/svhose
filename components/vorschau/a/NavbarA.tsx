@@ -34,6 +34,7 @@ const PUNKTE: Punkt[] = [
     label: 'Verein',
     kinder: [
       { href: '/ueber-uns', label: 'Über uns' },
+      { href: '/foerderverein', label: 'Förderverein' },
       { href: '/kinderschutz', label: 'Kinderschutz' },
       { href: '/downloads', label: 'Downloads' },
     ],

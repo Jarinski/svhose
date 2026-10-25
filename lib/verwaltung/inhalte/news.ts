@@ -11,6 +11,7 @@
 
 import { and, eq, ne } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
+import { kategorieVereinheitlichen } from '@/lib/foerderverein'
 import { schema } from '@/lib/db'
 import { kannZuordnung, type Rechte } from '@/lib/verwaltung/rechte'
 import { slugify } from '@/lib/verwaltung/text'
@@ -90,7 +91,7 @@ export function newsSpeichern(db: Datenbank, rechte: Rechte, e: NewsEingabe): Sp
   const werte = {
     titel,
     datum: e.datum as string,
-    kategorie: e.kategorie,
+    kategorie: kategorieVereinheitlichen(e.kategorie),
     teaser: e.teaser,
     inhalt: mehrzeilig(e.inhalt),
     veroeffentlicht: e.veroeffentlicht,

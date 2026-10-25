@@ -20,10 +20,17 @@ const navLinks: NavLink[] = [
   },
   { href: '/termine', label: 'Termine' },
   { href: '/trainingszeiten', label: 'Training' },
+  // Gruppiert, damit die Leiste auch bei 1024 px in eine Zeile passt (wie in Design A)
+  {
+    label: 'Verein',
+    children: [
+      { href: '/ueber-uns', label: 'Über uns' },
+      { href: '/foerderverein', label: 'Förderverein' },
+      { href: '/kinderschutz', label: 'Kinderschutz' },
+      { href: '/downloads', label: 'Downloads' },
+    ],
+  },
   { href: '/ansprechpartner', label: 'Kontakt' },
-  { href: '/downloads', label: 'Downloads' },
-  { href: '/ueber-uns', label: 'Über uns' },
-  { href: '/kinderschutz', label: 'Kinderschutz' },
 ]
 
 function DropdownMenu({ label, children }: { label: string; children: { href: string; label: string }[] }) {

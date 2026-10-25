@@ -5,6 +5,7 @@ import { ExternalLink } from 'lucide-react'
 import { datenbank, schema } from '@/lib/db'
 import { medienUrl } from '@/lib/medien'
 import { heuteBerlin, vorschlaege, zuordnungsOptionen, zuordnungWert } from '@/lib/verwaltung/inhalte/gemeinsam'
+import { FOERDERVEREIN_KATEGORIE } from '@/lib/foerderverein'
 import { kannZuordnung } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { zeitpunktDeutsch } from '@/lib/verwaltung/text'
@@ -23,7 +24,7 @@ export default async function NewsBearbeiten(props: { params: Promise<{ id: stri
   const news = db.select().from(schema.news).where(eq(schema.news.id, id)).get()
   if (!news || !kannZuordnung(db, rechte, news)) notFound()
 
-  const kategorien = vorschlaege(db.select({ k: schema.news.kategorie }).from(schema.news).all().map(n => n.k))
+  const kategorien = vorschlaege([FOERDERVEREIN_KATEGORIE, ...db.select({ k: schema.news.kategorie }).from(schema.news).all().map(n => n.k)])
 
   return (
     <>

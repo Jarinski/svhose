@@ -7,6 +7,7 @@
 
 import { eq } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
+import { FOERDERVEREIN_KATEGORIE, kategorieVereinheitlichen } from '@/lib/foerderverein'
 import { schema } from '@/lib/db'
 import type { Rechte } from '@/lib/verwaltung/rechte'
 import { protokollieren } from '@/lib/verwaltung/verlauf'
@@ -30,7 +31,7 @@ export function downloadFormularDaten(db: Datenbank) {
       .from(schema.sparten)
       .all()
       .sort((a, b) => a.name.localeCompare(b.name, 'de')),
-    kategorien: vorschlaege(db.select({ k: schema.downloads.kategorie }).from(schema.downloads).all().map(d => d.k)),
+    kategorien: vorschlaege([FOERDERVEREIN_KATEGORIE, ...db.select({ k: schema.downloads.kategorie }).from(schema.downloads).all().map(d => d.k)]),
   }
 }
 
@@ -70,7 +71,7 @@ export function downloadSpeichern(db: Datenbank, rechte: Rechte, e: DownloadEing
   const werte = {
     titel: e.titel as string,
     beschreibung: e.beschreibung,
-    kategorie: e.kategorie,
+    kategorie: kategorieVereinheitlichen(e.kategorie),
     datum: e.datum,
     sparteId: e.sparteId,
     ...(e.datei !== undefined ? { datei: e.datei } : {}),

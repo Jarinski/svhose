@@ -22,6 +22,7 @@ const SPALTEN: { titel: string; links: { href: string; label: string; extern?: b
     titel: 'Verein',
     links: [
       { href: '/ueber-uns', label: 'Über uns' },
+      { href: '/foerderverein', label: 'Förderverein' },
       { href: '/news', label: 'News' },
       { href: '/downloads', label: 'Downloads' },
       { href: '/kinderschutz', label: 'Kinderschutz' },

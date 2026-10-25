@@ -25,6 +25,7 @@ export default function Footer() {
                 { href: '/termine', label: 'Termine' },
                 { href: '/downloads', label: 'Downloads' },
                 { href: '/ansprechpartner', label: 'Kontakt' },
+                { href: '/foerderverein', label: 'Förderverein' },
                 { href: '/kinderschutz', label: 'Kinderschutz' },
               ].map(link => (
                 <li key={link.href}>

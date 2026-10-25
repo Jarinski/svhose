@@ -31,6 +31,7 @@ const NACH_SPIELPLAENEN: Ziel[] = [
 
 /** Im Burger-Menü zusätzlich (auf dem Desktop stehen sie im Footer) */
 const NUR_MOBIL: Ziel[] = [
+  { href: '/foerderverein', label: 'Förderverein' },
   { href: '/downloads', label: 'Downloads' },
   { href: '/kinderschutz', label: 'Kinderschutz' },
 ]
