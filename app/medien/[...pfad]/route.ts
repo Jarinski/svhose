@@ -3,8 +3,9 @@
  *
  * Liefert Bilder und Dateien aus dem Medienordner (siehe lib/medien.ts) unter /medien/<pfad> aus.
  *
- * Caching: Nur Dateinamen mit Inhalts-Hash ("<name>-<hash8>.<ext>", so legt der Import Bilder ab)
- * ändern unter derselben URL nie ihren Inhalt und dürfen dauerhaft gecacht werden. Alle anderen
+ * Caching: Nur Dateinamen mit Inhalts-Hash ("<name>-<hash8>.<ext>", so legen Verwaltung und
+ * WordPress-Import Dateien ab; die übernommenen Altdaten heißen ebenso) ändern unter derselben URL
+ * nie ihren Inhalt und dürfen dauerhaft gecacht werden. Alle anderen
  * Dateien (z. B. Downloads wie downloads/satzung.pdf oder von Hand kopierte Bilder) können unter
  * gleichem Namen ersetzt werden – sie werden bei jedem Abruf nachgeprüft (ETag/Last-Modified, 304).
  * Der Bildoptimierer von next/image übernimmt diese Cache-Dauer für seinen Server-Cache.

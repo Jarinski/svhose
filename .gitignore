@@ -34,5 +34,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# lokale Datenbank, Medien und Sanity-Export (enthalten personenbezogene Daten – nie committen)
+# lokale Datenbank, Medien und Importdaten (enthalten personenbezogene Daten – nie committen)
 /data/

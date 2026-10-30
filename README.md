@@ -12,21 +12,21 @@ Voraussetzung: **Node.js 22 oder neuer** (wegen `better-sqlite3`).
 
 ```bash
 npm install
-npm run import:sanity   # nur, wenn data/import/sanity-export.json vorhanden ist
 npm run dev
 ```
 
 Öffne [http://localhost:3000](http://localhost:3000) im Browser.
 
-- **Mit Sanity-Export**: `npm run import:sanity` baut die Datenbank aus
-  `data/import/sanity-export.json` auf und kopiert die Bilder und Dateien in den Medienordner.
-  Achtung: Der Import **löscht und ersetzt Datenbank und Medienordner** komplett.
-- **Ohne Export**: einfach `npm run dev` starten. Die Datenbank `data/svhs.db` wird beim ersten
-  Zugriff automatisch mit allen Tabellen angelegt, ist dann aber leer. Danach mit
+- **Mit vorhandenem Datenbestand**: vor dem Start eine Kopie der Datenbank als `data/svhs.db` und
+  den Medienordner als `data/medien/` ablegen, z. B. aus einem Backup (siehe `OPERATIONS.md`,
+  Abschnitt 4). Fehlende Migrationen spielt die Anwendung beim ersten Zugriff selbst ein.
+- **Ohne Datenbestand**: einfach `npm run dev` starten. Die Datenbank `data/svhs.db` wird beim
+  ersten Zugriff automatisch mit allen Tabellen angelegt, ist dann aber leer. Danach mit
   `npm run verwaltung:admin -- "Vorname Nachname"` den ersten Admin anlegen und Inhalte unter
   `/verwaltung` eintragen.
 - `data/` ist **nicht im Git**, weil es personenbezogene Daten enthält (das Repository ist
-  öffentlich). Export oder Datenbank gibt es bei den Webverantwortlichen, nicht über Git oder Chats.
+  öffentlich). Eine Kopie von Datenbank und Medien gibt es bei den Webverantwortlichen, nicht über
+  Git oder Chats.
 
 ---
 
@@ -69,15 +69,12 @@ sv-holm-seppensen/
 │
 ├── drizzle/                    ← SQL-Migrationen (erzeugt mit npm run db:generate)
 ├── scripts/
-│   ├── sanity-export.mjs       ← einmaliger Export aus Sanity
-│   ├── import-aus-sanity.ts    ← baut die Datenbank aus dem Export auf
 │   ├── import-wordpress-news.ts ← News von der alten WordPress-Seite übernehmen (npm run import:wordpress)
 │   └── verwaltung-admin.ts     ← ersten Admin anlegen bzw. Notfall-Zugang (npm run verwaltung:admin)
 │
 ├── data/                       ← NICHT im Git (personenbezogene Daten)
 │   ├── svhs.db                 ← die Datenbank
-│   ├── medien/                 ← Bilder & Dateien
-│   └── import/                 ← Sanity-Export (nur für die Erstbefüllung)
+│   └── medien/                 ← Bilder & Dateien
 │
 └── public/                     ← statische Dateien (Logo, feste Bilder & PDFs)
 ```
@@ -162,14 +159,13 @@ Wichtig:
 | `npm run db:studio` | Tabellen-Editor im Browser (Drizzle Studio) |
 | `npm run db:generate` | erzeugt nach einer Änderung an `lib/db/schema.ts` eine neue Migration in `drizzle/` |
 | `npm run db:migrate` | spielt ausstehende Migrationen ein (passiert sonst automatisch beim ersten Zugriff) |
-| `npm run export:sanity` | einmaliger Export aus Sanity nach `data/import/` (braucht die Sanity-Variablen in `.env.local`) |
-| `npm run import:sanity` | baut Datenbank und Medienordner aus `data/import/sanity-export.json` neu auf (**überschreibt alles**, auch Zugänge und Verlauf; bricht ab, sobald es Zugänge gibt – dann nur mit `-- --alles-ueberschreiben`; Bericht in `data/import/import-bericht.md`) |
 | `npm run verwaltung:admin -- "Name"` | legt einen Admin-Zugang an bzw. setzt ihn zurück und zeigt den Einladungs-QR-Code |
 | `npm run import:wordpress` | übernimmt News mit Bildern von der alten WordPress-Seite (Standard: seit 1. Januar; `-- --seit 2025-06-01`, `-- --anzahl 10`, `-- --probelauf`). Vorhandene News werden übersprungen, das Skript kann also erneut laufen und holt dann nur Neues |
 
 Pfade lassen sich über `DATENBANK_PFAD` (Standard `data/svhs.db`) und `MEDIEN_PFAD`
-(Standard `data/medien`) ändern. `npm run import:sanity` liest dafür keine Env-Datei, abweichende
-Pfade dort beim Aufruf setzen (siehe `OPERATIONS.md`, Abschnitt 2.2).
+(Standard `data/medien`) ändern. `npm run verwaltung:admin` und `npm run import:wordpress` lesen
+dafür keine Env-Datei, abweichende Pfade dort beim Aufruf setzen (siehe `OPERATIONS.md`,
+Abschnitt 2.2).
 
 ---
 
@@ -236,7 +232,7 @@ Wiederherstellung: [`OPERATIONS.md`](OPERATIONS.md).
 | [Lucide React](https://lucide.dev) | Icons |
 | [sharp](https://sharp.pixelplumbing.com) | Bilder beim Hochladen verkleinern (WebP), Bildoptimierung |
 | [qrcode](https://github.com/soldair/node-qrcode) | QR-Codes für Einladungen und die Authenticator-App |
-| [tsx](https://github.com/privatenumber/tsx) | TypeScript-Skripte (z. B. Import) |
+| [tsx](https://github.com/privatenumber/tsx) | TypeScript-Skripte (z. B. erster Admin, WordPress-Import) |
 | eigener Server (geplant: Hetzner) | Hosting mit Node.js und nginx |
 
 ---

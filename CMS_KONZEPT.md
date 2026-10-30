@@ -529,7 +529,7 @@ flowchart LR
 | Service-Schicht | Speicherfunktionen in `lib/verwaltung/` und `app/verwaltung/(intern)/*/logik.ts` ✅ umgesetzt (statt einer Datei `lib/verwaltung/service.ts`) | Rechte, Prüfung und Verlauf in jeder Funktion; ohne Next.js-Abhängigkeit, damit API und Bot sie später nutzen können |
 | Schemas | **zod** – **offen** | geplant: ein Schema für Formularprüfung, API-Prüfung, OpenAPI-Beschreibung und Bot-Werkzeuge. Die Verwaltung prüft bisher mit eigenen Hilfsfunktionen (`lib/verwaltung/pruefhilfen.ts`); zod kommt frühestens mit der REST-API |
 | Anmeldung | Passwort mit **scrypt**, App-Codes nach **TOTP** (RFC 6238), beides mit `node:crypto` ✅ umgesetzt | keine Fremdbibliothek und kein Fremddienst für den Login (Abschnitt 6) |
-| Fotos | **lokaler Medienordner** `data/medien`, ausgeliefert unter `/medien/<pfad>` ✅ umgesetzt | liegt neben der Datenbank auf dem Server, kein Fremddienst. Bilder verkleinert die Verwaltung mit **`sharp`** vor dem Speichern (max. 1600 px, WebP, ohne EXIF/GPS). Hochgeladene Dateien (auch PDFs) bekommen immer einen Inhalts-Hash im Namen (`<name>-<hash8>.<ext>`), weil `/medien` solche Namen ein Jahr lang cacht. Ersetzte Dateien löscht die Verwaltung, wenn nichts mehr darauf verweist; den Bildcache von `next/image` danach von Hand leeren (`OPERATIONS.md`, Abschnitt 7.4) |
+| Fotos | **lokaler Medienordner** `data/medien`, ausgeliefert unter `/medien/<pfad>` ✅ umgesetzt | liegt neben der Datenbank auf dem Server, kein Fremddienst. Bilder verkleinert die Verwaltung mit **`sharp`** vor dem Speichern (max. 1600 px, WebP, ohne EXIF/GPS). Hochgeladene Dateien (auch PDFs) bekommen immer einen Inhalts-Hash im Namen (`<name>-<hash8>.<ext>`), weil `/medien` solche Namen ein Jahr lang cacht. Ersetzte Dateien löscht die Verwaltung, wenn nichts mehr darauf verweist; den Bildcache von `next/image` danach von Hand leeren (`OPERATIONS.md`, Abschnitt 7.3) |
 | QR-Codes | Paket `qrcode` (erzeugt SVG auf dem Server) ✅ umgesetzt | Die Website braucht keinen eigenen Scanner, die Handykamera reicht |
 | Formulare | **Server Actions** ✅ umgesetzt | keine eigene API für die Oberfläche nötig; Uploads bis 16 MB pro Anfrage (`next.config.js`) |
 | Aktualität | Seiten rendern dynamisch (`force-dynamic`) ✅ umgesetzt | Änderungen sind **sofort** sichtbar, auch über API und Bot. Ein `revalidateTag` ist nicht mehr nötig |
@@ -807,14 +807,11 @@ Schätzung folgt mit der Modellwahl.
 Die Übernahme lief in zwei Schritten und hat **alle** Inhalte erfasst, nicht nur Mannschaften,
 Personen und Trainingszeiten:
 
-1. **Export** mit `scripts/sanity-export.mjs` (`npm run export:sanity`): alle veröffentlichten
-   Dokumente, die offenen Entwürfe und alle referenzierten Bilder und Dateien (32 Assets, ca.
-   17 MB) nach `data/import/`. Das Skript nutzt nur `fetch`, kein Sanity-Paket.
-2. **Import** mit `scripts/import-aus-sanity.ts` (`npm run import:sanity`):
-   - plant und prüft den ganzen Import, bevor etwas gelöscht wird,
-   - legt Datenbank und Medienordner neu an und schreibt alle Zeilen in **einer Transaktion**,
-   - kopiert die Bilder und Dateien in den Medienordner,
-   - schreibt einen **Bericht** nach `data/import/import-bericht.md`.
+1. **Export** aus Sanity: alle veröffentlichten Dokumente, die offenen Entwürfe und alle
+   referenzierten Bilder und Dateien (32 Assets, ca. 17 MB).
+2. **Import** in die neue Datenbank: Der Import wurde vorab vollständig geplant und geprüft,
+   schrieb alle Zeilen in **einer Transaktion**, kopierte die Bilder und Dateien in den
+   Medienordner und erstellte einen Bericht mit Zuordnungen und Auffälligkeiten.
 3. Wesentliche Umwandlungen:
    - `uhrzeit` „17:00 - 18:30“ wird zu `beginn`/`ende`.
    - `ort` „KuRa Platz Wiesenschule (ab Februar)“ wird zu Ort plus Hinweis.
@@ -828,21 +825,16 @@ Personen und Trainingszeiten:
 4. Grundlage sind die veröffentlichten Dokumente. Der offene Sparten-Entwurf wurde nur für
    Kontaktdaten mit ausgewertet; andere Entwürfe nennt der Bericht.
 
-Eine `sanity_id` wird nicht gespeichert. Die Zuordnung lässt sich über den Bericht und den
-Export nachvollziehen.
+Eine `sanity_id` wird nicht gespeichert.
 
 ### Umstellung
 
 Weil die Website noch nicht produktiv ist, wurde **direkt und vollständig** umgestellt: kein
 Redaktionsstopp, kein Schalter `CONTENT_SOURCE`, kein Parallelbetrieb. Sanity, `/studio`, das
-Studio-Handbuch, die Sanity-Pakete und die alten Skripte sind entfernt. Einen Rückweg zu Sanity
-gibt es nicht mehr; Absicherung bieten der Export in `data/import/` und die Backups.
-
-**Achtung:** `npm run import:sanity` löscht und ersetzt Datenbank und Medienordner. Nach dem
-Beginn der Pflege in SQLite nur noch für frische Entwicklungsumgebungen verwenden. Seit dem
-20.10.2026 bricht der Import ab, sobald es Zugänge der Verwaltung gibt; nur mit
-`npm run import:sanity -- --alles-ueberschreiben` verwirft er trotzdem alles, auch Zugänge,
-Verlauf und Uploads.
+Studio-Handbuch, die Sanity-Pakete, die alten Skripte und auch Export- und Importskript der
+Übernahme sind entfernt. Einen Rückweg zu Sanity gibt es nicht mehr; die Inhalte liegen nur noch
+in der SQLite-Datenbank und im Medienordner, abgesichert durch die Backups (`OPERATIONS.md`,
+Abschnitt 4).
 
 Offen bleibt: im Sanity-Projekt alle Tokens widerrufen (sie stehen in der öffentlichen
 Git-Historie) und das Projekt danach löschen (`OPERATIONS.md`, Abschnitt 8.1).

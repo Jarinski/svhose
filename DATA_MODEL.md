@@ -922,7 +922,7 @@ weiterhin selbst einhalten.
     `termine.bild` oder `downloads.datei` mehr darauf verweist. Bilder, die nur im Markdown-Text
     einer News eingebunden sind, prüft sie dabei nicht.
 - Nach dem Löschen oder Ersetzen eines Fotos den Bildcache von `next/image` leeren
-  (`OPERATIONS.md`, Abschnitt 7.4), sonst liefert er verkleinerte Kopien weiter aus. Das gilt auch
+  (`OPERATIONS.md`, Abschnitt 7.3), sonst liefert er verkleinerte Kopien weiter aus. Das gilt auch
   für Änderungen über die Verwaltung.
 
 ## 7.2 Datum und Uhrzeit
@@ -1012,8 +1012,9 @@ Bisherige Migrationen:
 Während der Entwicklung gab es kurz eine zweite Migration `0002_zwei_faktor`. Sie wurde vor dem
 ersten Deployment in `0001_verwaltung` zusammengeführt. Eine lokale Entwicklungsdatenbank, auf
 der die alten Fassungen schon eingespielt waren, passt nicht mehr zum Migrationsverlauf und muss
-neu aufgebaut werden, z. B. mit `npm run import:sanity` (bei vorhandenen Zugängen mit
-`-- --alles-ueberschreiben`).
+ersetzt werden: durch eine Kopie einer aktuellen Datenbank (z. B. aus dem Backup, siehe
+`OPERATIONS.md`, Abschnitt 4) oder durch eine leere Datenbank, in der `npm run verwaltung:admin`
+den ersten Admin anlegt.
 
 SQLite kann manche Änderungen (z. B. neue Constraints) nur über eine neue Tabelle mit
 Datenübernahme abbilden. `drizzle-kit` erzeugt das selbst. Vor solchen Migrationen auf dem Server
@@ -1023,8 +1024,7 @@ immer ein Backup ziehen (siehe `OPERATIONS.md`).
 
 ## 10) Herkunft: Sanity → SQLite
 
-Die Daten wurden am 03.10.2026 einmalig aus Sanity übernommen (`scripts/sanity-export.mjs`, dann
-`npm run import:sanity`). Grob gilt:
+Die Daten wurden am 03.10.2026 einmalig aus Sanity übernommen. Grob gilt:
 
 | Sanity-Typ | SQLite |
 |---|---|
@@ -1043,13 +1043,11 @@ Weggefallen sind damit auch alle Altlasten des Sanity-Modells: eingebettete Mann
 `trainingszeiten_spartes`, Fallback-Felder an Trainingszeiten, Sparten als Freitext in Terminen und
 News sowie die Zuordnung von Trainingszeiten per Stichwort-Heuristik.
 
-Details zur Umwandlung stehen im Importskript `scripts/import-aus-sanity.ts`. Jeder Lauf schreibt
-außerdem einen Bericht nach `data/import/import-bericht.md` (nicht im Git).
-
-Die Verwaltungstabellen füllt der Import nicht. Weil er Datenbank und Medienordner komplett neu
-aufbaut, bricht er ab, sobald es in der Datenbank Zugänge gibt. Nur mit
-`npm run import:sanity -- --alles-ueberschreiben` läuft er trotzdem und verwirft dann alles,
-auch Zugänge, Verlauf und hochgeladene Medien.
+Die Verwaltungstabellen (Abschnitte 3.12–3.17) waren nicht Teil der Übernahme; sie kamen erst am
+20.10.2026 hinzu. Export- und Importskript wurden nach der Übernahme entfernt (Details zur
+Umwandlung im Git-Verlauf: `scripts/import-aus-sanity.ts`, zuletzt in Commit 50cf9d2). Seitdem
+ist die SQLite-Datenbank die einzige Datenquelle; ein erneuter Import aus Sanity ist nicht
+vorgesehen.
 
 ---
 
@@ -1061,4 +1059,3 @@ auch Zugänge, Verlauf und hochgeladene Medien.
 - Datenschicht: `lib/content.ts`
 - Verwaltung: `lib/verwaltung/` (u. a. `anmeldung.ts`, `sitzung.ts`, `rechte.ts`, `passwort.ts`,
   `totp.ts`, `codes.ts`, `verlauf.ts`), `app/verwaltung/`, `scripts/verwaltung-admin.ts`
-- Übernahme: `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`

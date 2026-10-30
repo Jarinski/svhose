@@ -14,7 +14,8 @@ wie sie auf die Website gelangen.
   1. manuelle Pflege über die eigene **Verwaltung `/verwaltung`** (seit 20.10.2026, mit Rechten
      und Verlauf); **Drizzle Studio** (`npm run db:studio`) nur noch für Technik und Notfälle,
   2. **Cronjobs** für Spiele von fussball.de und click-tt → Tabelle `termine`,
-  3. **einmalige Übernahme** aus Sanity (Export und Import, erledigt am 03.10.2026).
+  3. **Übernahme von Altdaten**: News von der alten WordPress-Seite (`npm run import:wordpress`).
+     Die übrigen Inhalte wurden am 03.10.2026 einmalig aus Sanity übernommen (Abschnitt 3).
 - **Ausgabe**: Die Seiten lesen über `lib/content.ts` und rendern dynamisch (`force-dynamic`).
   Änderungen in der Datenbank sind sofort sichtbar, für die Seiten gibt es kein ISR und keinen Cache mehr.
 - **Medien**: werden unter `/medien/<pfad>` ausgeliefert (`app/medien/[...pfad]/route.ts`) und
@@ -42,11 +43,9 @@ flowchart LR
   CF -->|"Upsert termine"| DB
   CT -->|"Upsert termine"| DB
 
-  SAN[("Sanity<br/>(abgelöst)")] --> EX["scripts/sanity-export.mjs"]
-  EX --> IMP["data/import/<br/>sanity-export.json + assets"]
-  IMP --> IM["scripts/import-aus-sanity.ts"]
-  IM -->|"einmalig, überschreibt alles"| DB
-  IM --> MED
+  WP["alte WordPress-Seite<br/>/wp-json"] --> WI["scripts/import-wordpress-news.ts"]
+  WI -->|"nur neue News"| DB
+  WI -->|"Bilder (WebP)"| MED
 
   DB --> CL["lib/content.ts"]
   CL --> P["Seiten<br/>(force-dynamic)"]
@@ -126,15 +125,16 @@ Regeln und Felder im Detail: `DATA_MODEL.md`.
 - **Neue Fassung = neuer Dateiname**: Ein Bild oder Dokument nie unter gleichem Namen
   überschreiben, sondern mit neuem Namen ablegen (z. B. mit Datum:
   `downloads/beitragsordnung-2026-10.pdf`) und den Pfad in der Tabelle anpassen. Hintergrund:
-  Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen Import und Verwaltung
-  Dateien ab) gelten als unveränderlich und werden ein Jahr lang gecacht; eine überschriebene Datei
-  bliebe dann bei Besucher:innen alt. Dateien ohne Hash werden zwar bei jedem Abruf nachgeprüft,
-  ein neuer Name ist aber auch dort der sichere Weg. Die Verwaltung hält diese Regel automatisch ein.
+  Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen Verwaltung und
+  WordPress-Import Dateien ab; die übernommenen Altdaten heißen ebenso) gelten als unveränderlich
+  und werden ein Jahr lang gecacht; eine überschriebene Datei bliebe dann bei Besucher:innen alt.
+  Dateien ohne Hash werden zwar bei jedem Abruf nachgeprüft, ein neuer Name ist aber auch dort der
+  sichere Weg. Die Verwaltung hält diese Regel automatisch ein.
 - **Foto gelöscht oder ersetzt**: Der Bildoptimierer (`next/image`, z. B. Fotos auf
   `/ansprechpartner` und in den News) hält eigene verkleinerte Kopien in `.next/cache/images` und
   liefert sie auch dann weiter aus, wenn die Originaldatei fehlt. Nach dem Löschen eines Fotos
   (z. B. bei Widerruf der Einwilligung) deshalb den Bildcache leeren, siehe `OPERATIONS.md`,
-  Abschnitt 7.4. Das gilt auch, wenn das Foto in der Verwaltung entfernt wurde.
+  Abschnitt 7.3. Das gilt auch, wenn das Foto in der Verwaltung entfernt wurde.
 
 ---
 
@@ -201,35 +201,14 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 
 ---
 
-## 3) Einmalige Übernahme aus Sanity (erledigt am 03.10.2026)
+## 3) Übernahme von Altdaten
 
-## 3.1 Export
+## 3.1 Inhalte aus Sanity (erledigt am 03.10.2026)
 
-- Skript: `scripts/sanity-export.mjs` (`npm run export:sanity`). Es nutzt kein Sanity-Paket, nur
-  `fetch`.
-- Benötigt `NEXT_PUBLIC_SANITY_PROJECT_ID` und `SANITY_API_READ_TOKEN` (oder
-  `SANITY_API_WRITE_TOKEN`) in `.env.local`.
-- Ergebnis in `data/import/` (nicht im Git):
-  - `sanity-export.json` mit `dokumente` (alle veröffentlichten Dokumente, roh), `entwuerfe`
-    (offene Entwürfe) und `assets` (Metadaten inkl. `lokaleDatei`)
-  - `assets/` mit allen referenzierten Bildern und Dateien
-- Umfang beim Export am 03.10.2026: 15 Sparten, 49 Mannschafts-Dokumente, 51 Personen,
-  93 Trainingszeiten, 16 Kontaktseiten-Einträge, 4 News, 177 Termine, 5 Downloads, 4 Partner;
-  32 Assets (27 Bilder, 5 Dateien, ca. 17 MB); 2 offene Entwürfe.
-
-## 3.2 Import
-
-- Skript: `scripts/import-aus-sanity.ts` (`npm run import:sanity`). Arbeitet nur mit dem Export,
-  ohne Netzwerk und ohne Sanity-Paket.
-- Ablauf:
-  1. Export lesen und den ganzen Import im Speicher planen und prüfen, bevor etwas gelöscht wird.
-  2. `data/svhs.db` und den **Medienordner löschen**, Datenbank neu anlegen.
-  3. Alle Zeilen in **einer Transaktion** einfügen.
-  4. Bilder und Dateien in den Medienordner kopieren.
-  5. Bericht nach `data/import/import-bericht.md` schreiben (Zuordnungen, Auffälligkeiten).
-  Schlägt Schritt 3 oder 4 fehl, werden Datenbank und Medienordner wieder entfernt.
-- Grundlage sind die veröffentlichten Dokumente. Offene Entwürfe von Sparten werden nur für die
-  Kontaktdaten mit ausgewertet; andere Entwürfe nennt der Bericht, übernommen werden sie nicht.
+- Die Inhalte wurden am 03.10.2026 einmalig aus Sanity übernommen: 15 Sparten,
+  49 Mannschafts-Dokumente, 51 Personen, 93 Trainingszeiten, 16 Kontaktseiten-Einträge, 4 News,
+  177 Termine und 5 Downloads, dazu 32 Bilder und Dateien (ca. 17 MB). Grundlage waren die
+  veröffentlichten Dokumente; offene Entwürfe von Sparten flossen nur mit ihren Kontaktdaten ein.
 - Wesentliche Umwandlungen (Übersicht in `DATA_MODEL.md`, Abschnitt 10):
   - Sanity-`mannschaft` → `mannschaften` (Fußball-Teams, Tischtennis-Ligateams) oder `gruppen`
     (alles andere, inkl. Fußball-Torwarttraining und Tischtennis-Trainingsgruppe)
@@ -238,15 +217,16 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
   - News-Text: Portable Text → Markdown
   - Termine: `fussballDeId` bzw. `clickTtId` → `quelle` + `externe_id`
   - Partner entfallen
+- Export- und Importskript wurden danach entfernt, ebenso `/studio`, das Studio-Handbuch, die
+  Sanity-Pakete und die alten Patch- und Migrationsskripte. Seitdem ist die SQLite-Datenbank die
+  einzige Datenquelle; ein erneuter Import aus Sanity ist nicht vorgesehen. Eine neue Installation
+  startet mit einer Kopie von Datenbank und Medienordner (`OPERATIONS.md`, Abschnitt 5.1,
+  Schritt 6; Kopie per Backup, Abschnitt 4.2) oder leer mit `npm run verwaltung:admin` für den
+  ersten Admin (`README.md`, „Schnellstart“).
+- Offen ist nur noch, im Sanity-Projekt alle Tokens zu widerrufen und das Projekt zu löschen
+  (`OPERATIONS.md`, Abschnitt 8.1).
 
-> **Achtung:** `npm run import:sanity` **löscht und ersetzt Datenbank und Medienordner**. Seit die
-> Pflege in SQLite läuft, gingen dabei alle späteren Änderungen verloren. Den Import nur noch
-> für eine frische Entwicklungsumgebung nutzen, nie auf dem Server mit Live-Daten.
-> Als Schutz bricht er ab, sobald die Datenbank Zugänge der Verwaltung enthält. Nur mit
-> `npm run import:sanity -- --alles-ueberschreiben` läuft er dann trotzdem und verwirft alles,
-> auch Zugänge, Verlauf und hochgeladene Medien.
-
-## 3.3 News von der alten WordPress-Seite
+## 3.2 News von der alten WordPress-Seite
 
 - Skript: `scripts/import-wordpress-news.ts` (`npm run import:wordpress`). Liest die Beiträge über die
   öffentliche WordPress-Schnittstelle von www.sv-holm-seppensen.de (`/wp-json/wp/v2/posts`).
@@ -259,22 +239,12 @@ Die Endpunkte werden per `curl` aus der crontab aufgerufen (Einrichtung: `OPERAT
 - `-- --probelauf` schreibt nichts, sondern legt die umgewandelten Texte zur Kontrolle unter
   `data/import/wordpress-probelauf/` ab.
 
-## 3.4 Danach
-
-- Sanity wird nicht mehr gebraucht: `/studio`, das Studio-Handbuch, die Sanity-Pakete und die
-  alten Patch- und Migrationsskripte sind entfernt.
-- Im Sanity-Projekt alle Tokens widerrufen und das Projekt nach dem Umzug löschen (siehe
-  `OPERATIONS.md`, Abschnitt 8.1).
-
 ---
 
 ## 4) Risiken
 
 ## 4.1 Datenverlust / Überschreiben
 
-- **`npm run import:sanity`** ersetzt Datenbank und Medienordner durch den Stand vom 03.10.2026,
-  samt Verlust aller Zugänge und des Verlaufs. Er bricht ab, sobald es Zugänge gibt, außer mit
-  `--alles-ueberschreiben`.
 - **Löschen wirkt sofort und teils kaskadierend**, in der Verwaltung wie in Drizzle Studio:
   - Eine Person löschen (in der Verwaltung nur Admins, mit Anzeige, wo sie vorkommt) entfernt sie
     aus allen Trainerteams, Sparten und Funktionen.
@@ -347,7 +317,7 @@ flowchart TD
 - **Cron-Automation**: `app/api/cron/sync-fussball/route.ts`, `app/api/cron/sync-tischtennis/route.ts`,
   crontab auf dem Server (`OPERATIONS.md`)
 - **Externe Parser/Scraper**: `lib/fussball-de.ts`, `lib/click-tt.ts`
-- **Übernahme aus Sanity**: `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`
+- **Übernahme von Altdaten**: `scripts/import-wordpress-news.ts` (News von der alten WordPress-Seite)
 - **Pflege**: Verwaltung `app/verwaltung/`, `lib/verwaltung/` (Rechte, Anmeldung, Uploads,
   Verlauf), `components/verwaltung/`; Admin-Skript `scripts/verwaltung-admin.ts`; für Technik
   Drizzle Studio (`npm run db:studio`)
@@ -364,6 +334,4 @@ Die größten Risiken liegen in:
    nicht per Knopf zurücknehmen; Änderungen in Drizzle Studio stehen gar nicht im Verlauf
    (→ Verlauf, Backups),
 2. **Scraper-Fragilität** gegenüber HTML-Änderungen bei fussball.de und click-tt,
-3. **dem Import-Skript**, das mit `--alles-ueberschreiben` alle Änderungen seit dem 03.10.2026
-   samt Zugängen verwirft,
-4. **dem Betrieb auf einem einzelnen Server** (→ Backups außer Haus).
+3. **dem Betrieb auf einem einzelnen Server** (→ Backups außer Haus).

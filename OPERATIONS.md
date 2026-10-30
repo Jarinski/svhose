@@ -70,7 +70,7 @@ flowchart LR
 | `data/svhs.db` | die Datenbank: Inhalte, Zugänge der Verwaltung, angemeldete Geräte und Verlauf | dazu im Betrieb `svhs.db-wal` und `svhs.db-shm` (WAL-Modus) |
 | `data/medien/` | Bilder und Dateien, ausgeliefert unter `/medien/<pfad>` | auch alle Uploads aus der Verwaltung |
 | `data/backup/` | nächtliche Datenbank-Kopien (Vorschlag) | zusätzlich außer Haus sichern |
-| `data/import/` | Sanity-Export vom 03.10.2026 | nur für die Erstbefüllung; enthält personenbezogene Daten |
+| `data/import/` | Kontrollausgaben von `npm run import:wordpress -- --probelauf` (ggf. alte Importdaten) | personenbezogen, nicht nötig für den Betrieb; nicht auf den Server kopieren |
 
 - `data/` steht in `.gitignore`. `git pull` fasst den Ordner nicht an.
 - Wer die Daten außerhalb des Checkouts ablegen will (z. B. `/var/lib/svhs`), setzt
@@ -88,8 +88,6 @@ flowchart LR
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
 | `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>`. Außerdem die Adresse in den Einladungs-Links und -QR-Codes der Verwaltung: Ohne sie nimmt die Verwaltung die Adresse der aktuellen Anfrage, das Skript `npm run verwaltung:admin` dagegen `http://localhost:3000` | niedrig |
-| `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET` | nur für `npm run export:sanity` | – | einmaliger Export aus Sanity | niedrig |
-| `SANITY_API_READ_TOKEN` bzw. `SANITY_API_WRITE_TOKEN` | nur für `npm run export:sanity` | – | Lesezugriff für den Export | **kritisch** – nach dem Umzug widerrufen und löschen |
 
 Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter hinzu (siehe
 `CMS_KONZEPT.md`). Die Namen der Variablen sind noch offen.
@@ -100,13 +98,11 @@ Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter h
 - **drizzle-kit** (`npm run db:studio`, `db:migrate`, `db:generate`) liest nur `.env`, nicht
   `.env.local`. Abweichende Pfade deshalb in `.env` eintragen oder beim Aufruf mitgeben:
   `DATENBANK_PFAD=/var/lib/svhs/svhs.db npm run db:studio`.
-- `scripts/sanity-export.mjs` liest `.env.local` selbst ein.
-- `npm run import:sanity` (tsx) liest **keine** Env-Datei. Abweichende Pfade beim Aufruf mitgeben:
-  `DATENBANK_PFAD=/var/lib/svhs/svhs.db MEDIEN_PFAD=/var/lib/svhs/medien npm run import:sanity`.
-  Sonst baut der Import `./data/svhs.db` und `./data/medien` auf, während die Website den
+- `npm run import:wordpress` (tsx) liest **keine** Env-Datei. Abweichende Pfade beim Aufruf
+  mitgeben:
+  `DATENBANK_PFAD=/var/lib/svhs/svhs.db MEDIEN_PFAD=/var/lib/svhs/medien npm run import:wordpress`.
+  Sonst schreibt das Skript in `./data/svhs.db` und `./data/medien`, während die Website den
   konfigurierten Pfad liest.
-- `npm run import:wordpress` (tsx) liest ebenfalls **keine** Env-Datei. Auf dem Server deshalb
-  `DATENBANK_PFAD=… MEDIEN_PFAD=… npm run import:wordpress` aufrufen.
 - `npm run verwaltung:admin` (tsx) liest ebenfalls **keine** Env-Datei. `SEITEN_URL` und einen
   abweichenden `DATENBANK_PFAD` deshalb beim Aufruf mitgeben (Abschnitt 9.1). Sonst landet der
   Admin-Zugang in `./data/svhs.db`, und der Link im QR-Code zeigt auf `http://localhost:3000`.
@@ -291,19 +287,33 @@ automatisch mit ein.
 4. **Umgebung**: `.env` bzw. `.env.local` anlegen (mindestens `CRON_SECRET` und `SEITEN_URL`,
    siehe Abschnitt 2).
 5. **Abhängigkeiten und Build**: `npm ci` und `npm run build`.
-6. **Daten**: die gepflegte `data/svhs.db` und `data/medien/` per `scp`/`rsync` auf den Server
-   kopieren. Alternativ einmalig `npm run import:sanity`, falls `data/import/` dort liegt
-   (bei abweichenden Pfaden diese beim Aufruf setzen, siehe Abschnitt 2.2). Der Import bricht ab,
-   sobald die Datenbank Zugänge enthält (Abschnitt 7.3), also vor dem ersten Admin ausführen.
-   Ab dann wird **nur noch auf dem Server** gepflegt, über die Verwaltung.
+6. **Daten**: den bisherigen Datenbestand, also eine konsistente Kopie der Datenbank (per
+   SQLite-Backup, Abschnitt 4.2) als `data/svhs.db` und den Ordner `data/medien/`, per
+   `scp`/`rsync` auf den Server kopieren. Bei abweichenden Pfaden die Dateien dort ablegen, wohin
+   `DATENBANK_PFAD` und `MEDIEN_PFAD` zeigen. Anschließend müssen die Dateien dem Dienstbenutzer
+   gehören (Abschnitt 8.3), sonst kann der Dienst weder in die Datenbank noch in den
+   Medienordner schreiben: `sudo chown -R svhs: data && sudo chmod -R o-rwx data` (bzw. die Pfade
+   aus `DATENBANK_PFAD` und `MEDIEN_PFAD`), oder gleich als `svhs` kopieren. Die Kopie bringt
+   alle Zugänge, angemeldeten Geräte und offenen Einladungs-Codes mit (z. B. vom Vereins-PC,
+   `README.md`, „Vorerst: auf dem eigenen Rechner“); Aufräumen siehe Schritt 11. Gibt es noch
+   keinen Datenbestand, entfällt dieser Schritt: Die leere Datenbank legt die Anwendung beim
+   ersten Zugriff selbst an, die Inhalte werden nach dem ersten Admin (Schritt 11) in der
+   Verwaltung eingetragen. Ab dann wird **nur noch auf dem Server** gepflegt, über die Verwaltung.
 7. **systemd-Dienst** einrichten (Beispiel unten), aktivieren und starten.
 8. **nginx** als Reverse Proxy einrichten (Beispiel unten) und TLS mit `certbot --nginx` holen.
 9. **crontab** und Backup-Skript einrichten (Abschnitte 3 und 4).
 10. **Domain** auf den Server zeigen lassen, `SEITEN_URL` in der Env-Datei auf die öffentliche
     Adresse setzen (Abschnitt 2.1; mit oder ohne „www“ vorher klären), Dienst neu starten und alle
-    Seiten prüfen.
-11. **Ersten Admin der Verwaltung** anlegen (Abschnitt 9.1), sich über `https://…/verwaltung`
-    anmelden und mindestens einen zweiten Admin einrichten.
+    Seiten prüfen (ohne Datenbestand erst nach Schritt 11 sinnvoll).
+11. **Zugänge der Verwaltung**:
+    - *Mit kopierter Datenbank*: keinen neuen ersten Admin anlegen. Mit einem vorhandenen
+      Admin-Zugang über `https://…/verwaltung` anmelden und unter „Zugänge“ Test- und nicht mehr
+      benötigte Zugänge deaktivieren, unbekannte oder nicht mehr genutzte Geräte abmelden und
+      offene Einladungs-Codes ungültig machen (Zugang deaktivieren oder neuen Code erstellen; alte
+      Links zeigen sonst noch auf `localhost` oder die Adresse des PCs). Sicherstellen, dass es
+      mindestens zwei Admins gibt.
+    - *Mit leerer Datenbank*: ersten Admin anlegen (Abschnitt 9.1), sich über
+      `https://…/verwaltung` anmelden und mindestens einen zweiten Admin einrichten.
 
 systemd-Dienst `/etc/systemd/system/svhs.service` (Beispiel):
 
@@ -455,28 +465,13 @@ Drizzle Studio lauscht nur lokal (Port 4983) und darf **nie** öffentlich erreic
 Alternative für Einzelkorrekturen: `sqlite3 data/svhs.db`, dann zuerst
 `PRAGMA foreign_keys = ON;`. Sonst greifen die Lösch- und Fremdschlüsselregeln nicht.
 
-### 7.3 Neu aufbauen aus dem Sanity-Export
-
-`npm run import:sanity` löscht Datenbank und Medienordner und baut beide aus `data/import/sanity-export.json` neu auf.
-Das ist **nur** für eine frische Entwicklungsumgebung gedacht. Auf dem Server würde es alle
-Änderungen seit dem 03.10.2026 verwerfen, dazu alle Zugänge, den Verlauf und alle Uploads.
-
-Als Schutz bricht der Import ab, sobald die Datenbank Zugänge der Verwaltung enthält (dort wird
-also schon gearbeitet). Nur mit ausdrücklichem Schalter läuft er trotzdem:
-
-```sh
-npm run import:sanity -- --alles-ueberschreiben
-```
-
-Diesen Schalter auf dem Server mit Live-Daten nie verwenden. Danach gibt es keine Zugänge mehr;
-der erste Admin muss neu angelegt werden (Abschnitt 9.1).
-
-### 7.4 Medien ersetzen oder löschen (Cache)
+### 7.3 Medien ersetzen oder löschen (Cache)
 
 `/medien/<pfad>` wird gecacht (`app/medien/[...pfad]/route.ts`):
 
-- Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen der Import und die
-  Verwaltung Dateien ab) gelten als unveränderlich: `Cache-Control: public, max-age=31536000, immutable`.
+- Dateinamen mit 8-stelligem Hash-Suffix (`…-1a2b3c4d.webp`, so legen Verwaltung und
+  WordPress-Import Dateien ab; die übernommenen Altdaten heißen ebenso) gelten als unveränderlich:
+  `Cache-Control: public, max-age=31536000, immutable`.
 - Alle anderen Dateien (z. B. `downloads/satzung.pdf`) werden bei jedem Abruf nachgeprüft
   (`max-age=0, must-revalidate` mit ETag und Last-Modified, unverändert ⇒ `304`).
 
@@ -512,23 +507,23 @@ Daraus folgt:
   der Historie, und vorhandene Klone oder Forks behalten sie.
 - Deshalb in der Sanity-Verwaltung (sanity.io/manage) im Projekt **alle API-Tokens widerrufen**,
   auch die aus `.env.local` und Vercel.
-- Nach erfolgreichem Umzug das **Sanity-Projekt löschen**. Dann sind auch unbekannte Kopien der
-  Tokens wertlos.
-- Die Sanity-Variablen anschließend aus `.env.local` entfernen. Im Vercel-Projekt hinterlegte
-  Variablen ebenfalls löschen bzw. das Vercel-Projekt nach dem Umzug abschalten.
+- Danach das **Sanity-Projekt löschen**; der Umzug ist abgeschlossen, es wird nicht mehr
+  gebraucht. Dann sind auch unbekannte Kopien der Tokens wertlos.
+- Die Sanity-Variablen werden nirgends mehr gelesen: aus `.env.local` entfernen. Im
+  Vercel-Projekt hinterlegte Variablen ebenfalls löschen bzw. das Vercel-Projekt abschalten.
 
 ### 8.2 Personenbezogene Daten
 
-- `data/` (Datenbank, Medien, Sanity-Export, Backups) ist gitignored und darf **nie** committet
-  oder in versionierte Dateien kopiert werden. Das Repository ist öffentlich.
+- `data/` (Datenbank, Medien, Backups, Importdaten in `data/import/`) ist gitignored und darf
+  **nie** committet oder in versionierte Dateien kopiert werden. Das Repository ist öffentlich.
 - Kontaktdaten erscheinen öffentlich auf der Website: nur mit Einverständnis der Personen eintragen.
 - Alles im Medienordner ist über `/medien/<pfad>` öffentlich abrufbar. Interne Dokumente gehören
   nicht dorthin. Die Route lässt keine Pfade außerhalb des Medienordners zu (`medienDatei()`).
 - Wird ein Foto gelöscht (z. B. Widerruf der Einwilligung), reicht das Entfernen von Datei und
-  Datenbankeintrag nicht: zusätzlich den Bildcache leeren (Abschnitt 7.4).
+  Datenbankeintrag nicht: zusätzlich den Bildcache leeren (Abschnitt 7.3).
 - Die Verwaltung schreibt beim Hochladen einen Inhalts-Hash in den Dateinamen, entfernt
   Metadaten wie GPS-Koordinaten aus Bildern und löscht ersetzte Dateien. Den Bildcache leert sie
-  nicht (Abschnitt 7.4).
+  nicht (Abschnitt 7.3).
 - **Verlauf:** Er hebt alte Stände dauerhaft auf, bei Personen auch Kontaktdaten und interne
   Notizen, und zwar auch nach dem Löschen der Person. Eine automatische Löschfrist gibt es nicht.
   Bei einem Löschwunsch (z. B. Widerruf der Einwilligung) die betroffenen Einträge in `verlauf`
@@ -586,7 +581,8 @@ und 6; Tabellen: `DATA_MODEL.md`, Abschnitte 3.12–3.18.
 
 ### 9.1 Erster Admin auf dem Server
 
-Den allerersten Admin legt ein Skript direkt in der Datenbank an. Auf dem Server als
+Nur bei leerer Datenbank nötig; eine kopierte Datenbank bringt ihre Zugänge mit (Abschnitt 5.1,
+Schritt 11). Den allerersten Admin legt ein Skript direkt in der Datenbank an. Auf dem Server als
 Dienstbenutzer im Projektverzeichnis (damit neu angelegte Dateien in `data/` dem Dienst gehören):
 
 ```sh
@@ -688,7 +684,7 @@ SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname N
 
 ## Anhang: Relevante Betriebsdateien
 
-- `package.json` (Skripte `build`, `start`, `db:*`, `export:sanity`, `import:sanity`, `import:wordpress`, `verwaltung:admin`)
+- `package.json` (Skripte `build`, `start`, `db:*`, `import:wordpress`, `verwaltung:admin`)
 - `next.config.js` (externe Pakete `better-sqlite3` und `sharp`, Upload-Grenze der Server-Aktionen)
 - `drizzle.config.ts`, `drizzle/`
 - `lib/db/index.ts`, `lib/db/schema.ts`
@@ -699,5 +695,4 @@ SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname N
 - `app/api/cron/sync-tischtennis/route.ts`
 - `lib/fussball-de.ts`
 - `lib/click-tt.ts`
-- `scripts/sanity-export.mjs`, `scripts/import-aus-sanity.ts`
 - `.env.local.example`
