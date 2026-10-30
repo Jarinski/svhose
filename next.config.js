@@ -1,18 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Sanity Studio und UI-Pakete müssen transpiliert werden
-  transpilePackages: ['sanity', '@sanity/ui', 'next-sanity', 'styled-components'],
-
-  images: {
-    remotePatterns: [
-      {
-        // Sanity CDN für Bilder und Dateien
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+  // Projektordner festlegen, damit eine package-lock.json weiter oben im Dateisystem nicht stört.
+  turbopack: { root: __dirname },
+  // better-sqlite3 und sharp sind native Node-Module (.node-Binaries) und dürfen nicht
+  // gebündelt werden – sie werden zur Laufzeit direkt aus node_modules geladen.
+  serverExternalPackages: ['better-sqlite3', 'sharp'],
+  experimental: {
+    serverActions: {
+      // Foto- und PDF-Uploads in der Verwaltung laufen über Server-Aktionen (Standard wäre 1 MB).
+      bodySizeLimit: '16mb',
+    },
   },
 }
 

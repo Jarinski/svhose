@@ -1,21 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { MapPin, Mail, Phone, User, RotateCcw } from 'lucide-react'
-
-interface TrainingsEntry {
-  sparte: string
-  gruppe: string
-  tag: string
-  uhrzeit: string
-  ort: string
-  jahreszeit: string
-  frequenz: string
-  trainer: string
-  email: string
-  telefon: string
-  foto?: string
-}
+import { MapPin, Mail, Phone, User, RotateCcw, Info } from 'lucide-react'
+import type { TrainingsEintrag } from '@/lib/content'
 
 const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 
@@ -40,6 +27,7 @@ const SAISON_STYLE: Record<string, { bg: string; color: string }> = {
   Winter:     { bg: '#dbeafe', color: '#1e40af' },
 }
 
+/** Fallback, falls für eine Sparte keine Farbe in der Datenbank gepflegt ist. */
 const SPARTE_COLOR: Record<string, string> = {
   'Akrobatik':           '#9333ea',
   'Badminton':           '#2563eb',
@@ -60,6 +48,8 @@ const SPARTE_COLOR: Record<string, string> = {
   'Volleyball':          '#7c3aed',
 }
 
+const STANDARD_FARBE = '#0a0a0a'
+
 function normJahreszeit(j: string) {
   const l = j.toLowerCase()
   if (l === 'ganzjährig') return 'ganzjährig'
@@ -68,18 +58,31 @@ function normJahreszeit(j: string) {
   return j
 }
 
-export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[] }) {
+export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag[] }) {
   const [activeSparte, setActiveSparte] = useState<string>('Alle')
   const [activeTag, setActiveTag] = useState<string>('Alle')
   const [activeJahreszeit, setActiveJahreszeit] = useState<string>('Alle')
 
-  // Unique sorted spartes in JSON order (preserving first occurrence)
+  // Sparten in der Reihenfolge der Daten (erstes Vorkommen zählt)
   const spartes = useMemo(() => {
     const seen = new Set<string>()
     const list: string[] = []
     data.forEach(e => { if (!seen.has(e.sparte)) { seen.add(e.sparte); list.push(e.sparte) } })
     return list
   }, [data])
+
+  // Akzentfarbe je Sparte: aus der Datenbank, sonst feste Tabelle, sonst Standardfarbe
+  const sparteFarben = useMemo(() => {
+    const map = new Map<string, string>()
+    data.forEach(e => {
+      if (!map.has(e.sparte) && e.farbe) map.set(e.sparte, e.farbe)
+    })
+    return map
+  }, [data])
+
+  function sparteFarbe(sparte: string): string {
+    return sparteFarben.get(sparte) ?? SPARTE_COLOR[sparte] ?? STANDARD_FARBE
+  }
 
   const availableTags = useMemo(
     () => TAG_ORDER.filter(t => data.some(e => e.tag === t)),
@@ -99,7 +102,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
 
   // Group filtered entries by sparte (preserving order)
   const grouped = useMemo(() => {
-    const map = new Map<string, TrainingsEntry[]>()
+    const map = new Map<string, TrainingsEintrag[]>()
     filtered.forEach(e => {
       if (!map.has(e.sparte)) map.set(e.sparte, [])
       map.get(e.sparte)!.push(e)
@@ -136,7 +139,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                 label={s}
                 count={data.filter(e => e.sparte === s).length}
                 active={activeSparte === s}
-                activeColor={SPARTE_COLOR[s] ?? '#0a0a0a'}
+                activeColor={sparteFarbe(s)}
                 onClick={() => setActiveSparte(activeSparte === s ? 'Alle' : s)}
               />
             ))}
@@ -225,7 +228,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
       ) : (
         <div className="space-y-12">
           {Array.from(grouped.entries()).map(([sparte, entries]) => {
-            const color = SPARTE_COLOR[sparte] ?? '#0a0a0a'
+            const color = sparteFarbe(sparte)
             return (
               <div key={sparte}>
                 {/* Sparte header */}
@@ -278,11 +281,15 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b6b6b]">
-                              <span className="flex items-center gap-1">
-                                <MapPin size={9} className="shrink-0" />
-                                <span className="truncate">{e.ort}</span>
-                              </span>
-                              <span className="opacity-60">·</span>
+                              {e.ort && (
+                                <>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={9} className="shrink-0" />
+                                    <span className="truncate">{e.ort}</span>
+                                  </span>
+                                  <span className="opacity-60">·</span>
+                                </>
+                              )}
                               <span>{e.frequenz}</span>
                               {e.uhrzeit && (
                                 <>
@@ -291,14 +298,23 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEntry[]
                                 </>
                               )}
                             </div>
+                            {/* Hinweis, z. B. "ab Februar" */}
+                            {e.hinweis && (
+                              <div className="flex items-center gap-1 text-xs text-[#0a0a0a]/80">
+                                <Info size={9} className="shrink-0" />
+                                <span>{e.hinweis}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Right: trainer info – hidden on mobile */}
                           <div className="hidden sm:flex shrink-0 flex-col items-end justify-center gap-1" style={{ maxWidth: '240px' }}>
-                            <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
-                              <User size={9} className="shrink-0" />
-                              <span className="leading-tight text-right">{e.trainer}</span>
-                            </div>
+                            {e.trainer && (
+                              <div className="flex items-center gap-1 text-[11px] text-[#6b6b6b]">
+                                <User size={9} className="shrink-0" />
+                                <span className="leading-tight text-right">{e.trainer}</span>
+                              </div>
+                            )}
                             {e.email && (
                               <a
                                 href={`mailto:${e.email}`}

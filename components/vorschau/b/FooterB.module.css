@@ -1,0 +1,182 @@
+/*
+ * Design B · Bento – Footer als schwarzer, abgerundeter Block.
+ * Unten bleibt Platz für den schwebenden Umschalter der Design-Vorschau.
+ */
+
+.fuss {
+  margin: 100px 0 0;
+  padding: 0 20px 96px;
+}
+
+.block {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px;
+  border-radius: 36px;
+  background: var(--b-ink);
+  color: #fff;
+}
+
+.block :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* ── Aufruf oben ── */
+.cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 44px;
+  margin-bottom: 44px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.ctaText {
+  font-family: var(--b-display);
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.02;
+}
+
+/* ── Spalten ── */
+.oben {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 36px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.marke {
+  border-radius: 999px;
+}
+
+.marke img {
+  background: #fff;
+  border-radius: 50%;
+  padding: 4px;
+}
+
+.marke small { color: rgba(255, 255, 255, .6); }
+
+.text {
+  max-width: 300px;
+  margin-top: 16px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, .7);
+}
+
+/* Kinderschutz-Siegel bleibt farbig (offizielles Siegel) */
+.siegel {
+  display: inline-block;
+  margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  opacity: .85;
+  transition: opacity .2s;
+}
+
+.siegel:hover { opacity: 1; }
+
+.siegel img {
+  display: block;
+  width: 180px;
+  height: auto;
+}
+
+.spalte h2 {
+  margin-bottom: 14px;
+  font-family: var(--b-schrift);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .55);
+}
+
+.spalte ul {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.spalte a {
+  color: rgba(255, 255, 255, .85);
+  overflow-wrap: anywhere;
+  transition: color .15s;
+}
+
+.spalte a:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ── Unterste Zeile ── */
+.unten {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 26px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, .6);
+}
+
+.rechtliches {
+  display: flex;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+}
+
+.rechtliches a,
+.rechtliches button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rechtliches a:hover,
+.rechtliches button:hover {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 1100px) {
+  .oben { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .fuss {
+    margin-top: 72px;
+    padding: 0 14px 96px;
+  }
+  .block {
+    padding: 32px 24px;
+    border-radius: 28px;
+  }
+  .cta {
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+  }
+  .oben { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siegel,
+  .spalte a { transition: none; }
+}

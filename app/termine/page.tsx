@@ -3,7 +3,9 @@ import TermineClient from './TermineClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Termine' }
-export const revalidate = 60
+
+// Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen und synchronisierte Spiele erscheinen sofort
+export const dynamic = 'force-dynamic'
 
 export default async function TerminePage() {
   const termine = await getTermine()

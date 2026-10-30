@@ -52,6 +52,24 @@ function stripTags(str: string): string {
 }
 
 /**
+ * Build a bounded key that stays unique when the input is longer than `max`.
+ * Plain truncation would collapse two distinct games into one ID — e.g. two
+ * Kinderfestival matches on the same day whose only difference ("… II") sits
+ * past the cutoff — so the overflow is folded into a hash suffix instead.
+ */
+function boundedKey(value: string, max: number): string {
+  if (value.length <= max) return value
+
+  let hash = 2166136261
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  const suffix = (hash >>> 0).toString(36)
+  return `${value.slice(0, max - suffix.length - 1)}-${suffix}`
+}
+
+/**
  * Parse the HTML fragment returned by fussball.de AJAX endpoints.
  *
  * Structure per game:
@@ -132,7 +150,7 @@ function parseGamesFromHtml(html: string): FussballSpiel[] {
     const idFromUrl = url.match(/\/spiel\/([a-z0-9]+)$/i)?.[1]
     const id = idFromUrl
       ? idFromUrl.toLowerCase()
-      : `${datum}-${heim}-${gast}`.replace(/\s+/g, '-').toLowerCase().slice(0, 80)
+      : boundedKey(`${datum}-${heim}-${gast}`.replace(/\s+/g, '-').toLowerCase(), 80)
 
     games.push({
       id,

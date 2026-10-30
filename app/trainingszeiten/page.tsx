@@ -3,10 +3,13 @@ import TrainingszeitenClient from './TrainingszeitenClient'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Trainingszeiten' }
-export const revalidate = 60
+
+// Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen erscheinen sofort
+export const dynamic = 'force-dynamic'
 
 export default async function TrainingszeitenPage() {
   const data = await getTrainingszeiten()
+  const anzahlSparten = new Set(data.map(e => e.sparte)).size
 
   return (
     <div className="pt-32 pb-24 px-6 max-w-6xl mx-auto">
@@ -24,9 +27,7 @@ export default async function TrainingszeitenPage() {
           <div className="h-3 w-px bg-[#0a0a0a]/20 hidden sm:block" />
           <p className="text-sm text-[#6b6b6b]">
             <span className="font-medium text-[#0a0a0a]">{data.length}</span> Trainingseinheiten in{' '}
-            <span className="font-medium text-[#0a0a0a]">
-              {Array.from(new Set(data.map((e: any) => e.sparte))).length}
-            </span>{' '}
+            <span className="font-medium text-[#0a0a0a]">{anzahlSparten}</span>{' '}
             Sparten
           </p>
         </div>
@@ -43,7 +44,7 @@ export default async function TrainingszeitenPage() {
         <div className="w-1 h-8 bg-[#0a0a0a]/10 shrink-0 hidden sm:block" />
         <p className="text-sm text-[#6b6b6b]">
           Änderungen und Ausfälle werden kurzfristig über unsere Social-Media-Kanäle bekannt gegeben.
-          Bei Fragen wende dich direkt an den jeweiligen Trainer.
+          Bei Fragen wende dich direkt an das jeweilige Trainerteam.
         </p>
       </div>
     </div>

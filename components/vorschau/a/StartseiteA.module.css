@@ -1,0 +1,881 @@
+/* Startseite Design A (Matchday) – nach public/vorschau/a-matchday.html */
+
+.seite {
+  /* Trikot-Streifen: Breite eines Streifens */
+  --streifen: 28px;
+  overflow-x: clip;
+  color: var(--a-text);
+}
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  padding: 140px 0 56px;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  filter: grayscale(1) contrast(1.1);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(10, 10, 10, .55) 0%, rgba(10, 10, 10, .3) 35%, rgba(10, 10, 10, .72) 70%, var(--a-bg) 100%),
+    linear-gradient(90deg, rgba(10, 10, 10, .78) 0%, transparent 60%);
+}
+
+/* Text auf dem Video: zarter Schatten sichert den Kontrast bei hellen Videobildern */
+.heroText {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .5);
+}
+
+.heroText .actions {
+  text-shadow: none;
+}
+
+.heroGrid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 48px;
+  align-items: end;
+}
+
+.h1 {
+  font-size: clamp(4.5rem, 13vw, 12.5rem);
+  margin: 22px 0 26px;
+}
+
+/* „stark.“ als kursive Outline-Schrift */
+.h1 em {
+  font-style: italic;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--a-text);
+}
+
+.lead {
+  max-width: 520px;
+  font-size: 18px;
+  color: var(--a-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+/* ── Karte "Nächstes Spiel" ── */
+.match {
+  background: rgba(20, 20, 20, .72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 24px;
+  padding: 22px;
+  min-width: 0;
+}
+
+.matchTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--a-muted);
+}
+
+.matchKopf {
+  text-align: right;
+  min-width: 0;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--a-text);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.live::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--a-text);
+}
+
+/* Pulsierender Punkt nur, wenn das Spiel heute ist */
+.livePuls::before {
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, .6);
+  animation: puls 1.8s infinite;
+}
+
+@keyframes puls {
+  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.matchArt {
+  margin-top: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--a-muted);
+  text-align: center;
+}
+
+/* Wappen oben bündig, auch wenn ein Vereinsname umbricht */
+.teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  margin: 14px 0 22px;
+  text-align: center;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.crest {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--a-surface-2);
+  border: 1px solid var(--a-line);
+}
+
+.crest img {
+  width: 44px;
+  height: 44px;
+}
+
+.crestHeim {
+  background: var(--a-paper);
+  border-color: var(--a-paper);
+}
+
+.crestGast {
+  font-stretch: 70%;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--a-muted);
+  background: transparent;
+  border-color: var(--a-line-strong);
+}
+
+.vs {
+  display: grid;
+  place-items: center;
+  height: 64px;
+  font-stretch: 66%;
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--a-muted);
+}
+
+.matchMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--a-line);
+  font-size: 13px;
+  color: var(--a-muted);
+}
+
+.ort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.matchMeta a,
+.matchLinks a {
+  color: var(--a-text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.matchMeta a:hover,
+.matchLinks a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Ersatz, wenn kein Spiel ansteht */
+.termin {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 22px 0;
+}
+
+.termin b {
+  font-size: 34px;
+  line-height: .95;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  min-width: 0;
+}
+
+.terminIcon {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--a-line-strong);
+  color: var(--a-soft);
+}
+
+.terminIcon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.matchText {
+  margin: 18px 0 20px;
+  color: var(--a-soft);
+  font-size: 15px;
+}
+
+.matchLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--a-line);
+  font-size: 13px;
+}
+
+/* ── Zahlen mit Trikot-Streifen ── */
+.stats {
+  position: relative;
+  border-top: 1px solid var(--a-line);
+  border-bottom: 1px solid var(--a-line);
+}
+
+.stats::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 var(--streifen), transparent var(--streifen) calc(var(--streifen) * 2));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
+  pointer-events: none;
+}
+
+.statsWrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat {
+  padding: 30px 24px;
+  border-left: 1px solid var(--a-line);
+  color: var(--a-text);
+}
+
+.stat:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.stat b {
+  display: block;
+  font-stretch: 66%;
+  font-weight: 800;
+  font-size: 54px;
+  line-height: 1;
+}
+
+.stat > span {
+  font-size: 13px;
+  color: var(--a-muted);
+}
+
+.statLink {
+  color: var(--a-text);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, .35);
+  text-underline-offset: 3px;
+  transition: text-decoration-color .15s;
+}
+
+.statLink:hover {
+  text-decoration-color: var(--a-text);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Offizielles Siegel – bleibt farbig */
+.badge img {
+  width: 132px;
+  height: auto;
+  border-radius: 8px;
+  flex: none;
+}
+
+.badge:hover > span {
+  color: var(--a-text);
+}
+
+/* ── Abschnitte ── */
+.abschnitt {
+  padding: 110px 0;
+  scroll-margin-top: 90px;
+}
+
+.ohneOben {
+  padding-top: 0;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 44px;
+}
+
+.h2 {
+  font-size: clamp(3rem, 7vw, 6rem);
+  margin-top: 14px;
+}
+
+.leer {
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px dashed var(--a-line-strong);
+  color: var(--a-soft);
+}
+
+.leer a {
+  color: var(--a-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── News: Fotos schwarz-weiß, beim Hover in Farbe ── */
+
+/* Emojis aus übernommenen Texten (z. B. 🩸, 💜) schwarz-weiß */
+.featureTitel,
+.featureText,
+.newsText {
+  filter: grayscale(1);
+}
+.newsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.newsEinzeln {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.feature {
+  position: relative;
+  isolation: isolate;
+  border-radius: 26px;
+  overflow: hidden;
+  min-height: 560px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--a-surface);
+  color: var(--a-text);
+}
+
+.featureBild {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+  transition: transform .8s cubic-bezier(.16, 1, .3, 1), filter .7s ease;
+}
+
+.feature:hover .featureBild,
+.feature:focus-visible .featureBild {
+  transform: scale(1.05);
+  filter: grayscale(0) contrast(1);
+}
+
+.feature::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(10, 10, 10, .92) 100%);
+  pointer-events: none;
+}
+
+/* Ohne Foto: Wappen auf Trikot-Streifen */
+.featureLeer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding-top: 72px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .04) 0 var(--streifen), transparent var(--streifen) calc(var(--streifen) * 2)),
+    var(--a-surface-2);
+}
+
+.featureLeer img {
+  width: 160px;
+  height: 160px;
+  opacity: .55;
+}
+
+.featureBody {
+  position: relative;
+  z-index: 2;
+  padding: 36px;
+}
+
+/* Abdunklung direkt hinter dem Text, wächst mit der Textmenge mit */
+.featureBody::before {
+  content: '';
+  position: absolute;
+  inset: -120px 0 0;
+  z-index: -1;
+  background: linear-gradient(180deg, transparent 0, rgba(10, 10, 10, .78) 120px, rgba(10, 10, 10, .9) 100%);
+  pointer-events: none;
+}
+
+.featureTitel {
+  font-stretch: 70%;
+  font-weight: 800;
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  line-height: .95;
+  text-transform: uppercase;
+  margin: 14px 0 12px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.featureText {
+  color: var(--a-soft);
+  max-width: 460px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meta {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--a-muted);
+}
+
+.meta b {
+  color: var(--a-text);
+  font-weight: 700;
+}
+
+.feature .meta {
+  color: var(--a-soft);
+}
+
+.feature .meta b {
+  display: inline-block;
+  padding: 4px 8px;
+  margin-right: 4px;
+  border-radius: 4px;
+  background: var(--a-paper);
+  color: var(--a-ink);
+  letter-spacing: .1em;
+}
+
+.newsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.newsList > li {
+  flex: 1;
+  display: flex;
+}
+
+.newsItem {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  padding: 14px;
+  background: var(--a-surface);
+  border: 1px solid var(--a-line);
+  border-radius: 22px;
+  color: var(--a-text);
+  transition: border-color .2s, background .2s;
+}
+
+.newsItem:hover,
+.newsItem:focus-visible {
+  border-color: rgba(255, 255, 255, .22);
+  background: var(--a-surface-2);
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--a-surface-2);
+  display: grid;
+  place-items: center;
+}
+
+.thumb img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+  transition: filter .6s ease, transform .6s cubic-bezier(.16, 1, .3, 1);
+}
+
+.newsItem:hover .thumb img,
+.newsItem:focus-visible .thumb img {
+  filter: grayscale(0) contrast(1);
+  transform: scale(1.04);
+}
+
+.thumbLeer {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 10px, transparent 10px 20px),
+    var(--a-surface-2);
+}
+
+.thumbLeer img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  opacity: .7;
+}
+
+.newsItem:hover .thumbLeer img,
+.newsItem:focus-visible .thumbLeer img {
+  transform: none;
+}
+
+.newsText h3 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 8px 0 6px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.newsText p {
+  font-size: 14px;
+  color: var(--a-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Sparten: typografisch mit Laufnummer, Hover invertiert ── */
+.sparten {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sparten > li {
+  display: flex;
+  min-width: 0;
+}
+
+.sparte {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding: 22px;
+  min-height: 180px;
+  border-radius: 20px;
+  background: var(--a-surface);
+  border: 1px solid var(--a-line);
+  color: var(--a-text);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  overflow: hidden;
+  container-type: inline-size;
+  transition: background .25s, color .25s, border-color .25s, transform .25s;
+}
+
+.nr {
+  font-stretch: 62%;
+  font-weight: 800;
+  font-size: 64px;
+  line-height: .8;
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .4);
+  transition: color .25s, -webkit-text-stroke-color .25s;
+}
+
+/* Schriftgröße folgt der Kachelbreite, damit lange Namen nicht umbrechen */
+.sparte b {
+  font-stretch: 70%;
+  font-weight: 800;
+  font-size: min(22px, 13cqi);
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: .01em;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.pfeil {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .07);
+  transition: background .2s, color .2s, transform .2s;
+}
+
+.pfeil svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sparte:hover,
+.sparte:focus-visible {
+  background: var(--a-paper);
+  color: var(--a-ink);
+  border-color: var(--a-paper);
+  transform: translateY(-3px);
+}
+
+.sparte:hover .nr,
+.sparte:focus-visible .nr {
+  color: var(--a-ink);
+  -webkit-text-stroke-color: var(--a-ink);
+}
+
+.sparte:hover .pfeil,
+.sparte:focus-visible .pfeil {
+  background: var(--a-ink);
+  color: var(--a-paper);
+  transform: rotate(-45deg);
+}
+
+/* ── Mitmachen: invertierter Abschnitt mit Trikot-Streifen ── */
+.ctaWrap {
+  scroll-margin-top: 90px;
+  padding-bottom: 54px;
+}
+
+.cta {
+  /* Im hellen Block gelten dunkle Schrift und dunkler Fokusrahmen */
+  --a-text: #0a0a0a;
+  --a-fokus: #0a0a0a;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 32px;
+  background: var(--a-paper);
+  color: var(--a-ink);
+  padding: 72px 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 40px;
+  align-items: end;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .035) 0 var(--streifen), transparent var(--streifen) calc(var(--streifen) * 2));
+  -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 30%, #000 100%);
+  pointer-events: none;
+}
+
+.cta > div {
+  position: relative;
+}
+
+.ctaTitel {
+  font-size: clamp(3.4rem, 8vw, 7.5rem);
+  margin-top: 18px;
+}
+
+.ctaTitel em {
+  font-style: italic;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--a-ink);
+}
+
+.cta p {
+  max-width: 460px;
+  margin-top: 20px;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--a-ink-soft);
+}
+
+.ctaActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btnDark {
+  background: var(--a-ink);
+  color: var(--a-paper);
+  justify-content: center;
+}
+
+.btnDark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+}
+
+.btnLine {
+  border: 1.5px solid var(--a-ink);
+  color: var(--a-ink);
+  justify-content: center;
+}
+
+.btnLine:hover {
+  background: var(--a-ink);
+  color: var(--a-paper);
+}
+
+.wappen {
+  position: absolute;
+  right: -50px;
+  top: -70px;
+  width: 380px;
+  opacity: .08;
+  filter: grayscale(1);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .heroGrid { grid-template-columns: minmax(0, 1fr); }
+  .match { max-width: 440px; }
+  /* Einspaltig steht der Text mitten im Video: Verlauf deutlich kräftiger, Einleitung heller */
+  .hero::after {
+    background: linear-gradient(180deg, rgba(10, 10, 10, .65) 0%, rgba(10, 10, 10, .6) 30%, rgba(10, 10, 10, .6) 50%, rgba(10, 10, 10, .8) 72%, var(--a-bg) 100%);
+  }
+  .lead { color: var(--a-text); text-shadow: 0 1px 14px rgba(0, 0, 0, .55); }
+  /* Zahlenleiste zweispaltig, damit Siegel und Text Platz haben */
+  .statsWrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--a-line); }
+  .sparten { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .hero { padding-top: 120px; }
+  /* Schriftgröße an die Breite gekoppelt, damit „Gemeinsam“ auch bei 320 px in die Spalte passt */
+  .h1 { font-size: min(4.5rem, calc((100vw - 2rem) / 4.8)); }
+  .lead { font-size: 16px; }
+  .statsWrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { padding: 22px 0; border-left: 0; }
+  /* Dritte Zahl über die volle Breite, damit keine Lücke bleibt */
+  .statBreit { grid-column: span 2; display: flex; align-items: center; gap: 14px; border-top: 1px solid var(--a-line); }
+  .badge { grid-column: span 2; border-top: 1px solid var(--a-line); }
+  .abschnitt { padding: 72px 0; }
+  .ohneOben { padding-top: 0; }
+  .head { flex-direction: column; align-items: flex-start; }
+  .newsGrid { grid-template-columns: minmax(0, 1fr); }
+  .feature { min-height: 420px; }
+  .featureBody { padding: 24px; }
+  .featureLeer { padding-top: 48px; }
+  .featureLeer img { width: 120px; height: 120px; }
+  .newsItem { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; }
+  .newsText h3 { font-size: 16px; }
+  .sparten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sparten > li:last-child:nth-child(odd) { grid-column: span 2; }
+  .sparte { min-height: 150px; padding: 16px; }
+  .nr { font-size: 52px; }
+  .pfeil { top: 16px; right: 16px; }
+  .cta { grid-template-columns: minmax(0, 1fr); padding: 44px 24px; border-radius: 24px; }
+  .wappen { width: 240px; right: -80px; top: -40px; }
+  .cta::before {
+    -webkit-mask-image: linear-gradient(180deg, transparent 40%, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 40%, #000 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .livePuls::before { animation: none; }
+  .featureBild,
+  .thumb img,
+  .newsItem,
+  .sparte,
+  .nr,
+  .pfeil,
+  .btnDark { transition: none; }
+  .feature:hover .featureBild,
+  .feature:focus-visible .featureBild,
+  .newsItem:hover .thumb img,
+  .newsItem:focus-visible .thumb img { transform: none; }
+  .sparte:hover,
+  .sparte:focus-visible,
+  .btnDark:hover { transform: none; }
+}

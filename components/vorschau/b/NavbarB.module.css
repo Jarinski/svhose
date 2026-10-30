@@ -1,0 +1,242 @@
+/*
+ * Design B · Bento – Navigation: weiße, abgerundete Leiste, die oben mitläuft (sticky).
+ * Sticky statt fixed: Die Leiste nimmt ihren Platz im Seitenfluss ein, app/vorschau-b.css
+ * verkleinert dafür den oberen Abstand (pt-32) der Unterseiten.
+ */
+
+.kopf {
+  position: sticky;
+  /* unter der Umschaltleiste der Design-Vorschau (app/vorschau.css) */
+  top: var(--du-hoehe, 0px);
+  z-index: 50;
+  padding: 14px 0;
+  background: linear-gradient(var(--b-bg) 60%, rgba(243, 243, 242, 0));
+}
+
+.leiste {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 68px;
+  padding: 0 10px 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 28px rgba(0, 0, 0, .06);
+}
+
+.leiste :focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: 3px;
+}
+
+.marke {
+  border-radius: 999px;
+}
+
+/* ── Links (Desktop) ── */
+.links {
+  display: flex;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.links > li { position: relative; }
+
+.eintrag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: 500 14.5px/1.4 var(--b-schrift);
+  color: #444;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.eintrag:hover {
+  background: var(--b-bg);
+  color: var(--b-ink);
+}
+
+.eintrag[aria-current='page'],
+.eintrag.aktiv {
+  background: var(--b-bg);
+  color: var(--b-ink);
+  font-weight: 600;
+}
+
+.eintrag svg {
+  width: 14px;
+  height: 14px;
+  transition: transform .2s;
+}
+
+.eintrag[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+/* ── Ausklappmenü Spielpläne ── */
+.ausklapp {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  min-width: 210px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .12);
+}
+
+.ausklapp[hidden] { display: none; }
+
+.ausklapp a {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  transition: background .15s;
+}
+
+.ausklapp a small {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--b-muted);
+}
+
+.ausklapp a:hover,
+.ausklapp a[aria-current='page'] { background: var(--b-bg); }
+
+/* ── Rechts: Mitglied werden + Burger ── */
+.rechts {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: none;
+}
+
+.iconBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: var(--b-bg);
+  color: var(--b-ink);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.iconBtn:hover { background: var(--b-grau); }
+
+.iconBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.burger { display: none; }
+
+/* ── Menü (mobil) ── */
+.panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  /* unten Platz für den Vorschau-Umschalter (fixed, ca. 65 px über dem Rand) */
+  max-height: calc(100vh - 180px);
+  max-height: calc(100dvh - 180px);
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .12);
+}
+
+.panel[hidden] { display: none; }
+
+.panel ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panelLink {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background .15s;
+}
+
+.panelLink:hover,
+.panelLink[aria-current='page'] {
+  background: var(--b-bg);
+  font-weight: 600;
+}
+
+.gruppe {
+  padding: 14px 16px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--b-muted);
+}
+
+.panelCta {
+  display: none;
+  padding: 10px 4px 2px;
+}
+
+.panelCta a { width: 100%; }
+
+@media (max-width: 1100px) {
+  .links { display: none; }
+  .burger { display: grid; }
+}
+
+@media (min-width: 1101px) {
+  .panel { display: none; }
+}
+
+@media (max-width: 720px) {
+  .leiste {
+    gap: 10px;
+    padding: 0 8px 0 10px;
+  }
+  .rechts { gap: 6px; }
+  .rechts .mitglied { display: none; }
+  .iconBtn {
+    width: 44px;
+    height: 44px;
+  }
+  .marke small { display: none; }
+  .panelCta { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eintrag,
+  .eintrag svg,
+  .iconBtn,
+  .ausklapp a,
+  .panelLink { transition: none; }
+}

@@ -2,20 +2,13 @@
 
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import type { SparteUebersicht } from '@/lib/content'
 
-interface Sparte {
-  slug: string
-  name: string
-  icon: string
-  farbe: string
-  beschreibung: string
-}
-
-export default function SpartenClient({ sparten }: { sparten: Sparte[] }) {
+export default function SpartenClient({ sparten }: { sparten: SparteUebersicht[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
       {sparten.map(sparte => {
-        const farbe = sparte.farbe ?? '#0a0a0a'
+        const farbe = sparte.farbe
 
         return (
           <Link
@@ -35,7 +28,11 @@ export default function SpartenClient({ sparten }: { sparten: Sparte[] }) {
                 style={{ background: `${farbe}14` }}
                 aria-hidden="true"
               >
-                {sparte.icon}
+                {sparte.icon || (
+                  // Ohne gepflegtes Icon: Vereinswappen als Platzhalter
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/SV_Holm_Seppensen_Logo.svg" alt="" className="w-9 h-9 object-contain opacity-30" />
+                )}
               </div>
               <ArrowRight
                 size={18}
@@ -48,9 +45,11 @@ export default function SpartenClient({ sparten }: { sparten: Sparte[] }) {
               <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-none">
                 {sparte.name}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[#6b6b6b]">
-                {sparte.beschreibung}
-              </p>
+              {sparte.beschreibung && (
+                <p className="mt-4 text-sm leading-relaxed text-[#6b6b6b]">
+                  {sparte.beschreibung}
+                </p>
+              )}
             </div>
 
             <div className="mt-8 inline-flex items-center gap-2 text-xs tracking-[0.16em] uppercase font-medium" style={{ color: farbe }}>

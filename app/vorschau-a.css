@@ -1,0 +1,526 @@
+/*
+ * Design-Vorschau A – Anpassung der Unterseiten (siehe lib/vorschau.ts).
+ * Alle Regeln gelten nur unter html[data-design="a"] .site, damit weder das bisherige
+ * Design noch die Verwaltung betroffen sind.
+ *
+ * Matchday: komplett dunkel. Die Unterseiten sind mit festen Tailwind-Klassen im hellen
+ * Look gestaltet – hier werden sie konsequent invertiert: helle Flächen werden dunkel,
+ * bisher dunkle Flächen und Knöpfe werden hell. Spartenfarben (Inline-Styles) werden
+ * schwarz-weiß. Die Startseite A (data-a-startseite) bringt eigene Styles mit und ist
+ * von den Regeln für Unterseiten ausgenommen.
+ */
+
+/* ── Grundlage ─────────────────────────────────────────────────────────────── */
+
+html[data-design="a"] .site {
+  --a-bg: #0a0a0a;
+  --a-surface: #141414;
+  --a-surface-2: #1c1c1c;
+  --a-line: rgba(255, 255, 255, .1);
+  --a-line-strong: rgba(255, 255, 255, .3);
+  --a-text: #fafafa;
+  --a-soft: #c8c8c8;
+  --a-muted: #8c8c8c;
+  --a-paper: #fafafa;
+  --a-ink: #0a0a0a;
+  --a-ink-muted: #5c5c5c;
+  --a-ink-soft: #2e2e2e;
+  min-height: 100vh;
+  background: var(--a-bg);
+  color: var(--a-text);
+  font-family: 'Archivo', system-ui, sans-serif;
+  line-height: 1.55;
+  color-scheme: dark;
+}
+
+/* Seitenhintergrund und Scrollleiste des Fensters (nur wenn der Website-Rahmen da ist) */
+html[data-design="a"]:has(> body > .site),
+html[data-design="a"]:has(> body > .site) > body {
+  background: #0a0a0a;
+}
+
+html[data-design="a"]:has(> body > .site)::-webkit-scrollbar-track { background: #0a0a0a; }
+html[data-design="a"]:has(> body > .site)::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .35); }
+
+html[data-design="a"] .site ::selection {
+  background: var(--a-paper);
+  color: var(--a-ink);
+}
+
+/* Sichtbarer Fokus überall; in hellen Flächen dunkel (--a-fokus) */
+html[data-design="a"] .site :focus-visible {
+  outline: 2px solid var(--a-fokus, #fafafa);
+  outline-offset: 3px;
+}
+
+/* Unterseiten beginnen unter der schwebenden Navigation */
+html[data-design="a"] .site main > .pt-32 {
+  padding-top: 9.5rem;
+}
+
+@media (max-width: 767px) {
+  html[data-design="a"] .site main > .pt-32 {
+    padding-top: 8rem;
+  }
+}
+
+/* ── Überschriften: Archivo kondensiert statt Bebas Neue ───────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .font-display {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-stretch: 66%;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -.005em;
+  line-height: .95;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Große Seitentitel auf dem Handy etwas kleiner, damit lange Wörter passen */
+@media (max-width: 767px) {
+  html[data-design="a"] .site main > :not([data-a-startseite]) h1.font-display.text-6xl {
+    font-size: min(3.75rem, 12.5vw);
+  }
+  /* Titel der News-Detailseiten ("Vertrauenspersonen", "Mädchenfußball" …) */
+  html[data-design="a"] .site main > :not([data-a-startseite]) h1.font-display.text-5xl {
+    font-size: min(3rem, 9.6vw);
+  }
+  /* Überschriften in den hellen Blöcken (z. B. "Selbstverpflichtung"): Block hat Rand und Innenabstand */
+  html[data-design="a"] .site main > :not([data-a-startseite]) > .bg-\[\#0a0a0a\].px-6 h2.font-display.text-4xl {
+    font-size: min(2.25rem, 8.4vw);
+  }
+}
+
+/* Lange Adressen in Texten (z. B. Links in Terminbeschreibungen) umbrechen statt überstehen */
+html[data-design="a"] .site main > :not([data-a-startseite]) :is(p, li) {
+  overflow-wrap: break-word;
+}
+
+/* ── Standard für Linien ohne eigene Farbe ─────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) * {
+  border-color: var(--a-line);
+}
+
+/* ── Textfarben ────────────────────────────────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#0a0a0a\] { color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#0a0a0a\]\/80 { color: rgba(250, 250, 250, .8); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#0a0a0a\]\/20 { color: rgba(250, 250, 250, .25); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#0a0a0a\]\/5 { color: rgba(250, 250, 250, .06); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#6b6b6b\] { color: var(--a-muted); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#6b6b6b\]\/60 { color: rgba(140, 140, 140, .7); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#4a4a4a\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#8b8b8b\] { color: var(--a-soft); }
+
+/* Bisher helle Schrift stand auf dunklen Flächen – die werden hell, also wird sie dunkel */
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\] { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\]\/80 { color: rgba(10, 10, 10, .8); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\]\/60 { color: rgba(10, 10, 10, .62); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\]\/50 { color: rgba(10, 10, 10, .56); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\]\/40 { color: rgba(10, 10, 10, .6); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#f5f5f0\]\/20 { color: rgba(10, 10, 10, .22); }
+
+/* Grüne Akzente (WhatsApp, Häkchen, Heimspiel) → neutral */
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#16a34a\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[\#15803d\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-emerald-600,
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-emerald-700 { color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-emerald-700\/30 { border-color: var(--a-line-strong); }
+
+/* Heimspiel-Kennzeichen im Fußball-Spielplan: weiße Pille wie auf der Startseite */
+html[data-design="a"] .site main > :not([data-a-startseite]) span.text-emerald-700 {
+  background: var(--a-paper);
+  border-color: var(--a-paper);
+  color: var(--a-ink);
+  font-weight: 700;
+}
+
+/* ── Flächen ───────────────────────────────────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#f5f5f0\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#fafaf8\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#f0f0ea\] { background-color: var(--a-surface); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-white,
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#e9e9e2\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#e8e8e3\] { background-color: var(--a-surface-2); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#f5f5f0\]\/95 { background-color: rgba(10, 10, 10, .95); }
+
+/* Dunkle Flächen, Knöpfe und Datumsblöcke werden hell */
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] {
+  background-color: var(--a-paper);
+  color: var(--a-ink);
+}
+/* In hellen Abschnitten dunkler Fokusrahmen (Knöpfe selbst stehen meist auf Dunkel) */
+html[data-design="a"] .site main > :not([data-a-startseite]) div.bg-\[\#0a0a0a\] { --a-fokus: #0a0a0a; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#1a1a1a\] { background-color: #e6e6e6; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#2a2a2a\] { background-color: #d4d4d4; }
+
+/* Fugen und zarte Flächen */
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\]\/10 { background-color: var(--a-line); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\]\/20 { background-color: rgba(255, 255, 255, .2); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\]\/5 { background-color: rgba(255, 255, 255, .06); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#f5f5f0\]\/10 { background-color: rgba(10, 10, 10, .1); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#6b6b6b\] { background-color: var(--a-muted); }
+
+/* ── Rahmen ────────────────────────────────────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\] { border-color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/10 { border-color: var(--a-line); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/15 { border-color: rgba(255, 255, 255, .15); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/20 { border-color: rgba(255, 255, 255, .2); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/50 { border-color: rgba(255, 255, 255, .5); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/8,
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/\[0\.06\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#0a0a0a\]\/\[0\.08\] { border-color: rgba(255, 255, 255, .09); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#f5f5f0\]\/10 { border-color: rgba(10, 10, 10, .12); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#f5f5f0\]\/20 { border-color: rgba(10, 10, 10, .2); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .border-\[\#f5f5f0\]\/30 { border-color: rgba(10, 10, 10, .3); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .divide-\[\#0a0a0a\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--a-line); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .decoration-\[\#0a0a0a\]\/30 { text-decoration-color: rgba(255, 255, 255, .3); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .accent-\[\#0a0a0a\] { accent-color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .ring-\[\#0a0a0a\],
+html[data-design="a"] .site main > :not([data-a-startseite]) .focus-visible\:ring-\[\#0a0a0a\]:focus-visible {
+  --tw-ring-color: var(--a-text);
+  --tw-ring-offset-color: var(--a-bg);
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .marker\:text-\[\#6b6b6b\] *::marker,
+html[data-design="a"] .site main > :not([data-a-startseite]) .marker\:text-\[\#6b6b6b\]::marker { color: var(--a-muted); }
+
+/* ── Innerhalb der (jetzt hellen) früher dunklen Flächen ───────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] .text-\[\#6b6b6b\] { color: var(--a-ink-muted); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] .text-\[\#0a0a0a\]:not([class*="bg-"]) { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] .border-\[\#0a0a0a\]\/10 { border-color: rgba(10, 10, 10, .12); }
+/* …es sei denn, darin liegt wieder eine (jetzt dunkle) helle Fläche */
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] .bg-\[\#f5f5f0\] .text-\[\#6b6b6b\] { color: var(--a-muted); }
+
+/* ── Hover ─────────────────────────────────────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-\[\#0a0a0a\]:hover { background-color: var(--a-paper); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-white:hover { background-color: var(--a-surface-2); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-\[\#1a1a1a\]:hover { background-color: #e0e0e0; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-\[\#0a0a0a\]\/5:hover { background-color: rgba(255, 255, 255, .06); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-\[\#f5f5f0\]\/20:hover { background-color: rgba(10, 10, 10, .2); }
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#0a0a0a\]:hover { color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\] .hover\:text-\[\#0a0a0a\]:hover { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#f5f5f0\]:hover { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#f5f5f0\]\/60:hover { color: rgba(10, 10, 10, .6); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#16a34a\]:hover,
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#15803d\]:hover { color: var(--a-text); }
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:border-\[\#0a0a0a\]:hover { border-color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:border-\[\#0a0a0a\]\/50:hover { border-color: rgba(255, 255, 255, .5); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:border-\[\#0a0a0a\]\/30:hover { border-color: rgba(255, 255, 255, .35); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:border-\[\#f5f5f0\]:hover { border-color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:border-\[\#f5f5f0\]\/40:hover { border-color: rgba(10, 10, 10, .4); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:decoration-\[\#0a0a0a\]:hover { text-decoration-color: var(--a-text); }
+
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover .group-hover\:text-\[\#f5f5f0\] { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover .group-hover\:text-\[\#f5f5f0\]\/60 { color: rgba(10, 10, 10, .6); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover .group-hover\:text-\[\#f5f5f0\]\/50 { color: rgba(10, 10, 10, .56); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover .group-hover\:text-\[\#0a0a0a\] { color: var(--a-text); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover .group-hover\:text-white { color: var(--a-text); }
+
+/* Karten, die sich beim Hover invertieren (News, Downloads), tun das auch beim Tastaturfokus */
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:bg-\[\#0a0a0a\]:focus-visible { background-color: var(--a-paper); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .hover\:text-\[\#f5f5f0\]:focus-visible { color: var(--a-ink); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:focus-visible .group-hover\:text-\[\#f5f5f0\]\/60 { color: rgba(10, 10, 10, .6); }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:focus-visible .group-hover\:text-\[\#f5f5f0\]\/50 { color: rgba(10, 10, 10, .56); }
+
+/* ── Formen: abgerundete Karten, Pillen-Knöpfe ─────────────────────────────── */
+
+/* Raster mit 1-px-Fugen → einzelne Karten mit Abstand */
+html[data-design="a"] .site main > :not([data-a-startseite]) .gap-px.bg-\[\#0a0a0a\]\/10,
+html[data-design="a"] .site main > :not([data-a-startseite]) .gap-px.bg-\[\#f5f5f0\]\/10 {
+  gap: 12px;
+  background-color: transparent;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .gap-px.bg-\[\#0a0a0a\]\/10 > * {
+  border: 1px solid var(--a-line);
+  border-radius: 22px;
+  overflow: hidden;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .gap-px.bg-\[\#f5f5f0\]\/10 > * {
+  border: 1px solid rgba(10, 10, 10, .12);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* Listen mit 1-px-Fugen → Kartenstapel */
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px.bg-\[\#0a0a0a\]\/10 { background-color: transparent; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px > :not([hidden]) ~ :not([hidden]) { margin-top: 8px; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px > * { border-radius: 20px; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px.bg-\[\#0a0a0a\]\/10 > * { border: 1px solid var(--a-line); }
+
+/* Vergangene Termine und Spiele: statt halber Deckkraft (zu wenig Kontrast) ohne Fläche, nur mit Rahmen */
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px:is(.opacity-50, .opacity-60) {
+  opacity: 1;
+  color: var(--a-soft);
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px:is(.opacity-50, .opacity-60) > * {
+  background-color: transparent;
+}
+
+/* Kompakte Zeilen (vergangene Termine und Spiele) auf dem Handy: Titel über die volle Breite */
+@media (max-width: 639px) {
+  html[data-design="a"] .site main > :not([data-a-startseite]) .flex-wrap > .font-medium.flex-1.min-w-0 {
+    flex-basis: 100%;
+  }
+}
+
+/* Kästen mit Rahmen */
+html[data-design="a"] .site main > :not([data-a-startseite]) div.border { border-radius: 22px; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .rounded-sm.overflow-hidden { border-radius: 22px; }
+
+/* Datumsblock in Terminen und Spielplänen */
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\].w-20 { border-radius: 14px; }
+
+/* Früher dunkle Abschnitte über die volle Breite → helle Blöcke mit runden Ecken */
+html[data-design="a"] .site main > :not([data-a-startseite]) > .bg-\[\#0a0a0a\].px-6 {
+  margin-left: 16px;
+  margin-right: 16px;
+  border-radius: 32px;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#0a0a0a\][class*="p-8"]:not(.gap-px > *) { border-radius: 28px; }
+
+/* Knöpfe, Filter und Schlagwörter als Pillen */
+html[data-design="a"] .site main > :not([data-a-startseite]) a[class*="px-"][class*="py-"],
+html[data-design="a"] .site main > :not([data-a-startseite]) button[class*="px-"][class*="py-"],
+html[data-design="a"] .site main > :not([data-a-startseite]) span[class*="px-"][class*="py-"],
+html[data-design="a"] .site main > :not([data-a-startseite]) div.border.px-2 { border-radius: 999px; }
+
+/* Laufnummern (Kinderschutz) als Outline-Ziffern wie auf der Startseite */
+html[data-design="a"] .site main > :not([data-a-startseite]) .font-display.text-\[\#0a0a0a\]\/20 {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .5);
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .font-display.text-\[\#f5f5f0\]\/20 {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(10, 10, 10, .45);
+}
+
+/* 404: große Zahl als Outline-Schrift */
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[20vw\] {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .22);
+}
+/* Auf dem Handy größer, damit die Überschrift die Zahl nicht zur Hälfte verdeckt */
+@media (max-width: 767px) {
+  html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[20vw\] {
+    font-size: 38vw;
+    -webkit-text-stroke-width: 1.5px;
+  }
+  html[data-design="a"] .site main > :not([data-a-startseite]) .text-\[20vw\] + h1 {
+    margin-top: -1rem;
+  }
+}
+
+/* ── Bilder: Fotos in Graustufen, beim Hover/Fokus in Farbe ────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) img {
+  filter: grayscale(1);
+  transition: filter .5s ease, transform .5s ease;
+}
+/* Das offizielle Kinderschutz-Siegel bleibt farbig, das Wappen ist ohnehin schwarz-weiß */
+html[data-design="a"] .site main > :not([data-a-startseite]) img[src*="schutzkonzepte1"],
+html[data-design="a"] .site main > :not([data-a-startseite]) img[src$=".svg"],
+html[data-design="a"] .site main > :not([data-a-startseite]) img:hover,
+html[data-design="a"] .site main > :not([data-a-startseite]) a:hover img,
+html[data-design="a"] .site main > :not([data-a-startseite]) a:focus-visible img,
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover img {
+  filter: none;
+}
+/* Wappen als Platzhalter ohne Foto etwas deutlicher */
+html[data-design="a"] .site main > :not([data-a-startseite]) .bg-\[\#e9e9e2\] img.opacity-20 { opacity: .45; }
+
+/* Emojis in Inhalten (Sparten-Icons, Texte) schwarz-weiß */
+html[data-design="a"] .site main > :not([data-a-startseite]) .text-5xl.mb-4,
+html[data-design="a"] .site main > :not([data-a-startseite]) .whitespace-pre-line,
+html[data-design="a"] .site main > :not([data-a-startseite]) :is(p, li).text-\[\#0a0a0a\].leading-relaxed,
+/* Markdown-Text der News: nur Textblöcke ohne Bild, damit Bilder beim Hover farbig werden können */
+html[data-design="a"] .site main > :not([data-a-startseite]) div.text-\[\#0a0a0a\].leading-relaxed :is(p, li, h2, h3, h4, h5, h6, blockquote):not(:has(img)),
+html[data-design="a"] .site main > :not([data-a-startseite]) .max-w-3xl.border,
+html[data-design="a"] .site main > :not([data-a-startseite]) .group p.leading-relaxed {
+  filter: grayscale(1);
+}
+
+/* ── Spartenfarben aus Inline-Styles → Schwarz-Weiß ────────────────────────── */
+
+/* Rückfall für alles Farbige, das unten nicht eigens behandelt wird */
+html[data-design="a"] .site main > :not([data-a-startseite]) [style*="background"]:not(img):not(video):not(:has(img)) {
+  filter: grayscale(1);
+}
+
+/* Farbige Schrift (Abschnittstitel, "Mehr erfahren") → Weiß */
+html[data-design="a"] .site main > :not([data-a-startseite]) [style*="color"]:not(img):not(button):not([style*="background"]) {
+  color: var(--a-text) !important;
+}
+
+/* Linke Akzentlinie: im Kopf der Sparte weiß, an Listen zart */
+html[data-design="a"] .site main > :not([data-a-startseite]) [style*="border-left"] {
+  border-left-color: rgba(255, 255, 255, .14) !important;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) .pl-6[style*="border-left"] {
+  border-left-color: var(--a-text) !important;
+}
+/* Trainingszeiten: Liste ist jetzt ein Kartenstapel, die Linie entfällt */
+html[data-design="a"] .site main > :not([data-a-startseite]) .space-y-px[style*="border-left"] {
+  border-left: 0 !important;
+}
+
+/* Punkte und Trennlinien in Abschnittsköpfen */
+html[data-design="a"] .site main > :not([data-a-startseite]) .rounded-full.w-1\.5[style] { background: var(--a-text) !important; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .h-px[style] { background: var(--a-line) !important; }
+
+/* Farbbalken oben auf den Spartenkarten */
+html[data-design="a"] .site main > :not([data-a-startseite]) .inset-x-0.top-0.h-1[style] { background: var(--a-line-strong) !important; }
+html[data-design="a"] .site main > :not([data-a-startseite]) .group:hover > .inset-x-0.top-0.h-1[style] { background: var(--a-text) !important; }
+
+/* Icon- und Bildflächen mit Spartentönung */
+html[data-design="a"] .site main > :not([data-a-startseite]) .w-16.h-16[style]:not(.rounded-full),
+html[data-design="a"] .site main > :not([data-a-startseite]) .w-\[512px\][style] {
+  background: var(--a-surface-2) !important;
+  border-radius: 16px;
+}
+
+/* Wochentage: helle Kästchen statt bunter */
+html[data-design="a"] .site main > :not([data-a-startseite]) .rounded-sm.text-white[style] {
+  background: var(--a-paper) !important;
+  color: var(--a-ink) !important;
+  border-radius: 8px;
+}
+
+/* Initialen ohne Foto */
+html[data-design="a"] .site main > :not([data-a-startseite]) .rounded-full.text-white[style] {
+  background: var(--a-surface-2) !important;
+  color: var(--a-text) !important;
+  box-shadow: inset 0 0 0 1px var(--a-line-strong);
+}
+
+/* Saison- und Anzahl-Schildchen */
+html[data-design="a"] .site main > :not([data-a-startseite]) span[style*="background"][style*="color"] {
+  background: transparent !important;
+  color: var(--a-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--a-line-strong);
+}
+
+/* Filterknöpfe der Trainingszeiten: aus = Umriss, an = weiß */
+html[data-design="a"] .site main > :not([data-a-startseite]) button[style] { border-radius: 999px; }
+html[data-design="a"] .site main > :not([data-a-startseite]) button[style*="transparent"] {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, .18) !important;
+  color: var(--a-soft) !important;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) button[style*="transparent"]:hover {
+  border-color: rgba(255, 255, 255, .5) !important;
+  color: var(--a-text) !important;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) button[style]:not([style*="transparent"]) {
+  background: var(--a-paper) !important;
+  border-color: var(--a-paper) !important;
+  color: var(--a-ink) !important;
+}
+/* Anzahl im aktiven Knopf: ohne zusätzliche Deckkraft (opacity-70), sonst zu blass */
+html[data-design="a"] .site main > :not([data-a-startseite]) button[style]:not([style*="transparent"]) span {
+  color: rgba(10, 10, 10, .65) !important;
+  opacity: 1;
+}
+
+/* Schlagwort-Gruppen dürfen nicht breiter als ihre Zeile werden (vergangene Termine auf dem Handy) */
+html[data-design="a"] .site main > :not([data-a-startseite]) .shrink-0.flex-wrap { max-width: 100%; }
+
+/* Kennzahlen (Über uns) in den schmalen Kacheln auf dem Handy: "100%" bleibt in einer Zeile */
+@media (max-width: 639px) {
+  html[data-design="a"] .site main > :not([data-a-startseite]) .grid-cols-2.gap-px > .p-8 { padding: 24px 12px; }
+  html[data-design="a"] .site main > :not([data-a-startseite]) .grid-cols-2.gap-px .font-display.text-5xl { white-space: nowrap; }
+  /* Trainingszeiten der Mannschaften: Ort · Uhrzeit · Rhythmus umbrechen statt abschneiden */
+  html[data-design="a"] .site main > :not([data-a-startseite]) .flex-1.min-w-0.text-sm > .truncate {
+    white-space: normal;
+    overflow: visible;
+  }
+}
+
+/* Mannschaftskarten: Bild (512 × 320) auf kleinen Bildschirmen über dem Text statt daneben */
+@media (max-width: 1023px) {
+  html[data-design="a"] .site main > :not([data-a-startseite]) .flex:has(> .w-\[512px\]) {
+    flex-direction: column;
+  }
+  html[data-design="a"] .site main > :not([data-a-startseite]) .w-\[512px\] {
+    width: 100%;
+    max-width: 512px;
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* ── Formulare, Tabellen ───────────────────────────────────────────────────── */
+
+html[data-design="a"] .site main > :not([data-a-startseite]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html[data-design="a"] .site main > :not([data-a-startseite]) select,
+html[data-design="a"] .site main > :not([data-a-startseite]) textarea {
+  background-color: var(--a-surface);
+  color: var(--a-text);
+  border: 1px solid var(--a-line-strong);
+  border-radius: 12px;
+}
+html[data-design="a"] .site main > :not([data-a-startseite]) ::placeholder { color: var(--a-muted); }
+html[data-design="a"] .site main > :not([data-a-startseite]) input[type="checkbox"],
+html[data-design="a"] .site main > :not([data-a-startseite]) input[type="radio"] { accent-color: var(--a-text); }
+
+html[data-design="a"] .site main > :not([data-a-startseite]) table { border-collapse: collapse; }
+html[data-design="a"] .site main > :not([data-a-startseite]) th,
+html[data-design="a"] .site main > :not([data-a-startseite]) td { border-bottom: 1px solid var(--a-line); }
+html[data-design="a"] .site main > :not([data-a-startseite]) th { color: var(--a-muted); }
+
+/* ── Cookie-Hinweis ────────────────────────────────────────────────────────── */
+
+/* Über dem Umschalter der Vorschau, damit dessen Leiste die Knöpfe nicht verdeckt */
+html[data-design="a"] .site > [role="dialog"] { padding-bottom: 84px; }
+/* Auf niedrigen Bildschirmen (aufgeklappte Einstellungen) im Hinweis scrollen statt oben abschneiden */
+html[data-design="a"] .site > [role="dialog"] > div {
+  background: var(--a-surface);
+  border-color: rgba(255, 255, 255, .12);
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .7);
+  max-height: calc(100vh - 116px);
+  max-height: calc(100dvh - 116px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .3) transparent;
+}
+/* Ausgeschaltete Schalter: Umriss und hellerer Knopf, damit sie auf der dunklen Fläche erkennbar sind */
+html[data-design="a"] .site > [role="dialog"] [role="switch"][aria-checked="false"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35);
+}
+html[data-design="a"] .site > [role="dialog"] [role="switch"][aria-checked="false"] > div {
+  background: #8c8c8c;
+}
+html[data-design="a"] .site > [role="dialog"] .font-display {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-stretch: 66%;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+html[data-design="a"] .site > [role="dialog"] .text-\[\#6b6b6b\] { color: var(--a-muted); }
+html[data-design="a"] .site > [role="dialog"] .text-\[\#8b8b8b\] { color: var(--a-soft); }
+html[data-design="a"] .site > [role="dialog"] button.rounded-lg { border-radius: 999px; }
+html[data-design="a"] .site > [role="dialog"] .select-none[aria-hidden="true"] { filter: grayscale(1); }
+
+/* ── Bewegung reduzieren ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-design="a"] .site *,
+  html[data-design="a"] .site *::before,
+  html[data-design="a"] .site *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
