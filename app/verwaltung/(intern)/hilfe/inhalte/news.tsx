@@ -53,7 +53,8 @@ export const news: Thema = {
             an und wähl bei <Begriff>Gehört zu</Begriff>, zu wem die News gehört.
           </>
           <>
-            Wenn du magst: Wähl unter <Begriff>Beitragsbild</Begriff> mit <Taste>Bild auswählen</Taste> ein Foto aus.
+            Wenn du magst: Wähl unter <Begriff>Beitragsbild</Begriff> mit <Taste>Bild auswählen</Taste> ein Foto aus. Danach schneidest du es zu: Verschieb das Foto im
+            Rahmen und vergrößere es mit dem Regler, dann klick auf <Taste>Zuschnitt übernehmen</Taste>.
           </>
           <>
             Schalte <Begriff>Veröffentlicht</Begriff> ein, wenn die News gleich erscheinen soll. Bleibt der Schalter aus, ist sie ein Entwurf.
@@ -167,6 +168,10 @@ export const news: Thema = {
           nimmst du es heraus, <Taste>Rückgängig</Taste> holt es zurück. Beides gilt erst, wenn du auf <Taste>Speichern</Taste> klickst.
         </p>
         <p>
+          Mit <Taste>Zuschneiden</Taste> änderst du den Ausschnitt eines Bildes nachträglich, auch bei einem schon gespeicherten. Auch das gilt erst nach dem{' '}
+          <Taste>Speichern</Taste>.
+        </p>
+        <p>
           Nach dem ersten Speichern gibt es das Feld <Begriff>Adresse auf der Website</Begriff>. Die Adresse entsteht aus der Überschrift, zum Beispiel
           /news/sommerfest-2026. Sie bleibt gleich, auch wenn du die Überschrift später änderst. Leerst du das Feld, bildet die Verwaltung die Adresse
           neu aus der Überschrift. Ist sie beim Anlegen schon vergeben, hängt die Verwaltung eine Zahl an, etwa -2. Trägst du selbst eine vergebene
@@ -197,8 +202,8 @@ export const news: Thema = {
 
       <Abschnitt titel="Gut zu wissen">
         <Tipp>
-          In der News-Übersicht und auf der Startseite schneidet die Website das Beitragsbild auf ein Querformat zu. Querformat-Fotos passen deshalb am besten. Ohne Bild zeigt die
-          Karte das Vereinswappen.
+          In der News-Übersicht und auf der Startseite zeigt die Website das Beitragsbild im Querformat (16:9). Den Ausschnitt bestimmst du selbst beim Zuschneiden; Querformat-Fotos passen von
+          Haus aus am besten. Ohne Bild zeigt die Karte das Vereinswappen.
         </Tipp>
         <Tipp>
           Fotos lädst du nur als Beitragsbild hoch – eins pro News. Bilder mitten im Text lassen sich nicht hochladen.

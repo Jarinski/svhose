@@ -1,10 +1,12 @@
 import Image from 'next/image'
 import type { NewsPost } from '@/lib/content'
+import { NEWS_BILD_VERHAELTNIS } from '@/lib/news-bild'
 
 /**
  * Vorschaubild einer News-Karte.
  *
- * Feste 16:9-Fläche statt der Originalproportion: In einem Raster sollen die
+ * Feste 16:9-Fläche (NEWS_BILD_VERHAELTNIS, auch der Zuschnitt in der Verwaltung nutzt es) statt
+ * der Originalproportion: In einem Raster sollen die
  * Karten auf einer Höhe beginnen – ein quadratisches Bild würde seine Spalte
  * sonst deutlich in die Länge ziehen. Beiträge ohne Bild bekommen das
  * Vereinswappen, damit keine Karte ohne Vorschau dasteht.
@@ -19,7 +21,7 @@ export default function NewsThumbnail({
   sizes: string
 }) {
   return (
-    <div className="relative w-full aspect-[16/9] overflow-hidden bg-[#e9e9e2]">
+    <div className="relative w-full overflow-hidden bg-[#e9e9e2]" style={{ aspectRatio: NEWS_BILD_VERHAELTNIS }}>
       {bild ? (
         <Image
           src={bild.url}

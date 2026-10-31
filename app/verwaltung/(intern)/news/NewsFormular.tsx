@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { NEWS_BILD_VERHAELTNIS } from '@/lib/news-bild'
 import { erfolg } from '@/lib/verwaltung/formular'
 import type { AuswahlGruppe } from '@/lib/verwaltung/inhalte/gemeinsam'
 import { neuererStand, type AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
@@ -142,8 +143,8 @@ export default function NewsFormular({
           </div>
         </Karte>
 
-        <Karte titel="Beitragsbild" beschreibung="Optional. Wird oben in der News und in der Übersicht gezeigt.">
-          <BildFeld aktuell={news?.bildUrl ?? null} onAenderung={merken} />
+        <Karte titel="Beitragsbild" beschreibung="Optional. Wird oben in der News und in der Übersicht gezeigt – nach der Auswahl lässt sich das Bild passend zuschneiden.">
+          <BildFeld aktuell={news?.bildUrl ?? null} zuschnitt={NEWS_BILD_VERHAELTNIS} onAenderung={merken} />
           {f.bild && <p className="mt-2 text-sm text-red-700">{f.bild}</p>}
         </Karte>
 
