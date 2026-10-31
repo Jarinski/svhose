@@ -26,6 +26,7 @@ const navLinks: NavLink[] = [
     label: 'Verein',
     children: [
       { href: '/ueber-uns', label: 'Über uns' },
+      { href: '/sportplaetze', label: 'Sportplätze' },
       { href: '/kinderschutz', label: 'Kinderschutz' },
       { href: '/downloads', label: 'Downloads' },
     ],

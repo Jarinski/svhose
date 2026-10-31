@@ -43,7 +43,7 @@ sv-holm-seppensen/
 │   ├── ansprechpartner/        ← Kontaktseite (Vereinsfunktionen)
 │   ├── downloads/              ← Dokumente & PDFs
 │   ├── fussball/, tischtennis/ ← Spielpläne (live von fussball.de / click-tt)
-│   ├── ueber-uns/, kinderschutz/, impressum/, datenschutz/
+│   ├── ueber-uns/, sportplaetze/, kinderschutz/, impressum/, datenschutz/
 │   ├── medien/[...pfad]/       ← liefert Bilder & Dateien aus data/medien aus
 │   ├── api/cron/               ← sync-fussball, sync-tischtennis (Spiele → Tabelle termine)
 │   └── verwaltung/             ← Verwaltung (eigener Rahmen, nicht in Suchmaschinen)

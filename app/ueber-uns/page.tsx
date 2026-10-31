@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
+import { SPORTPLAETZE } from '@/lib/sportplaetze'
 
 export const metadata: Metadata = { title: 'Über uns' }
 
@@ -52,24 +53,20 @@ export default function UeberUnsPage() {
         <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Unsere Anlagen</div>
         <h2 className="font-display text-5xl tracking-tight mb-12">SPORTPLÄTZE</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[#0a0a0a]/10">
-          {[
-            {
-              name: 'Sportplatz Tostedter Weg',
-              adresse: 'Tostedter Weg 1, Holm-Seppensen',
-              beschreibung: 'Unser Hauptplatz mit Rasenplatz für den Fußballbetrieb.',
-            },
-            {
-              name: 'Sportplatz Mühlenschule',
-              adresse: 'Holm-Seppensen',
-              beschreibung: 'Sporthalle für Indoor-Sportarten wie Judo, Volleyball und Kinderturnen.',
-            },
-          ].map(platz => (
-            <div key={platz.name} className="bg-[#f5f5f0] p-8">
+          {SPORTPLAETZE.map(platz => (
+            <div key={platz.id} className="bg-[#f5f5f0] p-8">
               <h3 className="font-display text-2xl tracking-tight mb-2">{platz.name}</h3>
-              <div className="text-xs tracking-[0.1em] text-[#6b6b6b] mb-4">{platz.adresse}</div>
+              <div className="text-xs tracking-[0.1em] text-[#6b6b6b] mb-4">{platz.adresse ?? platz.art}</div>
               <p className="text-sm text-[#6b6b6b] leading-relaxed">{platz.beschreibung}</p>
             </div>
           ))}
+          <Link
+            href="/sportplaetze"
+            className="bg-[#0a0a0a] text-[#f5f5f0] p-8 flex items-center justify-between gap-4 hover:bg-[#1a1a1a] transition-colors"
+          >
+            <span className="font-display text-2xl tracking-tight">ALLE SPORTPLÄTZE</span>
+            <ArrowRight size={20} className="shrink-0" />
+          </Link>
         </div>
       </div>
 

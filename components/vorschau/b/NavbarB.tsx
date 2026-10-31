@@ -36,6 +36,7 @@ const FOERDERVEREIN: Ziel[] = [...FOERDERVEREIN_MENUE.kinder]
 
 /** Im Burger-Menü zusätzlich (auf dem Desktop stehen sie im Footer) */
 const NUR_MOBIL: Ziel[] = [
+  { href: '/sportplaetze', label: 'Sportplätze' },
   { href: '/downloads', label: 'Downloads' },
   { href: '/kinderschutz', label: 'Kinderschutz' },
 ]
