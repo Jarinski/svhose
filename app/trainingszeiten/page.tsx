@@ -22,7 +22,7 @@ export default async function TrainingszeitenPage() {
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">TRAININGSZEITEN</h1>
         <div className="mt-5 flex flex-wrap items-center gap-6">
           <p className="text-sm text-[#6b6b6b]">
-            Gültig ab <span className="font-medium text-[#0a0a0a]">01.12.2025</span>
+            Saison <span className="font-medium text-[#0a0a0a]">2026/27</span>
           </p>
           <div className="h-3 w-px bg-[#0a0a0a]/20 hidden sm:block" />
           <p className="text-sm text-[#6b6b6b]">
