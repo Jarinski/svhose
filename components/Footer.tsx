@@ -23,6 +23,7 @@ export default function Footer() {
                 { href: '/news', label: 'News' },
                 { href: '/sparten', label: 'Sparten' },
                 { href: '/termine', label: 'Termine' },
+                { href: '/sportplaetze', label: 'Sportplätze' },
                 { href: '/downloads', label: 'Downloads' },
                 { href: '/ansprechpartner', label: 'Kontakt' },
                 { href: '/foerderverein', label: 'Förderverein' },
