@@ -130,6 +130,10 @@ export const news: Thema = {
           <li>
             <Begriff>Ganzer Verein</Begriff>: Nur Admins können das wählen und die News bearbeiten.
           </li>
+          <li>
+            <Begriff>Förderverein</Begriff>: Das sehen nur Zugänge mit dem Recht <Begriff>Förderverein</Begriff>. Die News bekommt dann immer die
+            Kategorie „Förderverein“ und erscheint unter Förderverein → Aktuelles.
+          </li>
         </Punkte>
         <Tipp art="achtung">
           Bei einer neuen News ist unter <Begriff>Gehört zu</Begriff> der erste Eintrag der Liste vorausgewählt. Prüf das Feld vor dem Speichern –

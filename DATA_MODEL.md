@@ -216,6 +216,7 @@ erDiagram
     int totp_letzter_schritt
     text eingerichtet_am
     bool ist_admin
+    bool foerderverein
     bool aktiv
     int person_id FK
     int erstellt_von
@@ -524,6 +525,7 @@ beschreibt `CMS_KONZEPT.md` (Abschnitte 5 und 6); der Code steht in `lib/verwalt
 | `totp_letzter_schritt` | integer | nein | – | zuletzt akzeptierter 30-Sekunden-Schritt; damit gilt jeder App-Code nur einmal |
 | `eingerichtet_am` | text | nein | – | wann Passwort und App zuletzt eingerichtet wurden; leer = Einrichtung ausstehend |
 | `ist_admin` | boolean | ja | `false` | Admins dürfen alles, alle anderen nur ihre Bereiche |
+| `foerderverein` | boolean | ja | `false` | gesondertes Recht ohne Admin: News und Downloads der Kategorie „Förderverein“ pflegen (gilt unabhängig von `zugang_bereiche`; bei Admins ohne Wirkung, sie dürfen ohnehin alles) |
 | `aktiv` | boolean | ja | `true` | deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet |
 | `person_id` | integer | nein | – | → `personen.id`, die eigene Person (optional) |
 | `erstellt_von` | integer | nein | – | ID des Zugangs, der diesen angelegt hat; bewusst **ohne** Fremdschlüssel, damit Löschen nie blockiert |

@@ -1,7 +1,8 @@
 'use server'
 
 /**
- * Server-Aktionen für Downloads (nur Admins): speichern (anlegen oder ändern) und löschen.
+ * Server-Aktionen für Downloads (Admins und Zugänge mit Förderverein-Recht): speichern (anlegen oder ändern)
+ * und löschen. Welche Downloads ein Zugang ohne Admin-Rechte bearbeiten darf, prüft downloadSpeichern/downloadLoeschen.
  * Die PDF-Datei wird VOR der Transaktion gespeichert; eine ersetzte Datei wird NACH erfolgreichem
  * Speichern freigegeben – schlägt das Speichern fehl, wird die neue Datei wieder entfernt.
  */
@@ -11,14 +12,15 @@ import { redirect } from 'next/navigation'
 import { datenbank } from '@/lib/db'
 import { erfolg, fehler, zahlFeld, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { downloadLoeschen, downloadPruefen, downloadSpeichern, type DownloadEingabe } from '@/lib/verwaltung/inhalte/downloads'
-import { FELDER_PRUEFEN, mehrzeilig } from '@/lib/verwaltung/inhalte/gemeinsam'
+import { FELDER_PRUEFEN, KEINE_RECHTE, mehrzeilig } from '@/lib/verwaltung/inhalte/gemeinsam'
 import type { AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
 import { hatDatei, medienFreigeben, pdfSpeichern, UploadFehler } from '@/lib/verwaltung/medien-upload'
-import { adminErzwingen } from '@/lib/verwaltung/sitzung'
+import { darfDownloads } from '@/lib/verwaltung/rechte'
+import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { textOderNull } from '@/lib/verwaltung/text'
 
 export async function downloadSichern(_vorher: AktionsErgebnis, formData: FormData): Promise<AktionsErgebnis> {
-  const { rechte } = await adminErzwingen()
+  const { rechte } = await sitzungErzwingen()
 
   const roh = (name: string) => {
     const wert = formData.get(name)
@@ -36,6 +38,9 @@ export async function downloadSichern(_vorher: AktionsErgebnis, formData: FormDa
 
   // Bei Fehlern den mitgeschickten Stand zurückgeben, damit das Formular ihn behält
   const abbruch = (meldung: string, f?: Record<string, string>): AktionsErgebnis => ({ ...fehler(meldung, f), stand: eingabe.stand ?? undefined })
+
+  // Rechte VOR dem Speichern der PDF prüfen – sonst könnte jede:r Angemeldete Dateien hochladen.
+  if (!darfDownloads(rechte)) return abbruch(KEINE_RECHTE)
 
   const datei = formData.get('datei')
   const felder = downloadPruefen(eingabe, hatDatei(datei))
@@ -66,7 +71,7 @@ export async function downloadSichern(_vorher: AktionsErgebnis, formData: FormDa
 }
 
 export async function downloadEntfernen(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
-  const { rechte } = await adminErzwingen()
+  const { rechte } = await sitzungErzwingen()
   const id = zahlFeld(formData, 'id')
   if (id == null) return fehler('Dieser Download wurde nicht gefunden.')
   const ergebnis = downloadLoeschen(datenbank(), rechte, id)

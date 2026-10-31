@@ -139,6 +139,8 @@ export interface AuswahlGruppe {
 export function zuordnungsOptionen(db: Datenbank, r: Rechte): AuswahlGruppe[] {
   const gruppen: AuswahlGruppe[] = []
   if (r.istAdmin) gruppen.push({ titel: 'Verein', optionen: [{ wert: 'verein', text: 'Ganzer Verein' }] })
+  // Mit dem Förderverein-Recht gibt es "ganzer Verein" nur für News der Kategorie Förderverein (siehe newsKategorie).
+  else if (r.foerderverein) gruppen.push({ titel: 'Förderverein', optionen: [{ wert: 'verein', text: 'Förderverein' }] })
 
   const teams = bearbeitbareTeams(db, r)
   db.select()

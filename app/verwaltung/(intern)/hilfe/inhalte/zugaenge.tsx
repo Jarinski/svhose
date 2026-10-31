@@ -73,6 +73,11 @@ export const zugaenge: Thema = {
             bearbeiten nur diese Teams (Trainingszeiten, Trainerteam, Foto und Texte), schreiben News für diese Teams und pflegen die Personen,
             die nur dort eingetragen sind. Löschen können sie ihre Teams nicht, nur ausblenden. Termine pflegt die Spartenleitung.
           </li>
+          <li>
+            <Begriff>Bestimmte Bereiche</Begriff> und der Haken bei <strong>Förderverein</strong> – das ist ein eigenes Recht für den Förderverein. Es
+            gilt auch ganz ohne Sparte. Der Zugang pflegt die News und Downloads des Fördervereins (Förderverein → Aktuelles und → Mitglied werden),
+            sonst nichts. Du kannst den Haken mit Sparten, Mannschaften oder Gruppen kombinieren.
+          </li>
         </Punkte>
         <p>
           Für einzelne Teams klappst du die Sparte über <Taste>einzeln</Taste> rechts daneben auf (auf dem Handy steht dort nur ein Pfeil mit der

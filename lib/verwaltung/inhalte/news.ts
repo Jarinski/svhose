@@ -6,12 +6,13 @@
  * app/verwaltung/(intern)/news/aktionen.ts kümmern sich um Sitzung, Uploads und Neuladen.
  *
  * Rechte: Bearbeiten darf, wer die Zuordnung der News bearbeiten darf (kannZuordnung) –
- * beim Ändern sowohl die bisherige als auch die neue. Vereins-News ohne Zuordnung nur Admins.
+ * beim Ändern sowohl die bisherige als auch die neue. Vereins-News ohne Zuordnung nur Admins –
+ * oder mit dem Förderverein-Recht, wenn die Kategorie "Förderverein" ist.
  */
 
 import { and, eq, ne } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
-import { kategorieVereinheitlichen } from '@/lib/foerderverein'
+import { FOERDERVEREIN_KATEGORIE, kategorieVereinheitlichen } from '@/lib/foerderverein'
 import { schema } from '@/lib/db'
 import { kannZuordnung, type Rechte } from '@/lib/verwaltung/rechte'
 import { slugify } from '@/lib/verwaltung/text'
@@ -27,6 +28,7 @@ import {
   zuordnungAufloesen,
   type LoeschErgebnis,
   type SpeicherErgebnis,
+  type Zuordnung,
 } from './gemeinsam'
 
 export interface NewsEingabe {
@@ -49,6 +51,16 @@ export interface NewsEingabe {
 }
 
 const SLUG_VERGEBEN = 'Diese Adresse ist schon an eine andere News vergeben. Bitte eine andere wählen.'
+
+/**
+ * Kategorie, mit der die News gespeichert wird. Wer nur das Förderverein-Recht hat, darf "ganzer Verein"
+ * ausschließlich für Förderverein-News wählen – dort steht die Kategorie deshalb fest.
+ */
+export function newsKategorie(rechte: Rechte, ziel: Zuordnung, kategorie: string | null): string | null {
+  const nurFoerderverein = !rechte.istAdmin && rechte.foerderverein
+  if (nurFoerderverein && ziel.sparteId == null && ziel.mannschaftId == null && ziel.gruppeId == null) return FOERDERVEREIN_KATEGORIE
+  return kategorieVereinheitlichen(kategorie)
+}
 
 /** Prüft die Pflichtfelder – ohne Datenbank, damit vor einem Upload abgebrochen werden kann. */
 export function newsPruefen(e: NewsEingabe): Record<string, string> {
@@ -82,7 +94,8 @@ export function newsSpeichern(db: Datenbank, rechte: Rechte, e: NewsEingabe): Sp
 
   const ziel = zuordnungAufloesen(db, e.zuordnung)
   if (!ziel) return abgelehnt(FELDER_PRUEFEN, { zuordnung: 'Diese Auswahl gibt es nicht mehr. Bitte Seite neu laden.' })
-  if (!kannZuordnung(db, rechte, ziel)) {
+  const kategorie = newsKategorie(rechte, ziel, e.kategorie)
+  if (!kannZuordnung(db, rechte, ziel, kategorie)) {
     return abgelehnt(FELDER_PRUEFEN, {
       zuordnung: ziel.sparteId == null ? 'News für den ganzen Verein dürfen nur Admins anlegen.' : 'Für diese Auswahl hast du keine Berechtigung.',
     })
@@ -91,7 +104,7 @@ export function newsSpeichern(db: Datenbank, rechte: Rechte, e: NewsEingabe): Sp
   const werte = {
     titel,
     datum: e.datum as string,
-    kategorie: kategorieVereinheitlichen(e.kategorie),
+    kategorie,
     teaser: e.teaser,
     inhalt: mehrzeilig(e.inhalt),
     veroeffentlicht: e.veroeffentlicht,
@@ -114,7 +127,7 @@ export function newsSpeichern(db: Datenbank, rechte: Rechte, e: NewsEingabe): Sp
       // ── Ändern ──
       const alt = db.select().from(schema.news).where(eq(schema.news.id, e.id)).get()
       if (!alt) return abgelehnt('Diese News gibt es nicht mehr – vielleicht wurde sie gerade gelöscht.')
-      if (!kannZuordnung(db, rechte, alt)) return abgelehnt(KEINE_RECHTE)
+      if (!kannZuordnung(db, rechte, alt, alt.kategorie)) return abgelehnt(KEINE_RECHTE)
       if (alt.geaendertAm !== e.stand) return abgelehnt(KONFLIKT)
 
       const gewuenscht = slugify(e.slug ?? '')
@@ -138,7 +151,7 @@ export function newsLoeschen(db: Datenbank, rechte: Rechte, id: number): LoeschE
     return db.transaction((): LoeschErgebnis => {
       const alt = db.select().from(schema.news).where(eq(schema.news.id, id)).get()
       if (!alt) return { ok: true, alteDatei: null }
-      if (!kannZuordnung(db, rechte, alt)) return { ok: false, meldung: KEINE_RECHTE }
+      if (!kannZuordnung(db, rechte, alt, alt.kategorie)) return { ok: false, meldung: KEINE_RECHTE }
       db.delete(schema.news).where(eq(schema.news.id, id)).run()
       protokollieren(db, rechte, { aktion: 'geloescht', objektTyp: 'news', objektId: id, bezeichnung: `News: ${alt.titel}`, vorher: alt })
       return { ok: true, alteDatei: alt.bild }

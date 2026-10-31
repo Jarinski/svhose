@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { ChevronRight, ExternalLink, FileText, Plus } from 'lucide-react'
 import { datenbank, schema } from '@/lib/db'
 import { medienUrl } from '@/lib/medien'
 import { namensVerzeichnis } from '@/lib/verwaltung/inhalte/gemeinsam'
-import { adminErzwingen } from '@/lib/verwaltung/sitzung'
+import { darfDownloads, kannDownload } from '@/lib/verwaltung/rechte'
+import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { datumDeutsch } from '@/lib/verwaltung/text'
 import { Karte, knopfKlassen, LeerHinweis, Meldung, Seitenkopf } from '@/components/verwaltung/ui'
 
@@ -14,7 +16,8 @@ const OHNE_KATEGORIE = 'Ohne Kategorie'
 
 export default async function DownloadsListe(props: { searchParams: Promise<{ geloescht?: string }> }) {
   const searchParams = await props.searchParams
-  await adminErzwingen()
+  const { rechte } = await sitzungErzwingen()
+  if (!darfDownloads(rechte)) redirect('/verwaltung')
   const db = datenbank()
   const namen = namensVerzeichnis(db)
 
@@ -22,6 +25,7 @@ export default async function DownloadsListe(props: { searchParams: Promise<{ ge
     .select()
     .from(schema.downloads)
     .all()
+    .filter(d => kannDownload(rechte, d))
     .sort((a, b) => a.reihenfolge - b.reihenfolge || a.titel.localeCompare(b.titel, 'de', { numeric: true }))
 
   // Nach Kategorie gruppieren, "Ohne Kategorie" ans Ende
@@ -33,7 +37,11 @@ export default async function DownloadsListe(props: { searchParams: Promise<{ ge
     <>
       <Seitenkopf
         titel="DOWNLOADS"
-        untertitel="Formulare und Dokumente (PDF) auf der Download-Seite der Website."
+        untertitel={
+          rechte.istAdmin
+            ? 'Formulare und Dokumente (PDF) auf der Download-Seite der Website.'
+            : 'Dokumente (PDF) des Fördervereins, zu finden unter Förderverein → Mitglied werden.'
+        }
         aktionen={
           <Link href="/verwaltung/downloads/neu" className={knopfKlassen.primaer}>
             <Plus size={15} /> Neuer Download

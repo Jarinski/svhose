@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { FOERDERVEREIN_KATEGORIE } from '@/lib/foerderverein'
 import { NEWS_BILD_VERHAELTNIS } from '@/lib/news-bild'
 import { erfolg } from '@/lib/verwaltung/formular'
 import type { AuswahlGruppe } from '@/lib/verwaltung/inhalte/gemeinsam'
@@ -37,6 +38,7 @@ export default function NewsFormular({
   heute,
   zuordnungen,
   kategorien,
+  nurFoerderverein = false,
   hinweis,
 }: {
   /** null = neue News */
@@ -45,6 +47,8 @@ export default function NewsFormular({
   heute: string
   zuordnungen: AuswahlGruppe[]
   kategorien: string[]
+  /** Kein Admin, aber mit Förderverein-Recht: "Förderverein" (ohne Sparte) hat dann immer die Kategorie "Förderverein". */
+  nurFoerderverein?: boolean
   /** Erfolgsmeldung nach dem Anlegen (bis zur nächsten Änderung) */
   hinweis?: string
 }) {
@@ -55,6 +59,8 @@ export default function NewsFormular({
   useUngespeichertWarnung(geaendert)
   const f = ergebnis.felder ?? {}
   const ersteZuordnung = zuordnungen[0]?.optionen[0]?.wert ?? ''
+  const [zuordnung, setZuordnung] = useState(news?.zuordnung ?? ersteZuordnung)
+  const kategorieFest = nurFoerderverein && zuordnung === 'verein'
 
   return (
     <div className="space-y-6">
@@ -113,8 +119,24 @@ export default function NewsFormular({
             <Feld label="Datum" htmlFor="datum" fehler={f.datum}>
               <input id="datum" name="datum" type="date" required defaultValue={news?.datum ?? heute} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Verein“ oder „Fußball“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint die News auch unter Förderverein → Aktuelles.">
-              <input id="kategorie" name="kategorie" list="news-kategorien" defaultValue={news?.kategorie ?? ''} className={eingabeKlasse} />
+            <Feld
+              label="Kategorie"
+              htmlFor="kategorie"
+              hinweis={
+                kategorieFest
+                  ? 'Steht fest: Die News erscheint unter Förderverein → Aktuelles.'
+                  : 'Zum Beispiel „Verein“ oder „Fußball“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint die News auch unter Förderverein → Aktuelles.'
+              }
+            >
+              {/* key: Wechsel zwischen fester und freier Kategorie setzt das Feld neu auf, statt es umzuschalten */}
+              <input
+                key={kategorieFest ? 'fest' : 'frei'}
+                id="kategorie"
+                name="kategorie"
+                list="news-kategorien"
+                {...(kategorieFest ? { value: FOERDERVEREIN_KATEGORIE, readOnly: true } : { defaultValue: news?.kategorie ?? '' })}
+                className={kategorieFest ? `${eingabeKlasse} bg-[#f0f0ea]` : eingabeKlasse}
+              />
               <datalist id="news-kategorien">
                 {kategorien.map(k => (
                   <option key={k} value={k} />
@@ -128,7 +150,14 @@ export default function NewsFormular({
               className="sm:col-span-2"
               hinweis="Bestimmt, wer die News später bearbeiten darf und wo sie zugeordnet wird."
             >
-              <select id="zuordnung" name="zuordnung" required defaultValue={news?.zuordnung ?? ersteZuordnung} className={auswahlKlasse}>
+              <select
+                id="zuordnung"
+                name="zuordnung"
+                required
+                defaultValue={news?.zuordnung ?? ersteZuordnung}
+                onChange={e => setZuordnung(e.target.value)}
+                className={auswahlKlasse}
+              >
                 {zuordnungen.map(g => (
                   <optgroup key={g.titel} label={g.titel}>
                     {g.optionen.map(o => (

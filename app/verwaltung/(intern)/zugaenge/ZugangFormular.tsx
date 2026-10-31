@@ -30,6 +30,7 @@ export interface ZugangFormDaten {
   personId: number | null
   personName: string | null
   istAdmin: boolean
+  foerderverein: boolean
   sparten: number[]
   mannschaften: number[]
   gruppen: number[]
@@ -51,6 +52,7 @@ interface Werte {
   benutzername: string
   personId: number | null
   rolle: 'admin' | 'bereiche'
+  foerderverein: boolean
   auswahl: string[]
 }
 
@@ -74,7 +76,7 @@ function vergleichsStand(w: Werte, baum: SparteMitTeams[]): string {
       sp.gruppen.forEach(g => w.auswahl.indexOf(`g${g.id}`) >= 0 && bereiche.push(`g${g.id}`))
     })
   }
-  return JSON.stringify([w.name.trim().replace(/\s+/g, ' '), w.benutzername.trim().toLowerCase(), w.personId, w.rolle, bereiche])
+  return JSON.stringify([w.name.trim().replace(/\s+/g, ' '), w.benutzername.trim().toLowerCase(), w.personId, w.rolle, w.rolle === 'bereiche' && w.foerderverein, bereiche])
 }
 
 export default function ZugangFormular({ modus, zugang, istSelbst = false, personen, baum }: Props) {
@@ -86,6 +88,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
     zugang?.personId != null ? { id: zugang.personId, name: zugang.personName ?? `Person Nr. ${zugang.personId}` } : null,
   )
   const [rolle, setRolle] = useState<'admin' | 'bereiche'>(zugang?.istAdmin ? 'admin' : 'bereiche')
+  const [foerderverein, setFoerderverein] = useState(zugang?.foerderverein ?? false)
   const [auswahl, setAuswahl] = useState<string[]>(() => auswahlAus(zugang))
   const [benutzername, setBenutzername] = useState(zugang?.benutzername ?? '')
   // Beim Anlegen folgt der Benutzername dem Namen, bis er von Hand geändert wird.
@@ -117,13 +120,14 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
   const angelegt = modus === 'neu' && !!ergebnis.ok && !!ergebnis.zugangId
   const geaendert =
     !angelegt &&
-    vergleichsStand({ name, benutzername, personId: person?.id ?? null, rolle, auswahl }, baum) !==
+    vergleichsStand({ name, benutzername, personId: person?.id ?? null, rolle, foerderverein, auswahl }, baum) !==
       vergleichsStand(
         {
           name: zugang?.name ?? '',
           benutzername: zugang?.benutzername ?? '',
           personId: zugang?.personId ?? null,
           rolle: zugang?.istAdmin ? 'admin' : 'bereiche',
+          foerderverein: zugang?.foerderverein ?? false,
           auswahl: auswahlAus(zugang),
         },
         baum,
@@ -258,12 +262,36 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
               <input type="radio" name="rolle" value="bereiche" checked={rolle === 'bereiche'} onChange={() => setRolle('bereiche')} className="mt-0.5 w-5 h-5" />
               <span>
                 <span className="block font-medium text-sm">Bestimmte Bereiche</span>
-                <span className="block text-xs text-[#6b6b6b]">Nur ausgewählte Sparten, Mannschaften oder Gruppen – z. B. für Trainer:innen und Spartenleitungen.</span>
+                <span className="block text-xs text-[#6b6b6b]">
+                  Nur ausgewählte Sparten, Mannschaften oder Gruppen – z. B. für Trainer:innen und Spartenleitungen – und/oder der Förderverein.
+                </span>
               </span>
             </label>
           </fieldset>
           {istSelbst && <p className="text-xs text-[#6b6b6b]">Du kannst dir nicht selbst die Admin-Rechte entziehen.</p>}
-          {rolle === 'bereiche' && <BereichAuswahl baum={baum} auswahl={auswahl} setAuswahl={setAuswahl} fehler={f.bereiche} />}
+          {rolle === 'bereiche' && (
+            <>
+              <label
+                className={`flex items-start gap-3 border rounded-sm p-3 cursor-pointer ${foerderverein ? 'border-[#0a0a0a] bg-[#0a0a0a]/[0.03]' : 'border-[#0a0a0a]/15'}`}
+              >
+                <input
+                  type="checkbox"
+                  name="foerderverein"
+                  value="1"
+                  checked={foerderverein}
+                  onChange={e => setFoerderverein(e.target.checked)}
+                  className="mt-0.5 w-5 h-5"
+                />
+                <span>
+                  <span className="block font-medium text-sm">Förderverein</span>
+                  <span className="block text-xs text-[#6b6b6b]">
+                    News und Downloads des Fördervereins pflegen – sie erscheinen unter Förderverein auf der Website. Sonst nichts: keine Sparten, Personen oder Zugänge.
+                  </span>
+                </span>
+              </label>
+              <BereichAuswahl baum={baum} auswahl={auswahl} setAuswahl={setAuswahl} fehler={f.bereiche} />
+            </>
+          )}
         </div>
       </Karte>
 
@@ -320,7 +348,7 @@ function BereichAuswahl({
             <span className="font-medium">Ausgewählt:</span> {zusammenfassung.join(', ')}
           </>
         ) : (
-          'Noch nichts ausgewählt.'
+          'Noch keine Sparte, Mannschaft oder Gruppe ausgewählt.'
         )}
       </div>
       {fehler && <p className="text-sm text-red-700">{fehler}</p>}

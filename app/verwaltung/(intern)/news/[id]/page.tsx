@@ -22,7 +22,7 @@ export default async function NewsBearbeiten(props: { params: Promise<{ id: stri
   const id = Number(params.id)
   if (!Number.isInteger(id)) notFound()
   const news = db.select().from(schema.news).where(eq(schema.news.id, id)).get()
-  if (!news || !kannZuordnung(db, rechte, news)) notFound()
+  if (!news || !kannZuordnung(db, rechte, news, news.kategorie)) notFound()
 
   const kategorien = vorschlaege([FOERDERVEREIN_KATEGORIE, ...db.select({ k: schema.news.kategorie }).from(schema.news).all().map(n => n.k)])
 
@@ -62,6 +62,7 @@ export default async function NewsBearbeiten(props: { params: Promise<{ id: stri
         heute={heuteBerlin()}
         zuordnungen={zuordnungsOptionen(db, rechte)}
         kategorien={kategorien}
+        nurFoerderverein={!rechte.istAdmin && rechte.foerderverein}
         hinweis={
           searchParams.neu
             ? news.veroeffentlicht

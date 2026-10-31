@@ -3,7 +3,9 @@
  *
  * Wer darf was? Admins dürfen alles. Alle anderen Zugänge dürfen ihre Bereiche bearbeiten
  * (zugang_bereiche): eine Sparte mit allen Mannschaften und Gruppen darin – oder einzelne
- * Mannschaften bzw. Gruppen. Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
+ * Mannschaften bzw. Gruppen. Dazu kann ein Zugang das gesonderte Förderverein-Recht haben
+ * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen, sonst nichts.
+ * Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
  * ausschließlich in ihrem eigenen Bereich vorkommt (siehe kannPerson) – und jede:r sich selbst.
  *
  * Jede Server-Aktion prüft diese Rechte selbst – die Oberfläche blendet nur aus.
@@ -12,12 +14,15 @@
 import { eq } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
+import { istFoerderverein } from '@/lib/foerderverein'
 
 export interface Rechte {
   zugangId: number
   name: string
   istAdmin: boolean
   personId: number | null
+  /** Darf News und Downloads des Fördervereins pflegen (Admins immer). */
+  foerderverein: boolean
   sparten: number[]
   mannschaften: number[]
   gruppen: number[]
@@ -30,6 +35,7 @@ export function rechteLaden(db: Datenbank, zugang: typeof schema.zugaenge.$infer
     name: zugang.name,
     istAdmin: zugang.istAdmin,
     personId: zugang.personId,
+    foerderverein: zugang.istAdmin || zugang.foerderverein,
     sparten: bereiche.map(b => b.sparteId).filter((x): x is number => x != null),
     mannschaften: bereiche.map(b => b.mannschaftId).filter((x): x is number => x != null),
     gruppen: bereiche.map(b => b.gruppeId).filter((x): x is number => x != null),
@@ -97,13 +103,28 @@ export function kannPerson(db: Pick<Datenbank, 'select'>, r: Rechte, personId: n
   )
 }
 
-/** Darf der Zugang einen Inhalt mit dieser Zuordnung (News, Termin, Download) bearbeiten? Ohne Zuordnung = Verein → nur Admins. */
+/** Darf der Zugang Downloads pflegen (Admins alle, mit Förderverein-Recht nur die der Kategorie "Förderverein")? */
+export function darfDownloads(r: Rechte): boolean {
+  return r.istAdmin || r.foerderverein
+}
+
+/** Darf der Zugang diesen Download bearbeiten? Ohne Admin-Rechte nur mit Förderverein-Recht und Kategorie "Förderverein". */
+export function kannDownload(r: Rechte, d: { kategorie: string | null }): boolean {
+  return r.istAdmin || (r.foerderverein && istFoerderverein(d.kategorie))
+}
+
+/**
+ * Darf der Zugang einen Inhalt mit dieser Zuordnung (News, Termin, Download) bearbeiten? Ohne Zuordnung
+ * = Verein → nur Admins; mit Förderverein-Recht zusätzlich News der Kategorie "Förderverein" ohne Zuordnung.
+ */
 export function kannZuordnung(
   db: Datenbank,
   r: Rechte,
   z: { sparteId?: number | null; mannschaftId?: number | null; gruppeId?: number | null },
+  kategorie?: string | null,
 ): boolean {
   if (r.istAdmin) return true
+  if (r.foerderverein && istFoerderverein(kategorie) && z.sparteId == null && z.mannschaftId == null && z.gruppeId == null) return true
   if (z.mannschaftId != null) {
     const m = db.select().from(schema.mannschaften).where(eq(schema.mannschaften.id, z.mannschaftId)).get()
     if (!m || !kannMannschaft(r, m)) return false

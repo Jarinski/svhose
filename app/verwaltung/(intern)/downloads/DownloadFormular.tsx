@@ -31,12 +31,15 @@ export default function DownloadFormular({
   download,
   sparten,
   kategorien,
+  nurFoerderverein = false,
   hinweis,
 }: {
   /** null = neuer Download */
   download: DownloadFormDaten | null
   sparten: { id: number; name: string }[]
   kategorien: string[]
+  /** Kein Admin, aber mit Förderverein-Recht: Kategorie und Sparte stehen fest (Förderverein, ohne Sparte). */
+  nurFoerderverein?: boolean
   hinweis?: string
 }) {
   const [ergebnis, speichern] = useActionState(downloadSichern, LEER_ERGEBNIS)
@@ -63,27 +66,35 @@ export default function DownloadFormular({
             <Feld label="Beschreibung" htmlFor="beschreibung" className="sm:col-span-2">
               <textarea id="beschreibung" name="beschreibung" rows={3} defaultValue={download?.beschreibung ?? ''} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Mitgliedschaft“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint der Download auch unter Förderverein → Mitglied werden.">
-              <input id="kategorie" name="kategorie" list="download-kategorien" defaultValue={download?.kategorie ?? ''} className={eingabeKlasse} />
-              <datalist id="download-kategorien">
-                {kategorien.map(k => (
-                  <option key={k} value={k} />
-                ))}
-              </datalist>
-            </Feld>
+            {nurFoerderverein ? (
+              <p className="sm:col-span-2 text-sm text-[#4a4a4a]">
+                Der Download erscheint auf der Website unter <strong>Förderverein → Mitglied werden</strong>.
+              </p>
+            ) : (
+              <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Mitgliedschaft“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint der Download auch unter Förderverein → Mitglied werden.">
+                <input id="kategorie" name="kategorie" list="download-kategorien" defaultValue={download?.kategorie ?? ''} className={eingabeKlasse} />
+                <datalist id="download-kategorien">
+                  {kategorien.map(k => (
+                    <option key={k} value={k} />
+                  ))}
+                </datalist>
+              </Feld>
+            )}
             <Feld label="Stand (Datum)" htmlFor="datum" fehler={f.datum} hinweis="Optional – z. B. das Datum der Fassung.">
               <input id="datum" name="datum" type="date" defaultValue={download?.datum ?? ''} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Sparte" htmlFor="sparteId" fehler={f.sparteId} hinweis="Optional – dann erscheint der Download auch auf der Seite der Sparte.">
-              <select id="sparteId" name="sparteId" defaultValue={download?.sparteId != null ? String(download.sparteId) : ''} className={auswahlKlasse}>
-                <option value="">Keine (ganzer Verein)</option>
-                {sparten.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </Feld>
+            {!nurFoerderverein && (
+              <Feld label="Sparte" htmlFor="sparteId" fehler={f.sparteId} hinweis="Optional – dann erscheint der Download auch auf der Seite der Sparte.">
+                <select id="sparteId" name="sparteId" defaultValue={download?.sparteId != null ? String(download.sparteId) : ''} className={auswahlKlasse}>
+                  <option value="">Keine (ganzer Verein)</option>
+                  {sparten.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </Feld>
+            )}
           </div>
         </Karte>
 

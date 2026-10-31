@@ -52,6 +52,7 @@ export default async function ZugangSeite(props: { params: Promise<{ id: string 
           <span className="inline-flex flex-wrap items-center gap-2">
             {istSelbst && <Badge ton="erfolg">Das bist du</Badge>}
             {zugang.istAdmin ? <Badge>Admin</Badge> : <Badge>Bestimmte Bereiche</Badge>}
+            {!zugang.istAdmin && zugang.foerderverein && <Badge>Förderverein</Badge>}
             {!zugang.aktiv && <Badge ton="warnung">deaktiviert</Badge>}
             {zugang.eingerichtetAm ? (
               <Badge ton="erfolg">eingerichtet am {zeitpunktDeutsch(zugang.eingerichtetAm)}</Badge>
@@ -81,6 +82,7 @@ export default async function ZugangSeite(props: { params: Promise<{ id: string 
             personId: zugang.personId,
             personName: person?.name ?? null,
             istAdmin: zugang.istAdmin,
+            foerderverein: zugang.foerderverein,
             sparten: bereiche.map(b => b.sparteId).filter((x): x is number => x != null),
             mannschaften: bereiche.map(b => b.mannschaftId).filter((x): x is number => x != null),
             gruppen: bereiche.map(b => b.gruppeId).filter((x): x is number => x != null),

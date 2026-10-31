@@ -1,7 +1,7 @@
 import { abmelden } from '../aktionen'
 import Navigation, { type NavPunkt } from '@/components/verwaltung/Navigation'
 import { datenbank } from '@/lib/db'
-import { bearbeitbareTeams } from '@/lib/verwaltung/rechte'
+import { bearbeitbareTeams, darfDownloads } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 
 // Alles unter diesem Layout braucht eine gültige Sitzung. Die Rechte prüft trotzdem jede
@@ -21,9 +21,9 @@ export default async function InternLayout({ children }: { children: React.React
     ...(hatSparte ? [{ href: '/verwaltung/sparten', text: 'Sparten' }] : []),
     { href: '/verwaltung/news', text: 'News' },
     ...(hatSparte ? [{ href: '/verwaltung/termine', text: 'Termine' }] : []),
+    ...(darfDownloads(rechte) ? [{ href: '/verwaltung/downloads', text: 'Downloads' }] : []),
     ...(admin
       ? [
-          { href: '/verwaltung/downloads', text: 'Downloads' },
           { href: '/verwaltung/kontakte', text: 'Kontaktseite' },
           { href: '/verwaltung/zugaenge', text: 'Zugänge' },
           { href: '/verwaltung/verlauf', text: 'Verlauf' },

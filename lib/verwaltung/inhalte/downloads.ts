@@ -2,14 +2,15 @@
  * lib/verwaltung/inhalte/downloads.ts
  *
  * Speichern und Löschen von Downloads (PDFs) als reine Funktionen (siehe news.ts).
- * Downloads pflegen nur Admins.
+ * Downloads pflegen Admins – und Zugänge mit dem Förderverein-Recht, aber nur Downloads der Kategorie
+ * "Förderverein" (ohne Sparte).
  */
 
 import { eq } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { FOERDERVEREIN_KATEGORIE, kategorieVereinheitlichen } from '@/lib/foerderverein'
 import { schema } from '@/lib/db'
-import type { Rechte } from '@/lib/verwaltung/rechte'
+import { darfDownloads, kannDownload, type Rechte } from '@/lib/verwaltung/rechte'
 import { protokollieren } from '@/lib/verwaltung/verlauf'
 import {
   abgelehnt,
@@ -60,8 +61,14 @@ export function downloadPruefen(e: DownloadEingabe, mitDatei: boolean): Record<s
   return felder
 }
 
-export function downloadSpeichern(db: Datenbank, rechte: Rechte, e: DownloadEingabe): SpeicherErgebnis {
-  if (!rechte.istAdmin) return abgelehnt(KEINE_RECHTE)
+/** Wer nur das Förderverein-Recht hat, speichert immer in der Kategorie "Förderverein" und ohne Sparte. */
+export function downloadEingabeEinschraenken(rechte: Rechte, e: DownloadEingabe): DownloadEingabe {
+  return rechte.istAdmin ? e : { ...e, kategorie: FOERDERVEREIN_KATEGORIE, sparteId: null }
+}
+
+export function downloadSpeichern(db: Datenbank, rechte: Rechte, eingabe: DownloadEingabe): SpeicherErgebnis {
+  if (!darfDownloads(rechte)) return abgelehnt(KEINE_RECHTE)
+  const e = downloadEingabeEinschraenken(rechte, eingabe)
   const felder = downloadPruefen(e, e.datei !== undefined)
   if (Object.keys(felder).length > 0) return abgelehnt(FELDER_PRUEFEN, felder)
   if (e.sparteId != null && !db.select({ id: schema.sparten.id }).from(schema.sparten).where(eq(schema.sparten.id, e.sparteId)).get()) {
@@ -91,6 +98,7 @@ export function downloadSpeichern(db: Datenbank, rechte: Rechte, e: DownloadEing
 
       const alt = db.select().from(schema.downloads).where(eq(schema.downloads.id, e.id)).get()
       if (!alt) return abgelehnt('Diesen Download gibt es nicht mehr – vielleicht wurde er gerade gelöscht.')
+      if (!kannDownload(rechte, alt)) return abgelehnt(KEINE_RECHTE)
       if (alt.geaendertAm !== e.stand) return abgelehnt(KONFLIKT)
 
       const neu = db.update(schema.downloads).set(werte).where(eq(schema.downloads.id, alt.id)).returning().get()
@@ -103,11 +111,12 @@ export function downloadSpeichern(db: Datenbank, rechte: Rechte, e: DownloadEing
 }
 
 export function downloadLoeschen(db: Datenbank, rechte: Rechte, id: number): LoeschErgebnis {
-  if (!rechte.istAdmin) return { ok: false, meldung: KEINE_RECHTE }
+  if (!darfDownloads(rechte)) return { ok: false, meldung: KEINE_RECHTE }
   try {
     return db.transaction((): LoeschErgebnis => {
       const alt = db.select().from(schema.downloads).where(eq(schema.downloads.id, id)).get()
       if (!alt) return { ok: true, alteDatei: null }
+      if (!kannDownload(rechte, alt)) return { ok: false, meldung: KEINE_RECHTE }
       db.delete(schema.downloads).where(eq(schema.downloads.id, id)).run()
       protokollieren(db, rechte, { aktion: 'geloescht', objektTyp: 'downloads', objektId: id, bezeichnung: `Download: ${alt.titel}`, vorher: alt })
       return { ok: true, alteDatei: alt.datei }

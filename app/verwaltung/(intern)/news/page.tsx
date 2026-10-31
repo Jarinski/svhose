@@ -18,7 +18,7 @@ export default async function NewsListe(props: { searchParams: Promise<{ geloesc
   const db = datenbank()
 
   const alle = db.select().from(schema.news).orderBy(desc(schema.news.datum), desc(schema.news.id)).all()
-  const sichtbar = alle.filter(n => kannZuordnung(db, rechte, n))
+  const sichtbar = alle.filter(n => kannZuordnung(db, rechte, n, n.kategorie))
   const namen = namensVerzeichnis(db)
   const darfAnlegen = zuordnungsOptionen(db, rechte).length > 0
 
@@ -26,7 +26,13 @@ export default async function NewsListe(props: { searchParams: Promise<{ geloesc
     <>
       <Seitenkopf
         titel="NEWS"
-        untertitel={rechte.istAdmin ? 'Alle News des Vereins.' : 'News deiner Sparten, Mannschaften und Gruppen.'}
+        untertitel={
+          rechte.istAdmin
+            ? 'Alle News des Vereins.'
+            : rechte.foerderverein
+              ? 'News des Fördervereins und deiner Sparten, Mannschaften und Gruppen.'
+              : 'News deiner Sparten, Mannschaften und Gruppen.'
+        }
         aktionen={
           darfAnlegen && (
             <Link href="/verwaltung/news/neu" className={knopfKlassen.primaer}>

@@ -24,7 +24,13 @@ export default async function NeueNews() {
         untertitel="Wird erst auf der Website gezeigt, wenn „Veröffentlicht“ eingeschaltet ist."
         zurueck={{ href: '/verwaltung/news', text: 'Alle News' }}
       />
-      <NewsFormular news={null} heute={heuteBerlin()} zuordnungen={zuordnungen} kategorien={kategorien} />
+      <NewsFormular
+        news={null}
+        heute={heuteBerlin()}
+        zuordnungen={zuordnungen}
+        kategorien={kategorien}
+        nurFoerderverein={!rechte.istAdmin && rechte.foerderverein}
+      />
     </>
   )
 }

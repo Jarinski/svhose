@@ -12,7 +12,7 @@ import { redirect } from 'next/navigation'
 import { datenbank } from '@/lib/db'
 import { erfolg, fehler, zahlFeld, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { FELDER_PRUEFEN, mehrzeilig, zuordnungAufloesen } from '@/lib/verwaltung/inhalte/gemeinsam'
-import { newsLoeschen, newsPruefen, newsSpeichern, type NewsEingabe } from '@/lib/verwaltung/inhalte/news'
+import { newsKategorie, newsLoeschen, newsPruefen, newsSpeichern, type NewsEingabe } from '@/lib/verwaltung/inhalte/news'
 import type { AktionsErgebnis } from '@/lib/verwaltung/inhalte/stand'
 import { bildSpeichern, hatDatei, medienFreigeben, UploadFehler } from '@/lib/verwaltung/medien-upload'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
@@ -49,7 +49,9 @@ export async function newsSichern(_vorher: AktionsErgebnis, formData: FormData):
   // Rechte VOR dem Hochladen prüfen – sonst könnte jede:r Angemeldete Bilder verarbeiten lassen.
   const ziel = zuordnungAufloesen(db, eingabe.zuordnung)
   if (!ziel) return abbruch(FELDER_PRUEFEN, { zuordnung: 'Diese Auswahl gibt es nicht mehr. Bitte Seite neu laden.' })
-  if (!kannZuordnung(db, rechte, ziel)) return abbruch(FELDER_PRUEFEN, { zuordnung: 'Für diese Auswahl hast du keine Berechtigung.' })
+  if (!kannZuordnung(db, rechte, ziel, newsKategorie(rechte, ziel, eingabe.kategorie))) {
+    return abbruch(FELDER_PRUEFEN, { zuordnung: 'Für diese Auswahl hast du keine Berechtigung.' })
+  }
 
   // Bild hochladen (vor der Transaktion)
   const datei = formData.get('bild')

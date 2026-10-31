@@ -30,6 +30,8 @@ export interface ZugangEingabe {
   benutzername: string
   personId: number | null
   istAdmin: boolean
+  /** Darf News und Downloads des Fördervereins pflegen (gilt nur ohne Admin-Rechte). */
+  foerderverein: boolean
   sparten: number[]
   mannschaften: number[]
   gruppen: number[]
@@ -45,7 +47,7 @@ function eindeutig(ids: number[]): number[] {
 
 // ─── Lesen ──────────────────────────────────────────────────────────────────
 
-/** Bereiche eines Zugangs als lesbare Texte, z. B. "Sparte Fußball" oder "Fußball · U13". */
+/** Bereiche eines Zugangs als lesbare Texte, z. B. "Förderverein", "Sparte Fußball" oder "Fußball · U13". */
 export function bereicheText(db: Lesend, zugangId: number): string[] {
   const zeilen = db
     .select({
@@ -65,7 +67,10 @@ export function bereicheText(db: Lesend, zugangId: number): string[] {
   const teams = zeilen
     .filter(z => z.mannschaft || z.gruppe)
     .map(z => (z.mannschaft ? `${z.mannschaftSparte} · ${z.mannschaft}` : `${z.gruppeSparte} · ${z.gruppe} (Gruppe)`))
-  return sparten.sort((a, b) => a.localeCompare(b, 'de')).concat(teams.sort((a, b) => a.localeCompare(b, 'de', { numeric: true })))
+  const foerderverein = db.select({ an: schema.zugaenge.foerderverein }).from(schema.zugaenge).where(eq(schema.zugaenge.id, zugangId)).get()?.an
+  return (foerderverein ? ['Förderverein'] : [])
+    .concat(sparten.sort((a, b) => a.localeCompare(b, 'de')))
+    .concat(teams.sort((a, b) => a.localeCompare(b, 'de', { numeric: true })))
 }
 
 export interface SparteMitTeams {
@@ -177,6 +182,8 @@ function eingabePruefen(db: Lesend, e: ZugangEingabe, ausserId?: number) {
   let sparten: number[] = []
   let mannschaften: number[] = []
   let gruppen: number[] = []
+  // Admins dürfen ohnehin alles – das Förderverein-Recht speichern wir nur für alle anderen.
+  const foerderverein = !e.istAdmin && e.foerderverein
   if (!e.istAdmin) {
     const alleSparten = db.select({ id: schema.sparten.id }).from(schema.sparten).all().map(s => s.id)
     const alleMannschaften = db.select({ id: schema.mannschaften.id, sparteId: schema.mannschaften.sparteId }).from(schema.mannschaften).all()
@@ -185,13 +192,13 @@ function eingabePruefen(db: Lesend, e: ZugangEingabe, ausserId?: number) {
     // Teams einer ganz ausgewählten Sparte sind schon abgedeckt und werden nicht extra gespeichert.
     mannschaften = eindeutig(e.mannschaften).filter(id => alleMannschaften.some(m => m.id === id && sparten.indexOf(m.sparteId) < 0))
     gruppen = eindeutig(e.gruppen).filter(id => alleGruppen.some(g => g.id === id && sparten.indexOf(g.sparteId) < 0))
-    if (sparten.length + mannschaften.length + gruppen.length === 0) {
-      throw new MeldungsFehler('Bitte mindestens eine Sparte, Mannschaft oder Gruppe auswählen – oder „Alles (Admin)“.', {
+    if (!foerderverein && sparten.length + mannschaften.length + gruppen.length === 0) {
+      throw new MeldungsFehler('Bitte mindestens den Förderverein, eine Sparte, Mannschaft oder Gruppe auswählen – oder „Alles (Admin)“.', {
         bereiche: 'Bitte mindestens einen Bereich auswählen.',
       })
     }
   }
-  return { name, benutzername, personId: e.personId, istAdmin: e.istAdmin, sparten, mannschaften, gruppen }
+  return { name, benutzername, personId: e.personId, istAdmin: e.istAdmin, foerderverein, sparten, mannschaften, gruppen }
 }
 
 function bereicheSchreiben(tx: Pick<Datenbank, 'insert' | 'delete'>, zugangId: number, e: { sparten: number[]; mannschaften: number[]; gruppen: number[] }) {
@@ -212,7 +219,7 @@ export function zugangAnlegen(db: Datenbank, wer: Rechte, eingabe: ZugangEingabe
     const e = eingabePruefen(tx, eingabe)
     const neu = tx
       .insert(schema.zugaenge)
-      .values({ name: e.name, benutzername: e.benutzername, istAdmin: e.istAdmin, personId: e.personId, erstelltVon: wer.zugangId })
+      .values({ name: e.name, benutzername: e.benutzername, istAdmin: e.istAdmin, foerderverein: e.foerderverein, personId: e.personId, erstelltVon: wer.zugangId })
       .returning()
       .get()
     if (!e.istAdmin) bereicheSchreiben(tx, neu.id, e)
@@ -238,7 +245,7 @@ export function zugangAendern(db: Datenbank, wer: Rechte, zugangId: number, eing
     if (vorher.istAdmin && !e.istAdmin) adminsSichern(tx, zugangId, { istAdmin: false, aktiv: vorher.aktiv })
 
     tx.update(schema.zugaenge)
-      .set({ name: e.name, benutzername: e.benutzername, istAdmin: e.istAdmin, personId: e.personId })
+      .set({ name: e.name, benutzername: e.benutzername, istAdmin: e.istAdmin, foerderverein: e.foerderverein, personId: e.personId })
       .where(eq(schema.zugaenge.id, zugangId))
       .run()
     // Admins brauchen keine Bereiche – alte Einträge werden aufgeräumt.

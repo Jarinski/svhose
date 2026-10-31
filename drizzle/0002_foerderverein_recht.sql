@@ -1,0 +1,1 @@
+ALTER TABLE `zugaenge` ADD `foerderverein` integer DEFAULT false NOT NULL;

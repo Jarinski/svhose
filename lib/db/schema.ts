@@ -364,6 +364,8 @@ export const zugaenge = sqliteTable('zugaenge', {
   eingerichtetAm: text('eingerichtet_am'),
   /** Admins dürfen alles, alle anderen nur ihre Bereiche (zugang_bereiche). */
   istAdmin: integer('ist_admin', { mode: 'boolean' }).notNull().default(false),
+  /** Darf News und Downloads des Fördervereins pflegen (Kategorie "Förderverein"), unabhängig von den Bereichen. */
+  foerderverein: integer('foerderverein', { mode: 'boolean' }).notNull().default(false),
   /** Deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet. */
   aktiv: integer('aktiv', { mode: 'boolean' }).notNull().default(true),
   /** Optional: die eigene Person ("das bin ich"). */

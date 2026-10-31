@@ -19,8 +19,10 @@ export const downloads: Thema = {
           PDF-Datei.
         </p>
         <p>
-          Downloads pflegen nur Admins. Nur sie sehen den Menüpunkt <Begriff>Downloads</Begriff>. Ein Download kann aber zu einer Sparte gehören – dann
-          steht er auch auf der Seite dieser Sparte.
+          Downloads pflegen Admins und Zugänge mit dem Recht <Begriff>Förderverein</Begriff>. Nur sie sehen den Menüpunkt <Begriff>Downloads</Begriff>.
+          Wer nur das Förderverein-Recht hat, sieht und bearbeitet ausschließlich die Downloads des Fördervereins; sie stehen unter Förderverein →
+          Mitglied werden, Kategorie und Sparte sind dann fest. Ein Download kann sonst auch zu einer Sparte gehören – dann steht er auch auf der Seite
+          dieser Sparte.
         </p>
       </Abschnitt>
 

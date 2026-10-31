@@ -36,6 +36,7 @@ function eingabeLesen(formData: FormData): ZugangEingabe {
     benutzername: String(formData.get('benutzername') ?? ''),
     personId: zahlFeld(formData, 'personId'),
     istAdmin: formData.get('rolle') === 'admin',
+    foerderverein: formData.get('foerderverein') === '1',
     sparten: zahlen('sparte'),
     mannschaften: zahlen('mannschaft'),
     gruppen: zahlen('gruppe'),
