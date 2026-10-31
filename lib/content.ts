@@ -87,6 +87,8 @@ export interface TrainingsEintrag {
   farbe: string | null
   /** Mannschafts- bzw. Gruppenname inkl. " (Altersklasse)"; bei beidem "Mannschaft / Gruppe" */
   gruppe: string
+  /** Geburtsjahrgänge, die in der Altersklasse stehen (leer, wenn dort kein Jahr steht), aufsteigend */
+  jahrgaenge: number[]
   tag: WochentagName
   uhrzeit: string
   ort: string
@@ -370,6 +372,28 @@ function teamName(team: TeamMitSparte): string {
   return altersklasse ? `${team.name} (${altersklasse})` : team.name
 }
 
+/**
+ * Liest die Geburtsjahrgänge aus dem Freitext der Altersklasse.
+ * "Jg. 2013" → [2013], "Jg. 2013/14" → [2013, 2014], "2012–2014" → [2012, 2013, 2014].
+ * Texte ohne Jahr ("5–7 Jahre", "Erwachsene") ergeben eine leere Liste.
+ */
+export function jahrgaengeAus(text: string | null): number[] {
+  if (!text) return []
+  const jahre = new Set<number>()
+  const re = /\b((?:19|20)\d{2})(?:\s*[/–-]\s*((?:19|20)?\d{2}))?\b/g
+  for (const m of text.matchAll(re)) {
+    const von = Number(m[1])
+    let bis = von
+    if (m[2]) {
+      // "2013/14" → 2014; ein ungültiger oder zu weiter Bereich zählt nur als Einzeljahr
+      const ende = m[2].length === 2 ? Number(m[1].slice(0, 2) + m[2]) : Number(m[2])
+      if (ende >= von && ende - von <= 10) bis = ende
+    }
+    for (let j = von; j <= bis; j++) jahre.add(j)
+  }
+  return [...jahre].sort((a, b) => a - b)
+}
+
 export async function getTrainingszeiten(): Promise<TrainingsEintrag[]> {
   const teamBezuege = {
     sparte: true,
@@ -416,6 +440,7 @@ export async function getTrainingszeiten(): Promise<TrainingsEintrag[]> {
         sparteSlug: team.sparte.slug,
         farbe: team.sparte.farbe || null,
         gruppe: teams.map(teamName).join(' / '),
+        jahrgaenge: [...new Set(teams.flatMap(t => jahrgaengeAus(wert(t.altersklasse))))].sort((a, b) => a - b),
         tag: einheit.tag,
         uhrzeit: einheit.uhrzeit,
         ort: einheit.ort,

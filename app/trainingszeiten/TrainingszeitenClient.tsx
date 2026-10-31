@@ -62,6 +62,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
   const [activeSparte, setActiveSparte] = useState<string>('Alle')
   const [activeTag, setActiveTag] = useState<string>('Alle')
   const [activeJahreszeit, setActiveJahreszeit] = useState<string>('Alle')
+  const [activeJahrgang, setActiveJahrgang] = useState<number | null>(null)
 
   // Sparten in der Reihenfolge der Daten (erstes Vorkommen zählt)
   const spartes = useMemo(() => {
@@ -89,16 +90,31 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
     [data]
   )
 
+  // Jahrgänge der gewählten Sparte, neueste zuerst. Ohne gewählte Sparte gibt es keinen
+  // Jahrgangsfilter – quer über alle Sparten wäre die Liste nur eine Wand aus Jahreszahlen.
+  const jahrgaenge = useMemo(() => {
+    if (activeSparte === 'Alle') return []
+    const anzahl = new Map<number, number>()
+    data.forEach(e => {
+      if (e.sparte !== activeSparte) return
+      e.jahrgaenge.forEach(j => anzahl.set(j, (anzahl.get(j) ?? 0) + 1))
+    })
+    return Array.from(anzahl.entries())
+      .map(([jahr, count]) => ({ jahr, count }))
+      .sort((a, b) => b.jahr - a.jahr)
+  }, [data, activeSparte])
+
   const filtered = useMemo(() => {
     return data.filter(e => {
       const norm = normJahreszeit(e.jahreszeit)
       return (
         (activeSparte === 'Alle' || e.sparte === activeSparte) &&
         (activeTag === 'Alle' || e.tag === activeTag) &&
-        (activeJahreszeit === 'Alle' || norm === activeJahreszeit)
+        (activeJahreszeit === 'Alle' || norm === activeJahreszeit) &&
+        (activeJahrgang === null || e.jahrgaenge.includes(activeJahrgang))
       )
     })
-  }, [data, activeSparte, activeTag, activeJahreszeit])
+  }, [data, activeSparte, activeTag, activeJahreszeit, activeJahrgang])
 
   // Group filtered entries by sparte (preserving order)
   const grouped = useMemo(() => {
@@ -110,10 +126,17 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
     return map
   }, [filtered])
 
-  const hasActiveFilter = activeSparte !== 'Alle' || activeTag !== 'Alle' || activeJahreszeit !== 'Alle'
+  const hasActiveFilter =
+    activeSparte !== 'Alle' || activeTag !== 'Alle' || activeJahreszeit !== 'Alle' || activeJahrgang !== null
+
+  function waehleSparte(sparte: string) {
+    setActiveSparte(sparte)
+    // Der gewählte Jahrgang gehört zur bisherigen Sparte und passt in der neuen meist nicht.
+    setActiveJahrgang(null)
+  }
 
   function clearAll() {
-    setActiveSparte('Alle')
+    waehleSparte('Alle')
     setActiveTag('Alle')
     setActiveJahreszeit('Alle')
   }
@@ -131,7 +154,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
               label="Alle"
               active={activeSparte === 'Alle'}
               activeColor="#0a0a0a"
-              onClick={() => setActiveSparte('Alle')}
+              onClick={() => waehleSparte('Alle')}
             />
             {spartes.map(s => (
               <FilterChip
@@ -140,11 +163,36 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
                 count={data.filter(e => e.sparte === s).length}
                 active={activeSparte === s}
                 activeColor={sparteFarbe(s)}
-                onClick={() => setActiveSparte(activeSparte === s ? 'Alle' : s)}
+                onClick={() => waehleSparte(activeSparte === s ? 'Alle' : s)}
               />
             ))}
           </div>
         </div>
+
+        {/* Jahrgang – nur, wenn die gewählte Sparte Jahrgänge hat (z. B. Fußball-Jugend) */}
+        {jahrgaenge.length > 0 && (
+          <div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Jahrgang</div>
+            <div className="flex flex-wrap gap-2">
+              <FilterChip
+                label="Alle"
+                active={activeJahrgang === null}
+                activeColor="#0a0a0a"
+                onClick={() => setActiveJahrgang(null)}
+              />
+              {jahrgaenge.map(({ jahr, count }) => (
+                <FilterChip
+                  key={jahr}
+                  label={String(jahr)}
+                  count={count}
+                  active={activeJahrgang === jahr}
+                  activeColor={sparteFarbe(activeSparte)}
+                  onClick={() => setActiveJahrgang(activeJahrgang === jahr ? null : jahr)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tag + Saison row */}
         <div className="flex flex-wrap gap-x-10 gap-y-5">
