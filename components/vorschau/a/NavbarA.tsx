@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from 'react'
 import basis from './basisA.module.css'
 import s from './NavbarA.module.css'
 import { IconBurger, IconPfeilUnten, IconSchliessen } from './IconsA'
+import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 
 // ─── Navigation Design A (Matchday) ──────────────────────────────────────────
-// Schwebende Glas-Leiste als Pille oben. Ab 1100 px mit Aufklappmenüs für Spielpläne
-// und Verein, darunter mit Burger-Menü. Wird immer mitgerendert, aber nur im
+// Schwebende Glas-Leiste als Pille oben. Ab 1240 px mit Aufklappmenüs für Spielpläne
+// Verein und Förderverein, darunter mit Burger-Menü. Wird immer mitgerendert, aber nur im
 // Vorschau-Modus A angezeigt (app/vorschau.css) – Bilder deshalb mit loading="lazy".
 
 type Eintrag = { href: string; label: string }
@@ -34,11 +35,11 @@ const PUNKTE: Punkt[] = [
     label: 'Verein',
     kinder: [
       { href: '/ueber-uns', label: 'Über uns' },
-      { href: '/foerderverein', label: 'Förderverein' },
       { href: '/kinderschutz', label: 'Kinderschutz' },
       { href: '/downloads', label: 'Downloads' },
     ],
   },
+  { id: 'foerderverein', label: FOERDERVEREIN_MENUE.label, kinder: [...FOERDERVEREIN_MENUE.kinder] },
   { href: '/ansprechpartner', label: 'Kontakt' },
 ]
 

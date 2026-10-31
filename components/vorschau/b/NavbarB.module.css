@@ -209,13 +209,19 @@
 
 .panelCta a { width: 100%; }
 
-@media (max-width: 1100px) {
+/* Burger-Menü schon unter 1240 px (vorher 1100): mit dem Förderverein sind es acht Menüpunkte */
+@media (max-width: 1240px) {
   .links { display: none; }
   .burger { display: grid; }
 }
 
-@media (min-width: 1101px) {
+@media (min-width: 1241px) {
   .panel { display: none; }
+}
+
+/* Mit dem Menüpunkt Förderverein wird die Leiste eng: Zusatzzeile unter dem Namen erst auf breiten Bildschirmen */
+@media (max-width: 1360px) {
+  .marke small { display: none; }
 }
 
 @media (max-width: 720px) {

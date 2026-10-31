@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState, type FocusEvent } from 'react'
 import b from './bento.module.css'
+import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 import s from './NavbarB.module.css'
 
 // ─── Navigation von Design B (Bento) ─────────────────────────────────────────
@@ -11,6 +12,7 @@ import s from './NavbarB.module.css'
 // Wird für alle Besucher*innen mitgerendert, aber nur im Vorschau-Modus B gezeigt (app/vorschau.css).
 
 type Ziel = { href: string; label: string; hinweis?: string }
+type AusklappId = 'spiele' | 'foerderverein'
 
 const SPIELPLAENE: Ziel[] = [
   { href: '/fussball', label: 'Fußball', hinweis: 'Spiele von fussball.de' },
@@ -26,12 +28,14 @@ const VOR_SPIELPLAENEN: Ziel[] = [
 const NACH_SPIELPLAENEN: Ziel[] = [
   { href: '/trainingszeiten', label: 'Training' },
   { href: '/ueber-uns', label: 'Über uns' },
-  { href: '/ansprechpartner', label: 'Kontakt' },
 ]
+
+const KONTAKT: Ziel = { href: '/ansprechpartner', label: 'Kontakt' }
+
+const FOERDERVEREIN: Ziel[] = [...FOERDERVEREIN_MENUE.kinder]
 
 /** Im Burger-Menü zusätzlich (auf dem Desktop stehen sie im Footer) */
 const NUR_MOBIL: Ziel[] = [
-  { href: '/foerderverein', label: 'Förderverein' },
   { href: '/downloads', label: 'Downloads' },
   { href: '/kinderschutz', label: 'Kinderschutz' },
 ]
@@ -54,30 +58,32 @@ export default function NavbarB() {
   const pfad = usePathname() ?? '/'
   // Menüs merken sich die Seite, auf der sie geöffnet wurden – nach einem Seitenwechsel sind sie zu.
   const [menuAuf, setMenuAuf] = useState<string | null>(null)
-  const [spieleAuf, setSpieleAuf] = useState<string | null>(null)
+  // Höchstens ein Aufklappmenü (Spielpläne, Förderverein) ist offen
+  const [ausklappAuf, setAusklappAuf] = useState<{ pfad: string; id: AusklappId } | null>(null)
   const menuOffen = menuAuf === pfad
-  const spieleOffen = spieleAuf === pfad
+  const offenesAusklapp = ausklappAuf?.pfad === pfad ? ausklappAuf.id : null
+  const ausklappOffen = offenesAusklapp !== null
 
   const wurzel = useRef<HTMLElement>(null)
   const burger = useRef<HTMLButtonElement>(null)
-  const spieleKnopf = useRef<HTMLButtonElement>(null)
+  const ausklappKnoepfe = useRef<Partial<Record<AusklappId, HTMLButtonElement | null>>>({})
   const panelId = useId()
-  const spieleId = useId()
+  const ausklappPrefix = useId()
 
   // Escape und Klick außerhalb schließen offene Menüs
   useEffect(() => {
-    if (!menuOffen && !spieleOffen) return
+    if (!menuOffen && !ausklappOffen) return
     function taste(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
-      if (spieleOffen) spieleKnopf.current?.focus()
+      if (offenesAusklapp) ausklappKnoepfe.current[offenesAusklapp]?.focus()
       else burger.current?.focus()
       setMenuAuf(null)
-      setSpieleAuf(null)
+      setAusklappAuf(null)
     }
     function klick(e: PointerEvent) {
       if (wurzel.current && !wurzel.current.contains(e.target as Node)) {
         setMenuAuf(null)
-        setSpieleAuf(null)
+        setAusklappAuf(null)
       }
     }
     document.addEventListener('keydown', taste)
@@ -86,9 +92,7 @@ export default function NavbarB() {
       document.removeEventListener('keydown', taste)
       document.removeEventListener('pointerdown', klick)
     }
-  }, [menuOffen, spieleOffen])
-
-  const spieleAktiv = SPIELPLAENE.some(z => istAktiv(pfad, z.href))
+  }, [menuOffen, ausklappOffen, offenesAusklapp])
 
   function eintrag(ziel: Ziel) {
     const aktiv = istAktiv(pfad, ziel.href)
@@ -117,6 +121,50 @@ export default function NavbarB() {
     )
   }
 
+  /** Menüpunkt mit Aufklappmenü auf dem Desktop; es ist immer nur eines offen. */
+  function ausklapp(id: AusklappId, label: string, ziele: Ziel[]) {
+    const offen = offenesAusklapp === id
+    const listeId = `${ausklappPrefix}-${id}`
+    return (
+      <li
+        key={id}
+        onBlur={e => {
+          if (fokusVerlaesst(e)) setAusklappAuf(null)
+        }}
+      >
+        <button
+          ref={el => {
+            ausklappKnoepfe.current[id] = el
+          }}
+          type="button"
+          className={`${s.eintrag} ${ziele.some(z => istAktiv(pfad, z.href)) ? s.aktiv : ''}`}
+          aria-expanded={offen}
+          aria-controls={listeId}
+          onClick={() => setAusklappAuf(offen ? null : { pfad, id })}
+        >
+          {label}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+        <ul id={listeId} className={s.ausklapp} hidden={!offen}>
+          {ziele.map(ziel => (
+            <li key={ziel.href}>
+              <Link
+                href={ziel.href}
+                aria-current={istAktiv(pfad, ziel.href) ? 'page' : undefined}
+                onClick={() => setAusklappAuf(null)}
+              >
+                {ziel.label}
+                {ziel.hinweis && <small>{ziel.hinweis}</small>}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </li>
+    )
+  }
+
   return (
     <header
       ref={wurzel}
@@ -139,40 +187,10 @@ export default function NavbarB() {
 
           <ul className={s.links}>
             {VOR_SPIELPLAENEN.map(eintrag)}
-            <li
-              onBlur={e => {
-                if (fokusVerlaesst(e)) setSpieleAuf(null)
-              }}
-            >
-              <button
-                ref={spieleKnopf}
-                type="button"
-                className={`${s.eintrag} ${spieleAktiv ? s.aktiv : ''}`}
-                aria-expanded={spieleOffen}
-                aria-controls={spieleId}
-                onClick={() => setSpieleAuf(spieleOffen ? null : pfad)}
-              >
-                Spielpläne
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              <ul id={spieleId} className={s.ausklapp} hidden={!spieleOffen}>
-                {SPIELPLAENE.map(ziel => (
-                  <li key={ziel.href}>
-                    <Link
-                      href={ziel.href}
-                      aria-current={istAktiv(pfad, ziel.href) ? 'page' : undefined}
-                      onClick={() => setSpieleAuf(null)}
-                    >
-                      {ziel.label}
-                      <small>{ziel.hinweis}</small>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </li>
+            {ausklapp('spiele', 'Spielpläne', SPIELPLAENE)}
             {NACH_SPIELPLAENEN.map(eintrag)}
+            {ausklapp('foerderverein', FOERDERVEREIN_MENUE.label, FOERDERVEREIN)}
+            {eintrag(KONTAKT)}
           </ul>
 
           <div className={s.rechts}>
@@ -205,10 +223,13 @@ export default function NavbarB() {
             <ul>
               {VOR_SPIELPLAENEN.map(z => panelEintrag(z))}
               {NACH_SPIELPLAENEN.map(z => panelEintrag(z))}
+              {panelEintrag(KONTAKT)}
               {NUR_MOBIL.map(z => panelEintrag(z))}
             </ul>
             <div className={s.gruppe}>Spielpläne</div>
             <ul>{SPIELPLAENE.map(z => panelEintrag(z))}</ul>
+            <div className={s.gruppe}>{FOERDERVEREIN_MENUE.label}</div>
+            <ul>{FOERDERVEREIN.map(z => panelEintrag(z))}</ul>
             <div className={s.panelCta}>
               <Link href="/downloads" className={`${b.btn} ${b.btnDunkel}`} onClick={() => setMenuAuf(null)}>
                 Mitglied werden

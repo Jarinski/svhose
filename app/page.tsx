@@ -9,6 +9,7 @@ import StartseiteA from '@/components/vorschau/a/StartseiteA'
 import StartseiteB from '@/components/vorschau/b/StartseiteB'
 import { heuteInBerlin } from '@/lib/vorschau'
 import { vorschauDesign } from '@/lib/vorschau-server'
+import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
 
 // Liest bei jedem Aufruf direkt aus der Datenbank – neue News und Termine sind sofort sichtbar.
 export const dynamic = 'force-dynamic'
@@ -40,6 +41,7 @@ export default async function HomePage() {
   }
 
   const news = newsAll.slice(0, 3)
+  const fvNews = newsAll.find(n => istFoerderverein(n.category))
   const heuteStr = new Date().toISOString().slice(0, 10)
   const termineSliced = termine.filter(t => t.datum >= heuteStr).slice(0, 3)
 
@@ -163,6 +165,51 @@ export default async function HomePage() {
               <span className="text-[11px] tracking-[0.1em] uppercase font-medium">{s.name}</span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* FÖRDERVEREIN */}
+      <section className="px-6 pb-24 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-[#0a0a0a]/10 border border-[#0a0a0a]/10">
+          <div className="bg-[#f5f5f0] p-8 sm:p-12 flex flex-col">
+            <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Gemeinsam für Holm-Seppensen</div>
+            <h2 className="font-display text-5xl md:text-7xl tracking-tight mb-6 break-words">FÖRDERVEREIN</h2>
+            <p className="text-[#6b6b6b] leading-relaxed max-w-md mb-8">
+              Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen Rasenplatz am Tostedter Weg
+              bekommt – und der Ausbau geht weiter.
+            </p>
+            {fvNews && (
+              <Link
+                href={`/news/${fvNews.slug}`}
+                className="group block border-l-2 border-[#0a0a0a] pl-4 mb-8 max-w-md"
+              >
+                <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-1">
+                  Neu vom Förderverein — {format(new Date(fvNews.date), 'd. MMM yyyy', { locale: de })}
+                </div>
+                <div className="font-display text-xl tracking-tight leading-tight group-hover:underline underline-offset-4">{fvNews.title}</div>
+              </Link>
+            )}
+            <div className="mt-auto flex flex-wrap gap-3">
+              <Link href="/foerderverein/mitglied-werden" className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:bg-[#1a1a1a] transition-colors">
+                Mitglied werden <ArrowRight size={16} className="shrink-0" />
+              </Link>
+              <Link href="/foerderverein" className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:border-[#0a0a0a] transition-colors">
+                Mehr erfahren
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10">
+            {FOERDERVEREIN_MENUE.kinder.map(k => (
+              <Link
+                key={k.href}
+                href={k.href}
+                className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 p-6 sm:p-8 min-h-[9rem] flex flex-col justify-between"
+              >
+                <h3 className="font-display text-2xl tracking-tight">{k.label}</h3>
+                <ArrowRight size={16} className="shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

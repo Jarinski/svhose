@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import type { StartseitenDaten } from '@/lib/vorschau'
+import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
 import {
   aufzaehlung,
   datumLang,
@@ -19,6 +20,9 @@ import s from './StartseiteB.module.css'
 // ─── Startseite von Design B (Bento) ─────────────────────────────────────────
 // Hell und freundlich: abgerundete Kacheln im Bento-Raster. Server-Komponente –
 // nur der Termin-Filter und der Video-Knopf laufen im Browser.
+
+/** Symbole für die Kacheln des Fördervereins, in der Reihenfolge von FOERDERVEREIN_MENUE */
+const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝']
 
 const PFEIL = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -43,6 +47,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
   const naechster = anstehend[0] ? naechsterTermin(anstehend[0], heute) : null
   const terminZeilen = anstehend.slice(0, 80).map(terminZeile)
   const neueste = news.slice(0, 3)
+  const fvNews = news.find(n => istFoerderverein(n.category))
   const iconZuName = new Map(sparten.filter(sp => sp.icon).map(sp => [sp.name, sp.icon]))
 
   const zahlenText = [
@@ -209,6 +214,38 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
             </h3>
             <span className={`${b.link} ${s.linkHell}`}>Ansehen →</span>
           </Link>
+        </div>
+      </section>
+
+      {/* ── Förderverein ── */}
+      <section className={s.abschnitt} aria-labelledby="b-foerderverein">
+        <div className={s.kopf}>
+          <div>
+            <span className={b.eyebrow}>Förderverein</span>
+            <h2 id="b-foerderverein" className={s.abschnittTitel}>Gemeinsam für unseren Platz</h2>
+            <p>
+              Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
+              Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
+            </p>
+            {fvNews && (
+              <p>
+                <b>Neu:</b>{' '}
+                <Link href={`/news/${fvNews.slug}`} className={b.link}>{fvNews.title}</Link>
+              </p>
+            )}
+          </div>
+          <Link href="/foerderverein" className={b.link}>Zum Förderverein →</Link>
+        </div>
+        <div className={`${s.sparten} ${s.foerder}`}>
+          {FOERDERVEREIN_MENUE.kinder.map((kind, i) => (
+            <Link key={kind.href} href={kind.href} className={s.sparte}>
+              <span className={s.ico} aria-hidden="true">
+                <i className={b.emo}>{FOERDER_ICONS[i]}</i>
+              </span>
+              <h3>{kind.label}</h3>
+              <p>{kind.text}</p>
+            </Link>
+          ))}
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { NewsPost } from '@/lib/content'
 import { spielInfo, type StartseitenDaten } from '@/lib/vorschau'
+import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
 import basis from './basisA.module.css'
 import s from './StartseiteA.module.css'
 import HeroVideoA from './HeroVideoA'
@@ -33,6 +34,7 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
   const karten = spielKarten(termine.slice(0, SPIELPLAN_MAX), heute)
   const [aufmacher, ...weitere] = news
   const liste = weitere.slice(0, 3)
+  const fvNews = news.find(n => istFoerderverein(n.category))
 
   const kennzahlen = [
     zahlen.sparten > 0 ? `${zahlen.sparten} Sparten` : null,
@@ -199,6 +201,50 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
               Die Sparten werden gerade überarbeitet. <Link href="/ansprechpartner">Frag uns gern direkt.</Link>
             </p>
           )}
+        </div>
+      </section>
+
+      {/* ── Förderverein ── */}
+      <section id="foerderverein" className={`${s.abschnitt} ${s.ohneOben}`} aria-labelledby="a-titel-foerderverein">
+        <div className={basis.wrap}>
+          <div className={s.head}>
+            <div>
+              <span className={basis.eyebrow}>Gemeinsam für Holm-Seppensen</span>
+              <h2 id="a-titel-foerderverein" className={`${basis.cond} ${s.h2}`}>
+                Förderverein
+              </h2>
+            </div>
+            <Link href="/foerderverein" className={basis.more}>
+              Zum Förderverein →
+            </Link>
+          </div>
+
+          <p className={s.foerderText}>
+            Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
+            Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
+          </p>
+          {fvNews && (
+            <Link href={`/news/${fvNews.slug}`} className={s.foerderNeu}>
+              <span>Neu vom Förderverein · {langDatum(fvNews.date)}</span>
+              <b>{fvNews.title}</b>
+            </Link>
+          )}
+
+          <ul className={`${s.sparten} ${s.foerder}`}>
+            {FOERDERVEREIN_MENUE.kinder.map((kind, i) => (
+              <li key={kind.href}>
+                <Link href={kind.href} className={s.sparte}>
+                  <span className={s.nr} aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className={s.pfeil} aria-hidden="true">
+                    <IconPfeil />
+                  </span>
+                  <b>{kind.label}</b>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

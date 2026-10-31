@@ -65,7 +65,7 @@
   white-space: nowrap;
 }
 
-/* ── Leiste ab 1100 px ── */
+/* ── Leiste ab 1240 px ── */
 .links {
   display: flex;
   gap: 4px;
@@ -257,12 +257,13 @@
   flex: none;
 }
 
-@media (max-width: 1100px) {
+/* Burger-Menü schon unter 1240 px (vorher 1100): mit dem Förderverein sind es acht Menüpunkte */
+@media (max-width: 1240px) {
   .desktop { display: none; }
   .burger { display: grid; }
 }
 
-@media (min-width: 1101px) {
+@media (min-width: 1241px) {
   .panel { display: none !important; }
 }
 

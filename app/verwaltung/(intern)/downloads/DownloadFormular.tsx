@@ -63,7 +63,7 @@ export default function DownloadFormular({
             <Feld label="Beschreibung" htmlFor="beschreibung" className="sm:col-span-2">
               <textarea id="beschreibung" name="beschreibung" rows={3} defaultValue={download?.beschreibung ?? ''} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Mitgliedschaft“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint der Download auch auf der Förderverein-Seite.">
+            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Mitgliedschaft“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint der Download auch unter Förderverein → Mitglied werden.">
               <input id="kategorie" name="kategorie" list="download-kategorien" defaultValue={download?.kategorie ?? ''} className={eingabeKlasse} />
               <datalist id="download-kategorien">
                 {kategorien.map(k => (

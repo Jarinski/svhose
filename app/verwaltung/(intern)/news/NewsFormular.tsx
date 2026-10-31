@@ -112,7 +112,7 @@ export default function NewsFormular({
             <Feld label="Datum" htmlFor="datum" fehler={f.datum}>
               <input id="datum" name="datum" type="date" required defaultValue={news?.datum ?? heute} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Verein“ oder „Fußball“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint die News auch auf der Förderverein-Seite.">
+            <Feld label="Kategorie" htmlFor="kategorie" hinweis="Zum Beispiel „Verein“ oder „Fußball“ – eintippen oder Vorschlag wählen. Mit „Förderverein“ erscheint die News auch unter Förderverein → Aktuelles.">
               <input id="kategorie" name="kategorie" list="news-kategorien" defaultValue={news?.kategorie ?? ''} className={eingabeKlasse} />
               <datalist id="news-kategorien">
                 {kategorien.map(k => (

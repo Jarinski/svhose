@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { Menu, X, ChevronDown } from 'lucide-react'
+import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 
 type NavLink =
   | { href: string; label: string; children?: undefined }
@@ -25,11 +26,11 @@ const navLinks: NavLink[] = [
     label: 'Verein',
     children: [
       { href: '/ueber-uns', label: 'Über uns' },
-      { href: '/foerderverein', label: 'Förderverein' },
       { href: '/kinderschutz', label: 'Kinderschutz' },
       { href: '/downloads', label: 'Downloads' },
     ],
   },
+  { label: FOERDERVEREIN_MENUE.label, children: [...FOERDERVEREIN_MENUE.kinder] },
   { href: '/ansprechpartner', label: 'Kontakt' },
 ]
 
@@ -77,7 +78,8 @@ function DropdownMenu({ label, children }: { label: string; children: { href: st
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  const [spielplaeneOpen, setSpieleplaeneOpen] = useState(false)
+  // Im mobilen Menü ist höchstens eine Gruppe aufgeklappt
+  const [offeneGruppe, setOffeneGruppe] = useState<string | null>(null)
 
   return (
     <header className="fixed top-[var(--du-hoehe,0px)] left-0 right-0 z-50 bg-[#f5f5f0]/90 backdrop-blur-md border-b border-[#0a0a0a]/10">
@@ -136,19 +138,19 @@ export default function Navbar() {
                 <li key={link.label}>
                   <button
                     className="flex items-center gap-1 w-full text-left text-sm tracking-[0.08em] uppercase text-[#0a0a0a] font-medium py-2"
-                    onClick={() => setSpieleplaeneOpen(!spielplaeneOpen)}
+                    onClick={() => setOffeneGruppe(offeneGruppe === link.label ? null : link.label)}
                   >
                     {link.label}
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${spielplaeneOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${offeneGruppe === link.label ? 'rotate-180' : ''}`} />
                   </button>
-                  {spielplaeneOpen && (
+                  {offeneGruppe === link.label && (
                     <ul className="pl-4 flex flex-col gap-2 mt-1">
                       {link.children.map(child => (
                         <li key={child.href}>
                           <Link
                             href={child.href}
                             className="block text-sm tracking-[0.08em] uppercase text-[#6b6b6b] font-medium py-1"
-                            onClick={() => { setOpen(false); setSpieleplaeneOpen(false) }}
+                            onClick={() => { setOpen(false); setOffeneGruppe(null) }}
                           >
                             {child.label}
                           </Link>
