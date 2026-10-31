@@ -11,7 +11,7 @@ type ConsentState = {
 
 const STORAGE_KEY = 'svhose_cookie_consent'
 
-export function useCookieConsent(): ConsentState | null {
+function leseEinwilligung(): ConsentState | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -20,6 +20,15 @@ export function useCookieConsent(): ConsentState | null {
   } catch {
     return null
   }
+}
+
+export function useCookieConsent(): ConsentState | null {
+  return leseEinwilligung()
+}
+
+/** Karten und andere externe Inhalte dürfen nur laden, wenn "Funktionale Cookies" erlaubt sind. */
+export function externeInhalteErlaubt(): boolean {
+  return leseEinwilligung()?.functional === true
 }
 
 export default function CookieBanner() {

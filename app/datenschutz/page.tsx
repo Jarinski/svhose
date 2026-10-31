@@ -76,6 +76,21 @@ export default function DatenschutzPage() {
             Ihrer Nutzererfahrung auf unserer Webseite.
           </p>
           <p className="mt-3">
+            Auf der Seite „Sportplätze“ zeigen wir Karten von OpenStreetMap (OpenStreetMap
+            Foundation, Vereinigtes Königreich). Die Karten werden erst geladen, wenn Sie den
+            funktionalen Cookies zugestimmt oder auf „Karte laden“ geklickt haben. Dabei wird Ihre
+            IP-Adresse an die OpenStreetMap Foundation übertragen. Mehr dazu finden Sie in deren{' '}
+            <a
+              href="https://osmfoundation.org/wiki/Privacy_Policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+            >
+              Datenschutzerklärung
+            </a>
+            .
+          </p>
+          <p className="mt-3">
             Wir respektieren Ihre Privatsphäre und verwenden keine Cookies oder eingebetteten
             Inhalte, um personenbezogene Daten ohne Ihre ausdrückliche Zustimmung zu sammeln. Sie
             können die Cookie-Einstellungen in Ihrem Browser anpassen, um Cookies nach Ihren

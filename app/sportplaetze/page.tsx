@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, MapPin } from 'lucide-react'
 import type { Metadata } from 'next'
+import Karte from '@/components/Karte'
 import { getTrainingszeiten } from '@/lib/content'
 import { SPORTPLAETZE, spartenAmPlatz } from '@/lib/sportplaetze'
 
@@ -23,8 +24,8 @@ export default async function SportplaetzePage() {
         <h1 className="font-display text-6xl md:text-8xl tracking-tight mb-12">SPORTPLÄTZE</h1>
         <div className="max-w-2xl">
           <p className="text-xl text-[#6b6b6b] font-light leading-relaxed">
-            Unsere Mannschaften und Gruppen trainieren an fünf Anlagen in Holm-Seppensen: auf dem eigenen Platz am Tostedter Weg und in
-            Hallen und auf Plätzen der Schulen.
+            Unsere Mannschaften und Gruppen trainieren an fünf Anlagen in Holm-Seppensen und Buchholz: auf dem eigenen Platz am Tostedter Weg
+            und in Hallen und auf Plätzen der Schulen. Die Karten zeigen, wo du uns findest.
           </p>
         </div>
       </div>
@@ -69,6 +70,9 @@ export default async function SportplaetzePage() {
                       </ul>
                     </div>
                   )}
+                  <div className="mt-8 max-w-xl">
+                    <Karte name={platz.name} lat={platz.lat} lon={platz.lon} zoom={platz.zoom} />
+                  </div>
                 </div>
               </li>
             )
