@@ -35,7 +35,7 @@ const SPARTE_COLOR: Record<string, string> = {
   'Dart':                '#dc2626',
   'Step Aerobic':        '#db2777',
   'Seniorensport':       '#0d9488',
-  'Fußball Damen':      '#e11d48',
+  'Fußball Damen':       '#e11d48',
   'Fußball Herren':      '#0369a1',
   'Fußball Juniorinnen': '#7c3aed',
   'Fußball Junioren':    '#059669',
