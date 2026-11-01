@@ -40,7 +40,7 @@ export default async function HomePage() {
     return design === 'a' ? <StartseiteA daten={daten} /> : <StartseiteB daten={daten} />
   }
 
-  const news = newsAll.slice(0, 3)
+  const news = newsAll.slice(0, 6)
   const fvNews = newsAll.find(n => istFoerderverein(n.category))
   const heuteStr = new Date().toISOString().slice(0, 10)
   const termineSliced = termine.filter(t => t.datum >= heuteStr).slice(0, 3)
@@ -63,36 +63,45 @@ export default async function HomePage() {
 
       {/* NEWS */}
       <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-12">
-          <div>
-            <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Aktuelles</div>
-            <h2 className="font-display text-5xl md:text-7xl tracking-tight">NEWS</h2>
-          </div>
-          <Link href="/news" className="hidden sm:flex items-center gap-2 text-sm tracking-[0.08em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors">
-            Alle News <ArrowRight size={14} />
-          </Link>
+        <div className="mb-12">
+          <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Aktuelles</div>
+          <h2 className="font-display text-5xl md:text-7xl tracking-tight">NEWS</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#0a0a0a]/10">
-          {news.map((post) => (
-            <Link key={post.slug} href={`/news/${post.slug}`} className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col">
-              <NewsThumbnail
-                bild={post.image}
-                alt={post.title}
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
-              <div className="p-8 flex flex-col flex-1">
-                <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
-                  {post.category} — {format(new Date(post.date), 'd. MMM yyyy', { locale: de })}
-                </div>
-                <h3 className="font-display text-2xl tracking-tight leading-tight mb-4">{post.title}</h3>
-                <p className="text-sm text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 leading-relaxed flex-1">{post.excerpt}</p>
-                <div className="mt-6 flex items-center gap-2 text-xs tracking-[0.1em] uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                  Lesen <ArrowRight size={12} />
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14">
+          {news.map((post, i) => (
+            // Auf dem Handy reichen drei Beiträge, sonst wird die Startseite sehr lang
+            <Link key={post.slug} href={`/news/${post.slug}`} className={`group flex-col ${i >= 3 ? 'hidden sm:flex' : 'flex'}`}>
+              <div className="relative">
+                <NewsThumbnail
+                  bild={post.image}
+                  alt={post.title}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                <span className="absolute left-3 bottom-3 bg-[#0a0a0a]/80 text-[#f5f5f0] text-[10px] tracking-[0.15em] uppercase px-2.5 py-1">
+                  {post.sparte}
+                </span>
               </div>
+              <div className="mt-5 text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b]">
+                {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
+              </div>
+              <h3 className="mt-2 font-display text-2xl md:text-[1.75rem] tracking-tight leading-[1.05] group-hover:underline decoration-1 underline-offset-4">
+                {post.title}
+              </h3>
+              {post.excerpt && (
+                <p className="mt-3 text-sm text-[#6b6b6b] leading-relaxed line-clamp-4">{post.excerpt}</p>
+              )}
+              <span className="mt-5 self-start inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-4 py-2 text-[11px] tracking-[0.15em] uppercase transition-colors group-hover:bg-[#333]">
+                Weiterlesen <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-0.5" />
+              </span>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-14">
+          <Link href="/news" className="inline-flex items-center gap-2 border border-[#0a0a0a] px-6 py-3 text-xs tracking-[0.15em] uppercase font-medium hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-colors">
+            Alle News <ArrowRight size={14} />
+          </Link>
         </div>
       </section>
 
