@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Navbar from './Navbar'
 import CookieBanner from './CookieBanner'
+import SeitenLeiste from './SeitenLeiste'
 import NavbarA from './vorschau/a/NavbarA'
 import NavbarB from './vorschau/b/NavbarB'
 import DesignUmschalter from './vorschau/DesignUmschalter'
@@ -51,6 +52,7 @@ export default function SiteChrome({
       <div className="chrome-standard">{footer}</div>
       <div className="chrome-a">{vorschauFooter.a}</div>
       <div className="chrome-b">{vorschauFooter.b}</div>
+      <SeitenLeiste />
       <CookieBanner />
     </div>
   )
