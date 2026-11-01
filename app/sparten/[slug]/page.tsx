@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, Clock, FileText, Download } from 'lucide-react'
-import { getSparteBySlug, type Kontakt, type TeamKarte, type WochentagName } from '@/lib/content'
+import { getSparteBySlug, jahrgaengeAus, kurzName, type Kontakt, type TeamKarte, type WochentagName } from '@/lib/content'
 import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
 import { whatsappLink } from '@/lib/whatsapp'
+import MannschaftenListe from './MannschaftenListe'
 
 /* ── Rendering ─────────────────────────────────────────────── */
 // Die Seite liest bei jedem Aufruf direkt aus der Datenbank –
@@ -77,6 +78,22 @@ function mannschaftenNachBereich(mannschaften: TeamKarte[]) {
   ].filter(abschnitt => abschnitt.mannschaften.length > 0)
 }
 
+/**
+ * Beschriftung der Mannschaften in der Auswahl: der Jahrgang ("2015"), sonst der Name ("Damen").
+ * Teilen sich mehrere Mannschaften einen Jahrgang (U12 und U12 III), steht der Name dahinter.
+ */
+function auswahlBeschriftungen(mannschaften: TeamKarte[]): Map<number, string> {
+  const beschriftungen = mannschaften.map(m =>
+    m.altersklasse && jahrgaengeAus(m.altersklasse).length > 0 ? m.altersklasse.replace(/^Jg\.?\s*/i, '') : kurzName(m.name),
+  )
+  return new Map(
+    mannschaften.map((m, i) => [
+      m.id,
+      beschriftungen.filter(b => b === beschriftungen[i]).length > 1 ? `${beschriftungen[i]} · ${kurzName(m.name)}` : beschriftungen[i],
+    ]),
+  )
+}
+
 /* ── Seite ─────────────────────────────────────────────────── */
 export default async function SparteDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params
@@ -85,7 +102,16 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
 
   const { farbe, mannschaften, gruppen, ansprechpartner, downloads } = sparte
   const isAkrobatik = sparte.slug === 'akrobatik'
-  const mannschaftenByBereich = mannschaftenNachBereich(mannschaften)
+  const beschriftungen = auswahlBeschriftungen(mannschaften)
+  const mannschaftenByBereich = mannschaftenNachBereich(mannschaften).map(abschnitt => ({
+    key: abschnitt.key,
+    title: abschnitt.title,
+    mannschaften: abschnitt.mannschaften.map(mannschaft => ({
+      id: mannschaft.id,
+      label: beschriftungen.get(mannschaft.id) ?? mannschaft.name,
+      karte: <MannschaftCard team={mannschaft} farbe={farbe} sparteIcon={sparte.icon} />,
+    })),
+  }))
   const hatTeams = mannschaften.length > 0 || gruppen.length > 0
   const alleTeams = [...mannschaften, ...gruppen]
   const hatTrainingszeiten = alleTeams.some(team => team.trainingszeiten.length > 0)
@@ -209,30 +235,7 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
             {mannschaften.length > 0 && (
               <section>
                 <SectionHeader title="MANNSCHAFTEN" farbe={farbe} count={mannschaften.length} />
-                <div className="mt-8 space-y-10">
-                  {mannschaftenByBereich.map(abschnitt => (
-                    <div key={abschnitt.key}>
-                      <div className="flex items-center gap-3 mb-4">
-                        <h3 className="text-sm tracking-[0.18em] uppercase font-medium" style={{ color: farbe }}>
-                          {abschnitt.title}
-                        </h3>
-                        <div className="flex-1 h-px" style={{ background: `${farbe}20` }} />
-                        <span className="text-[11px] text-[#6b6b6b] shrink-0">{abschnitt.mannschaften.length}</span>
-                      </div>
-
-                      <div className="space-y-3">
-                        {abschnitt.mannschaften.map(mannschaft => (
-                          <MannschaftCard
-                            key={`mannschaft-${mannschaft.id}`}
-                            team={mannschaft}
-                            farbe={farbe}
-                            sparteIcon={sparte.icon}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <MannschaftenListe abschnitte={mannschaftenByBereich} farbe={farbe} />
               </section>
             )}
 

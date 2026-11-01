@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { MapPin, Mail, Phone, User, RotateCcw, Info } from 'lucide-react'
 import type { TrainingsEintrag } from '@/lib/content'
+import FilterChip from '@/components/FilterChip'
 
 const TAG_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
 
@@ -64,6 +65,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
   const [activeTag, setActiveTag] = useState<string>('Alle')
   const [activeJahreszeit, setActiveJahreszeit] = useState<string>('Alle')
   const [activeJahrgang, setActiveJahrgang] = useState<number | null>(null)
+  const [activeMannschaft, setActiveMannschaft] = useState<string | null>(null)
 
   // Sparten in der Reihenfolge der Daten (erstes Vorkommen zählt)
   const spartes = useMemo(() => {
@@ -105,6 +107,18 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
       .sort((a, b) => b.jahr - a.jahr)
   }, [data, activeSparte])
 
+  // Mannschaften der gewählten Sparte, die man nicht über den Jahrgang findet (Herren, Damen,
+  // Juniorinnen, Freizeit …), in der Reihenfolge der Daten.
+  const mannschaften = useMemo(() => {
+    if (activeSparte === 'Alle') return []
+    const anzahl = new Map<string, number>()
+    data.forEach(e => {
+      if (e.sparte !== activeSparte || !e.mannschaft) return
+      anzahl.set(e.mannschaft, (anzahl.get(e.mannschaft) ?? 0) + 1)
+    })
+    return Array.from(anzahl.entries()).map(([name, count]) => ({ name, count }))
+  }, [data, activeSparte])
+
   const filtered = useMemo(() => {
     return data.filter(e => {
       const norm = normJahreszeit(e.jahreszeit)
@@ -112,10 +126,11 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
         (activeSparte === 'Alle' || e.sparte === activeSparte) &&
         (activeTag === 'Alle' || e.tag === activeTag) &&
         (activeJahreszeit === 'Alle' || norm === activeJahreszeit) &&
-        (activeJahrgang === null || e.jahrgaenge.includes(activeJahrgang))
+        (activeJahrgang === null || e.jahrgaenge.includes(activeJahrgang)) &&
+        (activeMannschaft === null || e.mannschaft === activeMannschaft)
       )
     })
-  }, [data, activeSparte, activeTag, activeJahreszeit, activeJahrgang])
+  }, [data, activeSparte, activeTag, activeJahreszeit, activeJahrgang, activeMannschaft])
 
   // Group filtered entries by sparte (preserving order)
   const grouped = useMemo(() => {
@@ -128,11 +143,24 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
   }, [filtered])
 
   const hasActiveFilter =
-    activeSparte !== 'Alle' || activeTag !== 'Alle' || activeJahreszeit !== 'Alle' || activeJahrgang !== null
+    activeSparte !== 'Alle' || activeTag !== 'Alle' || activeJahreszeit !== 'Alle' ||
+    activeJahrgang !== null || activeMannschaft !== null
 
   function waehleSparte(sparte: string) {
     setActiveSparte(sparte)
-    // Der gewählte Jahrgang gehört zur bisherigen Sparte und passt in der neuen meist nicht.
+    // Jahrgang und Mannschaft gehören zur bisherigen Sparte und passen in der neuen meist nicht.
+    setActiveJahrgang(null)
+    setActiveMannschaft(null)
+  }
+
+  // Jahrgang und Mannschaft sind zwei Wege zur selben Auswahl, deshalb gilt immer nur einer.
+  function waehleJahrgang(jahr: number | null) {
+    setActiveJahrgang(jahr)
+    setActiveMannschaft(null)
+  }
+
+  function waehleMannschaft(name: string | null) {
+    setActiveMannschaft(name)
     setActiveJahrgang(null)
   }
 
@@ -170,6 +198,31 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
           </div>
         </div>
 
+        {/* Mannschaft – nur, wenn die gewählte Sparte Mannschaften hat, die der Jahrgang nicht abdeckt (z. B. Herren, Damen, Mädchen) */}
+        {mannschaften.length > 0 && (
+          <div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-[#6b6b6b] mb-2.5">Mannschaft</div>
+            <div className="flex flex-wrap gap-2">
+              <FilterChip
+                label="Alle"
+                active={activeMannschaft === null}
+                activeColor="#0a0a0a"
+                onClick={() => waehleMannschaft(null)}
+              />
+              {mannschaften.map(({ name, count }) => (
+                <FilterChip
+                  key={name}
+                  label={name}
+                  count={count}
+                  active={activeMannschaft === name}
+                  activeColor={sparteFarbe(activeSparte)}
+                  onClick={() => waehleMannschaft(activeMannschaft === name ? null : name)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Jahrgang – nur, wenn die gewählte Sparte Jahrgänge hat (z. B. Fußball-Jugend) */}
         {jahrgaenge.length > 0 && (
           <div>
@@ -179,7 +232,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
                 label="Alle"
                 active={activeJahrgang === null}
                 activeColor="#0a0a0a"
-                onClick={() => setActiveJahrgang(null)}
+                onClick={() => waehleJahrgang(null)}
               />
               {jahrgaenge.map(({ jahr, count }) => (
                 <FilterChip
@@ -188,7 +241,7 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
                   count={count}
                   active={activeJahrgang === jahr}
                   activeColor={sparteFarbe(activeSparte)}
-                  onClick={() => setActiveJahrgang(activeJahrgang === jahr ? null : jahr)}
+                  onClick={() => waehleJahrgang(activeJahrgang === jahr ? null : jahr)}
                 />
               ))}
             </div>
@@ -423,42 +476,5 @@ export default function TrainingszeitenClient({ data }: { data: TrainingsEintrag
         </div>
       )}
     </div>
-  )
-}
-
-// ── Small reusable chip ────────────────────────────────────────
-function FilterChip({
-  label,
-  count,
-  active,
-  activeColor,
-  onClick,
-}: {
-  label: string
-  count?: number
-  active: boolean
-  activeColor: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 text-xs tracking-[0.08em] uppercase px-3 py-1.5 border transition-all duration-150"
-      style={
-        active
-          ? { background: activeColor, borderColor: activeColor, color: '#f5f5f0' }
-          : { background: 'transparent', borderColor: 'rgba(10,10,10,0.15)', color: '#0a0a0a' }
-      }
-    >
-      {label}
-      {count !== undefined && (
-        <span
-          className="text-[10px] opacity-70"
-          style={active ? { color: 'rgba(245,245,240,0.7)' } : {}}
-        >
-          {count}
-        </span>
-      )}
-    </button>
   )
 }

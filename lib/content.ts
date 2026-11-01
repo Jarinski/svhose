@@ -89,6 +89,12 @@ export interface TrainingsEintrag {
   gruppe: string
   /** Geburtsjahrgänge, die in der Altersklasse stehen (leer, wenn dort kein Jahr steht), aufsteigend */
   jahrgaenge: number[]
+  /**
+   * Name der Mannschaft für die Mannschaftsauswahl, ohne Zusatz in Klammern ("Just4Fun").
+   * Nur bei Mannschaften, die man nicht über den Jahrgang findet (Herren, Damen, Juniorinnen,
+   * Freizeit …); bei Junioren-Mannschaften und Gruppen null.
+   */
+  mannschaft: string | null
   tag: WochentagName
   uhrzeit: string
   ort: string
@@ -394,6 +400,22 @@ export function jahrgaengeAus(text: string | null): number[] {
   return [...jahre].sort((a, b) => a - b)
 }
 
+/** Mannschaftsname ohne Zusatz in Klammern: "Just4Fun (Hobbymannschaft)" → "Just4Fun". */
+export function kurzName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*$/, '') || name
+}
+
+/**
+ * Junioren-Mannschaften findet man über den Jahrgang (U12 = 2015). Alle anderen – Herren, Damen,
+ * Juniorinnen, Freizeit – brauchen einen eigenen Eintrag in der Mannschaftsauswahl. Ohne Bereich
+ * gilt das nur, wenn auch kein Jahrgang in der Altersklasse steht.
+ */
+function auswahlName(team: { name: string; bereich: string | null; altersklasse: string | null }): string | null {
+  const ueberJahrgang =
+    team.bereich === 'Junioren' || (team.bereich === null && jahrgaengeAus(wert(team.altersklasse)).length > 0)
+  return ueberJahrgang ? null : kurzName(team.name)
+}
+
 export async function getTrainingszeiten(): Promise<TrainingsEintrag[]> {
   const teamBezuege = {
     sparte: true,
@@ -441,6 +463,7 @@ export async function getTrainingszeiten(): Promise<TrainingsEintrag[]> {
         farbe: team.sparte.farbe || null,
         gruppe: teams.map(teamName).join(' / '),
         jahrgaenge: [...new Set(teams.flatMap(t => jahrgaengeAus(wert(t.altersklasse))))].sort((a, b) => a - b),
+        mannschaft: mannschaft ? auswahlName(mannschaft) : null,
         tag: einheit.tag,
         uhrzeit: einheit.uhrzeit,
         ort: einheit.ort,
