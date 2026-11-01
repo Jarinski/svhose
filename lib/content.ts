@@ -12,6 +12,7 @@
 import { datenbank, schema } from '@/lib/db'
 import { FUNKTIONS_GRUPPEN } from '@/lib/db/schema'
 import { medienUrl } from '@/lib/medien'
+import { spartenBild } from '@/lib/sparten-bilder'
 
 // ─── Typen ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,8 @@ export interface SparteUebersicht {
   name: string
   /** Emoji, '' wenn leer */
   icon: string
+  /** Symbolbild für Übersichten (lib/sparten-bilder.ts), null wenn keins hinterlegt ist */
+  bild: string | null
   /** Akzentfarbe, Fallback '#0a0a0a' */
   farbe: string
   /** Kurzbeschreibung, '' wenn leer */
@@ -299,6 +302,7 @@ function sparteUebersicht(sparte: SparteDaten): SparteUebersicht {
     slug: sparte.slug,
     name: sparte.name,
     icon: sparte.icon || '',
+    bild: spartenBild(sparte.slug),
     farbe: sparte.farbe || '#0a0a0a',
     beschreibung: wert(sparte.kurzbeschreibung) ?? '',
   }

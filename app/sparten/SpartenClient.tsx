@@ -14,34 +14,46 @@ export default function SpartenClient({ sparten }: { sparten: SparteUebersicht[]
           <Link
             key={sparte.slug}
             href={`/sparten/${sparte.slug}`}
-            className="group relative overflow-hidden border border-[#0a0a0a]/10 bg-[#fafaf8] p-6 min-h-[220px] flex flex-col transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(10,10,10,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a0a0a]"
+            className="group relative overflow-hidden border border-[#0a0a0a]/10 bg-[#fafaf8] min-h-[220px] flex flex-col transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_45px_rgba(10,10,10,0.08)] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a0a0a]"
             aria-label={`${sparte.name} ansehen`}
           >
             <div
-              className="absolute inset-x-0 top-0 h-1 transition-opacity duration-300 group-hover:opacity-100"
+              className="absolute inset-x-0 top-0 h-1 z-10 transition-opacity duration-300 group-hover:opacity-100"
               style={{ background: farbe, opacity: 0.75 }}
             />
 
-            <div className="flex items-start justify-between gap-5">
-              <div
-                className="w-16 h-16 flex items-center justify-center text-4xl shrink-0 transition-transform duration-300 group-hover:scale-105"
-                style={{ background: `${farbe}14` }}
-                aria-hidden="true"
-              >
-                {sparte.icon || (
-                  // Ohne gepflegtes Icon: Vereinswappen als Platzhalter
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src="/SV_Holm_Seppensen_Logo.svg" alt="" className="w-9 h-9 object-contain opacity-30" />
-                )}
+            {sparte.bild ? (
+              <div className="relative aspect-[3/2] overflow-hidden bg-[#0a0a0a]/5" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sparte.bild}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
-              <ArrowRight
-                size={18}
-                className="mt-1 text-[#6b6b6b] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0a0a0a]"
-                aria-hidden="true"
-              />
-            </div>
+            ) : (
+              <div className="px-6 pt-6 flex items-start justify-between gap-5">
+                <div
+                  className="w-16 h-16 flex items-center justify-center text-4xl shrink-0 transition-transform duration-300 group-hover:scale-105"
+                  style={{ background: `${farbe}14` }}
+                  aria-hidden="true"
+                >
+                  {sparte.icon || (
+                    // Ohne gepflegtes Icon: Vereinswappen als Platzhalter
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src="/SV_Holm_Seppensen_Logo.svg" alt="" className="w-9 h-9 object-contain opacity-30" />
+                  )}
+                </div>
+                <ArrowRight
+                  size={18}
+                  className="mt-1 text-[#6b6b6b] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0a0a0a]"
+                  aria-hidden="true"
+                />
+              </div>
+            )}
 
-            <div className="mt-8 flex-1">
+            <div className={`px-6 flex-1 ${sparte.bild ? 'pt-6' : 'pt-8'}`}>
               <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-none">
                 {sparte.name}
               </h2>
@@ -52,8 +64,8 @@ export default function SpartenClient({ sparten }: { sparten: SparteUebersicht[]
               )}
             </div>
 
-            <div className="mt-8 inline-flex items-center gap-2 text-xs tracking-[0.16em] uppercase font-medium" style={{ color: farbe }}>
-              Mehr erfahren <ArrowRight size={12} aria-hidden="true" />
+            <div className="px-6 pb-6 mt-8 inline-flex items-center gap-2 text-xs tracking-[0.16em] uppercase font-medium" style={{ color: farbe }}>
+              Mehr erfahren <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </Link>
         )

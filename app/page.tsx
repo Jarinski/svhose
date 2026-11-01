@@ -154,15 +154,32 @@ export default async function HomePage() {
             <Link
               key={s.slug}
               href={`/sparten/${s.slug}`}
-              className="bg-[#f5f5f0] outline outline-1 outline-[#0a0a0a]/10 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200 flex flex-col items-center text-center gap-2 py-6 px-4 w-1/2 sm:w-1/3 md:w-1/4 lg:w-[14.285%]"
+              className="relative overflow-hidden aspect-square bg-[#f5f5f0] outline outline-1 outline-[#0a0a0a]/10 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 px-4 w-1/2 sm:w-1/3 md:w-1/4 lg:w-[14.285%]"
             >
-              {s.icon
-                ? <span className="text-2xl">{s.icon}</span>
-                : /* Ohne gepflegtes Icon: Vereinswappen als Platzhalter */
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src="/SV_Holm_Seppensen_Logo.svg" alt="" aria-hidden="true" className="w-8 h-8 object-contain opacity-30" />
-              }
-              <span className="text-[11px] tracking-[0.1em] uppercase font-medium">{s.name}</span>
+              {s.bild ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.bild}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-[#0a0a0a]/10 to-transparent transition-colors duration-200 group-hover:bg-[#0a0a0a]/30" />
+                  <span className="absolute inset-x-0 bottom-0 px-3 pb-4 text-[11px] tracking-[0.1em] uppercase font-medium text-[#f5f5f0]">{s.name}</span>
+                </>
+              ) : (
+                <>
+                  {s.icon
+                    ? <span className="text-2xl">{s.icon}</span>
+                    : /* Ohne gepflegtes Icon: Vereinswappen als Platzhalter */
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src="/SV_Holm_Seppensen_Logo.svg" alt="" aria-hidden="true" className="w-8 h-8 object-contain opacity-30" />
+                  }
+                  <span className="text-[11px] tracking-[0.1em] uppercase font-medium">{s.name}</span>
+                </>
+              )}
             </Link>
           ))}
         </div>
