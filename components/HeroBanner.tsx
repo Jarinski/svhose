@@ -67,7 +67,8 @@ export default function HeroBanner() {
             { num: '1', label: 'Team' },
           ].map(s => (
             <div key={s.label}>
-              <div className="font-display text-4xl text-[#f5f5f0]">{s.num}</div>
+              {/* ∞ nicht in Bebas Neue: Apples eingebaute Bebas Neue zeichnet dort das Dharma-Type-Logo */}
+              <div className={`${s.num === '∞' ? 'font-body' : 'font-display'} text-4xl text-[#f5f5f0]`}>{s.num}</div>
               <div className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] mt-1">{s.label}</div>
             </div>
           ))}

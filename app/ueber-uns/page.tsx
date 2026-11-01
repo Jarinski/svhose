@@ -40,7 +40,8 @@ export default function UeberUnsPage() {
               { zahl: '1', text: 'Team' },
             ].map(item => (
               <div key={item.text} className="bg-[#0a0a0a] p-8 text-center">
-                <div className="font-display text-5xl text-[#f5f5f0] mb-2">{item.zahl}</div>
+                {/* ∞ nicht in Bebas Neue: Apples eingebaute Bebas Neue zeichnet dort das Dharma-Type-Logo */}
+                <div className={`${item.zahl === '∞' ? 'font-body' : 'font-display'} text-5xl text-[#f5f5f0] mb-2`}>{item.zahl}</div>
                 <div className="text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b]">{item.text}</div>
               </div>
             ))}
