@@ -143,6 +143,9 @@ erDiagram
     int person_id FK
     text bezeichnung
     int reihenfolge
+    bool eigene_kontaktdaten
+    text telefon
+    text email
   }
   trainingszeiten {
     int id PK
@@ -425,8 +428,16 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `person_id` | integer | ja | – | → `personen.id` |
 | `bezeichnung` | text | ja | – | Funktion, z. B. „1. Vorsitzender“ oder „Kassenwartin“ |
 | `reihenfolge` | integer | ja | `0` | Reihenfolge auf der Vorstandsseite |
+| `eigene_kontaktdaten` | boolean | ja | `false` | Statt Telefon und E-Mail der Person die beiden Felder darunter zeigen |
+| `telefon` | text | nein | – | Telefon für die Förderverein-Seite (nur mit `eigene_kontaktdaten`; leer = nicht anzeigen) |
+| `email` | text | nein | – | E-Mail für die Förderverein-Seite (nur mit `eigene_kontaktdaten`; leer = nicht anzeigen) |
 
 - **Besonderheit**: Ist die Tabelle leer, zeigt die Website nur den Vorsitz aus `lib/foerderverein.ts`.
+- **Doppelrolle**: Wer im SV z. B. Trainer ist und im Förderverein im Vorstand sitzt, hat nur einen
+  Satz Kontaktdaten in `personen` – und der erscheint überall. Mit `eigene_kontaktdaten` zeigt die
+  Förderverein-Seite stattdessen eigene Angaben. Sie gehören zum Eintrag, nicht zur Person, und
+  dürfen deshalb auch Zugänge mit Förderverein-Recht pflegen, die die Person selbst nicht bearbeiten
+  dürfen. Das Foto kommt weiter aus `personen`.
 
 ## 3.8 trainingszeiten
 
@@ -1069,6 +1080,7 @@ Bisherige Migrationen:
 | `0002_foerderverein_recht.sql` | 31.10.2026 | neue Spalte `zugaenge.foerderverein` (Förderverein-Recht) |
 | `0003_chronik.sql` | 04.11.2026 | neue Tabelle `seiten` für die Förderverein-Chronik (Abschnitt 3.11a) |
 | `0004_foerderverein_vorstand.sql` | 04.11.2026 | neue Tabelle `foerderverein_vorstand` (Abschnitt 3.7a) |
+| `0005_foerderverein_vorstand_kontakt.sql` | 04.11.2026 | neue Spalten `foerderverein_vorstand.eigene_kontaktdaten`, `telefon`, `email` (Doppelrolle, Abschnitt 3.7a) |
 
 Während der Entwicklung gab es kurz eine zweite Migration `0002_zwei_faktor`. Sie wurde vor dem
 ersten Deployment in `0001_verwaltung` zusammengeführt. Eine lokale Entwicklungsdatenbank, auf

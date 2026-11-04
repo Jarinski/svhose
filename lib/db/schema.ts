@@ -229,6 +229,15 @@ export const foerdervereinVorstand = sqliteTable(
     /** Funktion, z. B. "1. Vorsitzender" oder "Kassenwartin". */
     bezeichnung: text('bezeichnung').notNull(),
     reihenfolge: integer('reihenfolge').notNull().default(0),
+    /**
+     * Doppelrolle im Verein und im Förderverein: Ist das gesetzt, zeigt die Vorstandsseite statt der
+     * Kontaktdaten der Person die beiden Felder darunter (leer = nicht anzeigen). Sie gehören zum
+     * Eintrag, nicht zur Person – deshalb darf sie auch ein Zugang mit Förderverein-Recht pflegen,
+     * wenn die Person zusätzlich z. B. im Trainerteam steht.
+     */
+    eigeneKontaktdaten: integer('eigene_kontaktdaten', { mode: 'boolean' }).notNull().default(false),
+    telefon: text('telefon'),
+    email: text('email'),
     ...zeitstempel(),
   },
   t => [index('foerderverein_vorstand_person_idx').on(t.personId)],

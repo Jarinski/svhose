@@ -21,6 +21,10 @@ export interface VorstandZeile {
   personId: number | null
   neu: NeuePersonDaten | null
   bezeichnung: string
+  /** Doppelrolle: auf der Förderverein-Seite statt der Personendaten diese Telefonnummer und E-Mail zeigen. */
+  eigene: boolean
+  telefon: string
+  email: string
 }
 
 interface Props {
@@ -29,11 +33,15 @@ interface Props {
   personen: AuswahlPerson[]
   /** Personen im gespeicherten Vorstand, deren Kontaktdaten der Zugang ändern darf. */
   bearbeitbar: number[]
+  /** Übrige Personen im gespeicherten Vorstand: wo sie sonst noch stehen (darum ändert ihre Kontaktdaten ein Admin). */
+  auchEingetragen: Record<number, string[]>
 }
 
 /** Vergleichbarer Stand – Funktionen ohne Leerzeichen am Rand, so wie sie gespeichert werden. */
 function vergleichsStand(zeilen: VorstandZeile[]): string {
-  return JSON.stringify(zeilen.map(z => [z.id, z.personId, z.neu?.name ?? null, z.bezeichnung.trim()]))
+  return JSON.stringify(
+    zeilen.map(z => [z.id, z.personId, z.neu?.name ?? null, z.bezeichnung.trim(), z.eigene, z.eigene ? z.telefon.trim() : '', z.eigene ? z.email.trim() : '']),
+  )
 }
 
 export default function VorstandFormular(props: Props) {
@@ -46,7 +54,7 @@ export default function VorstandFormular(props: Props) {
   )
 }
 
-function Editor({ stand, zeilen: start, personen, bearbeitbar, ergebnis }: Props & { ergebnis: FormErgebnis }) {
+function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, ergebnis }: Props & { ergebnis: FormErgebnis }) {
   const [zeilen, setZeilen] = useState<VorstandZeile[]>(start)
   const [fokus, setFokus] = useState<string | null>(null)
   const zaehler = useRef(0)
@@ -66,11 +74,19 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, ergebnis }: Props
   function hinzufuegen(personId: number | null, neu: NeuePersonDaten | null) {
     zaehler.current += 1
     const schluessel = `neu${zaehler.current}`
-    setZeilen(zeilen.concat({ schluessel, id: null, personId, neu, bezeichnung: '' }))
+    setZeilen(zeilen.concat({ schluessel, id: null, personId, neu, bezeichnung: '', eigene: false, telefon: '', email: '' }))
     setFokus(schluessel)
   }
 
-  const daten = zeilen.map(z => ({ id: z.id, personId: z.personId, neu: z.neu, bezeichnung: z.bezeichnung }))
+  const daten = zeilen.map(z => ({
+    id: z.id,
+    personId: z.personId,
+    neu: z.neu,
+    bezeichnung: z.bezeichnung,
+    eigeneKontaktdaten: z.eigene,
+    telefon: z.eigene ? z.telefon : '',
+    email: z.eigene ? z.email : '',
+  }))
   // Vergleich mit dem Stand beim Laden – nach dem Speichern startet der Editor ohnehin neu (key).
   const geaendert = vergleichsStand(zeilen) !== vergleichsStand(start)
   useUngespeichertWarnung(geaendert)
@@ -91,7 +107,9 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, ergebnis }: Props
               const person = z.personId != null ? personNachId.get(z.personId) : undefined
               const name = z.neu ? z.neu.name : (person?.name ?? 'Unbekannte Person')
               const kontakt = (z.neu ? [z.neu.telefon, z.neu.email] : [person?.telefon, person?.email]).filter(Boolean).join(' · ')
-              const kontaktLink = z.personId != null && gespeichert.indexOf(z.personId) >= 0 && bearbeitbar.indexOf(z.personId) >= 0
+              const imGespeicherten = z.personId != null && gespeichert.indexOf(z.personId) >= 0
+              const kontaktLink = imGespeicherten && bearbeitbar.indexOf(z.personId!) >= 0
+              const anderswo = imGespeicherten && !kontaktLink ? auchEingetragen[z.personId!] : undefined
               return (
                 <li key={z.schluessel} className="border border-[#0a0a0a]/10 rounded-sm p-3 sm:p-4 bg-[#fafaf7]">
                   <div className="flex items-start gap-3">
@@ -111,6 +129,14 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, ergebnis }: Props
                           </>
                         )}
                       </div>
+                      {anderswo && (
+                        <p className="text-xs text-[#6b6b6b] mt-1 break-words">
+                          {anderswo.length > 0
+                            ? `Auch eingetragen: ${anderswo.join(' · ')}. Kontaktdaten und Foto der Person gelten überall und ändert deshalb ein Admin.`
+                            : 'Kontaktdaten und Foto der Person ändert ein Admin.'}
+                          {' Für den Förderverein kannst du unten eigene Kontaktdaten eintragen.'}
+                        </p>
+                      )}
                     </div>
                     <ReihenfolgeKnoepfe
                       index={i}
@@ -134,6 +160,69 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, ergebnis }: Props
                       className={eingabeKlasse}
                     />
                   </div>
+                  {/* Neue Personen bekommen ihre Kontaktdaten schon beim Anlegen – eigene gibt es erst danach. */}
+                  {!z.neu && (
+                    <div className="mt-3">
+                      <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={z.eigene}
+                          onChange={e => {
+                            // Beim Einschalten mit den bekannten Personendaten vorbelegen – meist ändert sich nur eins davon.
+                            const leer = !z.telefon.trim() && !z.email.trim()
+                            aendern(
+                              i,
+                              e.target.checked && leer
+                                ? { eigene: true, telefon: person?.telefon ?? '', email: person?.email ?? '' }
+                                : { eigene: e.target.checked },
+                            )
+                          }}
+                          className="w-4 h-4 shrink-0"
+                        />
+                        Eigene Kontaktdaten für den Förderverein
+                      </label>
+                      {z.eigene && (
+                        <>
+                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:max-w-2xl">
+                            <div>
+                              <label htmlFor={`${z.schluessel}-tel`} className="block text-sm font-medium mb-1.5">
+                                Telefon
+                              </label>
+                              <input
+                                id={`${z.schluessel}-tel`}
+                                type="tel"
+                                inputMode="tel"
+                                maxLength={50}
+                                autoComplete="off"
+                                value={z.telefon}
+                                onChange={e => aendern(i, { telefon: e.target.value })}
+                                className={eingabeKlasse}
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor={`${z.schluessel}-mail`} className="block text-sm font-medium mb-1.5">
+                                E-Mail
+                              </label>
+                              <input
+                                id={`${z.schluessel}-mail`}
+                                type="email"
+                                inputMode="email"
+                                maxLength={200}
+                                autoComplete="off"
+                                value={z.email}
+                                onChange={e => aendern(i, { email: e.target.value })}
+                                className={eingabeKlasse}
+                              />
+                            </div>
+                          </div>
+                          <p className="mt-1.5 text-xs text-[#6b6b6b] leading-relaxed">
+                            Erscheinen nur auf der Förderverein-Seite, statt der Kontaktdaten oben. Ein leeres Feld wird dort nicht angezeigt. Die
+                            Personendaten und alle anderen Stellen bleiben unverändert.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </li>
               )
             })}

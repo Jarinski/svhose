@@ -132,9 +132,22 @@ export const personen: Thema = {
         </Schritte>
         <p>
           Danach stehen die Vorstandsmitglieder auch in deiner Liste unter <Begriff>Personen</Begriff>. Dort ergänzt du Foto und Kontaktdaten,
-          wie unten beschrieben. Ausnahme: Hat jemand zusätzlich eine Funktion auf der Kontaktseite des SV oder einen eigenen Zugang, ändern die
-          Kontaktdaten nur Admins.
+          wie unten beschrieben. Ausnahme: Steht jemand zusätzlich an einer Stelle, die du nicht bearbeitest – etwa im Trainerteam einer
+          Mannschaft oder auf der Kontaktseite des SV – oder hat einen eigenen Zugang, ändern die Kontaktdaten nur Admins. Sie gelten nämlich
+          überall, wo die Person steht. Im Vorstand steht dann unter dem Namen, wo die Person sonst noch eingetragen ist.
         </p>
+        <Tipp titel="Andere Telefonnummer oder E-Mail für den Förderverein">
+          <p>
+            Hat jemand eine Doppelrolle, z. B. Trainer im SV und 2. Vorsitzender im Förderverein, sollen auf der Förderverein-Seite oft andere
+            Kontaktdaten stehen. Setz dafür im Vorstand bei der Person den Haken <Begriff>Eigene Kontaktdaten für den Förderverein</Begriff> und
+            trag <Begriff>Telefon</Begriff> und <Begriff>E-Mail</Begriff> ein. Die Felder sind mit den Daten der Person vorbelegt. Ein leeres
+            Feld erscheint auf der Förderverein-Seite nicht.
+          </p>
+          <p className="mt-2">
+            Das geht auch, wenn du die Person selbst nicht bearbeiten darfst. Die Personendaten und alle anderen Stellen, etwa die
+            Mannschaftsseite, bleiben unverändert. Das Foto kommt weiter von der Person.
+          </p>
+        </Tipp>
       </Abschnitt>
 
       <Abschnitt titel="Kontaktdaten und Foto ändern">

@@ -142,7 +142,7 @@ export function verwendungenLaden(db: DbZugriff): Map<number, Verwendung[]> {
     .forEach(v =>
       hinzu(v.personId, {
         art: 'foerderverein',
-        text: `Förderverein-Vorstand: ${v.bezeichnung}`,
+        text: `Förderverein-Vorstand: ${v.bezeichnung}${v.eigeneKontaktdaten ? ' (mit eigenen Kontaktdaten)' : ''}`,
         href: '/verwaltung/foerderverein-vorstand',
         oeffentlich: true,
         bezugId: v.id,

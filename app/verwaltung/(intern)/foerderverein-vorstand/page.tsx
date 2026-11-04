@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
 import { datenbank } from '@/lib/db'
-import { personenFuerAuswahl } from '@/lib/verwaltung/person-bearbeiten'
+import { personenFuerAuswahl, sichtbareVerwendungen, verwendungenLaden } from '@/lib/verwaltung/person-bearbeiten'
 import { darfFoerdervereinVorstand, kannPerson } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { knopfKlassen, Seitenkopf } from '@/components/verwaltung/ui'
@@ -17,6 +17,18 @@ export default async function FoerdervereinVorstandSeite() {
   const db = datenbank()
   const zeilen = vorstandLaden(db)
   const imVorstand = zeilen.map(z => z.personId)
+  const bearbeitbar = imVorstand.filter(id => kannPerson(db, rechte, id))
+  // Wer auch anderswo steht (z. B. im Trainerteam), dessen Kontaktdaten ändert ein Admin – sie gelten überall.
+  // Der Editor nennt diese Stellen, statt den Link kommentarlos wegzulassen.
+  const verwendungen = verwendungenLaden(db)
+  const auchEingetragen: Record<number, string[]> = {}
+  imVorstand
+    .filter(id => bearbeitbar.indexOf(id) < 0)
+    .forEach(id => {
+      auchEingetragen[id] = sichtbareVerwendungen(verwendungen.get(id), rechte)
+        .filter(v => v.art !== 'foerderverein')
+        .map(v => v.text)
+    })
 
   return (
     <>
@@ -31,10 +43,20 @@ export default async function FoerdervereinVorstandSeite() {
       />
       <VorstandFormular
         stand={vorstandStand(db)}
-        zeilen={zeilen.map(z => ({ schluessel: `v${z.id}`, id: z.id, personId: z.personId, neu: null, bezeichnung: z.bezeichnung }))}
+        zeilen={zeilen.map(z => ({
+          schluessel: `v${z.id}`,
+          id: z.id,
+          personId: z.personId,
+          neu: null,
+          bezeichnung: z.bezeichnung,
+          eigene: z.eigeneKontaktdaten,
+          telefon: z.telefon ?? '',
+          email: z.email ?? '',
+        }))}
         // Kontaktdaten des Vorstands stehen ohnehin auf der Website – für alle anderen reichen Name und Verwendung.
         personen={personenFuerAuswahl(db, rechte, imVorstand)}
-        bearbeitbar={imVorstand.filter(id => kannPerson(db, rechte, id))}
+        bearbeitbar={bearbeitbar}
+        auchEingetragen={auchEingetragen}
       />
     </>
   )

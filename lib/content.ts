@@ -534,9 +534,10 @@ export async function getFoerdervereinVorstand(): Promise<Omit<AnsprechpartnerEi
       id: v.id,
       name: v.person.name,
       funktion: v.bezeichnung,
-      email: wert(v.person.email),
-      telefon: wert(v.person.telefon),
-      whatsapp: wert(v.person.whatsapp),
+      // Doppelrolle: eigene Kontaktdaten für den Förderverein ersetzen die der Person (leer = nicht anzeigen)
+      email: wert(v.eigeneKontaktdaten ? v.email : v.person.email),
+      telefon: wert(v.eigeneKontaktdaten ? v.telefon : v.person.telefon),
+      whatsapp: v.eigeneKontaktdaten ? null : wert(v.person.whatsapp),
       foto: medienUrl(v.person.foto),
     }))
 }

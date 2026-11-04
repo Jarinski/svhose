@@ -30,6 +30,10 @@ export interface VorstandEingabe {
   /** … oder eine neue, die beim Speichern angelegt wird. */
   neu?: { name?: unknown; telefon?: unknown; email?: unknown } | null
   bezeichnung: string
+  /** Statt der Kontaktdaten der Person eigene für die Förderverein-Seite zeigen (leere Felder = nicht anzeigen). */
+  eigeneKontaktdaten?: unknown
+  telefon?: unknown
+  email?: unknown
 }
 
 /** Der Vorstand in Anzeige-Reihenfolge, mit Personennamen. */
@@ -41,6 +45,9 @@ export function vorstandLaden(db: Lesend) {
       person: schema.personen.name,
       bezeichnung: schema.foerdervereinVorstand.bezeichnung,
       reihenfolge: schema.foerdervereinVorstand.reihenfolge,
+      eigeneKontaktdaten: schema.foerdervereinVorstand.eigeneKontaktdaten,
+      telefon: schema.foerdervereinVorstand.telefon,
+      email: schema.foerdervereinVorstand.email,
     })
     .from(schema.foerdervereinVorstand)
     .innerJoin(schema.personen, eq(schema.personen.id, schema.foerdervereinVorstand.personId))
@@ -51,17 +58,29 @@ export function vorstandLaden(db: Lesend) {
 /** Prüfsumme über den gespeicherten Stand – für die optimistische Sperre (wie bei der Kontaktseite). */
 export function vorstandStand(db: Lesend): string {
   const zeilen = db.select().from(schema.foerdervereinVorstand).orderBy(asc(schema.foerdervereinVorstand.id)).all()
-  const inhalt = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.reihenfolge, z.geaendertAm])
+  const inhalt = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.reihenfolge, z.eigeneKontaktdaten, z.telefon, z.email, z.geaendertAm])
   return createHash('sha1').update(JSON.stringify(inhalt)).digest('hex').slice(0, 16)
+}
+
+function eigeneText(z: { telefon: string | null; email: string | null }): string {
+  return [z.telefon, z.email].filter(Boolean).join(' · ') || 'keine Kontaktdaten'
 }
 
 /** Lesbarer Stand für den Verlauf, dazu die Rohdaten. */
 function verlaufStand(db: Lesend) {
   const zeilen = vorstandLaden(db)
   return {
-    Vorstand: zeilen.map(z => `${z.bezeichnung}: ${z.person}`),
+    Vorstand: zeilen.map(z => `${z.bezeichnung}: ${z.person}${z.eigeneKontaktdaten ? ` (für den Förderverein: ${eigeneText(z)})` : ''}`),
     // Rohdaten (für ein späteres Wiederherstellen); die Verlaufsansicht blendet "_"-Felder aus.
-    _zeilen: zeilen.map(z => ({ id: z.id, personId: z.personId, bezeichnung: z.bezeichnung, reihenfolge: z.reihenfolge })),
+    _zeilen: zeilen.map(z => ({
+      id: z.id,
+      personId: z.personId,
+      bezeichnung: z.bezeichnung,
+      reihenfolge: z.reihenfolge,
+      eigeneKontaktdaten: z.eigeneKontaktdaten,
+      telefon: z.telefon,
+      email: z.email,
+    })),
   }
 }
 
@@ -86,8 +105,15 @@ export function vorstandAbgleichen(
     const vorherStand = verlaufStand(tx)
 
     // Eingabe prüfen
-    const soll: { id: number | null; personId: number | null; neu: { name: string; telefon: string | null; email: string | null } | null; bezeichnung: string }[] =
-      []
+    const soll: {
+      id: number | null
+      personId: number | null
+      neu: { name: string; telefon: string | null; email: string | null } | null
+      bezeichnung: string
+      eigeneKontaktdaten: boolean
+      telefon: string | null
+      email: string | null
+    }[] = []
     const gesehen: number[] = []
     const neueNamen: string[] = []
     eingabe.forEach((z, index) => {
@@ -112,6 +138,18 @@ export function vorstandAbgleichen(
         throw new MeldungsFehler(`${zeile}Bitte eine Person auswählen oder die Zeile entfernen.`)
       }
 
+      // Eigene Kontaktdaten für den Förderverein – gleiche Regeln wie bei Personen (der Name spielt hier keine Rolle).
+      const eigeneKontaktdaten = z.eigeneKontaktdaten === true
+      let telefon: string | null = null
+      let email: string | null = null
+      if (eigeneKontaktdaten) {
+        const geprueft = kontaktPruefen({ name: '-', telefon: z.telefon, email: z.email }, '', zeile)
+        const ersterFehler = geprueft.felder.telefon ?? geprueft.felder.email
+        if (ersterFehler) throw new MeldungsFehler(ersterFehler)
+        telefon = geprueft.daten.telefon
+        email = geprueft.daten.email
+      }
+
       let id: number | null = null
       if (z.id != null) {
         // Unbekannte oder doppelte ids: Stand passt nicht zur Datenbank
@@ -119,7 +157,7 @@ export function vorstandAbgleichen(
         gesehen.push(z.id)
         id = z.id
       }
-      soll.push({ id, personId, neu, bezeichnung })
+      soll.push({ id, personId, neu, bezeichnung, eigeneKontaktdaten, telefon, email })
     })
 
     let neu = 0
@@ -144,14 +182,15 @@ export function vorstandAbgleichen(
         })
         personId = person.id
       }
-      const werte = { personId, bezeichnung: z.bezeichnung, reihenfolge }
+      const werte = { personId, bezeichnung: z.bezeichnung, reihenfolge, eigeneKontaktdaten: z.eigeneKontaktdaten, telefon: z.telefon, email: z.email }
       if (z.id == null) {
         tx.insert(schema.foerdervereinVorstand).values(werte).run()
         neu++
         return
       }
       const v = vorhanden.filter(x => x.id === z.id)[0]
-      if (v.personId !== werte.personId || v.bezeichnung !== werte.bezeichnung || v.reihenfolge !== werte.reihenfolge) {
+      const anders = (Object.keys(werte) as (keyof typeof werte)[]).some(k => v[k] !== werte[k])
+      if (anders) {
         tx.update(schema.foerdervereinVorstand).set(werte).where(eq(schema.foerdervereinVorstand.id, z.id)).run()
         geaendert++
       }
