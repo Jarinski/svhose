@@ -61,8 +61,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* NEWS */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      {/* NEWS – über die volle Breite; md:px-20 hält rechts Abstand zur festen Seitenleiste */}
+      <section className="py-24 px-6 md:px-20">
         <div className="mb-12">
           <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Aktuelles</div>
           <h2 className="font-display text-5xl md:text-7xl tracking-tight">NEWS</h2>
