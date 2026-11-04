@@ -14,6 +14,16 @@ import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
 // Liest bei jedem Aufruf direkt aus der Datenbank – neue News und Termine sind sofort sichtbar.
 export const dynamic = 'force-dynamic'
 
+/** Kacheln für „Wichtiges auf einen Blick“ unter den News */
+const AUF_EINEN_BLICK = [
+  { titel: 'Mitglied werden', text: 'Aufnahmeantrag herunterladen, ausfüllen und abgeben – schon bist du dabei.', knopf: 'Zum Antrag', href: '/downloads' },
+  { titel: 'Sportangebot', text: 'Von Fußball über Judo bis Yoga: Finde die Sparte, die zu dir passt.', knopf: 'Sparten ansehen', href: '/sparten' },
+  { titel: 'Trainingszeiten', text: 'Wann und wo trainiert wird – alle Gruppen auf einen Blick.', knopf: 'Zu den Zeiten', href: '/trainingszeiten' },
+  { titel: 'Ansprechpartner', text: 'Für jede Sparte und jede Frage gibt es bei uns die richtige Person.', knopf: 'Zum Kontakt', href: '/ansprechpartner' },
+  { titel: 'Sportplätze', text: 'Plätze und Hallen in Holm-Seppensen – mit Adresse und Anfahrt.', knopf: 'Zu den Plätzen', href: '/sportplaetze' },
+  { titel: 'Förderverein', text: 'Der Förderverein unterstützt Projekte, Ausstattung und Nachwuchs im Verein.', knopf: 'Mehr erfahren', href: '/foerderverein' },
+]
+
 /** "18:30" → "18:30 Uhr"; Freitext wie "ganztägig" bleibt unverändert. */
 function uhrzeitLabel(uhrzeit: string) {
   return /^\d/.test(uhrzeit) && !/uhr/i.test(uhrzeit) ? `${uhrzeit} Uhr` : uhrzeit
@@ -55,7 +65,7 @@ export default async function HomePage() {
         <div className="animate-ticker flex gap-12 whitespace-nowrap">
           {[...sparten, ...sparten].map((s, i) => (
             <span key={i} className="font-display text-lg text-[#f5f5f0]/40 tracking-widest uppercase shrink-0">
-              {s.icon ? `${s.icon} ${s.name}` : s.name}
+              {s.name}
             </span>
           ))}
         </div>
@@ -102,6 +112,30 @@ export default async function HomePage() {
           <Link href="/news" className="inline-flex items-center gap-2 border border-[#0a0a0a] px-6 py-3 text-xs tracking-[0.15em] uppercase font-medium hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-colors">
             Alle News <ArrowRight size={14} />
           </Link>
+        </div>
+      </section>
+
+      {/* AUF EINEN BLICK */}
+      {/* Geht ohne eigenen unteren Abstand in die ebenfalls schwarzen Termine über */}
+      <section className="pt-24 pb-4 px-6 md:px-20 bg-[#0a0a0a] text-[#f5f5f0]">
+        <div className="mb-12">
+          <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Service</div>
+          <h2 className="font-display text-5xl md:text-7xl tracking-tight">WICHTIGES AUF EINEN BLICK</h2>
+        </div>
+        {/* Auf dem Handy nur Titel mit Pfeil, sonst werden sechs Kacheln untereinander sehr lang */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+          {AUF_EINEN_BLICK.map(k => (
+            <Link key={k.href} href={k.href} className="group flex flex-col bg-[#f5f5f0] text-[#0a0a0a] px-5 py-4 sm:p-7 md:p-9">
+              <h3 className="flex items-center justify-between gap-4 font-display text-2xl sm:text-3xl md:text-4xl tracking-tight">
+                {k.titel}
+                <ArrowRight size={18} aria-hidden="true" className="sm:hidden shrink-0" />
+              </h3>
+              <p className="hidden sm:block mt-3 mb-8 text-sm text-[#6b6b6b] leading-relaxed">{k.text}</p>
+              <span className="hidden sm:inline-flex mt-auto self-start items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-2.5 text-[11px] tracking-[0.15em] uppercase transition-colors group-hover:bg-[#333]">
+                {k.knopf} <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-0.5" />
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
