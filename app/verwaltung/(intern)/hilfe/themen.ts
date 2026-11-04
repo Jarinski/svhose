@@ -6,7 +6,7 @@
 import { datenbank } from '@/lib/db'
 import { bearbeitbareTeams, type Rechte } from '@/lib/verwaltung/rechte'
 import { anmelden } from './inhalte/anmelden'
-import { chronik } from './inhalte/chronik'
+import { foerdervereinSeiten } from './inhalte/foerderverein-seiten'
 import { downloads } from './inhalte/downloads'
 import { grundlagen } from './inhalte/grundlagen'
 import { kontaktseite } from './inhalte/kontaktseite'
@@ -32,7 +32,7 @@ export const THEMEN: Thema[] = [
   termine,
   sparte,
   downloads,
-  chronik,
+  foerdervereinSeiten,
   kontaktseite,
   zugaenge,
   verlauf,

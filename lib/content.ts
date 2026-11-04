@@ -9,7 +9,9 @@
  * die Lesezugriffe selbst laufen synchron über better-sqlite3.
  */
 
-import { type AnzeigeBild, bilderUmwandeln, CHRONIK_SCHLUESSEL, CHRONIK_VORLAGE, type ChronikInhalt, chronikLesen } from '@/lib/chronik'
+import { istFoerderverein } from '@/lib/foerderverein'
+import type { FoerdervereinSeite } from '@/lib/foerderverein-seiten'
+import { type AnzeigeBild, bilderUmwandeln, type SeitenInhalt, seiteLesen } from '@/lib/seiten'
 import { datenbank, schema } from '@/lib/db'
 import { FUNKTIONS_GRUPPEN } from '@/lib/db/schema'
 import { medienUrl } from '@/lib/medien'
@@ -646,12 +648,24 @@ export async function getNewsSlugs(): Promise<{ slug: string }[]> {
   return news.map(n => ({ slug: n.slug }))
 }
 
-// ─── Förderverein-Chronik ───────────────────────────────────────────────────
+// ─── Förderverein-Seiten (Chronik, Aktuelles, Mitglied werden) ─────────────
 
-/** Die Chronik, wie sie auf der Website erscheint: nur sichtbare Bausteine, Bilder als fertige URLs. */
-export async function getChronik(): Promise<ChronikInhalt<AnzeigeBild>> {
-  const zeile = await datenbank().query.seiten.findFirst({ where: (s, { eq }) => eq(s.schluessel, CHRONIK_SCHLUESSEL) })
-  const inhalt = zeile ? chronikLesen(zeile.inhalt) : CHRONIK_VORLAGE
+/** News und Downloads mit der Kategorie "Förderverein" – für die Bausteine "Meldungen" und "Unterlagen". */
+export async function getFoerdervereinDaten(): Promise<{ news: NewsPost[]; downloads: Download[] }> {
+  const [news, downloads] = await Promise.all([getAllNews(), getDownloads()])
+  return { news: news.filter(n => istFoerderverein(n.category)), downloads: downloads.filter(d => istFoerderverein(d.kategorie)) }
+}
+
+/**
+ * Eine Förderverein-Seite, wie sie auf der Website erscheint: nur sichtbare Bausteine, Bilder als
+ * fertige URLs – ohne gespeicherten Stand die Vorlage. Dazu die Daten für die automatischen Bausteine.
+ */
+export async function getFoerdervereinSeite(
+  seite: FoerdervereinSeite,
+): Promise<{ inhalt: SeitenInhalt<AnzeigeBild>; daten: { news: NewsPost[]; downloads: Download[] } }> {
+  const daten = await getFoerdervereinDaten()
+  const zeile = await datenbank().query.seiten.findFirst({ where: (s, { eq }) => eq(s.schluessel, seite.schluessel) })
+  const inhalt = zeile ? seiteLesen(zeile.inhalt) : seite.vorlage(daten.downloads)
   const anzeige = bilderUmwandeln(inhalt, bild => (bild ? { src: medienUrl(bild.pfad) as string, breite: bild.breite, hoehe: bild.hoehe } : null))
-  return { einleitung: anzeige.einleitung, bausteine: anzeige.bausteine.filter(b => b.sichtbar) }
+  return { inhalt: { einleitung: anzeige.einleitung, bausteine: anzeige.bausteine.filter(b => b.sichtbar) }, daten }
 }

@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
-import ChronikBausteine, { ChronikKopf } from '@/components/foerderverein/ChronikBausteine'
-import Unternavigation from '@/components/foerderverein/Unternavigation'
-import { getChronik } from '@/lib/content'
+import SeitenAnsicht from '@/components/foerderverein/SeitenAnsicht'
+import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 
 // Chronik des Fördervereins: wie aus der Elterninitiative der eigene Sportplatz wurde.
-// Inhalt und Aufbau pflegt der Förderverein selbst unter /verwaltung/chronik (lib/chronik.ts);
-// solange dort nichts gespeichert ist, steht hier die Vorlage aus dem Code.
+// Inhalt und Aufbau pflegt der Förderverein selbst unter /verwaltung/foerderverein-seiten
+// (lib/foerderverein-seiten.ts); solange dort nichts gespeichert ist, steht hier die Vorlage.
 
 export const metadata: Metadata = {
   title: 'Chronik – Förderverein',
@@ -15,14 +14,6 @@ export const metadata: Metadata = {
 // Änderungen aus der Verwaltung sofort zeigen
 export const dynamic = 'force-dynamic'
 
-export default async function FoerdervereinChronikPage() {
-  const chronik = await getChronik()
-
-  return (
-    <div className="pt-32 pb-24">
-      <ChronikKopf einleitung={chronik.einleitung} />
-      <Unternavigation aktiv="/foerderverein/chronik" />
-      <ChronikBausteine bausteine={chronik.bausteine} />
-    </div>
-  )
+export default function FoerdervereinChronikPage() {
+  return <SeitenAnsicht seite={foerdervereinSeite('chronik')!} />
 }

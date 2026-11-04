@@ -88,7 +88,7 @@ export function medienFreigeben(pfad: string | null | undefined): void {
   }
   // Auch Bilder, die im Markdown-Text einer News eingebunden sind, zählen als verwendet.
   if (sqlite.prepare("SELECT 1 FROM news WHERE instr(inhalt, ?) > 0 LIMIT 1").get('/medien/' + pfad)) return
-  // Frei gestaltete Seiten (Chronik) speichern ihre Bilder im JSON-Dokument als "pfad":"<pfad>".
+  // Frei gestaltete Seiten (Förderverein-Seiten) speichern ihre Bilder im JSON-Dokument als "pfad":"<pfad>".
   if (sqlite.prepare('SELECT 1 FROM seiten WHERE instr(inhalt, ?) > 0 LIMIT 1').get(JSON.stringify(pfad))) return
   const datei = medienDatei(pfad)
   if (datei && fs.existsSync(datei)) fs.unlinkSync(datei)

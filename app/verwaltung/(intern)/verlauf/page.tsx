@@ -26,7 +26,7 @@ const TYP_NAMEN: Record<string, string> = {
   news: 'News',
   termine: 'Termine',
   downloads: 'Downloads',
-  seiten: 'Seiten (Chronik)',
+  seiten: 'Förderverein-Seiten',
   zugaenge: 'Zugänge',
   geraete: 'Anmeldungen & Geräte',
   anmelde_codes: 'Anmelde-Codes',

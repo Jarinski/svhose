@@ -29,7 +29,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 |---|---|---|
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
-| **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten wie die Förderverein-Chronik) |
+| **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten des Fördervereins) |
 | **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
@@ -541,18 +541,19 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 
 ## 3.11a seiten (frei gestaltete Seiten)
 
-- **Zweck**: Seiten, deren Inhalt **und** Aufbau komplett in der Verwaltung entstehen. Heute nur die
-  Chronik des Fördervereins (`/foerderverein/chronik`, bearbeitet unter `/verwaltung/chronik` von
-  Admins und Zugängen mit Förderverein-Recht).
+- **Zweck**: Seiten, deren Inhalt **und** Aufbau komplett in der Verwaltung entstehen: die
+  Förderverein-Seiten Chronik, Aktuelles und Mitglied werden (`/foerderverein/<seite>`, bearbeitet unter
+  `/verwaltung/foerderverein-seiten` von Admins und Zugängen mit Förderverein-Recht). Welche Seiten es
+  gibt, steht mit Überschrift und Vorlage in `lib/foerderverein-seiten.ts`.
 - **Beziehungen**: keine Fremdschlüssel. Bilder stehen als relative Medienpfade im JSON-Dokument.
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
 | `id` | integer | ja | automatisch | Primärschlüssel |
-| `schluessel` | text | ja, **eindeutig** | – | welche Seite, z. B. `foerderverein-chronik` |
+| `schluessel` | text | ja, **eindeutig** | – | welche Seite: `foerderverein-chronik`, `foerderverein-aktuelles`, `foerderverein-mitglied-werden` |
 | `inhalt` | text (JSON) | ja | – | das ganze Dokument, Aufbau siehe unten |
 
-- **Aufbau von `inhalt`** (Typen und Vorlage in `lib/chronik.ts`): `{ einleitung, bausteine: [...] }`.
+- **Aufbau von `inhalt`** (Typen in `lib/seiten.ts`): `{ einleitung, bausteine: [...] }`.
   Jeder Baustein hat `art` und `sichtbar` (ausgeblendete bleiben gespeichert, erscheinen aber nicht):
   - `zeitleiste`: `ueberschrift`, `darstellung` (`kacheln` | `zeitstrahl` | `gross`), `eintraege` mit `zeit`, `titel`, `text`, `bild`
   - `text`: `ueberschrift`, `text` (Markdown), `bild`, `bildPosition` (`rechts` | `links`), `hintergrund` (`hell` | `dunkel`)
@@ -560,12 +561,20 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
   - `liste`: `ueberschrift`, `text`, `punkte` (Strings), `darstellung` (`kaestchen` | `punkte`)
   - `zahlen`: `ueberschrift`, `eintraege` mit `zahl` und `text`, `hintergrund`
   - `zitat`: `text`, `quelle`
+  - `karten`: `ueberschrift`, `eintraege` mit `titel` und `text`
+  - `aufruf` (Kasten mit Knopf): `ueberschrift`, `text`, `hintergrund`, `downloads` (ids aus `downloads`, je ein Knopf), `email` (Knopf „E-Mail schreiben“)
+  - `meldungen`: `ueberschrift`, `darstellung` (`kacheln` | `zeilen`), `anzahl` (0 = alle, 3, 6), `leerTitel`, `leerText` (Markdown, wenn es keine Meldungen gibt) – zeigt die News der Kategorie „Förderverein“
+  - `unterlagen`: `ueberschrift`, `auswahl` (`uebrige` = ohne die Downloads aus einem `aufruf`, `alle`) – zeigt die Downloads der Kategorie „Förderverein“
 
-  Ein `bild` ist `{ pfad, breite, hoehe }` oder `null`.
+  Ein `bild` ist `{ pfad, breite, hoehe }` oder `null`. Die `downloads` in `aufruf` sind keine
+  Fremdschlüssel: Wird ein Download gelöscht, fällt sein Knopf auf der Website einfach weg.
 - **Besonderheiten**:
-  - Fehlt die Zeile, zeigt die Website die Vorlage aus `lib/chronik.ts` (der Stand vor der Verwaltung).
+  - Fehlt die Zeile, zeigt die Website die Vorlage aus `lib/foerderverein-seiten.ts` (der Stand vor der
+    Verwaltung). Die Vorlage von Mitglied werden setzt Downloads, deren Titel „Beitritt“, „Mitglied“ oder
+    „Aufnahme“ enthält, als Knöpfe in den Kasten „Beitrittserklärung“ – wie die Seite vorher.
   - Die Datenbank prüft den Aufbau nicht. Pflichtangaben und Längen prüft die Speicherlogik
-    (`lib/verwaltung/inhalte/chronik.ts`); beim Lesen bringt `chronikLesen` unbekannte Werte auf den Standard.
+    (`seitePruefen` in `lib/seiten.ts`, aufgerufen von `lib/verwaltung/inhalte/seiten.ts`); beim Lesen bringt
+    `seiteLesen` unbekannte Werte auf den Standard.
   - Gespeichert wird immer das ganze Dokument; `geaendert_am` dient als optimistische Sperre.
   - `medienFreigeben` löscht kein Bild, dessen Pfad noch in einem `inhalt` vorkommt.
 
@@ -1078,7 +1087,7 @@ Bisherige Migrationen:
 | `0000_initial.sql` | 03.10.2026 | alle Inhaltstabellen (Abschnitte 3.1–3.11) |
 | `0001_verwaltung.sql` | 20.10.2026 | neue Tabellen `zugaenge` (mit Benutzername, Passwort-Hash und App-Geheimnis), `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` samt Indizes und CHECKs (Abschnitte 3.12–3.17). Die Inhaltstabellen ändert sie nicht |
 | `0002_foerderverein_recht.sql` | 31.10.2026 | neue Spalte `zugaenge.foerderverein` (Förderverein-Recht) |
-| `0003_chronik.sql` | 04.11.2026 | neue Tabelle `seiten` für die Förderverein-Chronik (Abschnitt 3.11a) |
+| `0003_chronik.sql` | 04.11.2026 | neue Tabelle `seiten` für die Förderverein-Seiten (Abschnitt 3.11a; zuerst nur die Chronik) |
 | `0004_foerderverein_vorstand.sql` | 04.11.2026 | neue Tabelle `foerderverein_vorstand` (Abschnitt 3.7a) |
 | `0005_foerderverein_vorstand_kontakt.sql` | 04.11.2026 | neue Spalten `foerderverein_vorstand.eigene_kontaktdaten`, `telefon`, `email` (Doppelrolle, Abschnitt 3.7a) |
 

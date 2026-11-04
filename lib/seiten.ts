@@ -1,16 +1,16 @@
 /**
- * lib/chronik.ts
+ * lib/seiten.ts
  *
- * Aufbau der Förderverein-Chronik (/foerderverein/chronik): eine Einleitung und eine Folge von
- * Bausteinen – Zeitleiste, Text, Foto, Stichpunkte, Zahlen, Zitat –, jeder mit eigener
- * Darstellung. Gespeichert als JSON-Dokument in der Tabelle seiten, bearbeitet unter
- * /verwaltung/chronik von Admins und Zugängen mit Förderverein-Recht.
+ * Aufbau der frei gestalteten Seiten (heute die Förderverein-Seiten Chronik, Aktuelles und
+ * Mitglied werden, siehe lib/foerderverein-seiten.ts): eine Einleitung und eine Folge von
+ * Bausteinen, jeder mit eigener Darstellung. Die meisten Bausteine tragen ihren Inhalt selbst
+ * (Zeitleiste, Text, Foto, Karten …); "Meldungen" und "Unterlagen" zeigen automatisch die News und
+ * Downloads des Fördervereins. Gespeichert als JSON-Dokument in der Tabelle seiten, bearbeitet unter
+ * /verwaltung/foerderverein-seiten von Admins und Zugängen mit Förderverein-Recht.
  *
  * Nur Typen und reine Funktionen ohne Datenbank und ohne Node-Module: nutzbar auf der Website,
- * im Editor (Client) und in der Speicherlogik (lib/verwaltung/inhalte/chronik.ts).
+ * im Editor (Client) und in der Speicherlogik (lib/verwaltung/inhalte/seiten.ts).
  */
-
-export const CHRONIK_SCHLUESSEL = 'foerderverein-chronik'
 
 /** Bild im gespeicherten Dokument: Pfad im Medienordner und Maße (für das Seitenverhältnis). */
 export interface GespeichertesBild {
@@ -31,12 +31,19 @@ export const LISTEN_DARSTELLUNGEN = ['kaestchen', 'punkte'] as const
 export const HINTERGRUENDE = ['hell', 'dunkel'] as const
 export const BILD_POSITIONEN = ['rechts', 'links'] as const
 export const BILD_BREITEN = ['normal', 'breit'] as const
+export const MELDUNGEN_DARSTELLUNGEN = ['kacheln', 'zeilen'] as const
+/** Wie viele Meldungen höchstens – 0 = alle. */
+export const MELDUNGEN_ANZAHLEN = [0, 3, 6] as const
+/** "uebrige": ohne die Downloads, die schon in einem Kasten mit Knopf stehen. */
+export const UNTERLAGEN_AUSWAHL = ['uebrige', 'alle'] as const
 
 export type ZeitleistenDarstellung = (typeof ZEITLEISTE_DARSTELLUNGEN)[number]
 export type ListenDarstellung = (typeof LISTEN_DARSTELLUNGEN)[number]
 export type Hintergrund = (typeof HINTERGRUENDE)[number]
 export type BildPosition = (typeof BILD_POSITIONEN)[number]
 export type BildBreite = (typeof BILD_BREITEN)[number]
+export type MeldungenDarstellung = (typeof MELDUNGEN_DARSTELLUNGEN)[number]
+export type UnterlagenAuswahl = (typeof UNTERLAGEN_AUSWAHL)[number]
 
 export interface ZeitEintrag<B = GespeichertesBild> {
   /** Nur im Editor: stabiler Schlüssel (React, Dateifeld des Fotos). Wird nicht gespeichert. */
@@ -54,6 +61,12 @@ export interface ZahlEintrag {
   text: string
 }
 
+export interface KartenEintrag {
+  schluessel?: string
+  titel: string
+  text: string
+}
+
 interface Basis {
   /** Nur im Editor, siehe ZeitEintrag. */
   schluessel?: string
@@ -68,31 +81,46 @@ export type Baustein<B = GespeichertesBild> =
   | (Basis & { art: 'liste'; ueberschrift: string; text: string; punkte: string[]; darstellung: ListenDarstellung })
   | (Basis & { art: 'zahlen'; ueberschrift: string; eintraege: ZahlEintrag[]; hintergrund: Hintergrund })
   | (Basis & { art: 'zitat'; text: string; quelle: string })
+  | (Basis & { art: 'karten'; ueberschrift: string; eintraege: KartenEintrag[] })
+  /** Hervorgehobener Kasten; Knöpfe für die gewählten Downloads (ids) und auf Wunsch "E-Mail schreiben". */
+  | (Basis & { art: 'aufruf'; ueberschrift: string; text: string; hintergrund: Hintergrund; downloads: number[]; email: boolean })
+  /** Die News mit der Kategorie "Förderverein"; ohne News steht dort leerTitel/leerText (Markdown). */
+  | (Basis & { art: 'meldungen'; ueberschrift: string; darstellung: MeldungenDarstellung; anzahl: number; leerTitel: string; leerText: string })
+  /** Die Downloads mit der Kategorie "Förderverein". */
+  | (Basis & { art: 'unterlagen'; ueberschrift: string; auswahl: UnterlagenAuswahl })
 
 export type BausteinArt = Baustein['art']
 
-export interface ChronikInhalt<B = GespeichertesBild> {
-  /** Text unter der Überschrift CHRONIK. */
+export interface SeitenInhalt<B = GespeichertesBild> {
+  /** Text unter der großen Überschrift der Seite. */
   einleitung: string
   bausteine: Baustein<B>[]
 }
 
 // ─── Namen für Editor und Verlauf ───────────────────────────────────────────
 
-export const BAUSTEIN_ARTEN: { art: BausteinArt; name: string; beschreibung: string }[] = [
-  { art: 'zeitleiste', name: 'Zeitleiste', beschreibung: 'Stationen mit Jahr, Titel, Text und Foto' },
+/** automatisch: zeigt Inhalte, die anderswo in der Verwaltung gepflegt werden (News, Downloads). */
+export const BAUSTEIN_ARTEN: { art: BausteinArt; name: string; beschreibung: string; automatisch?: boolean }[] = [
   { art: 'text', name: 'Textabschnitt', beschreibung: 'Überschrift und Fließtext, wahlweise mit Foto' },
+  { art: 'karten', name: 'Karten', beschreibung: 'Kästen nebeneinander mit Titel und kurzem Text' },
+  { art: 'aufruf', name: 'Kasten mit Knopf', beschreibung: 'Hervorgehoben, mit Knopf zum Herunterladen oder Mailen' },
+  { art: 'zeitleiste', name: 'Zeitleiste', beschreibung: 'Stationen mit Jahr, Titel, Text und Foto' },
   { art: 'bild', name: 'Foto', beschreibung: 'Ein großes Foto mit Bildunterschrift' },
   { art: 'liste', name: 'Stichpunkte', beschreibung: 'Kurze Punkte, z. B. Ideen oder Unterstützer' },
   { art: 'zahlen', name: 'Zahlen & Fakten', beschreibung: 'Große Zahlen mit kurzer Erklärung' },
   { art: 'zitat', name: 'Zitat', beschreibung: 'Ein hervorgehobener Satz mit Quelle' },
+  { art: 'meldungen', name: 'Meldungen', beschreibung: 'Die News mit der Kategorie „Förderverein“', automatisch: true },
+  { art: 'unterlagen', name: 'Unterlagen', beschreibung: 'Die Downloads des Fördervereins', automatisch: true },
 ]
 
 export function bausteinName(art: BausteinArt): string {
   return BAUSTEIN_ARTEN.filter(a => a.art === art)[0]?.name ?? art
 }
 
-export const DARSTELLUNG_NAMEN: Record<ZeitleistenDarstellung | ListenDarstellung | Hintergrund | BildPosition | BildBreite, string> = {
+export const DARSTELLUNG_NAMEN: Record<
+  ZeitleistenDarstellung | ListenDarstellung | Hintergrund | BildPosition | BildBreite | MeldungenDarstellung | UnterlagenAuswahl,
+  string
+> = {
   kacheln: 'Kacheln',
   zeitstrahl: 'Zeitstrahl',
   gross: 'Groß mit Fotos',
@@ -104,6 +132,9 @@ export const DARSTELLUNG_NAMEN: Record<ZeitleistenDarstellung | ListenDarstellun
   links: 'Foto links',
   normal: 'Normal',
   breit: 'Volle Breite',
+  zeilen: 'Zeilen',
+  uebrige: 'Nur die übrigen',
+  alle: 'Alle',
 }
 
 // ─── Leere Bausteine (Editor) ───────────────────────────────────────────────
@@ -122,71 +153,15 @@ export function neuerBaustein(art: BausteinArt): Baustein<never> {
       return { art, sichtbar: true, ueberschrift: '', eintraege: [{ zahl: '', text: '' }], hintergrund: 'dunkel' }
     case 'zitat':
       return { art, sichtbar: true, text: '', quelle: '' }
+    case 'karten':
+      return { art, sichtbar: true, ueberschrift: '', eintraege: [{ titel: '', text: '' }] }
+    case 'aufruf':
+      return { art, sichtbar: true, ueberschrift: '', text: '', hintergrund: 'dunkel', downloads: [], email: true }
+    case 'meldungen':
+      return { art, sichtbar: true, ueberschrift: '', darstellung: 'kacheln', anzahl: 0, leerTitel: 'Noch keine Meldungen', leerText: '' }
+    case 'unterlagen':
+      return { art, sichtbar: true, ueberschrift: 'Unterlagen', auswahl: 'uebrige' }
   }
-}
-
-// ─── Vorlage ────────────────────────────────────────────────────────────────
-
-/**
- * Stand der Chronik, solange in der Verwaltung noch nichts gespeichert wurde.
- * Quellen: alte Website fshose.de und der Artikel „Unsere Unterstützer“ (2014).
- */
-export const CHRONIK_VORLAGE: ChronikInhalt = {
-  einleitung: 'Von der Idee zum eigenen Platz – so ist der Sportplatz am Tostedter Weg entstanden.',
-  bausteine: [
-    {
-      art: 'zeitleiste',
-      sichtbar: true,
-      ueberschrift: '',
-      darstellung: 'kacheln',
-      eintraege: [
-        {
-          zeit: 'Die Idee',
-          titel: 'Eltern gründen den Förderverein',
-          text: 'Eltern der damaligen E1-Jugend (U11) wollten ihren Kindern und den nächsten Jahrgängen ein besseres sportliches Umfeld bieten. Ihr Ziel: ein eigener Sportplatz für Holm-Seppensen.',
-          bild: null,
-        },
-        {
-          zeit: '2013',
-          titel: 'Jeder Quadratmeter zählt',
-          text: 'Brunsberglauf, Glühweinstand, Stadtfest und symbolische Patenschaften für Quadratmeter des künftigen Platzes: Allein 2013 kamen knapp 50 neue Mitglieder dazu.',
-          bild: null,
-        },
-        {
-          zeit: '2014',
-          titel: 'Gemeinsam für Holm-Seppensen',
-          text: 'Geschäfte im Ort spenden beim Kauf ausgewählter Produkte einen Teil des Erlöses für den Sportplatz. Bei der Baustellenbesichtigung des neuen REWE-Markts kamen in vier Stunden 400 € an Spenden zusammen.',
-          bild: null,
-        },
-        {
-          zeit: 'Oktober 2017',
-          titel: 'Spatenstich am Tostedter Weg',
-          text: 'Die Stadt Buchholz hat ein 2,9 Hektar großes Gelände gekauft und stellt es dem SV zur Verfügung. Am 27. Oktober 2017 ist Spatenstich – danach werden rund 12.000 m³ Erde bewegt.',
-          bild: null,
-        },
-        {
-          zeit: '2018',
-          titel: 'Platz und Vereinshaus entstehen',
-          text: 'Gebaut werden ein Naturrasenplatz mit Flutlicht und Beregnung und der erste Teil des Vereinshauses mit Umkleiden und Vereinsraum. Ehrenamtliche bepflanzen den Wall und setzen die Hecke – so bleiben die Kosten im Rahmen.',
-          bild: null,
-        },
-        {
-          zeit: 'Heute',
-          titel: 'Der Platz ist da',
-          text: 'Am Tostedter Weg hat der SV heute seine eigene Sportstätte mit Rasenplatz und Vereinsheim. Die Bandenwerbung rund um den Platz soll den weiteren Ausbau mitfinanzieren.',
-          bild: null,
-        },
-      ],
-    },
-    {
-      art: 'liste',
-      sichtbar: true,
-      ueberschrift: 'Ideen für die Zukunft',
-      text: 'Auf dem Gelände ist Platz für mehr. Bei der Planung 2017 standen diese Ideen auf der Liste:',
-      punkte: ['Größeres Vereinshaus mit vier Umkleiden und Gymnastikraum', 'Beachvolleyballfeld', 'Laufbahn', 'Bocciaanlage', 'Zusätzlicher Trainingsplatz'],
-      darstellung: 'kaestchen',
-    },
-  ],
 }
 
 // ─── Prüfen (Speichern in der Verwaltung und Übung in der Hilfe) ─────────────
@@ -207,10 +182,12 @@ const GRENZEN = {
   unterschrift: 300,
   zitat: 1000,
   quelle: 160,
+  karten: 12,
+  downloads: 20,
 }
 
-/** Ränder abschneiden und leere Einträge weglassen – so, wie die Chronik gespeichert wird. */
-export function chronikBereinigen<B>(inhalt: ChronikInhalt<B>): ChronikInhalt<B> {
+/** Ränder abschneiden und leere Einträge weglassen – so, wie die Seite gespeichert wird. */
+export function seiteBereinigen<B>(inhalt: SeitenInhalt<B>): SeitenInhalt<B> {
   const t = (s: string) => s.trim()
   return {
     einleitung: t(inhalt.einleitung),
@@ -234,19 +211,27 @@ export function chronikBereinigen<B>(inhalt: ChronikInhalt<B>): ChronikInhalt<B>
           return { ...b, ueberschrift: t(b.ueberschrift), eintraege: b.eintraege.map(e => ({ ...e, zahl: t(e.zahl), text: t(e.text) })).filter(e => e.zahl || e.text) }
         case 'zitat':
           return { ...b, text: t(b.text), quelle: t(b.quelle) }
+        case 'karten':
+          return { ...b, ueberschrift: t(b.ueberschrift), eintraege: b.eintraege.map(e => ({ ...e, titel: t(e.titel), text: t(e.text) })).filter(e => e.titel || e.text) }
+        case 'aufruf':
+          return { ...b, ueberschrift: t(b.ueberschrift), text: t(b.text), downloads: b.downloads.filter((id, i) => b.downloads.indexOf(id) === i) }
+        case 'meldungen':
+          return { ...b, ueberschrift: t(b.ueberschrift), leerTitel: t(b.leerTitel), leerText: t(b.leerText) }
+        case 'unterlagen':
+          return { ...b, ueberschrift: t(b.ueberschrift) }
       }
     }),
   }
 }
 
 /**
- * Prüft Pflichtangaben und Längen einer bereinigten Chronik. Liefert die erste Unstimmigkeit
+ * Prüft Pflichtangaben und Längen einer bereinigten Seite. Liefert die erste Unstimmigkeit
  * als Satz für die Person am Bildschirm – oder null, wenn alles passt.
  */
-export function chronikPruefen<B>(inhalt: ChronikInhalt<B>): string | null {
+export function seitePruefen<B>(inhalt: SeitenInhalt<B>): string | null {
   const zuLang = (wert: string, grenze: number) => wert.length > grenze
   if (zuLang(inhalt.einleitung, GRENZEN.einleitung)) return `Die Einleitung ist zu lang (höchstens ${GRENZEN.einleitung} Zeichen).`
-  if (inhalt.bausteine.length > GRENZEN.bausteine) return `Die Chronik hat zu viele Bausteine (höchstens ${GRENZEN.bausteine}).`
+  if (inhalt.bausteine.length > GRENZEN.bausteine) return `Die Seite hat zu viele Bausteine (höchstens ${GRENZEN.bausteine}).`
 
   for (let i = 0; i < inhalt.bausteine.length; i++) {
     const b = inhalt.bausteine[i]
@@ -297,6 +282,30 @@ export function chronikPruefen<B>(inhalt: ChronikInhalt<B>): string | null {
       case 'zitat':
         if (!b.text) return `${wo}: Bitte das Zitat eintragen – oder den Baustein entfernen.`
         meldung = laenge('Das Zitat', b.text, GRENZEN.zitat) ?? laenge('Die Quelle', b.quelle, GRENZEN.quelle)
+        break
+      case 'karten':
+        if (b.eintraege.length === 0) return `${wo}: Bitte mindestens eine Karte eintragen – oder den Baustein entfernen.`
+        if (b.eintraege.length > GRENZEN.karten) return `${wo}: zu viele Karten (höchstens ${GRENZEN.karten}).`
+        meldung = laenge('Die Überschrift', b.ueberschrift, GRENZEN.ueberschrift)
+        for (let j = 0; !meldung && j < b.eintraege.length; j++) {
+          const e = b.eintraege[j]
+          if (!e.titel) meldung = `${wo}: Bei Karte ${j + 1} fehlt der Titel.`
+          else meldung = laenge(`Bei Karte ${j + 1} der Titel`, e.titel, GRENZEN.titel) ?? laenge(`Bei Karte ${j + 1} der Text`, e.text, GRENZEN.kurztext)
+        }
+        break
+      case 'aufruf':
+        if (!b.ueberschrift && !b.text) return `${wo}: Bitte eine Überschrift oder einen Text eintragen – oder den Baustein entfernen.`
+        if (b.downloads.length > GRENZEN.downloads) return `${wo}: zu viele Downloads (höchstens ${GRENZEN.downloads}).`
+        meldung = laenge('Die Überschrift', b.ueberschrift, GRENZEN.ueberschrift) ?? laenge('Der Text', b.text, GRENZEN.kurztext)
+        break
+      case 'meldungen':
+        meldung =
+          laenge('Die Überschrift', b.ueberschrift, GRENZEN.ueberschrift) ??
+          laenge('Die Überschrift für „keine Meldungen“', b.leerTitel, GRENZEN.ueberschrift) ??
+          laenge('Der Text für „keine Meldungen“', b.leerText, GRENZEN.kurztext)
+        break
+      case 'unterlagen':
+        meldung = laenge('Die Überschrift', b.ueberschrift, GRENZEN.ueberschrift)
         break
     }
     if (meldung) return meldung
@@ -384,6 +393,38 @@ function bausteinLesen(roh: unknown): Baustein | null {
       }
     case 'zitat':
       return { ...basis, art: 'zitat', text: text(b.text), quelle: text(b.quelle) }
+    case 'karten':
+      return {
+        ...basis,
+        art: 'karten',
+        ueberschrift: text(b.ueberschrift),
+        eintraege: liste(b.eintraege).map(roh => {
+          const e = objekt(roh)
+          return { ...schluesselLesen(e.schluessel), titel: text(e.titel), text: text(e.text) }
+        }),
+      }
+    case 'aufruf':
+      return {
+        ...basis,
+        art: 'aufruf',
+        ueberschrift: text(b.ueberschrift),
+        text: text(b.text),
+        hintergrund: wahl(b.hintergrund, HINTERGRUENDE),
+        downloads: liste(b.downloads).filter((id): id is number => typeof id === 'number' && Number.isInteger(id) && id > 0),
+        email: b.email === true,
+      }
+    case 'meldungen':
+      return {
+        ...basis,
+        art: 'meldungen',
+        ueberschrift: text(b.ueberschrift),
+        darstellung: wahl(b.darstellung, MELDUNGEN_DARSTELLUNGEN),
+        anzahl: MELDUNGEN_ANZAHLEN.indexOf(b.anzahl as 0) >= 0 ? (b.anzahl as number) : 0,
+        leerTitel: text(b.leerTitel),
+        leerText: text(b.leerText),
+      }
+    case 'unterlagen':
+      return { ...basis, art: 'unterlagen', ueberschrift: text(b.ueberschrift), auswahl: wahl(b.auswahl, UNTERLAGEN_AUSWAHL) }
     default:
       return null
   }
@@ -394,7 +435,7 @@ function bausteinLesen(roh: unknown): Baustein | null {
  * fehlende Felder leer, unbekannte Darstellungen auf den Standard, unbekannte Bausteine weg.
  * Prüft keine Pflichtfelder – das macht die Speicherlogik.
  */
-export function chronikLesen(roh: unknown): ChronikInhalt {
+export function seiteLesen(roh: unknown): SeitenInhalt {
   const d = objekt(roh)
   return {
     einleitung: text(d.einleitung),
@@ -405,7 +446,7 @@ export function chronikLesen(roh: unknown): ChronikInhalt {
 }
 
 /** Ersetzt jedes Bild des Dokuments – auch leere Bildplätze (Wert null) mit ihrem Editor-Schlüssel. */
-export function bilderUmwandeln<A, B>(inhalt: ChronikInhalt<A>, f: (bild: A | null, schluessel: string | undefined) => B | null): ChronikInhalt<B> {
+export function bilderUmwandeln<A, B>(inhalt: SeitenInhalt<A>, f: (bild: A | null, schluessel: string | undefined) => B | null): SeitenInhalt<B> {
   return {
     einleitung: inhalt.einleitung,
     bausteine: inhalt.bausteine.map((b): Baustein<B> => {
@@ -417,7 +458,7 @@ export function bilderUmwandeln<A, B>(inhalt: ChronikInhalt<A>, f: (bild: A | nu
 }
 
 /** Alle Bildpfade des Dokuments. */
-export function chronikBilder(inhalt: ChronikInhalt): string[] {
+export function seitenBilder(inhalt: SeitenInhalt): string[] {
   const pfade: string[] = []
   bilderUmwandeln(inhalt, bild => {
     if (bild) pfade.push(bild.pfad)

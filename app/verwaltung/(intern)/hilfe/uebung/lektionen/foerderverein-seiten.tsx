@@ -1,32 +1,32 @@
 'use client'
 
 /**
- * Übung "Chronik des Fördervereins" – mit dem echten Editor (ChronikEditor aus
- * app/verwaltung/(intern)/chronik/ChronikFormular.tsx) und der echten Darstellung der Website
- * (components/foerderverein/ChronikBausteine). Geprüft wird mit denselben Regeln und Meldungen wie beim
- * echten Speichern (chronikBereinigen, chronikPruefen aus lib/chronik.ts). Gespeichert wird nichts;
+ * Übung "Seiten des Fördervereins" (am Beispiel der Chronik) – mit dem echten Editor (SeitenEditor aus
+ * app/verwaltung/(intern)/chronik/SeitenFormular.tsx) und der echten Darstellung der Website
+ * (components/foerderverein/SeitenBausteine). Geprüft wird mit denselben Regeln und Meldungen wie beim
+ * echten Speichern (seiteBereinigen, seitePruefen aus lib/seiten.ts). Gespeichert wird nichts;
  * gewählte Fotos bleiben im Browser.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
-import ChronikBausteine from '@/components/foerderverein/ChronikBausteine'
+import SeitenBausteine from '@/components/foerderverein/SeitenBausteine'
 import { knopfKlassen } from '@/components/verwaltung/ui'
+import { CHRONIK_VORLAGE } from '@/lib/foerderverein-seiten'
 import {
   bilderUmwandeln,
-  CHRONIK_VORLAGE,
-  chronikBereinigen,
-  chronikPruefen,
+  seiteBereinigen,
+  seitePruefen,
   type AnzeigeBild,
   type Baustein,
-  type ChronikInhalt,
+  type SeitenInhalt,
   type GespeichertesBild,
-} from '@/lib/chronik'
-import { ChronikEditor, type EditorBild, type EditorStand } from '../../../chronik/ChronikFormular'
+} from '@/lib/seiten'
+import { SeitenEditor, type EditorBild, type EditorStand } from '../../../foerderverein-seiten/SeitenFormular'
 import type { Lektion, LektionProps } from '../typen'
 import { Quiz, Spielwiese, UebungsLeiste, Vorschau } from '../werkzeuge'
 
-type Gespeichert = ChronikInhalt<AnzeigeBild>
+type Gespeichert = SeitenInhalt<AnzeigeBild>
 type Rueckmeldung = { art: 'erfolg' | 'fehler' | 'hinweis'; text: React.ReactNode }
 
 /** Für alle, die gerade kein eigenes Foto zur Hand haben: ein gezeichneter Sportplatz. */
@@ -40,7 +40,7 @@ const BEISPIELBILD =
 const START = bilderUmwandeln<GespeichertesBild, EditorBild>(CHRONIK_VORLAGE, () => null)
 const START_STATIONEN = START.bausteine.reduce((n, b) => n + (b.art === 'zeitleiste' ? b.eintraege.length : 0), 0)
 
-function alsAnzeige(inhalt: ChronikInhalt<EditorBild>): Gespeichert {
+function alsAnzeige(inhalt: SeitenInhalt<EditorBild>): Gespeichert {
   return bilderUmwandeln(inhalt, bild => (bild ? { src: bild.url, breite: bild.breite, hoehe: bild.hoehe } : null))
 }
 
@@ -91,8 +91,8 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
 
   async function speichern() {
     if (!aktuell.current) return
-    const neu = chronikBereinigen(aktuell.current.anzeige)
-    const fehler = chronikPruefen(neu)
+    const neu = seiteBereinigen(aktuell.current.anzeige)
+    const fehler = seitePruefen(neu)
     if (fehler) {
       setMeldung({ art: 'fehler', text: fehler })
       return
@@ -118,7 +118,7 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
     }
     setGespeichert(neu)
     setWebsite(await fotosKopieren(neu))
-    setMeldung({ art: 'erfolg', text: 'Gespeichert. Die Chronik ist sofort auf der Website zu sehen.' })
+    setMeldung({ art: 'erfolg', text: 'Gespeichert. Die Seite „Chronik“ ist sofort auf der Website zu sehen.' })
     geloest()
   }
 
@@ -128,7 +128,7 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h3 className="font-display text-3xl leading-none tracking-tight md:text-4xl">CHRONIK</h3>
-            <div className="mt-2 text-sm text-[#6b6b6b]">Die Geschichte des Fördervereins unter Förderverein → Chronik. Bausteine hinzufügen, verschieben und gestalten.</div>
+            <div className="mt-2 text-sm text-[#6b6b6b]">Von der Idee der Eltern bis zum eigenen Platz am Tostedter Weg. Bausteine hinzufügen, verschieben und gestalten.</div>
           </div>
           {/* In echt öffnet sich die Website in einem neuen Tab – hier springt der Knopf zur Website unten */}
           <button
@@ -139,7 +139,7 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
               vorschau.current?.scrollIntoView({ block: 'start' })
             }}
           >
-            Chronik ansehen <ExternalLink size={14} aria-hidden="true" />
+            Seite ansehen <ExternalLink size={14} aria-hidden="true" />
           </button>
         </div>
         <form
@@ -148,12 +148,13 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
             void speichern()
           }}
         >
-          <ChronikEditor
+          <SeitenEditor
             start={START}
+            kopf={{ kicker: 'Förderverein', titel: 'CHRONIK' }}
             beispielbild={BEISPIELBILD}
             unten={stand => {
               aktuell.current = stand
-              return <UebungsLeiste geaendert={!gleich(chronikBereinigen(stand.anzeige), gespeichert)} meldung={meldung} knopfText="Chronik speichern" />
+              return <UebungsLeiste geaendert={!gleich(seiteBereinigen(stand.anzeige), gespeichert)} meldung={meldung} knopfText="Seite speichern" />
             }}
           />
         </form>
@@ -166,7 +167,7 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
             {website.einleitung && <p className="mt-4 max-w-xl text-lg font-light leading-relaxed text-[#6b6b6b]">{website.einleitung}</p>}
           </div>
           <div className="-mx-4">
-            <ChronikBausteine bausteine={website.bausteine.filter(b => b.sichtbar)} />
+            <SeitenBausteine bausteine={website.bausteine.filter(b => b.sichtbar)} />
           </div>
         </Vorschau>
       </div>
@@ -305,10 +306,10 @@ export const lektionen: Lektion[] = [
         {...props}
         frage="Du hast die Chronik umgebaut und schaust sie dir unter „Vorschau“ an. Wann sehen Besucher:innen der Website deine Änderungen?"
         antworten={[
-          { text: 'Erst, wenn ich auf „Chronik speichern“ tippe', richtig: true },
+          { text: 'Erst, wenn ich auf „Seite speichern“ tippe', richtig: true },
           {
             text: 'Sofort – die Vorschau ist schon die Website',
-            erklaerung: 'Die Vorschau sieht nur aus wie die Website und ist allein für dich. Sichtbar wird es erst mit „Chronik speichern“.',
+            erklaerung: 'Die Vorschau sieht nur aus wie die Website und ist allein für dich. Sichtbar wird es erst mit „Seite speichern“.',
           },
           {
             text: 'Erst, wenn ein:e Admin die Änderung freigegeben hat',
@@ -318,6 +319,6 @@ export const lektionen: Lektion[] = [
       />
     ),
     danach:
-      'Gespeichert wird immer die ganze Chronik auf einmal. Willst du die Seite mit ungespeicherten Änderungen verlassen, fragt die Verwaltung vorher nach.',
+      'Gespeichert wird immer die ganze Seite auf einmal. Willst du die Seite mit ungespeicherten Änderungen verlassen, fragt die Verwaltung vorher nach.',
   },
 ]

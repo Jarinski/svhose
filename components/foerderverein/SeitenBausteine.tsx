@@ -1,40 +1,58 @@
 /**
- * components/foerderverein/ChronikBausteine.tsx
+ * components/foerderverein/SeitenBausteine.tsx
  *
- * Darstellung der Förderverein-Chronik aus Bausteinen (Aufbau in lib/chronik.ts) – gemeinsam
- * genutzt von der Seite /foerderverein/chronik und der Vorschau im Chronik-Editor der Verwaltung,
- * damit die Vorschau genau so aussieht wie später auf der Website.
+ * Darstellung der Förderverein-Seiten aus Bausteinen (Aufbau in lib/seiten.ts) – gemeinsam genutzt
+ * von den Seiten unter /foerderverein und der Vorschau im Editor der Verwaltung, damit die Vorschau
+ * genau so aussieht wie später auf der Website. "Meldungen" und "Unterlagen" zeigen die News und
+ * Downloads des Fördervereins, die als `daten` hereinkommen.
  *
  * Ohne Hooks und ohne 'use client': funktioniert in Server- und Client-Komponenten.
  */
 
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { de } from 'date-fns/locale'
+import { ArrowRight, Download as DownloadSymbol, FileText, Mail } from 'lucide-react'
 import MarkdownText from '@/components/MarkdownText'
-import type { AnzeigeBild, Baustein, Hintergrund } from '@/lib/chronik'
+import NewsKarten from '@/components/foerderverein/NewsKarten'
+import type { Download, NewsPost } from '@/lib/content'
+import { FOERDERVEREIN } from '@/lib/foerderverein'
+import type { AnzeigeBild, Baustein, Hintergrund } from '@/lib/seiten'
 
 type B = Baustein<AnzeigeBild>
 
-/** Kopf der Seite: Überschrift und Einleitung. */
-export function ChronikKopf({ einleitung }: { einleitung: string }) {
+/** Was die automatischen Bausteine zeigen: News und Downloads mit der Kategorie "Förderverein". */
+export interface SeitenDaten {
+  news: NewsPost[]
+  downloads: Download[]
+}
+
+const OHNE_DATEN: SeitenDaten = { news: [], downloads: [] }
+
+/** Kopf der Seite: kleine Zeile, Überschrift und Einleitung. */
+export function SeitenKopf({ kicker, titel, einleitung }: { kicker: string; titel: string; einleitung: string }) {
   return (
     <div className="px-6 max-w-7xl mx-auto mb-12">
-      <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Förderverein</div>
-      <h1 className="font-display text-6xl md:text-8xl tracking-tight mb-12">CHRONIK</h1>
+      <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">{kicker}</div>
+      <h1 className="font-display text-6xl md:text-8xl tracking-tight mb-12 break-words hyphens-auto">{titel}</h1>
       {einleitung.trim() && <p className="max-w-2xl text-xl text-[#6b6b6b] font-light leading-relaxed whitespace-pre-line">{einleitung}</p>}
     </div>
   )
 }
 
-export default function ChronikBausteine({ bausteine }: { bausteine: B[] }) {
+export default function SeitenBausteine({ bausteine, daten = OHNE_DATEN }: { bausteine: B[]; daten?: SeitenDaten }) {
+  // Downloads, die schon als Knopf in einem Kasten stehen – "Unterlagen" zeigt sie auf Wunsch nicht noch einmal
+  const inKaesten = bausteine.reduce<number[]>((ids, b) => (b.art === 'aufruf' ? ids.concat(b.downloads) : ids), [])
   return (
     <div className="space-y-16 md:space-y-20">
       {bausteine.map((b, i) => (
-        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} />
+        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} daten={daten} inKaesten={inKaesten} />
       ))}
     </div>
   )
 }
 
-function BausteinAnzeige({ baustein: b }: { baustein: B }) {
+function BausteinAnzeige({ baustein: b, daten, inKaesten }: { baustein: B; daten: SeitenDaten; inKaesten: number[] }) {
   switch (b.art) {
     case 'zeitleiste':
       return <Zeitleiste b={b} />
@@ -62,6 +80,16 @@ function BausteinAnzeige({ baustein: b }: { baustein: B }) {
           </figure>
         </Rahmen>
       ) : null
+    case 'karten':
+      return <Karten b={b} />
+    case 'aufruf':
+      return <Aufruf b={b} downloads={daten.downloads} />
+    case 'meldungen':
+      return <Meldungen b={b} news={daten.news} />
+    case 'unterlagen': {
+      const liste = b.auswahl === 'uebrige' ? daten.downloads.filter(d => inKaesten.indexOf(d.id) < 0) : daten.downloads
+      return <Unterlagen ueberschrift={b.ueberschrift} downloads={liste} />
+    }
   }
 }
 
@@ -256,6 +284,133 @@ function Zahlen({ b }: { b: Extract<B, { art: 'zahlen' }> }) {
           </div>
         ))}
       </div>
+    </Rahmen>
+  )
+}
+
+// ─── Karten ─────────────────────────────────────────────────────────────────
+
+function Karten({ b }: { b: Extract<B, { art: 'karten' }> }) {
+  const eintraege = b.eintraege.filter(e => e.titel.trim() || e.text.trim())
+  if (eintraege.length === 0) return null
+  const Titel = b.ueberschrift.trim() ? 'h3' : 'h2'
+  return (
+    <Rahmen>
+      <Ueberschrift text={b.ueberschrift} />
+      {/* Karten wachsen, bis die Zeile voll ist – höchstens vier nebeneinander, keine leeren Felder */}
+      <div className="flex flex-wrap gap-px bg-[#0a0a0a]/10">
+        {eintraege.map((e, i) => (
+          <div key={e.schluessel ?? i} className="grow basis-full md:basis-[40%] lg:basis-[20%] bg-[#f5f5f0] p-8">
+            {e.titel.trim() && <Titel className="font-display text-2xl tracking-tight mb-3">{e.titel}</Titel>}
+            {e.text.trim() && <p className="text-sm text-[#6b6b6b] leading-relaxed whitespace-pre-line">{e.text}</p>}
+          </div>
+        ))}
+      </div>
+    </Rahmen>
+  )
+}
+
+// ─── Kasten mit Knopf ───────────────────────────────────────────────────────
+
+function Aufruf({ b, downloads }: { b: Extract<B, { art: 'aufruf' }>; downloads: Download[] }) {
+  // In der gewählten Reihenfolge; gelöschte Downloads fallen einfach weg
+  const dateien = b.downloads.map(id => downloads.filter(d => d.id === id)[0]).filter((d): d is Download => !!d)
+  if (!b.ueberschrift.trim() && !b.text.trim()) return null
+  const dunkel = b.hintergrund === 'dunkel'
+  const knopf = `inline-flex items-center gap-2 px-6 py-4 text-sm tracking-[0.1em] uppercase font-medium transition-colors ${
+    dunkel ? 'bg-[#f5f5f0] text-[#0a0a0a] hover:bg-white' : 'bg-[#0a0a0a] text-[#f5f5f0] hover:bg-[#1a1a1a]'
+  }`
+  const betreff = b.ueberschrift.trim() || 'Förderverein'
+  return (
+    <Rahmen>
+      <div
+        className={`p-8 md:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8 ${
+          dunkel ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'border border-[#0a0a0a]/15'
+        }`}
+      >
+        <div className="min-w-0">
+          {b.ueberschrift.trim() && <h2 className="font-display text-3xl md:text-4xl tracking-tight mb-2 break-words hyphens-auto">{b.ueberschrift}</h2>}
+          {b.text.trim() && <p className={`whitespace-pre-line ${dunkel ? 'text-[#f5f5f0]/70' : 'text-[#6b6b6b]'}`}>{b.text}</p>}
+        </div>
+        {(dateien.length > 0 || b.email) && (
+          <div className="flex flex-col gap-3 min-w-0 lg:max-w-sm">
+            {dateien.map(d => (
+              <a key={d.id} href={d.datei} target="_blank" rel="noopener noreferrer" className={knopf}>
+                <DownloadSymbol size={16} className="shrink-0" /> <span className="min-w-0 break-words">{d.titel}</span>
+              </a>
+            ))}
+            {b.email && (
+              <a href={`mailto:${FOERDERVEREIN.email}?subject=${encodeURIComponent(betreff)}`} className={knopf}>
+                <Mail size={16} className="shrink-0" /> E-Mail schreiben
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </Rahmen>
+  )
+}
+
+// ─── Meldungen (News des Fördervereins) ─────────────────────────────────────
+
+function Meldungen({ b, news }: { b: Extract<B, { art: 'meldungen' }>; news: NewsPost[] }) {
+  const liste = b.anzahl > 0 ? news.slice(0, b.anzahl) : news
+  return (
+    <Rahmen>
+      <Ueberschrift text={b.ueberschrift} />
+      {liste.length === 0 ? (
+        <div className="border border-[#0a0a0a]/10 p-8 md:p-12 max-w-2xl">
+          {b.leerTitel.trim() && <h2 className="font-display text-3xl tracking-tight mb-3">{b.leerTitel}</h2>}
+          {b.leerText.trim() && (
+            <div className="text-[#6b6b6b] leading-relaxed mb-6">
+              <MarkdownText text={b.leerText} />
+            </div>
+          )}
+          <Link href="/news" className="inline-flex items-center gap-2 text-xs tracking-[0.1em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a]">
+            Zu den News des Vereins <ArrowRight size={14} className="shrink-0" />
+          </Link>
+        </div>
+      ) : b.darstellung === 'zeilen' ? (
+        <ul className="max-w-4xl divide-y divide-[#0a0a0a]/10 border-y border-[#0a0a0a]/10">
+          {liste.map(post => (
+            <li key={post.slug}>
+              <Link href={`/news/${post.slug}`} className="group grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-8 gap-y-1 py-5">
+                <span className="pt-1.5 text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b]">{format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}</span>
+                <span className="min-w-0">
+                  <span className="block font-display text-2xl tracking-tight leading-tight group-hover:underline underline-offset-4">{post.title}</span>
+                  {post.excerpt && <span className="block mt-1 text-sm text-[#6b6b6b] leading-relaxed">{post.excerpt}</span>}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <NewsKarten news={liste} />
+      )}
+    </Rahmen>
+  )
+}
+
+// ─── Unterlagen (Downloads des Fördervereins) ───────────────────────────────
+
+function Unterlagen({ ueberschrift, downloads }: { ueberschrift: string; downloads: Download[] }) {
+  if (downloads.length === 0) return null
+  return (
+    <Rahmen>
+      {ueberschrift.trim() && <h2 className="font-display text-2xl tracking-tight mb-4">{ueberschrift}</h2>}
+      <ul className="divide-y divide-[#0a0a0a]/10 border-y border-[#0a0a0a]/10">
+        {downloads.map(d => (
+          <li key={d.id}>
+            <a href={d.datei} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 py-4 hover:text-[#6b6b6b] transition-colors">
+              <FileText size={18} className="shrink-0 mt-0.5" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium break-words">{d.titel}</span>
+                {d.beschreibung && <span className="block text-sm text-[#6b6b6b]">{d.beschreibung}</span>}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </Rahmen>
   )
 }

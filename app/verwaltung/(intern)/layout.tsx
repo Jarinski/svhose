@@ -1,7 +1,7 @@
 import { abmelden } from '../aktionen'
 import Navigation, { type NavPunkt } from '@/components/verwaltung/Navigation'
 import { datenbank } from '@/lib/db'
-import { bearbeitbareTeams, darfChronik, darfDownloads, darfFoerdervereinVorstand } from '@/lib/verwaltung/rechte'
+import { bearbeitbareTeams, darfFoerdervereinSeiten, darfDownloads, darfFoerdervereinVorstand } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 
 // Alles unter diesem Layout braucht eine gültige Sitzung. Die Rechte prüft trotzdem jede
@@ -22,7 +22,7 @@ export default async function InternLayout({ children }: { children: React.React
     { href: '/verwaltung/news', text: 'News' },
     ...(hatSparte ? [{ href: '/verwaltung/termine', text: 'Termine' }] : []),
     ...(darfDownloads(rechte) ? [{ href: '/verwaltung/downloads', text: 'Downloads' }] : []),
-    ...(darfChronik(rechte) ? [{ href: '/verwaltung/chronik', text: 'Chronik (Förderverein)' }] : []),
+    ...(darfFoerdervereinSeiten(rechte) ? [{ href: '/verwaltung/foerderverein-seiten', text: 'Förderverein-Seiten' }] : []),
     ...(darfFoerdervereinVorstand(rechte) ? [{ href: '/verwaltung/foerderverein-vorstand', text: 'Vorstand (Förderverein)' }] : []),
     ...(admin
       ? [

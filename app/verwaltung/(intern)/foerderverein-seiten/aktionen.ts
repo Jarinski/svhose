@@ -1,8 +1,9 @@
 'use server'
 
 /**
- * Server-Aktion des Chronik-Editors (Admins und Zugänge mit Förderverein-Recht). Prüft Sitzung und
- * Recht selbst; die Logik steckt in lib/verwaltung/inhalte/chronik.ts.
+ * Server-Aktion des Editors für die Förderverein-Seiten (Admins und Zugänge mit Förderverein-Recht).
+ * Prüft Sitzung und Recht selbst; die Logik steckt in lib/verwaltung/inhalte/seiten.ts. Welche Seite,
+ * steht im Feld "seite" (Slug aus lib/foerderverein-seiten.ts).
  *
  * Fotos kommen als Dateifelder "bild:<schlüssel>" (Schlüssel aus dem Editor), "Foto entfernen" als
  * "bildEntfernen:<schlüssel>". Neue Fotos werden VOR dem Speichern hochgeladen und bei einem Fehler
@@ -10,30 +11,33 @@
  */
 
 import { revalidatePath } from 'next/cache'
-import { bilderUmwandeln, chronikBereinigen, chronikLesen, chronikPruefen, type GespeichertesBild } from '@/lib/chronik'
+import { bilderUmwandeln, seiteBereinigen, seiteLesen, seitePruefen, type GespeichertesBild } from '@/lib/seiten'
 import { datenbank } from '@/lib/db'
+import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 import { erfolg, fehler, jsonFeld, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { fehlerErgebnis } from '@/lib/verwaltung/fehlermeldung'
-import { chronikLaden, chronikSpeichern } from '@/lib/verwaltung/inhalte/chronik'
+import { seiteLaden, seiteSpeichern } from '@/lib/verwaltung/inhalte/seiten'
 import { KEINE_RECHTE } from '@/lib/verwaltung/inhalte/gemeinsam'
 import { bildSpeichern, hatDatei, medienFreigeben, UploadFehler } from '@/lib/verwaltung/medien-upload'
-import { darfChronik } from '@/lib/verwaltung/rechte'
+import { darfFoerdervereinSeiten } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 
-export async function chronikSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
+export async function seiteSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
   const { rechte } = await sitzungErzwingen()
   // Rechte VOR dem Hochladen prüfen – sonst könnte jede:r Angemeldete Bilder ablegen.
-  if (!darfChronik(rechte)) return fehler(KEINE_RECHTE)
+  if (!darfFoerdervereinSeiten(rechte)) return fehler(KEINE_RECHTE)
 
+  const seite = foerdervereinSeite(String(formData.get('seite') ?? ''))
+  if (!seite) return fehler('Diese Seite gibt es nicht. Bitte die Seite neu laden.')
   const roh = jsonFeld<unknown>(formData, 'daten')
   if (!roh || typeof roh !== 'object') return fehler('Die Eingaben konnten nicht gelesen werden. Bitte die Seite neu laden.')
-  const eingabe = chronikLesen(roh)
+  const eingabe = seiteLesen(roh)
   const stand = String(formData.get('stand') ?? '')
   const db = datenbank()
 
   // Ohne neue Datei bleibt nur ein Foto stehen, das schon gespeichert war – keine fremden Pfade aus dem Browser.
   const bisher = new Map<string, GespeichertesBild>()
-  bilderUmwandeln(chronikLaden(db).inhalt, bild => {
+  bilderUmwandeln(seiteLaden(db, seite).inhalt, bild => {
     if (bild) bisher.set(bild.pfad, bild)
     return null
   })
@@ -54,14 +58,14 @@ export async function chronikSpeichernAktion(_vorher: FormErgebnis, formData: Fo
     })
 
   // Erst prüfen, dann hochladen – bei einem Fehler im Text bleibt kein Foto liegen.
-  const vorab = chronikPruefen(chronikBereinigen(aufloesen()))
+  const vorab = seitePruefen(seiteBereinigen(aufloesen()))
   if (vorab) return fehler(vorab)
 
   const hochgeladen = new Map<string, GespeichertesBild>()
   const aufraeumen = () => hochgeladen.forEach(b => medienFreigeben(b.pfad))
   try {
     for (const [schluessel, datei] of Array.from(dateien)) {
-      const b = await bildSpeichern(datei, 'chronik', 'chronik')
+      const b = await bildSpeichern(datei, 'foerderverein', seite.slug)
       hochgeladen.set(schluessel, { pfad: b.pfad, breite: b.breite, hoehe: b.hoehe })
     }
   } catch (e) {
@@ -70,9 +74,9 @@ export async function chronikSpeichernAktion(_vorher: FormErgebnis, formData: Fo
     throw e
   }
 
-  let ergebnis: ReturnType<typeof chronikSpeichern>
+  let ergebnis: ReturnType<typeof seiteSpeichern>
   try {
-    ergebnis = chronikSpeichern(db, rechte, aufloesen(hochgeladen), stand)
+    ergebnis = seiteSpeichern(db, rechte, seite, aufloesen(hochgeladen), stand)
   } catch (e) {
     aufraeumen()
     return fehlerErgebnis(e)
@@ -81,6 +85,6 @@ export async function chronikSpeichernAktion(_vorher: FormErgebnis, formData: Fo
 
   if (!ergebnis.geaendert) return erfolg('Keine Änderungen – es war schon alles gespeichert.')
   revalidatePath('/verwaltung', 'layout')
-  revalidatePath('/foerderverein/chronik')
-  return erfolg('Gespeichert. Die Chronik ist sofort auf der Website zu sehen.')
+  revalidatePath(seite.pfad)
+  return erfolg(`Gespeichert. Die Seite „${seite.name}“ ist sofort auf der Website zu sehen.`)
 }

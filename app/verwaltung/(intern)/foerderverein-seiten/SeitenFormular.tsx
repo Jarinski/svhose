@@ -1,45 +1,65 @@
 'use client'
 
 /**
- * Editor der Förderverein-Chronik: Einleitung und Bausteine (Zeitleiste, Text, Foto, Stichpunkte,
- * Zahlen, Zitat) hinzufügen, verschieben, ausblenden und gestalten. Die Vorschau nutzt dieselbe
- * Darstellung wie die Website (components/foerderverein/ChronikBausteine).
+ * Editor der Förderverein-Seiten (Chronik, Aktuelles, Mitglied werden): Einleitung und Bausteine
+ * hinzufügen, verschieben, ausblenden und gestalten. Die Vorschau nutzt dieselbe Darstellung wie die
+ * Website (components/foerderverein/SeitenBausteine), auch mit den aktuellen News und Downloads.
  *
  * Der Inhalt geht als JSON im Feld "daten" an die Server-Aktion, neue Fotos als Dateifelder
  * "bild:<schlüssel>" (BildFeld). Gespeichert wird alles auf einmal.
  *
- * ChronikEditor ist der Editor ohne Formular – die Übung in der Hilfe nutzt ihn ebenfalls
- * (hilfe/uebung/lektionen/chronik.tsx), damit sie genau so aussieht und sich so bedient.
+ * SeitenEditor ist der Editor ohne Formular – die Übung in der Hilfe nutzt ihn ebenfalls
+ * (hilfe/uebung/lektionen/foerderverein-seiten.tsx), damit sie genau so aussieht und sich so bedient.
  */
 
 import { createContext, useActionState, useContext, useEffect, useRef, useState } from 'react'
-import { AlignLeft, Eye, FlaskConical, Hash, History, Image as ImageIcon, ImagePlus, List, Pencil, Plus, Quote, type LucideIcon } from 'lucide-react'
-import ChronikBausteine, { ChronikKopf } from '@/components/foerderverein/ChronikBausteine'
+import Link from 'next/link'
+import {
+  AlignLeft,
+  Eye,
+  Files,
+  FlaskConical,
+  Hash,
+  History,
+  Image as ImageIcon,
+  ImagePlus,
+  LayoutGrid,
+  List,
+  Megaphone,
+  Newspaper,
+  Pencil,
+  Plus,
+  Quote,
+  type LucideIcon,
+} from 'lucide-react'
+import SeitenBausteine, { SeitenKopf, type SeitenDaten } from '@/components/foerderverein/SeitenBausteine'
 import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
-import { Badge, eingabeKlasse, Feld, knopfKlassen, Karte, LeerHinweis } from '@/components/verwaltung/ui'
+import { auswahlKlasse, Badge, eingabeKlasse, Feld, knopfKlassen, Karte, LeerHinweis } from '@/components/verwaltung/ui'
 import { useUngespeichertWarnung } from '@/components/verwaltung/useUngespeichert'
 import {
   BAUSTEIN_ARTEN,
   bausteinName,
   bilderUmwandeln,
   DARSTELLUNG_NAMEN,
+  MELDUNGEN_ANZAHLEN,
   neuerBaustein,
   type AnzeigeBild,
   type Baustein,
   type BausteinArt,
-  type ChronikInhalt,
+  type SeitenInhalt,
   type GespeichertesBild,
-} from '@/lib/chronik'
+} from '@/lib/seiten'
+import { FOERDERVEREIN } from '@/lib/foerderverein'
 import { LEER } from '@/lib/verwaltung/formular'
-import { chronikSpeichernAktion } from './aktionen'
+import { seiteSpeichernAktion } from './aktionen'
 
 /** Gespeichertes Bild mit fertiger Adresse (die Seite rechnet sie aus – lib/medien.ts läuft nur auf dem Server). */
 export type EditorBild = GespeichertesBild & { url: string }
 type EBaustein = Baustein<EditorBild>
-type EInhalt = ChronikInhalt<EditorBild>
+type EInhalt = SeitenInhalt<EditorBild>
 type Art<A extends BausteinArt> = Extract<EBaustein, { art: A }>
 
 const ICONS: Record<BausteinArt, LucideIcon> = {
@@ -49,11 +69,25 @@ const ICONS: Record<BausteinArt, LucideIcon> = {
   liste: List,
   zahlen: Hash,
   zitat: Quote,
+  karten: LayoutGrid,
+  aufruf: Megaphone,
+  meldungen: Newspaper,
+  unterlagen: Files,
+}
+
+/** Kopf der Seite in der Vorschau – kommt aus lib/foerderverein-seiten.ts. */
+export interface SeitenKopfDaten {
+  kicker: string
+  titel: string
 }
 
 interface Props {
+  /** Slug aus lib/foerderverein-seiten.ts – sagt der Server-Aktion, welche Seite gespeichert wird. */
+  seite: string
+  kopf: SeitenKopfDaten
   stand: string
   inhalt: EInhalt
+  daten: SeitenDaten
 }
 
 /** Schlüssel für Bausteine und Einträge (b0, b1 … / e0, e1 …) – beim Laden immer gleich, damit Server und Browser übereinstimmen. */
@@ -64,6 +98,7 @@ function mitSchluesseln(inhalt: EInhalt): EInhalt {
     bausteine: inhalt.bausteine.map((b, i): EBaustein => {
       if (b.art === 'zeitleiste') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
       if (b.art === 'zahlen') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
+      if (b.art === 'karten') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
       return { ...b, schluessel: `b${i}` }
     }),
   }
@@ -79,18 +114,21 @@ function bildAdressen(inhalt: EInhalt): Record<string, string | null> {
   return adressen
 }
 
-export default function ChronikFormular({ stand, inhalt }: Props) {
-  const [ergebnis, aktion] = useActionState(chronikSpeichernAktion, LEER)
+export default function SeitenFormular({ seite, kopf, stand, inhalt, daten }: Props) {
+  const [ergebnis, aktion] = useActionState(seiteSpeichernAktion, LEER)
   return (
     <form action={aktion} onReset={eingabenBehalten}>
       {/* Nach dem Speichern ändert sich der Stand → der Editor startet mit dem frisch gespeicherten Inhalt. */}
-      <ChronikEditor
+      <SeitenEditor
         key={stand}
         start={inhalt}
+        kopf={kopf}
+        daten={daten}
         angeheftet
         warnen
         unten={({ inhalt: aktuell, geaendert }) => (
           <>
+            <input type="hidden" name="seite" value={seite} />
             <input type="hidden" name="stand" value={stand} />
             {/* Gespeicherte Fotos ohne Adresse – neue Fotos stecken in den Dateifeldern */}
             <input
@@ -98,7 +136,7 @@ export default function ChronikFormular({ stand, inhalt }: Props) {
               name="daten"
               value={JSON.stringify(bilderUmwandeln(aktuell, bild => (bild ? { pfad: bild.pfad, breite: bild.breite, hoehe: bild.hoehe } : null)))}
             />
-            <SpeicherLeiste geaendert={geaendert} ergebnis={ergebnis} knopfText="Chronik speichern" />
+            <SpeicherLeiste geaendert={geaendert} ergebnis={ergebnis} knopfText="Seite speichern" />
           </>
         )}
       />
@@ -110,8 +148,8 @@ export default function ChronikFormular({ stand, inhalt }: Props) {
 export interface EditorStand {
   /** Inhalt mit Editor-Schlüsseln; Fotos wie geladen – neu gewählte stecken in den Dateifeldern. */
   inhalt: EInhalt
-  /** So sähe die Chronik aus, mit neu gewählten Fotos als lokale Adressen. */
-  anzeige: ChronikInhalt<AnzeigeBild>
+  /** So sähe die Seite aus, mit neu gewählten Fotos als lokale Adressen. */
+  anzeige: SeitenInhalt<AnzeigeBild>
   /** Anders als beim Öffnen (Inhalt oder Fotos)? */
   geaendert: boolean
 }
@@ -119,18 +157,25 @@ export interface EditorStand {
 /** Adresse eines Beispielbilds für die Übung: Foto-Felder bieten es dann zusätzlich an. */
 const BeispielbildKontext = createContext<string | null>(null)
 
+/** News und Downloads des Fördervereins – für die Hinweise in "Meldungen", "Unterlagen" und die Auswahl im Kasten mit Knopf. */
+const DatenKontext = createContext<SeitenDaten>({ news: [], downloads: [] })
+
 /**
  * Der Editor selbst, ohne Formular und Speichern – die Seite in der Verwaltung und die Übung in der
- * Hilfe (hilfe/uebung/lektionen/chronik.tsx) bauen ihr eigenes `unten` darum.
+ * Hilfe (hilfe/uebung/lektionen/foerderverein-seiten.tsx) bauen ihr eigenes `unten` darum.
  */
-export function ChronikEditor({
+export function SeitenEditor({
   start,
+  kopf,
+  daten = { news: [], downloads: [] },
   unten,
   angeheftet = false,
   warnen = false,
   beispielbild = null,
 }: {
   start: EInhalt
+  kopf: SeitenKopfDaten
+  daten?: SeitenDaten
   unten: (stand: EditorStand) => React.ReactNode
   /** Umschalter Bearbeiten/Vorschau oben am Fenster anheften (Verwaltung) statt im Fluss (Übung). */
   angeheftet?: boolean
@@ -169,14 +214,16 @@ export function ChronikEditor({
         ? { ...roh, schluessel, eintraege: roh.eintraege.map(e => ({ ...e, schluessel: neuerSchluessel('e') })) }
         : roh.art === 'zahlen'
           ? { ...roh, schluessel, eintraege: roh.eintraege.map(e => ({ ...e, schluessel: neuerSchluessel('e') })) }
-          : { ...roh, schluessel }
+          : roh.art === 'karten'
+            ? { ...roh, schluessel, eintraege: roh.eintraege.map(e => ({ ...e, schluessel: neuerSchluessel('e') })) }
+            : { ...roh, schluessel }
     bausteine(inhalt.bausteine.slice(0, position).concat(b, inhalt.bausteine.slice(position)))
     setEinfuegenBei(null)
     setZuletztNeu(schluessel)
   }
   function entfernen(i: number) {
     const b = inhalt.bausteine[i]
-    if (!window.confirm(`Baustein ${i + 1} (${bausteinName(b.art)}) entfernen? Endgültig weg ist er erst mit „Chronik speichern“.`)) return
+    if (!window.confirm(`Baustein ${i + 1} (${bausteinName(b.art)}) entfernen? Endgültig weg ist er erst mit „Seite speichern“.`)) return
     bausteine(inhalt.bausteine.filter((_, j) => j !== i))
   }
   const fotoMelden = (schluessel: string) => (url: string | null) =>
@@ -203,6 +250,7 @@ export function ChronikEditor({
 
   return (
     <BeispielbildKontext.Provider value={beispielbild}>
+      <DatenKontext.Provider value={daten}>
       <div className="space-y-6">
         <div
           className={`flex flex-wrap items-center justify-between gap-3 ${
@@ -226,19 +274,19 @@ export function ChronikEditor({
         {vorschau && (
           <div className="rounded-sm border border-[#0a0a0a]/10 overflow-hidden">
             <p className="bg-white border-b border-[#0a0a0a]/10 px-4 py-2.5 text-xs text-[#6b6b6b]">
-              So sieht die Chronik nach dem Speichern aus{ausgeblendet > 0 ? ' – ausgeblendete Bausteine fehlen, wie auf der Website' : ''}. Zum Ändern
+              So sieht die Seite nach dem Speichern aus{ausgeblendet > 0 ? ' – ausgeblendete Bausteine fehlen, wie auf der Website' : ''}. Zum Ändern
               zurück zu „Bearbeiten“.
             </p>
             <div className="bg-[#f5f5f0] text-[#0a0a0a] pt-12 pb-16">
-              <ChronikKopf einleitung={anzeige.einleitung} />
-              <ChronikBausteine bausteine={anzeige.bausteine.filter(b => b.sichtbar)} />
+              <SeitenKopf kicker={kopf.kicker} titel={kopf.titel} einleitung={anzeige.einleitung} />
+              <SeitenBausteine bausteine={anzeige.bausteine.filter(b => b.sichtbar)} daten={daten} />
             </div>
           </div>
         )}
 
         {/* In der Vorschau nur ausgeblendet, nicht entfernt – sonst gingen gewählte Fotos verloren */}
         <div className={vorschau ? 'hidden' : 'space-y-4'}>
-          <Karte titel="Einleitung" beschreibung="Steht groß unter der Überschrift CHRONIK.">
+          <Karte titel="Einleitung" beschreibung={`Steht groß unter der Überschrift ${kopf.titel}.`}>
             <textarea
               aria-label="Einleitung"
               rows={3}
@@ -274,6 +322,10 @@ export function ChronikEditor({
                   {b.art === 'liste' && <ListeEditor b={b} setzen={setzen} />}
                   {b.art === 'zahlen' && <ZahlenEditor b={b} setzen={setzen} neuerSchluessel={neuerSchluessel} />}
                   {b.art === 'zitat' && <ZitatEditor b={b} setzen={setzen} />}
+                  {b.art === 'karten' && <KartenEditor b={b} setzen={setzen} neuerSchluessel={neuerSchluessel} />}
+                  {b.art === 'aufruf' && <AufrufEditor b={b} setzen={setzen} />}
+                  {b.art === 'meldungen' && <MeldungenEditor b={b} setzen={setzen} />}
+                  {b.art === 'unterlagen' && <UnterlagenEditor b={b} setzen={setzen} />}
                 </BausteinKarte>
               </div>
             )
@@ -284,6 +336,7 @@ export function ChronikEditor({
 
         {unten({ inhalt, anzeige, geaendert })}
       </div>
+      </DatenKontext.Provider>
     </BeispielbildKontext.Provider>
   )
 }
@@ -358,25 +411,30 @@ function BausteinWahl({ titel, onWaehlen, onAbbrechen }: { titel: string; onWaeh
           </button>
         )}
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {BAUSTEIN_ARTEN.map(a => {
-          const Icon = ICONS[a.art]
-          return (
-            <button
-              key={a.art}
-              type="button"
-              onClick={() => onWaehlen(a.art)}
-              className="flex items-start gap-3 text-left bg-white border border-[#0a0a0a]/15 rounded-sm p-3 hover:border-[#0a0a0a]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]"
-            >
-              <Icon size={18} className="mt-0.5 shrink-0 text-[#6b6b6b]" />
-              <span>
-                <span className="block text-sm font-medium">{a.name}</span>
-                <span className="block text-xs text-[#6b6b6b] mt-0.5">{a.beschreibung}</span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {[false, true].map(automatisch => (
+        <div key={String(automatisch)} className={automatisch ? 'mt-4' : ''}>
+          {automatisch && <p className="text-xs text-[#6b6b6b] mb-2">Automatisch aus der Verwaltung – der Inhalt kommt aus den News bzw. Downloads:</p>}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {BAUSTEIN_ARTEN.filter(a => !!a.automatisch === automatisch).map(a => {
+              const Icon = ICONS[a.art]
+              return (
+                <button
+                  key={a.art}
+                  type="button"
+                  onClick={() => onWaehlen(a.art)}
+                  className="flex items-start gap-3 text-left bg-white border border-[#0a0a0a]/15 rounded-sm p-3 hover:border-[#0a0a0a]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]"
+                >
+                  <Icon size={18} className="mt-0.5 shrink-0 text-[#6b6b6b]" />
+                  <span>
+                    <span className="block text-sm font-medium">{a.name}</span>
+                    <span className="block text-xs text-[#6b6b6b] mt-0.5">{a.beschreibung}</span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -541,6 +599,29 @@ function Skizze({ art }: { art: keyof typeof DARSTELLUNG_NAMEN }) {
         <span aria-hidden className={`${rahmen} flex-wrap content-center gap-[3px]`}>
           {[60, 35, 45, 55].map((w, i) => (
             <span key={i} className="h-2 border border-[#0a0a0a]/40 rounded-[1px]" style={{ width: `${w}%` }} />
+          ))}
+        </span>
+      )
+    case 'zeilen':
+      return (
+        <span aria-hidden className={`${rahmen} flex-col justify-center gap-1 px-1.5`}>
+          {[0, 1, 2].map(i => (
+            <span key={i} className="flex items-center gap-1">
+              <span className="w-2.5 h-[3px] bg-[#0a0a0a]/40 rounded-full shrink-0" />
+              <span className={`${zeile} flex-1`} />
+            </span>
+          ))}
+        </span>
+      )
+    case 'uebrige':
+    case 'alle':
+      return (
+        <span aria-hidden className={`${rahmen} flex-col justify-center gap-[3px] px-1.5`}>
+          {(art === 'alle' ? [0, 1, 2, 3] : [0, 1]).map(i => (
+            <span key={i} className="flex items-center gap-1">
+              <span className="w-1.5 h-2 border border-[#0a0a0a]/50 rounded-[1px] shrink-0" />
+              <span className={`${zeile} flex-1`} />
+            </span>
           ))}
         </span>
       )
@@ -861,6 +942,191 @@ function ZitatEditor({ b, setzen }: { b: Art<'zitat'>; setzen: (b: Art<'zitat'>)
     <>
       <Textfeld id={`${k}-text`} label="Zitat" zeilen={3} wert={b.text} onAendern={v => setzen({ ...b, text: v })} />
       <Textfeld id={`${k}-quelle`} label="Von wem? (optional)" wert={b.quelle} onAendern={v => setzen({ ...b, quelle: v })} platzhalter="z. B. Jörg Passlack, Vorsitzender" />
+    </>
+  )
+}
+
+function KartenEditor({ b, setzen, neuerSchluessel }: { b: Art<'karten'>; setzen: (b: Art<'karten'>) => void; neuerSchluessel: (praefix: 'e') => string }) {
+  const k = b.schluessel as string
+  const eintraege = (neu: Art<'karten'>['eintraege']) => setzen({ ...b, eintraege: neu })
+  const aendern = (j: number, aenderung: { titel?: string; text?: string }) => eintraege(b.eintraege.map((e, x) => (x === j ? { ...e, ...aenderung } : e)))
+  return (
+    <>
+      <Textfeld id={`${k}-ueberschrift`} label="Überschrift (optional)" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} />
+      <div>
+        <div className="text-sm font-medium mb-1.5">Karten</div>
+        <p className="text-xs text-[#6b6b6b] mb-2">Bis zu vier stehen nebeneinander; die Karten einer Reihe füllen immer die ganze Breite.</p>
+        <ol className="space-y-3">
+          {b.eintraege.map((e, j) => {
+            const ek = e.schluessel as string
+            return (
+              <Eintrag
+                key={ek}
+                knoepfe={
+                  <ReihenfolgeKnoepfe
+                    index={j}
+                    anzahl={b.eintraege.length}
+                    bezeichnung={e.titel || `Karte ${j + 1}`}
+                    onVerschieben={r => eintraege(verschieben(b.eintraege, j, r))}
+                    onEntfernen={() => eintraege(b.eintraege.filter((_, x) => x !== j))}
+                  />
+                }
+              >
+                <Textfeld id={`${ek}-titel`} label="Titel" wert={e.titel} onAendern={v => aendern(j, { titel: v })} platzhalter="z. B. Spenden" />
+                <Textfeld id={`${ek}-text`} label="Text" zeilen={3} wert={e.text} onAendern={v => aendern(j, { text: v })} />
+              </Eintrag>
+            )
+          })}
+        </ol>
+        <button type="button" className={`${knopfKlassen.sekundaer} mt-3`} onClick={() => eintraege(b.eintraege.concat({ schluessel: neuerSchluessel('e'), titel: '', text: '' }))}>
+          <Plus size={15} /> Karte hinzufügen
+        </button>
+      </div>
+    </>
+  )
+}
+
+/** Hinweis, woher ein automatischer Baustein seinen Inhalt holt, mit Link dorthin. */
+function Herkunft({ children, href, linkText }: { children: React.ReactNode; href: string; linkText: string }) {
+  return (
+    <p className="text-sm text-[#4a4a4a] bg-[#f5f5f0] border border-[#0a0a0a]/10 rounded-sm px-3 py-2.5 leading-relaxed">
+      {children}{' '}
+      <Link href={href} className="underline underline-offset-2 hover:text-[#0a0a0a] whitespace-nowrap">
+        {linkText}
+      </Link>
+    </p>
+  )
+}
+
+function AufrufEditor({ b, setzen }: { b: Art<'aufruf'>; setzen: (b: Art<'aufruf'>) => void }) {
+  const k = b.schluessel as string
+  const { downloads } = useContext(DatenKontext)
+  // Gewählte Downloads, die es nicht mehr gibt, bleiben erhalten, erscheinen aber nicht – hier sichtbar machen
+  const fehlend = b.downloads.filter(id => !downloads.some(d => d.id === id)).length
+  function umschalten(id: number, an: boolean) {
+    setzen({ ...b, downloads: an ? b.downloads.concat(id) : b.downloads.filter(x => x !== id) })
+  }
+  return (
+    <>
+      <Textfeld id={`${k}-ueberschrift`} label="Überschrift" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} platzhalter="z. B. Beitrittserklärung" />
+      <Textfeld id={`${k}-text`} label="Text" zeilen={3} wert={b.text} onAendern={v => setzen({ ...b, text: v })} />
+      <fieldset>
+        <legend className="block text-sm font-medium text-[#0a0a0a] mb-1.5">Knöpfe</legend>
+        {downloads.length === 0 ? (
+          <p className="text-sm text-[#6b6b6b] mb-2">Der Förderverein hat noch keine Downloads – deshalb gibt es hier nur den E-Mail-Knopf.</p>
+        ) : (
+          <div className="space-y-1.5 mb-3">
+            {downloads.map(d => (
+              <label key={d.id} className="flex items-start gap-2.5 text-sm cursor-pointer">
+                <input type="checkbox" checked={b.downloads.indexOf(d.id) >= 0} onChange={e => umschalten(d.id, e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#0a0a0a]" />
+                <span>
+                  <span className="font-medium">{d.titel}</span> <span className="text-[#6b6b6b]">– Knopf zum Herunterladen</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+        <label className="flex items-start gap-2.5 text-sm cursor-pointer">
+          <input type="checkbox" checked={b.email} onChange={e => setzen({ ...b, email: e.target.checked })} className="mt-0.5 h-4 w-4 accent-[#0a0a0a]" />
+          <span>
+            <span className="font-medium">E-Mail schreiben</span> <span className="text-[#6b6b6b]">– an {FOERDERVEREIN.email}, Betreff ist die Überschrift</span>
+          </span>
+        </label>
+        {fehlend > 0 && (
+          <p className="mt-2 text-xs text-amber-800">
+            {fehlend === 1 ? 'Ein gewählter Download wurde inzwischen gelöscht' : `${fehlend} gewählte Downloads wurden inzwischen gelöscht`} – sein Knopf erscheint nicht mehr.
+          </p>
+        )}
+      </fieldset>
+      <Herkunft href="/verwaltung/downloads" linkText="Zu den Downloads →">
+        Neue PDFs lädst du unter „Downloads“ hoch; sie bekommen dort automatisch die Kategorie „Förderverein“.
+      </Herkunft>
+      <Wahl
+        name={`${k}-hintergrund`}
+        label="Hintergrund"
+        wert={b.hintergrund}
+        onWahl={h => setzen({ ...b, hintergrund: h })}
+        optionen={[
+          { wert: 'dunkel', text: 'Schwarzer Kasten – fällt am meisten auf' },
+          { wert: 'hell', text: 'Heller Kasten mit Rahmen' },
+        ]}
+      />
+    </>
+  )
+}
+
+function MeldungenEditor({ b, setzen }: { b: Art<'meldungen'>; setzen: (b: Art<'meldungen'>) => void }) {
+  const k = b.schluessel as string
+  const { news } = useContext(DatenKontext)
+  return (
+    <>
+      <Herkunft href="/verwaltung/news" linkText="Zu den News →">
+        {news.length === 0
+          ? 'Zurzeit gibt es keine veröffentlichte News mit der Kategorie „Förderverein“ – dann steht hier der Text unten.'
+          : news.length === 1
+            ? 'Hier steht die veröffentlichte News mit der Kategorie „Förderverein“ (zurzeit eine).'
+            : `Hier stehen die veröffentlichten News mit der Kategorie „Förderverein“, die neueste zuerst (zurzeit ${news.length}).`}
+      </Herkunft>
+      <Textfeld id={`${k}-ueberschrift`} label="Überschrift (optional)" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} />
+      <Wahl
+        name={`${k}-darstellung`}
+        label="Darstellung"
+        wert={b.darstellung}
+        onWahl={d => setzen({ ...b, darstellung: d })}
+        optionen={[
+          { wert: 'kacheln', text: 'Karten mit Bild, bis zu drei nebeneinander' },
+          { wert: 'zeilen', text: 'Kompakte Liste mit Datum, Titel und Vorschautext' },
+        ]}
+      />
+      <Feld label="Wie viele?" htmlFor={`${k}-anzahl`}>
+        <select id={`${k}-anzahl`} value={b.anzahl} onChange={e => setzen({ ...b, anzahl: Number(e.target.value) })} className={`${auswahlKlasse} sm:max-w-xs`}>
+          {MELDUNGEN_ANZAHLEN.map(n => (
+            <option key={n} value={n}>
+              {n === 0 ? 'Alle' : `Die neuesten ${n}`}
+            </option>
+          ))}
+        </select>
+      </Feld>
+      <div className="grid gap-3">
+        <Textfeld id={`${k}-leer-titel`} label="Überschrift, solange es keine Meldungen gibt" wert={b.leerTitel} onAendern={v => setzen({ ...b, leerTitel: v })} />
+        <Textfeld
+          id={`${k}-leer-text`}
+          label="Text, solange es keine Meldungen gibt"
+          zeilen={3}
+          wert={b.leerText}
+          onAendern={v => setzen({ ...b, leerText: v })}
+          hinweis={
+            <>
+              Ein Link geht so: <code className="font-mono">[Text](https://…)</code> oder <code className="font-mono">[info@…](mailto:info@…)</code>.
+            </>
+          }
+        />
+      </div>
+    </>
+  )
+}
+
+function UnterlagenEditor({ b, setzen }: { b: Art<'unterlagen'>; setzen: (b: Art<'unterlagen'>) => void }) {
+  const k = b.schluessel as string
+  const { downloads } = useContext(DatenKontext)
+  return (
+    <>
+      <Herkunft href="/verwaltung/downloads" linkText="Zu den Downloads →">
+        {downloads.length === 0
+          ? 'Der Förderverein hat zurzeit keine Downloads – solange erscheint dieser Baustein nicht.'
+          : `Hier stehen die Downloads des Fördervereins (zurzeit ${downloads.length}).`}
+      </Herkunft>
+      <Textfeld id={`${k}-ueberschrift`} label="Überschrift" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} platzhalter="z. B. Unterlagen" />
+      <Wahl
+        name={`${k}-auswahl`}
+        label="Welche?"
+        wert={b.auswahl}
+        onWahl={a => setzen({ ...b, auswahl: a })}
+        optionen={[
+          { wert: 'uebrige', text: 'Ohne die, die schon als Knopf in einem Kasten stehen' },
+          { wert: 'alle', text: 'Alle Downloads des Fördervereins' },
+        ]}
+      />
     </>
   )
 }
