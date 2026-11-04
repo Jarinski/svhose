@@ -9,6 +9,7 @@
  * die Lesezugriffe selbst laufen synchron über better-sqlite3.
  */
 
+import { type AnzeigeBild, bilderUmwandeln, CHRONIK_SCHLUESSEL, CHRONIK_VORLAGE, type ChronikInhalt, chronikLesen } from '@/lib/chronik'
 import { datenbank, schema } from '@/lib/db'
 import { FUNKTIONS_GRUPPEN } from '@/lib/db/schema'
 import { medienUrl } from '@/lib/medien'
@@ -621,4 +622,14 @@ export async function getNewsSlugs(): Promise<{ slug: string }[]> {
     orderBy: (n, { desc }) => [desc(n.datum), desc(n.id)],
   })
   return news.map(n => ({ slug: n.slug }))
+}
+
+// ─── Förderverein-Chronik ───────────────────────────────────────────────────
+
+/** Die Chronik, wie sie auf der Website erscheint: nur sichtbare Bausteine, Bilder als fertige URLs. */
+export async function getChronik(): Promise<ChronikInhalt<AnzeigeBild>> {
+  const zeile = await datenbank().query.seiten.findFirst({ where: (s, { eq }) => eq(s.schluessel, CHRONIK_SCHLUESSEL) })
+  const inhalt = zeile ? chronikLesen(zeile.inhalt) : CHRONIK_VORLAGE
+  const anzeige = bilderUmwandeln(inhalt, bild => (bild ? { src: medienUrl(bild.pfad) as string, breite: bild.breite, hoehe: bild.hoehe } : null))
+  return { einleitung: anzeige.einleitung, bausteine: anzeige.bausteine.filter(b => b.sichtbar) }
 }

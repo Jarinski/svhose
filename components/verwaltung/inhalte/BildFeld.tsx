@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Bild auswählen, zuschneiden, ansehen und entfernen – für News und Termine.
+ * Bild auswählen, zuschneiden, ansehen und entfernen – für News, Termine und die Chronik.
  * Schickt die Datei im Feld `name` mit; "Bild entfernen" setzt das versteckte Feld `entfernenName` auf "1".
  * Hochgeladen wird erst beim Speichern des Formulars.
  * Mit `zuschnitt` öffnet sich nach der Auswahl ein Dialog, in dem das Bild auf dieses Seitenverhältnis
@@ -21,6 +21,7 @@ export default function BildFeld({
   id,
   zuschnitt,
   onAenderung,
+  onAnzeige,
 }: {
   /** URL des gespeicherten Bildes oder null */
   aktuell: string | null
@@ -31,6 +32,8 @@ export default function BildFeld({
   zuschnitt?: number
   /** Meldet Änderungen ohne Eingabe-Ereignis ("Bild entfernen", "Rückgängig", Zuschnitt) – z. B. für useFormularGeaendert. */
   onAenderung?: () => void
+  /** Meldet die Adresse des angezeigten Bildes (gespeichert, neu gewählt oder null) – z. B. für eine Vorschau der Seite. */
+  onAnzeige?: (url: string | null) => void
 }) {
   const eingabe = useRef<HTMLInputElement>(null)
   /** Die Datei, die gerade im Dateifeld steckt – um sie wiederherzustellen, wenn ein Zuschnitt abgebrochen wird. */
@@ -55,6 +58,13 @@ export default function BildFeld({
   }, [original])
 
   const angezeigt = vorschau ?? (entfernt ? null : aktuell)
+
+  // Nur bei einer neuen Adresse melden – der Aufrufer übergibt meist bei jedem Rendern eine neue Funktion.
+  const anzeigeMelden = useRef(onAnzeige)
+  anzeigeMelden.current = onAnzeige
+  useEffect(() => {
+    anzeigeMelden.current?.(angezeigt)
+  }, [angezeigt])
 
   /** Legt eine Datei ins Dateifeld (null leert es). */
   function dateiSetzen(datei: File | null) {

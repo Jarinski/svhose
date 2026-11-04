@@ -5,6 +5,7 @@
 
 import type { Lektion } from './typen'
 import { lektionen as anmelden } from './lektionen/anmelden'
+import { lektionen as chronik } from './lektionen/chronik'
 import { lektionen as downloads } from './lektionen/downloads'
 import { lektionen as grundlagen } from './lektionen/grundlagen'
 import { lektionen as kontaktseite } from './lektionen/kontaktseite'
@@ -29,6 +30,7 @@ export const UEBUNGEN: Record<string, Lektion[]> = {
   termine,
   sparte,
   downloads,
+  chronik,
   kontaktseite,
   zugaenge,
   verlauf,

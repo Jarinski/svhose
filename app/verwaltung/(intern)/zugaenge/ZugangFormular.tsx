@@ -285,7 +285,8 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
                 <span>
                   <span className="block font-medium text-sm">Förderverein</span>
                   <span className="block text-xs text-[#6b6b6b]">
-                    News und Downloads des Fördervereins pflegen – sie erscheinen unter Förderverein auf der Website. Sonst nichts: keine Sparten, Personen oder Zugänge.
+                    News und Downloads des Fördervereins pflegen und seine Chronik gestalten (Inhalt und Aufbau) – alles erscheint unter Förderverein auf der Website. Sonst
+                    nichts: keine Sparten, Personen oder Zugänge.
                   </span>
                 </span>
               </label>

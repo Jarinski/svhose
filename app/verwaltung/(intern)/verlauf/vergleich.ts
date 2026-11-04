@@ -57,6 +57,7 @@ const FELD_NAMEN: Record<string, string> = {
   rhythmus: 'Rhythmus',
   hinweis: 'Hinweis',
   bezeichnung: 'Bezeichnung',
+  einleitung: 'Einleitung',
   quelle: 'Quelle',
   externeId: 'Externe Nr.',
 }

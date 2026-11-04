@@ -7,9 +7,10 @@ import type { Rechte } from '@/lib/verwaltung/rechte'
  * - alle: jeder Zugang
  * - teams: wer Mannschaften oder Gruppen bearbeiten darf (Trainer:innen, Spartenleitung, Admins)
  * - sparte: Spartenleitung und Admins
+ * - foerderverein: Zugänge mit Förderverein-Recht und Admins
  * - admin: nur Admins
  */
-export type Zielgruppe = 'alle' | 'teams' | 'sparte' | 'admin'
+export type Zielgruppe = 'alle' | 'teams' | 'sparte' | 'foerderverein' | 'admin'
 
 /** Abschnitt der Übersicht, in dem die Kachel steht. */
 export type Bereich = 'start' | 'teams' | 'inhalte' | 'verwaltung'
@@ -35,6 +36,7 @@ export const ZIELGRUPPEN_TEXT: Record<Zielgruppe, string | null> = {
   alle: null,
   teams: 'Mannschaften & Gruppen',
   sparte: 'Spartenleitung & Admins',
+  foerderverein: 'Förderverein & Admins',
   admin: 'Nur Admins',
 }
 
@@ -43,5 +45,6 @@ export function zielgruppeErlaubt(z: Zielgruppe, rechte: Rechte, hatTeams: boole
   if (rechte.istAdmin || z === 'alle') return true
   if (z === 'teams') return hatTeams
   if (z === 'sparte') return rechte.sparten.length > 0
+  if (z === 'foerderverein') return rechte.foerderverein
   return false
 }

@@ -4,7 +4,8 @@
  * Wer darf was? Admins dürfen alles. Alle anderen Zugänge dürfen ihre Bereiche bearbeiten
  * (zugang_bereiche): eine Sparte mit allen Mannschaften und Gruppen darin – oder einzelne
  * Mannschaften bzw. Gruppen. Dazu kann ein Zugang das gesonderte Förderverein-Recht haben
- * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen, sonst nichts.
+ * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen und die Chronik des
+ * Fördervereins gestalten, sonst nichts.
  * Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
  * ausschließlich in ihrem eigenen Bereich vorkommt (siehe kannPerson) – und jede:r sich selbst.
  *
@@ -21,7 +22,7 @@ export interface Rechte {
   name: string
   istAdmin: boolean
   personId: number | null
-  /** Darf News und Downloads des Fördervereins pflegen (Admins immer). */
+  /** Darf News, Downloads und Chronik des Fördervereins pflegen (Admins immer). */
   foerderverein: boolean
   sparten: number[]
   mannschaften: number[]
@@ -105,6 +106,11 @@ export function kannPerson(db: Pick<Datenbank, 'select'>, r: Rechte, personId: n
 
 /** Darf der Zugang Downloads pflegen (Admins alle, mit Förderverein-Recht nur die der Kategorie "Förderverein")? */
 export function darfDownloads(r: Rechte): boolean {
+  return r.istAdmin || r.foerderverein
+}
+
+/** Darf der Zugang die Chronik des Fördervereins bearbeiten (Inhalt und Aufbau)? Admins und Zugänge mit Förderverein-Recht. */
+export function darfChronik(r: Rechte): boolean {
   return r.istAdmin || r.foerderverein
 }
 

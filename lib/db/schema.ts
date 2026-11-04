@@ -338,6 +338,21 @@ export const downloads = sqliteTable(
   t => [index('downloads_sparte_idx').on(t.sparteId)],
 )
 
+// ─── Frei gestaltete Seiten ─────────────────────────────────────────────────
+
+/**
+ * Seiten, deren Inhalt und Aufbau komplett in der Verwaltung entsteht – heute nur die Chronik des
+ * Fördervereins (schluessel "foerderverein-chronik", Aufbau in lib/chronik.ts). Der Inhalt ist ein
+ * JSON-Dokument aus Bausteinen; Bilder darin sind relative Pfade im Medienordner.
+ * Fehlt die Zeile, zeigt die Website die Vorlage aus dem Code.
+ */
+export const seiten = sqliteTable('seiten', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  schluessel: text('schluessel').notNull().unique(),
+  inhalt: text('inhalt', { mode: 'json' }).notNull(),
+  ...zeitstempel(),
+})
+
 // ─── Verwaltung: Zugänge, Anmeldung, Verlauf ────────────────────────────────
 
 export const CODE_ZWECKE = ['einladung'] as const

@@ -29,7 +29,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 |---|---|---|
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion |
-| **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads` | Was auf der Website erscheint |
+| **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten wie die Förderverein-Chronik) |
 | **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
@@ -502,6 +502,36 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `datum` | text | nein | – | `YYYY-MM-DD` |
 | `sparte_id` | integer | nein | – | → `sparten.id` |
 | `reihenfolge` | integer | ja | `0` | Sortierung bei gleichem Datum |
+
+## 3.11a seiten (frei gestaltete Seiten)
+
+- **Zweck**: Seiten, deren Inhalt **und** Aufbau komplett in der Verwaltung entstehen. Heute nur die
+  Chronik des Fördervereins (`/foerderverein/chronik`, bearbeitet unter `/verwaltung/chronik` von
+  Admins und Zugängen mit Förderverein-Recht).
+- **Beziehungen**: keine Fremdschlüssel. Bilder stehen als relative Medienpfade im JSON-Dokument.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `schluessel` | text | ja, **eindeutig** | – | welche Seite, z. B. `foerderverein-chronik` |
+| `inhalt` | text (JSON) | ja | – | das ganze Dokument, Aufbau siehe unten |
+
+- **Aufbau von `inhalt`** (Typen und Vorlage in `lib/chronik.ts`): `{ einleitung, bausteine: [...] }`.
+  Jeder Baustein hat `art` und `sichtbar` (ausgeblendete bleiben gespeichert, erscheinen aber nicht):
+  - `zeitleiste`: `ueberschrift`, `darstellung` (`kacheln` | `zeitstrahl` | `gross`), `eintraege` mit `zeit`, `titel`, `text`, `bild`
+  - `text`: `ueberschrift`, `text` (Markdown), `bild`, `bildPosition` (`rechts` | `links`), `hintergrund` (`hell` | `dunkel`)
+  - `bild`: `bild`, `unterschrift`, `breite` (`normal` | `breit`)
+  - `liste`: `ueberschrift`, `text`, `punkte` (Strings), `darstellung` (`kaestchen` | `punkte`)
+  - `zahlen`: `ueberschrift`, `eintraege` mit `zahl` und `text`, `hintergrund`
+  - `zitat`: `text`, `quelle`
+
+  Ein `bild` ist `{ pfad, breite, hoehe }` oder `null`.
+- **Besonderheiten**:
+  - Fehlt die Zeile, zeigt die Website die Vorlage aus `lib/chronik.ts` (der Stand vor der Verwaltung).
+  - Die Datenbank prüft den Aufbau nicht. Pflichtangaben und Längen prüft die Speicherlogik
+    (`lib/verwaltung/inhalte/chronik.ts`); beim Lesen bringt `chronikLesen` unbekannte Werte auf den Standard.
+  - Gespeichert wird immer das ganze Dokument; `geaendert_am` dient als optimistische Sperre.
+  - `medienFreigeben` löscht kein Bild, dessen Pfad noch in einem `inhalt` vorkommt.
 
 **Verwaltungstabellen (seit 20.10.2026):** Die folgenden Tabellen gehören zur Verwaltung unter `/verwaltung` (Migration `0001_verwaltung`).
 Die Website liest sie nie. Wie Anmeldung und Rechte fachlich ablaufen,
@@ -1010,6 +1040,8 @@ Bisherige Migrationen:
 |---|---|---|
 | `0000_initial.sql` | 03.10.2026 | alle Inhaltstabellen (Abschnitte 3.1–3.11) |
 | `0001_verwaltung.sql` | 20.10.2026 | neue Tabellen `zugaenge` (mit Benutzername, Passwort-Hash und App-Geheimnis), `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` samt Indizes und CHECKs (Abschnitte 3.12–3.17). Die Inhaltstabellen ändert sie nicht |
+| `0002_foerderverein_recht.sql` | 31.10.2026 | neue Spalte `zugaenge.foerderverein` (Förderverein-Recht) |
+| `0003_chronik.sql` | 04.11.2026 | neue Tabelle `seiten` für die Förderverein-Chronik (Abschnitt 3.11a) |
 
 Während der Entwicklung gab es kurz eine zweite Migration `0002_zwei_faktor`. Sie wurde vor dem
 ersten Deployment in `0001_verwaltung` zusammengeführt. Eine lokale Entwicklungsdatenbank, auf
