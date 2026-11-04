@@ -642,6 +642,14 @@ SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname N
 - Verdacht auf Missbrauch: einzelne Geräte abmelden (unter „Zugänge“ bzw. „Mein Zugang“) oder den
   Zugang deaktivieren. Deaktivieren meldet sofort alle Geräte ab.
 
+### 9.3a Passwort vergessen (App-Code)
+
+Wer sein Passwort vergisst, aber noch die Authenticator-App hat, braucht keinen Admin: Auf
+`/verwaltung/passwort-vergessen` setzen Benutzername und aktueller App-Code ein neues Passwort; alle Geräte
+werden abgemeldet, der Vorgang steht im Verlauf. Dafür gelten dieselben Fehlversuch-Sperren wie beim Login.
+Wichtig: Wer das entsperrte Handy hat und den Benutzernamen kennt, kann damit das Passwort ändern – das Handy
+ist also der eigentliche Schlüssel. Bei verlorenem Handy hilft nur Abschnitt 9.3 bzw. 9.4.
+
 ### 9.4 Notfall: alle Admins ausgesperrt
 
 Kann sich kein Admin mehr anmelden, hilft nur das Skript aus Abschnitt 9.1, direkt auf dem Server:

@@ -7,8 +7,9 @@
  *                            ihr Passwort fest und koppelt die Authenticator-App.
  *   Anmeldung             → Benutzername + Passwort + App-Code. "Angemeldet bleiben" = 30 Tage,
  *                            sonst endet die Sitzung nach 12 Stunden bzw. mit dem Schließen des Browsers.
- *   Passwort vergessen /   → ein Admin setzt den Zugang zurück: alle Geräte abgemeldet, Passwort und
- *   Handy verloren           App-Kopplung ungültig, neuer Einladungs-Code.
+ *   Passwort vergessen     → Benutzername + App-Code genügen für ein neues Passwort (alle Geräte abgemeldet).
+ *   Handy verloren         → ein Admin setzt den Zugang zurück: alle Geräte abgemeldet, Passwort und
+ *                            App-Kopplung ungültig, neuer Einladungs-Code.
  *
  * Gespeichert werden nur Hashes (Codes, Sitzungstoken: SHA-256; Passwörter: scrypt). Fehlversuche
  * werden pro IP und pro Kombination aus Benutzername und IP gezählt; danach ist eine Viertelstunde Pause.
@@ -326,6 +327,62 @@ export async function passwortAendern(
     tx.delete(schema.geraete).where(and(eq(schema.geraete.zugangId, zugangId), ne(schema.geraete.id, aktuellesGeraetId))).run()
     protokollieren(tx, { zugangId, name: zugang.name }, { aktion: 'geaendert', objektTyp: 'zugaenge', objektId: zugangId, bezeichnung: 'Passwort geändert (andere Geräte abgemeldet)' })
   })
+  return { ok: true }
+}
+
+/**
+ * Passwort vergessen: Wer die gekoppelte Authenticator-App hat, setzt mit Benutzername + App-Code ein neues
+ * Passwort. Alle Geräte werden abgemeldet. Fehler bleiben bewusst unspezifisch.
+ */
+export async function passwortPerAppZuruecksetzen(
+  db: Datenbank,
+  ip: string,
+  eingabe: { benutzername: string; totpCode: string; neuesPasswort: string; neuesPasswortWdh: string },
+): Promise<{ ok: true } | { ok: false; feld?: 'neuesPasswort' | 'neuesPasswortWdh'; meldung: string }> {
+  const benutzername = benutzernameNormalisieren(eingabe.benutzername)
+  if (istGesperrt(db, ip, benutzername)) {
+    return { ok: false, meldung: 'Zu viele falsche Versuche. Bitte in einer Viertelstunde erneut probieren.' }
+  }
+  const zugang = benutzername
+    ? db
+        .select()
+        .from(schema.zugaenge)
+        .where(and(eq(schema.zugaenge.benutzername, benutzername), eq(schema.zugaenge.aktiv, true), isNotNull(schema.zugaenge.eingerichtetAm)))
+        .get()
+    : undefined
+  const schritt = zugang?.totpGeheimnis ? totpPruefen(zugang.totpGeheimnis, eingabe.totpCode, zugang.totpLetzterSchritt) : null
+  if (!zugang || schritt == null) {
+    fehlversuchMerken(db, ip, benutzername)
+    return { ok: false, meldung: 'Benutzername oder App-Code stimmen nicht. Hinweis: Jeder App-Code gilt nur einmal – ggf. auf den nächsten warten.' }
+  }
+  const regel = passwortRegelVerletzt(eingabe.neuesPasswort, zugang.benutzername)
+  if (regel) return { ok: false, feld: 'neuesPasswort', meldung: regel }
+  if (eingabe.neuesPasswort !== eingabe.neuesPasswortWdh) return { ok: false, feld: 'neuesPasswortWdh', meldung: 'Die beiden Passwörter stimmen nicht überein.' }
+
+  const passwortHash = await passwortHashen(eingabe.neuesPasswort)
+  const ok = db.transaction(tx => {
+    const aktualisiert = tx
+      .update(schema.zugaenge)
+      .set({ passwortHash, totpLetzterSchritt: schritt })
+      .where(
+        and(
+          eq(schema.zugaenge.id, zugang.id),
+          eq(schema.zugaenge.aktiv, true),
+          // Derselbe App-Code gilt nur einmal – auch bei zwei gleichzeitigen Versuchen.
+          eq(schema.zugaenge.totpGeheimnis, zugang.totpGeheimnis!),
+          or(isNull(schema.zugaenge.totpLetzterSchritt), lt(schema.zugaenge.totpLetzterSchritt, schritt)),
+        ),
+      )
+      .run()
+    if (aktualisiert.changes !== 1) return false
+    tx.delete(schema.geraete).where(eq(schema.geraete.zugangId, zugang.id)).run()
+    protokollieren(tx, { zugangId: zugang.id, name: zugang.name }, { aktion: 'geaendert', objektTyp: 'zugaenge', objektId: zugang.id, bezeichnung: 'Passwort per App-Code zurückgesetzt (alle Geräte abgemeldet)' })
+    return true
+  })
+  if (!ok) {
+    fehlversuchMerken(db, ip, benutzername)
+    return { ok: false, meldung: 'Der App-Code wurde gerade schon benutzt. Bitte auf den nächsten warten.' }
+  }
   return { ok: true }
 }
 

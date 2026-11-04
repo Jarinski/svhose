@@ -2,7 +2,7 @@
 
 /**
  * Server-Aktionen rund um die Anmeldung: Zugang einrichten (Passwort + Authenticator-App),
- * anmelden mit Zwei-Faktor, Passwort ändern, Geräte abmelden.
+ * anmelden mit Zwei-Faktor, Passwort ändern, Passwort vergessen (per App-Code), Geräte abmelden.
  */
 
 import { and, eq } from 'drizzle-orm'
@@ -16,6 +16,7 @@ import {
   geraetNameAusUserAgent,
   istGesperrt,
   passwortAendern,
+  passwortPerAppZuruecksetzen,
   zweiFaktorAnmelden,
 } from '@/lib/verwaltung/anmeldung'
 import { erfolg, fehler, type FormErgebnis } from '@/lib/verwaltung/formular'
@@ -144,4 +145,16 @@ export async function passwortAendernAktion(_vorher: FormErgebnis, formData: For
   })
   if (!ergebnis.ok) return fehler(ergebnis.meldung, ergebnis.feld ? { [ergebnis.feld]: ergebnis.meldung } : undefined)
   return erfolg('Passwort geändert. Alle anderen Geräte wurden abgemeldet.')
+}
+
+/** Passwort vergessen: neues Passwort mit Benutzername + App-Code setzen. */
+export async function passwortVergessen(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
+  const ergebnis = await passwortPerAppZuruecksetzen(datenbank(), await anfrageIp(), {
+    benutzername: text(formData, 'benutzername'),
+    totpCode: text(formData, 'totpCode'),
+    neuesPasswort: text(formData, 'neuesPasswort'),
+    neuesPasswortWdh: text(formData, 'neuesPasswortWdh'),
+  })
+  if (!ergebnis.ok) return fehler(ergebnis.meldung, ergebnis.feld ? { [ergebnis.feld]: ergebnis.meldung } : undefined)
+  return erfolg('Passwort geändert. Alle Geräte wurden abgemeldet – du kannst dich jetzt mit dem neuen Passwort anmelden.')
 }

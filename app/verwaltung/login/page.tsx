@@ -35,7 +35,14 @@ export default async function LoginSeite() {
             </Link>
             .
           </p>
-          <p>Passwort vergessen oder Handy verloren? Ein Admin kann deinen Zugang zurücksetzen – danach richtest du ihn neu ein.</p>
+          <p>
+            Passwort vergessen?{' '}
+            <Link href="/verwaltung/passwort-vergessen" className="underline underline-offset-4 hover:text-[#0a0a0a]">
+              Mit dem App-Code neu setzen
+            </Link>
+            .
+          </p>
+          <p>Handy verloren? Ein Admin kann deinen Zugang zurücksetzen – danach richtest du ihn neu ein.</p>
         </div>
       </div>
     </div>
