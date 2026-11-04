@@ -9,6 +9,7 @@
  *   mannschaften / gruppen ──< *_personen >── personen   (Trainerteam)
  *   sparten ──< sparte_ansprechpartner >── personen
  *   personen ──< funktionen                              (Vereinsfunktionen, Kontaktseite)
+ *   personen ──< foerderverein_vorstand                  (Vorstand des Fördervereins)
  *   news, termine, downloads ──> sparten / mannschaften / gruppen (optional)
  *
  * Bild- und Dateipfade werden relativ zum Medienordner gespeichert
@@ -209,6 +210,28 @@ export const funktionen = sqliteTable(
     index('funktionen_person_idx').on(t.personId),
     check('funktionen_gruppe_check', sql`${t.gruppe} IN (${liste(FUNKTIONS_GRUPPEN)})`),
   ],
+)
+
+// ─── Vorstand des Fördervereins ─────────────────────────────────────────────
+
+/**
+ * Vorstand auf der Seite /foerderverein/vorstand. Eigene Tabelle statt einer weiteren Gruppe in
+ * funktionen: Den Vorstand pflegen auch Zugänge mit Förderverein-Recht, die Kontaktseite des SV
+ * bleibt Admin-Sache.
+ */
+export const foerdervereinVorstand = sqliteTable(
+  'foerderverein_vorstand',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    personId: integer('person_id')
+      .notNull()
+      .references(() => personen.id, { onDelete: 'cascade' }),
+    /** Funktion, z. B. "1. Vorsitzender" oder "Kassenwartin". */
+    bezeichnung: text('bezeichnung').notNull(),
+    reihenfolge: integer('reihenfolge').notNull().default(0),
+    ...zeitstempel(),
+  },
+  t => [index('foerderverein_vorstand_person_idx').on(t.personId)],
 )
 
 // ─── Trainingszeiten ────────────────────────────────────────────────────────
@@ -546,6 +569,10 @@ export const sparteAnsprechpartnerRelations = relations(sparteAnsprechpartner, (
 export const funktionenRelations = relations(funktionen, ({ one }) => ({
   person: one(personen, { fields: [funktionen.personId], references: [personen.id] }),
   sparte: one(sparten, { fields: [funktionen.sparteId], references: [sparten.id] }),
+}))
+
+export const foerdervereinVorstandRelations = relations(foerdervereinVorstand, ({ one }) => ({
+  person: one(personen, { fields: [foerdervereinVorstand.personId], references: [personen.id] }),
 }))
 
 export const trainingszeitenRelations = relations(trainingszeiten, ({ one }) => ({

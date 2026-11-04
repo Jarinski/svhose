@@ -48,7 +48,7 @@ export default async function Uebersicht() {
         {nurFoerderverein && (
           <Karte
             titel="Förderverein"
-            beschreibung="Du darfst News und Downloads des Fördervereins pflegen und seine Chronik gestalten. Alles erscheint auf der Website unter Förderverein."
+            beschreibung="Du darfst News und Downloads des Fördervereins pflegen, seine Chronik gestalten und den Vorstand eintragen. Alles erscheint auf der Website unter Förderverein."
           >
             <div className="flex flex-wrap gap-2">
               <Link href="/verwaltung/news" className={knopfKlassen.sekundaer}>
@@ -59,6 +59,9 @@ export default async function Uebersicht() {
               </Link>
               <Link href="/verwaltung/chronik" className={knopfKlassen.sekundaer}>
                 Chronik
+              </Link>
+              <Link href="/verwaltung/foerderverein-vorstand" className={knopfKlassen.sekundaer}>
+                Vorstand
               </Link>
             </div>
           </Karte>

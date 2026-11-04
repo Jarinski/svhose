@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { datenbank } from '@/lib/db'
 import { medienUrl } from '@/lib/medien'
 import { personenListe } from '@/lib/verwaltung/person-bearbeiten'
+import { darfFoerdervereinVorstand, darfPersonenAnlegen } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { suchtext } from '@/lib/verwaltung/suche'
 import { Karte, knopfKlassen, LeerHinweis, Seitenkopf } from '@/components/verwaltung/ui'
@@ -13,7 +14,11 @@ export const metadata: Metadata = { title: 'Personen' }
 
 export default async function PersonenSeite() {
   const { rechte } = await sitzungErzwingen()
-  const personen = personenListe(datenbank(), rechte).map(p => ({
+  const db = datenbank()
+  const darfAnlegen = darfPersonenAnlegen(db, rechte)
+  // Admins finden den Vorstand im Menü; mit Förderverein-Recht ist er oft der einzige Weg zu neuen Personen.
+  const vorstandKnopf = !rechte.istAdmin && darfFoerdervereinVorstand(rechte)
+  const personen = personenListe(db, rechte).map(p => ({
     id: p.id,
     name: p.name,
     kontakt: [p.telefon, p.email].filter(Boolean).join(' · '),
@@ -29,17 +34,35 @@ export default async function PersonenSeite() {
         untertitel={
           rechte.istAdmin
             ? 'Alle Trainer:innen, Ansprechpartner:innen und Vereinsfunktionen.'
-            : 'Die Personen deiner Mannschaften und Gruppen. Kontaktdaten änderst du hier – für alle Stellen auf einmal.'
+            : darfAnlegen
+              ? 'Die Personen deiner Mannschaften und Gruppen. Kontaktdaten änderst du hier – für alle Stellen auf einmal.'
+              : vorstandKnopf
+                ? 'Deine eigenen Kontaktdaten und die des Förderverein-Vorstands. Neue Vorstandsmitglieder legst du direkt beim Vorstand an.'
+                : 'Hier änderst du deine eigenen Kontaktdaten. Weitere Personen trägt ein:e Admin ein.'
         }
         aktionen={
-          <Link href="/verwaltung/personen/neu" className={knopfKlassen.primaer}>
-            <Plus size={16} /> Neue Person
-          </Link>
+          (vorstandKnopf || darfAnlegen) && (
+            <>
+              {vorstandKnopf && (
+                <Link href="/verwaltung/foerderverein-vorstand" className={darfAnlegen ? knopfKlassen.sekundaer : knopfKlassen.primaer}>
+                  Vorstand (Förderverein)
+                </Link>
+              )}
+              {darfAnlegen && (
+                <Link href="/verwaltung/personen/neu" className={knopfKlassen.primaer}>
+                  <Plus size={16} /> Neue Person
+                </Link>
+              )}
+            </>
+          )
         }
       />
       {personen.length === 0 ? (
         <Karte>
-          <LeerHinweis>Noch keine Personen, die du bearbeiten darfst. Personen trägst du am einfachsten direkt im Trainerteam einer Mannschaft ein.</LeerHinweis>
+          <LeerHinweis>
+            Noch keine Personen, die du bearbeiten darfst.
+            {darfAnlegen && ' Personen trägst du am einfachsten direkt im Trainerteam einer Mannschaft ein.'}
+          </LeerHinweis>
         </Karte>
       ) : (
         <PersonenListe personen={personen} zeigeUnbenutzt={rechte.istAdmin} />

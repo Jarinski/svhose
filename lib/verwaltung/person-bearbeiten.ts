@@ -21,7 +21,16 @@ import {
   nurZiffern,
   textWert,
 } from './pruefhilfen'
-import { bearbeitbareTeams, kannGruppe, kannMannschaft, kannPerson, kannSparte, type Rechte } from './rechte'
+import {
+  bearbeitbareTeams,
+  darfFoerdervereinVorstand,
+  darfPersonenAnlegen,
+  kannGruppe,
+  kannMannschaft,
+  kannPerson,
+  kannSparte,
+  type Rechte,
+} from './rechte'
 import { protokollieren } from './verlauf'
 
 /** Datenbank oder laufende Transaktion. */
@@ -32,7 +41,7 @@ type PersonZeile = typeof schema.personen.$inferSelect
 // ─── Verwendung: Wo kommt eine Person vor? ──────────────────────────────────
 
 export interface Verwendung {
-  art: 'mannschaft' | 'gruppe' | 'sparte' | 'funktion' | 'zugang'
+  art: 'mannschaft' | 'gruppe' | 'sparte' | 'funktion' | 'foerderverein' | 'zugang'
   /** Lesbar, z. B. "Trainer:in bei U13 (Fußball)" oder "Kontaktseite: Kassenwart". */
   text: string
   /** Seite in der Verwaltung, auf der sich die Verwendung ändern lässt. */
@@ -49,7 +58,7 @@ function nachName(a: string, b: string): number {
   return a.localeCompare(b, 'de', { numeric: true })
 }
 
-/** Alle Verwendungen aller Personen, je Person sortiert (Mannschaften, Gruppen, Sparten, Kontaktseite, Zugang). */
+/** Alle Verwendungen aller Personen, je Person sortiert (Mannschaften, Gruppen, Sparten, Kontaktseite, Förderverein-Vorstand, Zugang). */
 export function verwendungenLaden(db: DbZugriff): Map<number, Verwendung[]> {
   const ergebnis = new Map<number, Verwendung[]>()
   const hinzu = (personId: number, v: Verwendung) => {
@@ -126,6 +135,21 @@ export function verwendungenLaden(db: DbZugriff): Map<number, Verwendung[]> {
       hinzu(f.personId, { art: 'funktion', text: `Kontaktseite: ${f.bezeichnung}`, href: '/verwaltung/kontakte', oeffentlich: true, bezugId: f.id, sparteId: f.sparteId }),
     )
 
+  db.select()
+    .from(schema.foerdervereinVorstand)
+    .all()
+    .sort((a, b) => a.reihenfolge - b.reihenfolge || a.id - b.id)
+    .forEach(v =>
+      hinzu(v.personId, {
+        art: 'foerderverein',
+        text: `Förderverein-Vorstand: ${v.bezeichnung}`,
+        href: '/verwaltung/foerderverein-vorstand',
+        oeffentlich: true,
+        bezugId: v.id,
+        sparteId: null,
+      }),
+    )
+
   db.select({ id: schema.zugaenge.id, personId: schema.zugaenge.personId, name: schema.zugaenge.name })
     .from(schema.zugaenge)
     .all()
@@ -145,6 +169,7 @@ export function verwendungVerlinkbar(rechte: Rechte, v: Verwendung): boolean {
     return v.art === 'mannschaft' ? kannMannschaft(rechte, team) : kannGruppe(rechte, team)
   }
   if (v.art === 'sparte') return kannSparte(rechte, v.sparteId)
+  if (v.art === 'foerderverein') return darfFoerdervereinVorstand(rechte)
   return false
 }
 
@@ -331,6 +356,10 @@ export async function personSpeichern(db: Datenbank, rechte: Rechte, e: PersonSp
 
 // ─── Anlegen ────────────────────────────────────────────────────────────────
 
+/** Für Zugänge ohne Mannschaft, Gruppe oder Sparte (siehe darfPersonenAnlegen) – auch als Hinweis auf der Seite "Neue Person". */
+export const PERSONEN_ANLEGEN_NUR_ADMINS =
+  'Neue Personen legt bei deinem Zugang ein:e Admin an. Du bearbeitest keine Mannschaft, Gruppe oder Sparte, in der die Person danach stehen könnte – sie wäre nirgends eingetragen und für dich nicht mehr zu finden.'
+
 export interface PersonAnlegenEingabe {
   /** Formularwerte: name, email, telefon (optional whatsapp, notiz) */
   roh: Record<string, unknown>
@@ -343,6 +372,7 @@ export interface PersonAnlegenEingabe {
  * gleich einer eigenen Mannschaft oder Gruppe zu (sonst könnte er sie danach nicht mehr bearbeiten).
  */
 export function personAnlegen(db: Datenbank, rechte: Rechte, e: PersonAnlegenEingabe): { id: number } | { fehler: FormErgebnis } {
+  if (!darfPersonenAnlegen(db, rechte)) return { fehler: fehler(PERSONEN_ANLEGEN_NUR_ADMINS) }
   const { daten, felder } = kontaktPruefen(e.roh)
   const rolle = textWert(e.zuordnung?.rolle) ?? 'Trainer:in'
   if (rolle.length > 60) felder.rolle = 'Die Rolle ist zu lang (höchstens 60 Zeichen).'

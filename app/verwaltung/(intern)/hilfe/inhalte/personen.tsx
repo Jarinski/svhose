@@ -36,6 +36,10 @@ export const personen: Thema = {
             Sparten stehen. Steht eine Person zusätzlich in einem fremden Team, kannst du sie nicht ändern.
           </li>
           <li>
+            <strong>Mit Förderverein-Recht</strong> darfst du Personen bearbeiten, die nur im Vorstand des Fördervereins stehen (bzw. sonst nur in
+            deinen eigenen Bereichen).
+          </li>
+          <li>
             Personen mit einer Vereinsfunktion auf der Kontaktseite (z. B. Vorstand) oder mit einem eigenen Zugang zur Verwaltung bearbeiten nur
             Admins – und die Person selbst, siehe unten. Personen, die nirgends eingetragen sind, bearbeiten ebenfalls nur Admins.
           </li>
@@ -80,6 +84,11 @@ export const personen: Thema = {
           Als Trainer:in oder Spartenleitung musst du eine Mannschaft oder Gruppe wählen. Sonst könntest du die Person danach nicht mehr
           bearbeiten. Die Person steht dann gleich im Trainerteam dieser Mannschaft bzw. Gruppe.
         </p>
+        <p>
+          Bearbeitest du keine Mannschaft, Gruppe oder Sparte, fehlt der Knopf <Taste>Neue Person</Taste>. Die Person stünde sonst nirgends, und
+          du könntest sie danach nicht mehr finden. Mit Förderverein-Recht legst du Vorstandsmitglieder direkt beim Vorstand an (siehe unten).
+          Sonst bitte eine:n Admin, die Person anzulegen und einzutragen.
+        </p>
         <Tipp art="achtung" titel="Erst suchen, dann anlegen">
           Die Verwaltung warnt nicht, wenn es schon jemanden mit demselben Namen gibt. Such deshalb vorher, ob die Person schon da ist. In deiner
           Liste unter <Begriff>Personen</Begriff> stehen nur die Personen, die du bearbeiten darfst. Die Suche im Trainerteam findet alle Personen
@@ -97,6 +106,35 @@ export const personen: Thema = {
             Ansprechpartner:innen ein. Dann erscheint sie auch in deiner Liste.
           </p>
         </Tipp>
+      </Abschnitt>
+
+      <Abschnitt titel="Vorstand des Fördervereins eintragen">
+        <p>
+          Das geht mit dem Recht <Begriff>Förderverein</Begriff> und als Admin. Der Vorstand erscheint auf der Website unter Förderverein →
+          Vorstand.
+        </p>
+        <Schritte>
+          <>
+            Öffne <Begriff>Vorstand (Förderverein)</Begriff> im Menü.
+          </>
+          <>
+            Klicke auf <Taste>Person zum Vorstand hinzufügen</Taste> und tippe den Namen ein. Gibt es die Person schon, wähle sie aus. Sonst
+            klickst du auf <Taste>„…“ als neue Person anlegen</Taste>, ergänzt nach Wunsch Telefon und E-Mail und klickst auf{' '}
+            <Taste>Hinzufügen</Taste>.
+          </>
+          <>
+            Trage bei <Begriff>Funktion</Begriff> ein, was die Person im Vorstand macht, z. B. „1. Vorsitzender“ oder „Kassenwartin“. Mit den
+            Pfeilen änderst du die Reihenfolge.
+          </>
+          <>
+            Klicke unten auf <Taste>Vorstand speichern</Taste>. Neue Personen werden erst jetzt angelegt.
+          </>
+        </Schritte>
+        <p>
+          Danach stehen die Vorstandsmitglieder auch in deiner Liste unter <Begriff>Personen</Begriff>. Dort ergänzt du Foto und Kontaktdaten,
+          wie unten beschrieben. Ausnahme: Hat jemand zusätzlich eine Funktion auf der Kontaktseite des SV oder einen eigenen Zugang, ändern die
+          Kontaktdaten nur Admins.
+        </p>
       </Abschnitt>
 
       <Abschnitt titel="Kontaktdaten und Foto ändern">

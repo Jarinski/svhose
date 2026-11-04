@@ -520,6 +520,27 @@ export async function getAnsprechpartner(): Promise<AnsprechpartnerEintrag[]> {
     }))
 }
 
+// ─── Vorstand des Fördervereins ─────────────────────────────────────────────
+
+/** Leer, solange in der Verwaltung niemand eingetragen ist – die Seite zeigt dann die feste Angabe aus lib/foerderverein.ts. */
+export async function getFoerdervereinVorstand(): Promise<Omit<AnsprechpartnerEintrag, 'gruppe'>[]> {
+  const vorstand = await datenbank().query.foerdervereinVorstand.findMany({
+    with: { person: { columns: KONTAKT_SPALTEN } },
+  })
+
+  return vorstand
+    .sort((a, b) => a.reihenfolge - b.reihenfolge || a.id - b.id)
+    .map(v => ({
+      id: v.id,
+      name: v.person.name,
+      funktion: v.bezeichnung,
+      email: wert(v.person.email),
+      telefon: wert(v.person.telefon),
+      whatsapp: wert(v.person.whatsapp),
+      foto: medienUrl(v.person.foto),
+    }))
+}
+
 // ─── Termine ────────────────────────────────────────────────────────────────
 
 export async function getTermine(): Promise<Termin[]> {

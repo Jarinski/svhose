@@ -28,7 +28,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 | Gruppe | Tabellen | Zweck |
 |---|---|---|
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
-| **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion |
+| **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten wie die Förderverein-Chronik) |
 | **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
@@ -59,6 +59,7 @@ erDiagram
   gruppen ||--o{ gruppe_personen : "Trainerteam"
   personen ||--o{ gruppe_personen : "ist in"
   personen ||--o{ funktionen : "hat"
+  personen ||--o{ foerderverein_vorstand : "sitzt im"
   sparten |o--o{ funktionen : "optional"
   mannschaften |o--o{ trainingszeiten : "trainiert"
   gruppen |o--o{ trainingszeiten : "trainiert"
@@ -135,6 +136,12 @@ erDiagram
     text bezeichnung
     text gruppe
     int sparte_id FK
+    int reihenfolge
+  }
+  foerderverein_vorstand {
+    int id PK
+    int person_id FK
+    text bezeichnung
     int reihenfolge
   }
   trainingszeiten {
@@ -284,7 +291,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 - **Zweck**: Alle Menschen im Verein, einmal angelegt und überall wiederverwendet: Trainer:innen,
   Betreuer:innen, Ansprechpartner:innen von Sparten und Vereinsfunktionär:innen.
 - **Beziehungen**: wird verwendet von `mannschaft_personen`, `gruppe_personen`,
-  `sparte_ansprechpartner` und `funktionen`.
+  `sparte_ansprechpartner`, `funktionen` und `foerderverein_vorstand`.
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
@@ -402,6 +409,24 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `reihenfolge` | integer | ja | `0` | Reihenfolge innerhalb der Gruppe |
 
 - **Besonderheit**: `funktionen` hat kein Feld `sichtbar`. Jede Zeile erscheint auf der Kontaktseite.
+
+## 3.7a foerderverein_vorstand (Vorstand des Fördervereins)
+
+- **Zweck**: Der Vorstand auf der Seite `/foerderverein/vorstand`. Eine eigene Tabelle statt einer
+  weiteren Gruppe in `funktionen`, weil ihn auch Zugänge mit Förderverein-Recht pflegen
+  (`/verwaltung/foerderverein-vorstand`), die Kontaktseite des SV aber Admin-Sache bleibt.
+  Für diese Zugänge zählt der Vorstand als eigener Bereich: Personen, die nur hier stehen, dürfen
+  sie bearbeiten (`kannPerson` in `lib/verwaltung/rechte.ts`).
+- **Beziehungen**: gehört zu genau einer Person.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `person_id` | integer | ja | – | → `personen.id` |
+| `bezeichnung` | text | ja | – | Funktion, z. B. „1. Vorsitzender“ oder „Kassenwartin“ |
+| `reihenfolge` | integer | ja | `0` | Reihenfolge auf der Vorstandsseite |
+
+- **Besonderheit**: Ist die Tabelle leer, zeigt die Website nur den Vorsitz aus `lib/foerderverein.ts`.
 
 ## 3.8 trainingszeiten
 
@@ -804,6 +829,7 @@ Alle Fremdschlüssel haben `ON UPDATE NO ACTION` (IDs ändern sich nicht). Beim 
 | `sparte_ansprechpartner.person_id` | `personen` | CASCADE | Person ist nirgends mehr Ansprechpartner:in |
 | `funktionen.person_id` | `personen` | CASCADE | alle Vereinsfunktionen der Person verschwinden (auch von der Kontaktseite) |
 | `funktionen.sparte_id` | `sparten` | SET NULL | Funktion bleibt, ohne Spartenbezug |
+| `foerderverein_vorstand.person_id` | `personen` | CASCADE | Person verschwindet aus dem Vorstand des Fördervereins |
 | `trainingszeiten.mannschaft_id` | `mannschaften` | **CASCADE** | Trainingszeiten der Mannschaft werden **gelöscht** |
 | `trainingszeiten.gruppe_id` | `gruppen` | **CASCADE** | Trainingszeiten der Gruppe werden **gelöscht** |
 | `news.sparte_id`, `news.mannschaft_id`, `news.gruppe_id` | jeweiliges Ziel | SET NULL | News bleibt; ohne jeden Bezug gehört sie dem Verein |
@@ -1042,6 +1068,7 @@ Bisherige Migrationen:
 | `0001_verwaltung.sql` | 20.10.2026 | neue Tabellen `zugaenge` (mit Benutzername, Passwort-Hash und App-Geheimnis), `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` samt Indizes und CHECKs (Abschnitte 3.12–3.17). Die Inhaltstabellen ändert sie nicht |
 | `0002_foerderverein_recht.sql` | 31.10.2026 | neue Spalte `zugaenge.foerderverein` (Förderverein-Recht) |
 | `0003_chronik.sql` | 04.11.2026 | neue Tabelle `seiten` für die Förderverein-Chronik (Abschnitt 3.11a) |
+| `0004_foerderverein_vorstand.sql` | 04.11.2026 | neue Tabelle `foerderverein_vorstand` (Abschnitt 3.7a) |
 
 Während der Entwicklung gab es kurz eine zweite Migration `0002_zwei_faktor`. Sie wurde vor dem
 ersten Deployment in `0001_verwaltung` zusammengeführt. Eine lokale Entwicklungsdatenbank, auf

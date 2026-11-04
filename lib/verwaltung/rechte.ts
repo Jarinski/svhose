@@ -4,10 +4,11 @@
  * Wer darf was? Admins dürfen alles. Alle anderen Zugänge dürfen ihre Bereiche bearbeiten
  * (zugang_bereiche): eine Sparte mit allen Mannschaften und Gruppen darin – oder einzelne
  * Mannschaften bzw. Gruppen. Dazu kann ein Zugang das gesonderte Förderverein-Recht haben
- * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen und die Chronik des
- * Fördervereins gestalten, sonst nichts.
+ * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen, die Chronik des
+ * Fördervereins gestalten und seinen Vorstand eintragen, sonst nichts.
  * Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
  * ausschließlich in ihrem eigenen Bereich vorkommt (siehe kannPerson) – und jede:r sich selbst.
+ * Für das Förderverein-Recht ist der Vorstand des Fördervereins dieser Bereich.
  *
  * Jede Server-Aktion prüft diese Rechte selbst – die Oberfläche blendet nur aus.
  */
@@ -22,7 +23,7 @@ export interface Rechte {
   name: string
   istAdmin: boolean
   personId: number | null
-  /** Darf News, Downloads und Chronik des Fördervereins pflegen (Admins immer). */
+  /** Darf News, Downloads, Chronik und Vorstand des Fördervereins pflegen (Admins immer). */
   foerderverein: boolean
   sparten: number[]
   mannschaften: number[]
@@ -70,7 +71,8 @@ export function hatBereichInSparte(db: Datenbank, r: Rechte, sparteId: number): 
  * Alle anderen nur, wenn die Person mindestens einmal und AUSSCHLIESSLICH im eigenen Bereich
  * vorkommt. Sonst könnte man eine fremde Person (z. B. aus dem Vorstand) kurz ins eigene Team
  * holen, ihre Kontaktdaten ändern und sie wieder entfernen. Personen mit Vereinsfunktion
- * (Kontaktseite) oder mit eigenem Zugang sind deshalb Admin-Sache.
+ * (Kontaktseite) oder mit eigenem Zugang sind deshalb Admin-Sache. Der Vorstand des
+ * Fördervereins zählt für Zugänge mit Förderverein-Recht als eigener Bereich.
  */
 export function kannPerson(db: Pick<Datenbank, 'select'>, r: Rechte, personId: number): boolean {
   if (r.istAdmin || r.personId === personId) return true
@@ -94,14 +96,35 @@ export function kannPerson(db: Pick<Datenbank, 'select'>, r: Rechte, personId: n
     .from(schema.sparteAnsprechpartner)
     .where(eq(schema.sparteAnsprechpartner.personId, personId))
     .all()
+  const imFoerdervereinVorstand = db
+    .select({ id: schema.foerdervereinVorstand.id })
+    .from(schema.foerdervereinVorstand)
+    .where(eq(schema.foerdervereinVorstand.personId, personId))
+    .all()
 
-  const verwendungen = inMannschaften.length + inGruppen.length + inSparten.length
+  const verwendungen = inMannschaften.length + inGruppen.length + inSparten.length + imFoerdervereinVorstand.length
   return (
     verwendungen > 0 &&
     inMannschaften.every(m => kannMannschaft(r, m)) &&
     inGruppen.every(g => kannGruppe(r, g)) &&
-    inSparten.every(s => kannSparte(r, s.sparteId))
+    inSparten.every(s => kannSparte(r, s.sparteId)) &&
+    (imFoerdervereinVorstand.length === 0 || darfFoerdervereinVorstand(r))
   )
+}
+
+/** Darf der Zugang den Vorstand des Fördervereins eintragen (/foerderverein/vorstand)? Admins und Zugänge mit Förderverein-Recht. */
+export function darfFoerdervereinVorstand(r: Rechte): boolean {
+  return r.istAdmin || r.foerderverein
+}
+
+/**
+ * Darf der Zugang neue Personen anlegen? Nur, wer sie danach auch eintragen kann: Admins, wer Mannschaften
+ * oder Gruppen bearbeitet (Trainerteam) oder eine Sparte (Ansprechpartner:innen). Ohne solchen Bereich,
+ * z. B. mit reinem Förderverein-Recht, stünde die neue Person nirgends – und kannPerson ließe den Zugang
+ * sie danach weder sehen noch bearbeiten.
+ */
+export function darfPersonenAnlegen(db: Datenbank, r: Rechte): boolean {
+  return r.istAdmin || r.sparten.length > 0 || bearbeitbareTeams(db, r).length > 0
 }
 
 /** Darf der Zugang Downloads pflegen (Admins alle, mit Förderverein-Recht nur die der Kategorie "Förderverein")? */

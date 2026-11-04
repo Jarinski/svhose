@@ -75,8 +75,9 @@ export const zugaenge: Thema = {
           </li>
           <li>
             <Begriff>Bestimmte Bereiche</Begriff> und der Haken bei <strong>Förderverein</strong> – das ist ein eigenes Recht für den Förderverein. Es
-            gilt auch ganz ohne Sparte. Der Zugang pflegt die News und Downloads des Fördervereins (Förderverein → Aktuelles und → Mitglied werden),
-            sonst nichts. Du kannst den Haken mit Sparten, Mannschaften oder Gruppen kombinieren.
+            gilt auch ganz ohne Sparte. Der Zugang pflegt die News und Downloads des Fördervereins (Förderverein → Aktuelles und → Mitglied werden)
+            und trägt unter <Begriff>Vorstand (Förderverein)</Begriff> den Vorstand ein (Förderverein → Vorstand), sonst nichts. Du kannst den
+            Haken mit Sparten, Mannschaften oder Gruppen kombinieren.
           </li>
         </Punkte>
         <p>

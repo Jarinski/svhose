@@ -18,6 +18,7 @@ const TYP_NAMEN: Record<string, string> = {
   gruppen: 'Gruppen',
   personen: 'Personen',
   funktionen: 'Kontaktseite',
+  foerderverein_vorstand: 'Förderverein-Vorstand',
   sparte_ansprechpartner: 'Ansprechpartner:innen',
   mannschaft_personen: 'Trainerteams',
   gruppe_personen: 'Trainerteams (Gruppen)',

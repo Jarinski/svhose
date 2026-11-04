@@ -68,8 +68,8 @@ function PersonFormular({ id, stand, start, fotoUrl, ergebnis, aktion }: Props &
       <Karte titel="Kontaktdaten">
         <div className="space-y-5">
           <Meldung art="hinweis">
-            Name, Telefon, E-Mail, WhatsApp und Foto erscheinen auf der Website, sobald die Person in einem Trainerteam oder auf der
-            Kontaktseite steht. Bitte nur mit Einverständnis der Person eintragen.
+            Name, Telefon, E-Mail, WhatsApp und Foto erscheinen auf der Website, sobald die Person in einem Trainerteam, auf der
+            Kontaktseite oder im Förderverein-Vorstand steht. Bitte nur mit Einverständnis der Person eintragen.
           </Meldung>
           <Feld label="Name" htmlFor="name" fehler={felder.name}>
             <input {...feld('name')} required maxLength={100} autoComplete="off" />

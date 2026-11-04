@@ -40,6 +40,7 @@ export const FOERDERVEREIN = {
   name: 'Förderverein Sportplatz des SV Holm-Seppensen e.V.',
   register: 'Amtsgericht Tostedt, VR 200219',
   email: 'info@fshose.de',
+  /** Nur noch Rückfall für /foerderverein/vorstand, solange in der Verwaltung kein Vorstand eingetragen ist. */
   vorsitz: 'Jörg Passlack',
   beitrag: 'zuletzt 24 € im Jahr, Kinder und Jugendliche bis 18 Jahre beitragsfrei',
 } as const
