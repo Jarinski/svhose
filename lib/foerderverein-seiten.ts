@@ -107,7 +107,8 @@ const HELFEN = [
   },
   {
     titel: 'Spenden',
-    text: 'Spenden helfen beim weiteren Ausbau der Sportanlage. Schreib dem Förderverein – du bekommst die Kontoverbindung.',
+    // Kontoverbindung und GiroCode stehen auf /foerderverein/spenden (Menüpunkt „Spenden“)
+    text: 'Spenden helfen beim weiteren Ausbau der Sportanlage. Die Kontoverbindung und einen GiroCode für die Banking-App findest du unter Spenden.',
   },
   {
     titel: 'Bandenwerbung',

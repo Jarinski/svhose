@@ -30,16 +30,18 @@ export const FOERDERVEREIN_MENUE = {
     { href: '/foerderverein/chronik', label: 'Chronik', text: 'Von der Idee der Eltern bis zum eigenen Platz am Tostedter Weg.' },
     { href: '/foerderverein/vorstand', label: 'Vorstand', text: 'Wer den Förderverein leitet und wie du ihn erreichst.' },
     { href: '/foerderverein/mitglied-werden', label: 'Mitglied werden', text: 'Beitreten, spenden, Bandenwerbung oder mit anpacken.' },
+    { href: '/foerderverein/spenden', label: 'Spenden', text: 'Das Spendenkonto des Fördervereins – mit GiroCode für die Banking-App.' },
   ],
 } as const
 
 // Quellen: alte Website fshose.de (Impressum; Beitrag aus dem Artikel „Unsere Unterstützer“, 2014)
-// und der SV-Artikel „Unsere 3 Vereinshelden!“ vom 23.08.2026 (Vorsitz). Beitrag vor der
-// Veröffentlichung mit dem Förderverein abgleichen.
+// und der SV-Artikel „Unsere 3 Vereinshelden!“ vom 23.08.2026 (Vorsitz). E-Mail-Adresse vom
+// Förderverein (Christian Junge, 04.11.2026). Beitrag vor der Veröffentlichung mit dem
+// Förderverein abgleichen.
 export const FOERDERVEREIN = {
   name: 'Förderverein Sportplatz des SV Holm-Seppensen e.V.',
   register: 'Amtsgericht Tostedt, VR 200219',
-  email: 'info@fshose.de',
+  email: 'foerderverein@sv-holm-seppensen.de',
   /** Nur noch Rückfall für /foerderverein/vorstand, solange in der Verwaltung kein Vorstand eingetragen ist. */
   vorsitz: 'Jörg Passlack',
   beitrag: 'zuletzt 24 € im Jahr, Kinder und Jugendliche bis 18 Jahre beitragsfrei',

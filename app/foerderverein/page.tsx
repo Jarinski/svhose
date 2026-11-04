@@ -8,7 +8,7 @@ import { FOERDERVEREIN, FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foer
 
 // ─── Förderverein Sportplatz des SV Holm-Seppensen e.V. – Übersicht ──────────
 // Seine alte Website (fshose.de) wird nicht mehr gepflegt; der SV stellt den Förderverein hier
-// vor. Die Unterseiten (Aktuelles, Chronik, Vorstand, Mitglied werden) liegen daneben. Was sich
+// vor. Die Unterseiten (Aktuelles, Chronik, Vorstand, Mitglied werden, Spenden) liegen daneben. Was sich
 // öfter ändert, kommt aus der Verwaltung: News mit der Kategorie "Förderverein" erscheinen
 // automatisch (lib/foerderverein.ts).
 
@@ -49,6 +49,12 @@ export default async function FoerdervereinPage() {
               className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:bg-[#1a1a1a] transition-colors"
             >
               Mitglied werden <ArrowRight size={16} className="shrink-0" />
+            </Link>
+            <Link
+              href="/foerderverein/spenden"
+              className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:border-[#0a0a0a] transition-colors"
+            >
+              Spenden
             </Link>
             <Link
               href="/foerderverein/vorstand"
@@ -92,7 +98,8 @@ export default async function FoerdervereinPage() {
       <div className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Mehr zum Förderverein</div>
         <h2 className="font-display text-5xl tracking-tight mb-12">HIER GEHT’S WEITER</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#0a0a0a]/10">
+        {/* Eine Kachel je Menüpunkt; zweispaltig füllt die letzte bei ungerader Zahl die ganze Reihe */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-[#0a0a0a]/10 sm:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
           {FOERDERVEREIN_MENUE.kinder.map(k => (
             <Link key={k.href} href={k.href} className="bg-[#f5f5f0] p-8 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col">
               <h3 className="font-display text-2xl tracking-tight mb-3">{k.label}</h3>

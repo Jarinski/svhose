@@ -22,7 +22,7 @@ import s from './StartseiteB.module.css'
 // nur der Termin-Filter und der Video-Knopf laufen im Browser.
 
 /** Symbole für die Kacheln des Fördervereins, in der Reihenfolge von FOERDERVEREIN_MENUE */
-const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝']
+const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝', '💶']
 
 const PFEIL = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

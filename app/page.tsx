@@ -226,7 +226,8 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10">
+          {/* Bei ungerader Zahl füllt die letzte Kachel die ganze Reihe – sonst bliebe dort ein graues Loch */}
+          <div className="grid grid-cols-2 gap-px bg-[#0a0a0a]/10 [&>*:last-child:nth-child(odd)]:col-span-2">
             {FOERDERVEREIN_MENUE.kinder.map(k => (
               <Link
                 key={k.href}
