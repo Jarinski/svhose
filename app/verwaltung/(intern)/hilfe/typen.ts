@@ -8,12 +8,13 @@ import type { Rechte } from '@/lib/verwaltung/rechte'
  * - teams: wer Mannschaften oder Gruppen bearbeiten darf (Trainer:innen, Spartenleitung, Admins)
  * - sparte: Spartenleitung und Admins
  * - foerderverein: Zugänge mit Förderverein-Recht und Admins
+ * - buchungen: Zugänge mit Buchungs-Recht (Vereinsheim) und Admins
  * - admin: nur Admins
  */
-export type Zielgruppe = 'alle' | 'teams' | 'sparte' | 'foerderverein' | 'admin'
+export type Zielgruppe = 'alle' | 'teams' | 'sparte' | 'foerderverein' | 'buchungen' | 'admin'
 
 /** Abschnitt der Übersicht, in dem die Kachel steht. */
-export type Bereich = 'start' | 'teams' | 'inhalte' | 'verwaltung'
+export type Bereich = 'start' | 'teams' | 'inhalte' | 'vereinsheim' | 'verwaltung'
 
 export interface Thema {
   /** Teil der Adresse: /verwaltung/hilfe/<slug> */
@@ -28,6 +29,8 @@ export interface Thema {
   ziel?: { href: string; text: string }
   /** Wo das Ergebnis auf der Website erscheint. */
   website?: { href: string; text: string }
+  /** Noch keine Übung unter ./uebung – Kachel und Übungsseite führen direkt zur Anleitung. */
+  ohneUebung?: boolean
   /** Die Anleitung selbst (Bausteine aus ./bausteine). */
   inhalt: React.ReactNode
 }
@@ -37,6 +40,7 @@ export const ZIELGRUPPEN_TEXT: Record<Zielgruppe, string | null> = {
   teams: 'Mannschaften & Gruppen',
   sparte: 'Spartenleitung & Admins',
   foerderverein: 'Förderverein & Admins',
+  buchungen: 'Buchungen & Admins',
   admin: 'Nur Admins',
 }
 
@@ -46,5 +50,6 @@ export function zielgruppeErlaubt(z: Zielgruppe, rechte: Rechte, hatTeams: boole
   if (z === 'teams') return hatTeams
   if (z === 'sparte') return rechte.sparten.length > 0
   if (z === 'foerderverein') return rechte.foerderverein
+  if (z === 'buchungen') return rechte.buchungen
   return false
 }

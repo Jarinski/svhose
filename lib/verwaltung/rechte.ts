@@ -9,6 +9,8 @@
  * Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
  * ausschließlich in ihrem eigenen Bereich vorkommt (siehe kannPerson) – und jede:r sich selbst.
  * Für das Förderverein-Recht ist der Vorstand des Fördervereins dieser Bereich.
+ * Ebenso gesondert ist das Buchungs-Recht (zugaenge.buchungen): Anfragen und Belegung von Vereinsheim
+ * und Gelände bearbeiten (/verwaltung/buchungen), sonst nichts.
  *
  * Jede Server-Aktion prüft diese Rechte selbst – die Oberfläche blendet nur aus.
  */
@@ -25,6 +27,8 @@ export interface Rechte {
   personId: number | null
   /** Darf News, Downloads, Seiten und Vorstand des Fördervereins pflegen (Admins immer). */
   foerderverein: boolean
+  /** Darf Buchungen und Belegung von Vereinsheim und Gelände bearbeiten (Admins immer). */
+  buchungen: boolean
   sparten: number[]
   mannschaften: number[]
   gruppen: number[]
@@ -38,6 +42,7 @@ export function rechteLaden(db: Datenbank, zugang: typeof schema.zugaenge.$infer
     istAdmin: zugang.istAdmin,
     personId: zugang.personId,
     foerderverein: zugang.istAdmin || zugang.foerderverein,
+    buchungen: zugang.istAdmin || zugang.buchungen,
     sparten: bereiche.map(b => b.sparteId).filter((x): x is number => x != null),
     mannschaften: bereiche.map(b => b.mannschaftId).filter((x): x is number => x != null),
     gruppen: bereiche.map(b => b.gruppeId).filter((x): x is number => x != null),
@@ -125,6 +130,11 @@ export function darfFoerdervereinVorstand(r: Rechte): boolean {
  */
 export function darfPersonenAnlegen(db: Datenbank, r: Rechte): boolean {
   return r.istAdmin || r.sparten.length > 0 || bearbeitbareTeams(db, r).length > 0
+}
+
+/** Darf der Zugang Buchungen und Belegung von Vereinsheim und Gelände bearbeiten? Admins und Zugänge mit Buchungs-Recht. */
+export function darfBuchungen(r: Rechte): boolean {
+  return r.istAdmin || r.buchungen
 }
 
 /** Darf der Zugang Downloads pflegen (Admins alle, mit Förderverein-Recht nur die der Kategorie "Förderverein")? */

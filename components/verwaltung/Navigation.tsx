@@ -8,6 +8,8 @@ import { Menu, X } from 'lucide-react'
 export interface NavPunkt {
   href: string
   text: string
+  /** Kleine Zahl hinter dem Text, z. B. offene Anfragen (0 = keine Anzeige). */
+  zahl?: number
 }
 
 function istAktiv(pathname: string, href: string): boolean {
@@ -29,7 +31,19 @@ export default function Navigation({ punkte, name, abmelden }: { punkte: NavPunk
               istAktiv(pathname, p.href) ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'text-[#4a4a4a] hover:bg-[#0a0a0a]/[0.06]'
             }`}
           >
-            {p.text}
+            <span className="flex items-center justify-between gap-2">
+              {p.text}
+              {!!p.zahl && (
+                <span
+                  className={`min-w-[1.25rem] rounded-full px-1.5 text-center text-[11px] font-semibold leading-5 ${
+                    istAktiv(pathname, p.href) ? 'bg-[#f5f5f0] text-[#0a0a0a]' : 'bg-amber-200 text-amber-950'
+                  }`}
+                  aria-label={`${p.zahl} offen`}
+                >
+                  {p.zahl}
+                </span>
+              )}
+            </span>
           </Link>
         </li>
       ))}

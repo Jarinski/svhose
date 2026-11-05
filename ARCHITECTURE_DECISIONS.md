@@ -119,6 +119,8 @@ Gruppe). Jede Änderung landet mit Stand vorher und nachher im Verlauf.
   Ablauf „Gerät hinzufügen“ entfällt, weil sich jedes Gerät gleich anmeldet.
 - **Keine Fremddienste:** kein Mailversand, kein Login-Anbieter, kein Fremdkonto für die
   Redaktion. QR-Codes, Hashes und App-Codes berechnet der Server selbst.
+  (Seit November 2026 verschickt die Website E-Mails nur für die Buchungen des Vereinsheims, über
+  das SMTP-Postfach `buchungen@sv-holm-seppensen.de` – nie für die Anmeldung.)
 
 ### Betrachtete Alternativen
 

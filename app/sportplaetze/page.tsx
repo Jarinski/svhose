@@ -53,6 +53,14 @@ export default async function SportplaetzePage() {
 
                 <div>
                   <p className="text-[#6b6b6b] leading-relaxed mb-6">{platz.beschreibung}</p>
+                  {platz.verweis && (
+                    <Link
+                      href={platz.verweis.href}
+                      className="mb-6 inline-flex items-center gap-2 text-xs tracking-[0.1em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a]"
+                    >
+                      {platz.verweis.text} <ArrowRight size={12} className="shrink-0" />
+                    </Link>
+                  )}
                   {sparten.length > 0 && (
                     <div>
                       <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Hier trainieren</div>

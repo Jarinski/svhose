@@ -26,6 +26,8 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
+// Relativ statt "@/…": drizzle-kit liest diese Datei ohne die Pfad-Aliasse aus tsconfig.
+import { BUCHUNG_ARTEN, BUCHUNG_ORTE, BUCHUNG_QUELLEN, BUCHUNG_STATUS } from '../buchungen/werte'
 
 // ─── Wertelisten ─────────────────────────────────────────────────────────────
 
@@ -385,6 +387,113 @@ export const seiten = sqliteTable('seiten', {
   ...zeitstempel(),
 })
 
+// ─── Vereinsheim: Buchungen und Regelbelegung ───────────────────────────────
+
+export { BUCHUNG_ARTEN, BUCHUNG_ORTE, BUCHUNG_QUELLEN, BUCHUNG_STATUS }
+
+const ORTSZEIT_GLOB = '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]'
+
+/**
+ * Buchungen von Vereinsheim (Gemeinschaftsraum) und Gelände am Tostedter Weg: Anfragen über die
+ * Website (/vereinsheim) und Sonderbelegungen, die die Verwaltung selbst einträgt.
+ *
+ * Zeiten sind Ortszeit (Europe/Berlin) als "YYYY-MM-DDTHH:MM" – so lassen sie sich als Text
+ * vergleichen; "bis" darf auf einem späteren Tag liegen (über Mitternacht, mehrtägig).
+ * Die Buchungsnummer ist zufällig; mit ihr und dem Datum ruft man auf /vereinsheim/status den
+ * Stand ab. Dort stehen nie Name, E-Mail, Telefon oder Nachricht – die sieht nur die Verwaltung,
+ * und sie werden ein Jahr nach der Belegung automatisch gelöscht (anonymisiertAm).
+ */
+export const buchungen = sqliteTable(
+  'buchungen',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    /** z. B. "K7M2-Q9XD" (Großbuchstaben und Ziffern ohne Verwechsler) */
+    nummer: text('nummer').notNull().unique(),
+    quelle: text('quelle', { enum: BUCHUNG_QUELLEN }).notNull(),
+    art: text('art', { enum: BUCHUNG_ARTEN }).notNull(),
+    ort: text('ort', { enum: BUCHUNG_ORTE }).notNull(),
+    /** Anlass, z. B. "Elternabend U11" oder "Geburtstagsfeier" */
+    titel: text('titel').notNull(),
+    von: text('von').notNull(),
+    bis: text('bis').notNull(),
+    personenzahl: integer('personenzahl'),
+    status: text('status', { enum: BUCHUNG_STATUS }).notNull().default('angefragt'),
+    /** Sparte oder Mannschaft (Mitglieder), Verein oder Firma (Externe) */
+    bereich: text('bereich'),
+    name: text('name'),
+    email: text('email'),
+    telefon: text('telefon'),
+    /** Nachricht der buchenden Person – nur in der Verwaltung sichtbar */
+    nachricht: text('nachricht'),
+    /** Rückmeldung des Vereins – steht öffentlich auf der Statusseite, daher ohne personenbezogene Daten */
+    rueckmeldung: text('rueckmeldung'),
+    /** Interne Notiz, nur in der Verwaltung */
+    notiz: text('notiz'),
+    /** Wann Name, E-Mail, Telefon und Nachricht gelöscht wurden */
+    anonymisiertAm: text('anonymisiert_am'),
+    ...zeitstempel(),
+  },
+  t => [
+    index('buchungen_von_idx').on(t.von),
+    index('buchungen_status_idx').on(t.status),
+    check('buchungen_quelle_check', sql`${t.quelle} IN (${liste(BUCHUNG_QUELLEN)})`),
+    check('buchungen_art_check', sql`${t.art} IN (${liste(BUCHUNG_ARTEN)})`),
+    check('buchungen_ort_check', sql`${t.ort} IN (${liste(BUCHUNG_ORTE)})`),
+    check('buchungen_status_check', sql`${t.status} IN (${liste(BUCHUNG_STATUS)})`),
+    check(
+      'buchungen_zeit_check',
+      sql`${t.von} GLOB '${sql.raw(ORTSZEIT_GLOB)}' AND ${t.bis} GLOB '${sql.raw(ORTSZEIT_GLOB)}' AND ${t.bis} > ${t.von}`,
+    ),
+    check('buchungen_personenzahl_check', sql`${t.personenzahl} IS NULL OR ${t.personenzahl} > 0`),
+  ],
+)
+
+/**
+ * Regelbelegung: was jede Woche zur selben Zeit stattfindet (Dart, Yoga, Training …). Ist "ende"
+ * nicht später als "beginn", reicht die Belegung bis in den Folgetag (20:00–00:00 = bis Mitternacht).
+ */
+export const belegungRegeln = sqliteTable(
+  'belegung_regeln',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    titel: text('titel').notNull(),
+    ort: text('ort', { enum: BUCHUNG_ORTE }).notNull(),
+    /** 1 = Montag … 7 = Sonntag */
+    wochentag: integer('wochentag').notNull(),
+    /** "HH:MM" */
+    beginn: text('beginn').notNull(),
+    /** "HH:MM" */
+    ende: text('ende').notNull(),
+    /** "YYYY-MM-DD", optional */
+    gueltigAb: text('gueltig_ab'),
+    /** "YYYY-MM-DD", optional */
+    gueltigBis: text('gueltig_bis'),
+    hinweis: text('hinweis'),
+    ...zeitstempel(),
+  },
+  t => [
+    check('belegung_regeln_ort_check', sql`${t.ort} IN (${liste(BUCHUNG_ORTE)})`),
+    check('belegung_regeln_wochentag_check', sql`${t.wochentag} BETWEEN 1 AND 7`),
+    check('belegung_regeln_beginn_check', sql`${t.beginn} GLOB '[0-2][0-9]:[0-5][0-9]'`),
+    check('belegung_regeln_ende_check', sql`${t.ende} GLOB '[0-2][0-9]:[0-5][0-9]'`),
+    check('belegung_regeln_gueltig_check', sql`${t.gueltigAb} IS NULL OR ${t.gueltigBis} IS NULL OR ${t.gueltigBis} >= ${t.gueltigAb}`),
+  ],
+)
+
+/** Tage, an denen eine Regelbelegung ausfällt (Ferien, Feiertag, Sonderbelegung statt Training). */
+export const belegungAusfaelle = sqliteTable(
+  'belegung_ausfaelle',
+  {
+    regelId: integer('regel_id')
+      .notNull()
+      .references(() => belegungRegeln.id, { onDelete: 'cascade' }),
+    /** "YYYY-MM-DD" */
+    datum: text('datum').notNull(),
+    erstelltAm: text('erstellt_am').notNull().default(jetzt),
+  },
+  t => [primaryKey({ columns: [t.regelId, t.datum] })],
+)
+
 // ─── Verwaltung: Zugänge, Anmeldung, Verlauf ────────────────────────────────
 
 export const CODE_ZWECKE = ['einladung'] as const
@@ -413,6 +522,8 @@ export const zugaenge = sqliteTable('zugaenge', {
   istAdmin: integer('ist_admin', { mode: 'boolean' }).notNull().default(false),
   /** Darf News und Downloads des Fördervereins pflegen (Kategorie "Förderverein"), unabhängig von den Bereichen. */
   foerderverein: integer('foerderverein', { mode: 'boolean' }).notNull().default(false),
+  /** Darf die Buchungen von Vereinsheim und Gelände bearbeiten (Anfragen, Kalender, Regelbelegung), unabhängig von den Bereichen. */
+  buchungen: integer('buchungen', { mode: 'boolean' }).notNull().default(false),
   /** Deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet. */
   aktiv: integer('aktiv', { mode: 'boolean' }).notNull().default(true),
   /** Optional: die eigene Person ("das bin ich"). */

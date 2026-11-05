@@ -43,6 +43,13 @@
       "when": 1793798986675,
       "tag": "0005_foerderverein_vorstand_kontakt",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793870397827,
+      "tag": "0006_buchungen",
+      "breakpoints": true
     }
   ]
 }

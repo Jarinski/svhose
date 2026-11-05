@@ -27,14 +27,20 @@ export default async function HilfeAnleitung(props: { params: Promise<{ thema: s
 
   return (
     <>
-      <Seitenkopf titel={thema.titel} zurueck={{ href: `/verwaltung/hilfe/${thema.slug}`, text: 'Zur Übung' }} untertitel={thema.kurz} />
+      <Seitenkopf
+        titel={thema.titel}
+        zurueck={thema.ohneUebung ? { href: '/verwaltung/hilfe', text: 'Alle Themen' } : { href: `/verwaltung/hilfe/${thema.slug}`, text: 'Zur Übung' }}
+        untertitel={thema.kurz}
+      />
 
       <div className="max-w-3xl space-y-10">
         <div className="-mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
           {fuer && <Badge>Für: {fuer}</Badge>}
-          <Link href={`/verwaltung/hilfe/${thema.slug}`} className="inline-flex items-center gap-1.5 text-sm text-[#4a4a4a] underline underline-offset-4 hover:text-[#0a0a0a]">
-            <FlaskConical size={14} aria-hidden="true" /> Lieber ausprobieren? Zur Übung
-          </Link>
+          {!thema.ohneUebung && (
+            <Link href={`/verwaltung/hilfe/${thema.slug}`} className="inline-flex items-center gap-1.5 text-sm text-[#4a4a4a] underline underline-offset-4 hover:text-[#0a0a0a]">
+              <FlaskConical size={14} aria-hidden="true" /> Lieber ausprobieren? Zur Übung
+            </Link>
+          )}
         </div>
 
         <article className="space-y-10 text-[15px] leading-relaxed text-[#0a0a0a]">{thema.inhalt}</article>

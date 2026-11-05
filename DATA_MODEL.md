@@ -30,6 +30,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten des Fördervereins) |
+| **Vereinsheim** | `buchungen`, `belegung_regeln`, `belegung_ausfaelle` | Buchungen von Vereinsheim und Gelände (Anfragen über `/vereinsheim` und eigene Belegungen) und die wöchentliche Regelbelegung |
 | **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
@@ -579,6 +580,66 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
   - Gespeichert wird immer das ganze Dokument; `geaendert_am` dient als optimistische Sperre.
   - `medienFreigeben` löscht kein Bild, dessen Pfad noch in einem `inhalt` vorkommt.
 
+## 3.11b buchungen, belegung_regeln, belegung_ausfaelle (Vereinsheim)
+
+Seit November 2026 (Migration `0006_buchungen`). Code: `lib/buchungen/` (Zeiten, Belegung, öffentliche
+Anfrage, Mail-Texte) und `lib/verwaltung/inhalte/buchungen.ts` (Speichern in der Verwaltung).
+Bearbeiten dürfen Admins und Zugänge mit `zugaenge.buchungen`.
+
+**Zeiten** sind Ortszeit (Europe/Berlin) als Text: Zeitpunkt `YYYY-MM-DDTHH:MM`, Uhrzeit `HH:MM`.
+So lassen sie sich direkt vergleichen; gerechnet wird nur mit Kalendertagen, nie mit Zeitzonen.
+
+### buchungen
+
+- **Zweck**: Anfragen über die Website und Sonderbelegungen, die die Verwaltung selbst einträgt.
+- **Beziehungen**: keine Fremdschlüssel.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `nummer` | text | ja, **eindeutig** | – | Buchungsnummer `XXXX-XXXX` aus 31 Zeichen ohne Verwechsler (kein 0/O, 1/I/L), zufällig |
+| `quelle` | text | ja | – | `website` oder `verwaltung` |
+| `art` | text | ja | – | `verein` (intern), `mitglied` (reserviert), `extern` (gemietet) |
+| `ort` | text | ja | – | `vereinsheim`, `gelaende` oder `beides` |
+| `titel` | text | ja | – | Anlass, steht im Kalender |
+| `von`, `bis` | text | ja | – | Zeitraum; `bis` > `von`, auch über Mitternacht oder mehrere Tage. Ganztägig = `…T00:00` bis `…T00:00` des Folgetags |
+| `personenzahl` | integer | nein | – | ungefähre Personenzahl (> 0) |
+| `status` | text | ja | `angefragt` | `angefragt`, `rueckfrage`, `bestaetigt`, `abgelehnt`, `storniert` |
+| `bereich` | text | nein | – | Sparte/Mannschaft bzw. Verein/Firma |
+| `name`, `email`, `telefon`, `nachricht` | text | nein | – | Kontakt der buchenden Person – nur in der Verwaltung sichtbar, ein Jahr nach `bis` automatisch geleert |
+| `rueckmeldung` | text | nein | – | Rückmeldung des Vereins, **öffentlich** auf der Statusseite |
+| `notiz` | text | nein | – | interne Notiz |
+| `anonymisiert_am` | text | nein | – | wann die Kontaktdaten geleert wurden |
+| `erstellt_am`, `geaendert_am` | text | ja | jetzt | Zeitstempel; `geaendert_am` ist die optimistische Sperre |
+
+- **Besonderheiten**:
+  - Die Statusseite `/vereinsheim/status` braucht Nummer **und** ein Datum innerhalb von `von`–`bis`;
+    sie zeigt nur Status, Ort, Zeitraum, Rückmeldung und Stand. Falsche Versuche zählen in
+    `fehlversuche` (10 pro IP in 15 Minuten), Anfragen ebenso (5 pro IP und Stunde).
+  - Abgelehnte und stornierte Buchungen belegen nichts und fehlen im Kalender.
+  - Überschneidungen sind erlaubt und werden nur angezeigt.
+  - Der Verlauf speichert Buchungen ohne `name`, `email`, `telefon` und `nachricht`.
+
+### belegung_regeln
+
+- **Zweck**: Regelbelegung – was jede Woche zur selben Zeit stattfindet (Dart, Yoga, Training).
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `titel` | text | ja | – | z. B. „Dart“ |
+| `ort` | text | ja | – | wie `buchungen.ort` |
+| `wochentag` | integer | ja | – | 1 = Montag … 7 = Sonntag |
+| `beginn`, `ende` | text | ja | – | `HH:MM`; ist `ende` ≤ `beginn`, reicht die Belegung in den Folgetag (`20:00`–`00:00` = bis Mitternacht, `00:00`–`00:00` = ganztägig) |
+| `gueltig_ab`, `gueltig_bis` | text | nein | – | `YYYY-MM-DD`, leer = unbegrenzt |
+| `hinweis` | text | nein | – | interner Hinweis |
+| `erstellt_am`, `geaendert_am` | text | ja | jetzt | Zeitstempel |
+
+### belegung_ausfaelle
+
+- **Zweck**: Tage, an denen eine Regelbelegung ausfällt. Primärschlüssel (`regel_id`, `datum`);
+  `regel_id` → `belegung_regeln` mit **ON DELETE CASCADE**.
+
 **Verwaltungstabellen (seit 20.10.2026):** Die folgenden Tabellen gehören zur Verwaltung unter `/verwaltung` (Migration `0001_verwaltung`).
 Die Website liest sie nie. Wie Anmeldung und Rechte fachlich ablaufen,
 beschreibt `CMS_KONZEPT.md` (Abschnitte 5 und 6); der Code steht in `lib/verwaltung/`.
@@ -602,6 +663,7 @@ beschreibt `CMS_KONZEPT.md` (Abschnitte 5 und 6); der Code steht in `lib/verwalt
 | `eingerichtet_am` | text | nein | – | wann Passwort und App zuletzt eingerichtet wurden; leer = Einrichtung ausstehend |
 | `ist_admin` | boolean | ja | `false` | Admins dürfen alles, alle anderen nur ihre Bereiche |
 | `foerderverein` | boolean | ja | `false` | gesondertes Recht ohne Admin: News und Downloads der Kategorie „Förderverein“ pflegen (gilt unabhängig von `zugang_bereiche`; bei Admins ohne Wirkung, sie dürfen ohnehin alles) |
+| `buchungen` | boolean | ja | `false` | gesondertes Recht ohne Admin: Buchungen und Belegung von Vereinsheim und Gelände bearbeiten (`/verwaltung/buchungen`, seit Migration `0006_buchungen`); bei Admins ohne Wirkung |
 | `aktiv` | boolean | ja | `true` | deaktivierte Zugänge sind sofort auf allen Geräten abgemeldet |
 | `person_id` | integer | nein | – | → `personen.id`, die eigene Person (optional) |
 | `erstellt_von` | integer | nein | – | ID des Zugangs, der diesen angelegt hat; bewusst **ohne** Fremdschlüssel, damit Löschen nie blockiert |
@@ -693,8 +755,9 @@ einlösen.
 
 ## 3.16 fehlversuche
 
-- **Zweck**: Begrenzung von Fehlversuchen bei Anmeldung und Einladung. Gespeichert wird nur ein
-  Hash, keine IP-Adresse und kein Benutzername im Klartext.
+- **Zweck**: Begrenzung von Fehlversuchen bei Anmeldung und Einladung – und, mit eigenen
+  Schlüsseln, von Buchungsanfragen und Statusabfragen auf `/vereinsheim` (siehe 3.11b). Gespeichert
+  wird nur ein Hash, keine IP-Adresse und kein Benutzername im Klartext.
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
@@ -776,6 +839,10 @@ CHECK-Constraint sie in der Datenbank ab. Eine neue Option braucht dort also ein
 | `TRAINER_ROLLEN` (nur Vorschläge) | `mannschaft_personen.rolle`, `gruppe_personen.rolle` | `Trainer:in`, `Co-Trainer:in`, `Torwarttrainer:in`, `Betreuer:in`, `Übungsleiter:in` |
 | `CODE_ZWECKE` | `anmelde_codes.zweck` | `einladung`, `geraet` (unbenutzt, siehe 3.14) |
 | `VERLAUF_QUELLEN` | `verlauf.quelle` | `verwaltung`, `api`, `telegram`, `system` (`api` und `telegram` für die geplante REST-API und den Bot) |
+| `BUCHUNG_ORTE` | `buchungen.ort`, `belegung_regeln.ort` | `vereinsheim`, `gelaende`, `beides` |
+| `BUCHUNG_ARTEN` | `buchungen.art` | `verein`, `mitglied`, `extern` |
+| `BUCHUNG_STATUS` | `buchungen.status` | `angefragt`, `rueckfrage`, `bestaetigt`, `abgelehnt`, `storniert` |
+| `BUCHUNG_QUELLEN` | `buchungen.quelle` | `website`, `verwaltung` |
 | `VERLAUF_AKTIONEN` | `verlauf.aktion` | `angelegt`, `geaendert`, `geloescht`, `anmeldung`, `abmeldung` |
 
 `TRAINER_ROLLEN` ist bewusst **kein** Constraint, damit neue Rollen ohne Migration möglich sind.

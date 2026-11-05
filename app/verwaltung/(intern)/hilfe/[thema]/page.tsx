@@ -25,6 +25,7 @@ export default async function HilfeUebung(props: { params: Promise<{ thema: stri
   const naechste = themen[i + 1]
   const fuer = ZIELGRUPPEN_TEXT[thema.zielgruppe]
   const anleitung = `/verwaltung/hilfe/${thema.slug}/anleitung`
+  if (thema.ohneUebung) redirect(anleitung)
 
   return (
     <>

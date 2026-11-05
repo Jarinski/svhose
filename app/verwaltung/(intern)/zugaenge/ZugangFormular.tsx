@@ -31,6 +31,7 @@ export interface ZugangFormDaten {
   personName: string | null
   istAdmin: boolean
   foerderverein: boolean
+  buchungen: boolean
   sparten: number[]
   mannschaften: number[]
   gruppen: number[]
@@ -53,6 +54,7 @@ interface Werte {
   personId: number | null
   rolle: 'admin' | 'bereiche'
   foerderverein: boolean
+  buchungen: boolean
   auswahl: string[]
 }
 
@@ -76,7 +78,7 @@ function vergleichsStand(w: Werte, baum: SparteMitTeams[]): string {
       sp.gruppen.forEach(g => w.auswahl.indexOf(`g${g.id}`) >= 0 && bereiche.push(`g${g.id}`))
     })
   }
-  return JSON.stringify([w.name.trim().replace(/\s+/g, ' '), w.benutzername.trim().toLowerCase(), w.personId, w.rolle, w.rolle === 'bereiche' && w.foerderverein, bereiche])
+  return JSON.stringify([w.name.trim().replace(/\s+/g, ' '), w.benutzername.trim().toLowerCase(), w.personId, w.rolle, w.rolle === 'bereiche' && w.foerderverein, w.rolle === 'bereiche' && w.buchungen, bereiche])
 }
 
 export default function ZugangFormular({ modus, zugang, istSelbst = false, personen, baum }: Props) {
@@ -89,6 +91,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
   )
   const [rolle, setRolle] = useState<'admin' | 'bereiche'>(zugang?.istAdmin ? 'admin' : 'bereiche')
   const [foerderverein, setFoerderverein] = useState(zugang?.foerderverein ?? false)
+  const [buchungen, setBuchungen] = useState(zugang?.buchungen ?? false)
   const [auswahl, setAuswahl] = useState<string[]>(() => auswahlAus(zugang))
   const [benutzername, setBenutzername] = useState(zugang?.benutzername ?? '')
   // Beim Anlegen folgt der Benutzername dem Namen, bis er von Hand geändert wird.
@@ -120,7 +123,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
   const angelegt = modus === 'neu' && !!ergebnis.ok && !!ergebnis.zugangId
   const geaendert =
     !angelegt &&
-    vergleichsStand({ name, benutzername, personId: person?.id ?? null, rolle, foerderverein, auswahl }, baum) !==
+    vergleichsStand({ name, benutzername, personId: person?.id ?? null, rolle, foerderverein, buchungen, auswahl }, baum) !==
       vergleichsStand(
         {
           name: zugang?.name ?? '',
@@ -128,6 +131,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
           personId: zugang?.personId ?? null,
           rolle: zugang?.istAdmin ? 'admin' : 'bereiche',
           foerderverein: zugang?.foerderverein ?? false,
+          buchungen: zugang?.buchungen ?? false,
           auswahl: auswahlAus(zugang),
         },
         baum,
@@ -263,7 +267,7 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
               <span>
                 <span className="block font-medium text-sm">Bestimmte Bereiche</span>
                 <span className="block text-xs text-[#6b6b6b]">
-                  Nur ausgewählte Sparten, Mannschaften oder Gruppen – z. B. für Trainer:innen und Spartenleitungen – und/oder der Förderverein.
+                  Nur ausgewählte Sparten, Mannschaften oder Gruppen – z. B. für Trainer:innen und Spartenleitungen – und/oder Förderverein und Buchungen.
                 </span>
               </span>
             </label>
@@ -287,6 +291,18 @@ export default function ZugangFormular({ modus, zugang, istSelbst = false, perso
                   <span className="block text-xs text-[#6b6b6b]">
                     News und Downloads des Fördervereins pflegen, seine Seiten gestalten (Chronik, Aktuelles, Mitglied werden) und den Vorstand eintragen – alles erscheint unter
                     Förderverein auf der Website. Sonst nichts: keine Sparten, anderen Personen oder Zugänge.
+                  </span>
+                </span>
+              </label>
+              <label
+                className={`flex items-start gap-3 border rounded-sm p-3 cursor-pointer ${buchungen ? 'border-[#0a0a0a] bg-[#0a0a0a]/[0.03]' : 'border-[#0a0a0a]/15'}`}
+              >
+                <input type="checkbox" name="buchungen" value="1" checked={buchungen} onChange={e => setBuchungen(e.target.checked)} className="mt-0.5 w-5 h-5" />
+                <span>
+                  <span className="block font-medium text-sm">Buchungen (Vereinsheim)</span>
+                  <span className="block text-xs text-[#6b6b6b]">
+                    Anfragen für Vereinsheim und Gelände bestätigen oder ablehnen, den Belegungskalender und die Regelbelegung pflegen. Sieht dafür Namen und
+                    Kontaktdaten der Buchenden. Sonst nichts.
                   </span>
                 </span>
               </label>

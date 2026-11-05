@@ -24,6 +24,7 @@ export default function Footer() {
                 { href: '/sparten', label: 'Sparten' },
                 { href: '/termine', label: 'Termine' },
                 { href: '/sportplaetze', label: 'Sportplätze' },
+                { href: '/vereinsheim', label: 'Vereinsheim buchen' },
                 { href: '/downloads', label: 'Downloads' },
                 { href: '/ansprechpartner', label: 'Kontakt' },
                 { href: '/foerderverein', label: 'Förderverein' },

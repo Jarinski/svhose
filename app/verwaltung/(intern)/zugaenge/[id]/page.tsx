@@ -53,6 +53,7 @@ export default async function ZugangSeite(props: { params: Promise<{ id: string 
             {istSelbst && <Badge ton="erfolg">Das bist du</Badge>}
             {zugang.istAdmin ? <Badge>Admin</Badge> : <Badge>Bestimmte Bereiche</Badge>}
             {!zugang.istAdmin && zugang.foerderverein && <Badge>Förderverein</Badge>}
+            {!zugang.istAdmin && zugang.buchungen && <Badge>Buchungen</Badge>}
             {!zugang.aktiv && <Badge ton="warnung">deaktiviert</Badge>}
             {zugang.eingerichtetAm ? (
               <Badge ton="erfolg">eingerichtet am {zeitpunktDeutsch(zugang.eingerichtetAm)}</Badge>
@@ -83,6 +84,7 @@ export default async function ZugangSeite(props: { params: Promise<{ id: string 
             personName: person?.name ?? null,
             istAdmin: zugang.istAdmin,
             foerderverein: zugang.foerderverein,
+            buchungen: zugang.buchungen,
             sparten: bereiche.map(b => b.sparteId).filter((x): x is number => x != null),
             mannschaften: bereiche.map(b => b.mannschaftId).filter((x): x is number => x != null),
             gruppen: bereiche.map(b => b.gruppeId).filter((x): x is number => x != null),

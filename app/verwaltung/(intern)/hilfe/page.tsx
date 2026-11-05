@@ -31,10 +31,12 @@ export default async function HilfeUebersicht() {
                 {kacheln.map(t => {
                   const Symbol = t.icon
                   const fuer = rechte.istAdmin ? ZIELGRUPPEN_TEXT[t.zielgruppe] : null
+                  // Themen ohne Übung (noch) führen direkt zur Anleitung
+                  const mitUebung = !t.ohneUebung
                   return (
                     <li key={t.slug}>
                       <Link
-                        href={`/verwaltung/hilfe/${t.slug}`}
+                        href={mitUebung ? `/verwaltung/hilfe/${t.slug}` : `/verwaltung/hilfe/${t.slug}/anleitung`}
                         className="group flex h-full flex-col rounded-sm border border-[#0a0a0a]/10 bg-white p-5 transition-colors hover:border-[#0a0a0a]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]"
                       >
                         <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm bg-[#0a0a0a] text-[#f5f5f0]">
@@ -48,7 +50,7 @@ export default async function HilfeUebersicht() {
                             <ErledigtHaken slug={t.slug} />
                           </span>
                           <span className="ml-auto inline-flex items-center gap-1 text-sm font-medium">
-                            Üben <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                            {mitUebung ? 'Üben' : 'Lesen'} <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                           </span>
                         </span>
                       </Link>

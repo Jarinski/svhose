@@ -22,6 +22,8 @@ export interface Sportplatz {
   zoom?: number
   /** Schreibweisen des Orts in den Trainingszeiten (klein geschrieben, Teilstück genügt) */
   ortsnamen: string[]
+  /** Optionaler Verweis unter der Beschreibung, z. B. zur Buchung des Vereinsheims */
+  verweis?: { href: string; text: string }
 }
 
 export const SPORTPLAETZE: Sportplatz[] = [
@@ -58,6 +60,7 @@ export const SPORTPLAETZE: Sportplatz[] = [
     lat: 53.29695,
     lon: 9.86917,
     ortsnamen: ['sportanlage tostedter weg', 'sportplatz tostedter weg', 'hauptplatz tostedter weg'],
+    verweis: { href: '/vereinsheim', text: 'Vereinsheim buchen' },
   },
   {
     id: 'tostedter-weg-trainingsplatz',

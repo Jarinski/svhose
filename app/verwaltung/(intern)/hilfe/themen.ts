@@ -6,6 +6,7 @@
 import { datenbank } from '@/lib/db'
 import { bearbeitbareTeams, type Rechte } from '@/lib/verwaltung/rechte'
 import { anmelden } from './inhalte/anmelden'
+import { buchungen } from './inhalte/buchungen'
 import { foerdervereinSeiten } from './inhalte/foerderverein-seiten'
 import { downloads } from './inhalte/downloads'
 import { grundlagen } from './inhalte/grundlagen'
@@ -33,6 +34,7 @@ export const THEMEN: Thema[] = [
   sparte,
   downloads,
   foerdervereinSeiten,
+  buchungen,
   kontaktseite,
   zugaenge,
   verlauf,
@@ -42,6 +44,7 @@ export const BEREICHE: { bereich: Bereich; titel: string }[] = [
   { bereich: 'start', titel: 'Erste Schritte' },
   { bereich: 'teams', titel: 'Mannschaften & Gruppen' },
   { bereich: 'inhalte', titel: 'Inhalte der Website' },
+  { bereich: 'vereinsheim', titel: 'Vereinsheim' },
   { bereich: 'verwaltung', titel: 'Für Admins' },
 ]
 

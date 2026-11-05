@@ -79,6 +79,11 @@ export const zugaenge: Thema = {
             und trägt unter <Begriff>Vorstand (Förderverein)</Begriff> den Vorstand ein (Förderverein → Vorstand), sonst nichts. Du kannst den
             Haken mit Sparten, Mannschaften oder Gruppen kombinieren.
           </li>
+          <li>
+            <Begriff>Bestimmte Bereiche</Begriff> und der Haken bei <strong>Buchungen (Vereinsheim)</strong> – ebenfalls ein eigenes Recht, auch
+            ohne Sparte. Der Zugang bearbeitet unter <Begriff>Buchungen</Begriff> die Anfragen für Vereinsheim und Gelände, den Kalender und die
+            Regelbelegung und sieht dafür Namen und Kontaktdaten der Buchenden, sonst nichts.
+          </li>
         </Punkte>
         <p>
           Für einzelne Teams klappst du die Sparte über <Taste>einzeln</Taste> rechts daneben auf (auf dem Handy steht dort nur ein Pfeil mit der

@@ -57,6 +57,20 @@ export default function DatenschutzPage() {
             <li>Kontaktdaten (Telefonnummer, E-Mail-Adresse)</li>
             <li>Informationen, die Sie uns in Ihren Anfragen oder Mitteilungen übermitteln</li>
           </ul>
+          <p className="mt-3">
+            <span className="text-[#0a0a0a]">Anfragen für das Vereinsheim:</span> Wenn Sie über die Seite{' '}
+            <a href="/vereinsheim" className="text-[#0a0a0a] underline underline-offset-2">
+              Vereinsheim buchen
+            </a>{' '}
+            eine Anfrage stellen, speichern wir Ihren Namen, Ihre E-Mail-Adresse, optional Ihre Telefonnummer, Ihre Nachricht sowie
+            Anlass, Zeitraum und ungefähre Personenzahl. Diese Angaben sehen nur die Personen im Verein, die Buchungen bearbeiten. Sie
+            erhalten eine Bestätigung per E-Mail; die Anfrage wird zusätzlich an das Postfach des Vereins für Buchungen gemeldet.
+            Rechtsgrundlage ist die Anbahnung und Durchführung der Buchung (Art. 6 Abs. 1 lit. b DSGVO) und Ihre Einwilligung (Art. 6 Abs.
+            1 lit. a DSGVO). Name, E-Mail-Adresse, Telefonnummer und Nachricht löschen wir automatisch spätestens ein Jahr nach dem
+            gebuchten Termin. Mit Buchungsnummer und Datum lässt sich der Stand der Anfrage abrufen; dabei werden keine
+            personenbezogenen Daten angezeigt. Zum Schutz vor Missbrauch speichern wir für höchstens einen Tag einen nicht
+            umkehrbaren Prüfwert (Hash) Ihrer IP-Adresse.
+          </p>
         </div>
 
         <div>

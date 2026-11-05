@@ -87,6 +87,10 @@ flowchart LR
 | `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>` | **hoch** |
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
+| `SMTP_HOST`, `SMTP_PORT` | für Buchungs-Mails | Port `465` | SMTP-Server des Buchungs-Postfachs; `465` = TLS, sonst STARTTLS (Pflicht) | niedrig |
+| `SMTP_BENUTZER`, `SMTP_PASSWORT` | für Buchungs-Mails | – | Zugang des Postfachs `buchungen@sv-holm-seppensen.de`. Fehlt etwas davon (oder `SMTP_HOST`), ist der Versand aus; Anfragen gehen trotzdem | **hoch** (Passwort) |
+| `SMTP_ABSENDER` | nein | `"SV Holm-Seppensen · Vereinsheim" <SMTP_BENUTZER>` | Absender der Buchungs-Mails | niedrig |
+| `BUCHUNGEN_POSTFACH` | nein | `SMTP_BENUTZER` | Empfänger der Meldung „neue Anfrage“ | niedrig |
 | `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>`. Außerdem die Adresse in den Einladungs-Links und -QR-Codes der Verwaltung: Ohne sie nimmt die Verwaltung die Adresse der aktuellen Anfrage, das Skript `npm run verwaltung:admin` dagegen `http://localhost:3000` | niedrig |
 
 Für den späteren Telegram-Bot kommen Schlüssel für Telegram und OpenRouter hinzu (siehe
@@ -419,7 +423,10 @@ sudo systemctl restart svhs
 
 - Sanity wird nicht mehr genutzt. Die Website braucht zur Laufzeit außer fussball.de und click-tt
   keinen externen Dienst.
-- Auch die Verwaltung kommt ohne externen Dienst aus: kein Mailversand, kein Login-Anbieter.
+- **Mailversand** gibt es nur für die Buchungen des Vereinsheims (`lib/mail.ts`, Paket `nodemailer`):
+  über das SMTP-Postfach aus `SMTP_*`. Ist es nicht eingerichtet oder nicht erreichbar, gehen
+  Anfragen trotzdem ein; der Fehler steht im Server-Log (`[mail] Versand fehlgeschlagen`).
+- Sonst kommt die Verwaltung ohne externen Dienst aus: kein Login-Anbieter.
   QR-Codes (Paket `qrcode`), Passwort-Hashes (scrypt) und App-Codes (TOTP) berechnet der Server
   selbst; die Authenticator-Apps auf den Handys arbeiten offline.
 - Später kommen Telegram und OpenRouter für den Bot dazu (`CMS_KONZEPT.md`).
@@ -528,6 +535,11 @@ Daraus folgt:
   Notizen, und zwar auch nach dem Löschen der Person. Eine automatische Löschfrist gibt es nicht.
   Bei einem Löschwunsch (z. B. Widerruf der Einwilligung) die betroffenen Einträge in `verlauf`
   zusätzlich per Drizzle Studio entfernen; Backups laufen nach 30 Tagen von selbst aus.
+- **Buchungen Vereinsheim:** Name, E-Mail, Telefon und Nachricht der Buchenden sehen nur Zugänge
+  mit Buchungs-Recht und Admins. Sie werden ein Jahr nach dem Termin automatisch geleert
+  (`personendatenLoeschen` in `lib/buchungen/anfrage.ts`, läuft bei jeder Anfrage und beim Öffnen
+  der Buchungsübersicht) und stehen nie im Verlauf. Die Statusseite `/vereinsheim/status` zeigt
+  nur Status, Ort, Zeit und die Rückmeldung des Vereins.
 - **Zugänge** brauchen keine E-Mail-Adresse: gespeichert werden Name, Benutzername, Rechte und die
   Gerätenamen aus dem User-Agent. IP-Adressen stehen nur gehasht in `fehlversuche` und
   verschwinden nach etwa einem Tag (`DATA_MODEL.md`, Abschnitt 3.16).
