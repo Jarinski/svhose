@@ -3,14 +3,17 @@
  *
  * Wer belegt wann Vereinsheim und Gelände? Fügt Regelbelegung (jede Woche, ohne ausgefallene
  * Tage) und Buchungen zu einer Liste zusammen – für den Kalender der Verwaltung, die Prüfung auf
- * Überschneidungen und die Verfügbarkeit im öffentlichen Buchungsformular.
+ * Überschneidungen und die Verfügbarkeit auf der öffentlichen Vereinsheim-Seite (Kalender und
+ * Buchungsformular).
  */
 
 import { and, gte, inArray, lt } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
 import {
+  amTag,
   BELEGENDE_STATUS,
+  monatPlus,
   orteUeberschneiden,
   tagPlus,
   wochentag,
@@ -158,27 +161,50 @@ export interface FreiBelegt extends Zeitraum {
   art: 'regel' | 'belegt' | 'angefragt'
 }
 
+/** Öffentliche Belegung eines Tages, getrennt nach Ort. Buchungen für "beides" stehen bei beiden. */
+export interface TagesBelegung {
+  vereinsheim: FreiBelegt[]
+  gelaende: FreiBelegt[]
+}
+
 /**
- * Belegung eines Tages für das öffentliche Buchungsformular – nur Zeiten und Art, nie Titel oder
- * Namen. Überschneidungen gleicher Art werden zusammengefasst.
+ * Einträge (ohne ausgefallene Regeltermine) auf Zeit und Art reduzieren – nie Titel oder Namen –
+ * und Überschneidungen gleicher Art zusammenfassen.
  */
-export function belegungOeffentlich(db: Lesend, datum: string, ort: BuchungOrt): FreiBelegt[] {
-  const roh = belegung(db, datum, tagPlus(datum, 1))
-    .filter(e => !(e.typ === 'regel' && e.ausgefallen) && orteUeberschneiden(e.ort, ort))
-    .map(
-      (e): FreiBelegt => ({
-        von: e.von,
-        bis: e.bis,
-        art: e.typ === 'regel' ? 'regel' : e.status === 'bestaetigt' ? 'belegt' : 'angefragt',
-      }),
-    )
+function oeffentlich(eintraege: BelegungsEintrag[], ort: BuchungOrt): FreiBelegt[] {
   const ergebnis: FreiBelegt[] = []
-  for (const e of roh) {
-    const gleich = ergebnis.find(x => x.art === e.art && e.von <= x.bis && x.von <= e.bis)
+  for (const e of eintraege) {
+    if ((e.typ === 'regel' && e.ausgefallen) || !orteUeberschneiden(e.ort, ort)) continue
+    const art: FreiBelegt['art'] = e.typ === 'regel' ? 'regel' : e.status === 'bestaetigt' ? 'belegt' : 'angefragt'
+    const gleich = ergebnis.find(x => x.art === art && e.von <= x.bis && x.von <= e.bis)
     if (gleich) {
       gleich.von = gleich.von < e.von ? gleich.von : e.von
       gleich.bis = gleich.bis > e.bis ? gleich.bis : e.bis
-    } else ergebnis.push({ ...e })
+    } else ergebnis.push({ von: e.von, bis: e.bis, art })
   }
   return ergebnis.sort((a, b) => a.von.localeCompare(b.von))
+}
+
+/** Belegung eines Tages für das öffentliche Buchungsformular – nur Zeiten und Art. */
+export function belegungOeffentlich(db: Lesend, datum: string, ort: BuchungOrt): FreiBelegt[] {
+  return oeffentlich(belegung(db, datum, tagPlus(datum, 1)), ort)
+}
+
+/**
+ * Belegung eines Monats für den öffentlichen Kalender: alle Tage ab heute, nur Tage mit Einträgen.
+ * Vergangene Tage bleiben leer – wer früher was gebucht hat, geht niemanden etwas an.
+ */
+export function belegungOeffentlichMonat(db: Lesend, monat: string, heuteDatum: string): Record<string, TagesBelegung> {
+  const erster = `${monat}-01`
+  const von = erster > heuteDatum ? erster : heuteDatum
+  const bis = `${monatPlus(monat, 1)}-01`
+  const tage: Record<string, TagesBelegung> = {}
+  if (von >= bis) return tage
+  const alle = belegung(db, von, bis)
+  for (let d = von; d < bis; d = tagPlus(d, 1)) {
+    const amDatum = alle.filter(e => amTag(e, d))
+    const eintrag = { vereinsheim: oeffentlich(amDatum, 'vereinsheim'), gelaende: oeffentlich(amDatum, 'gelaende') }
+    if (eintrag.vereinsheim.length > 0 || eintrag.gelaende.length > 0) tage[d] = eintrag
+  }
+  return tage
 }

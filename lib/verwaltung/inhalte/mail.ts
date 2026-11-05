@@ -26,6 +26,9 @@ export interface MailEingabe {
   passwortLoeschen: boolean
   absenderName: string | null
   postfach: string | null
+  abrufen: boolean
+  imapHost: string | null
+  imapPort: number | null
   /** geaendertAm beim Öffnen (optimistische Sperre); null = noch nie gespeichert */
   stand: string | null
 }
@@ -37,7 +40,18 @@ const HOST = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/
 
 /** Stand für den Verlauf – ohne Passwort. */
 function schnappschuss(e: MailEinstellungen) {
-  return { aktiv: e.aktiv, host: e.host, port: e.port, benutzer: e.benutzer, absenderName: e.absenderName, postfach: e.postfach, passwort: e.passwort ? 'gespeichert' : 'keins' }
+  return {
+    aktiv: e.aktiv,
+    host: e.host,
+    port: e.port,
+    benutzer: e.benutzer,
+    absenderName: e.absenderName,
+    postfach: e.postfach,
+    abrufen: e.abrufen,
+    imapHost: e.imapHost,
+    imapPort: e.imapPort,
+    passwort: e.passwort ? 'gespeichert' : 'keins',
+  }
 }
 
 export function mailEinstellungenSpeichern(db: Datenbank, rechte: Rechte, e: MailEingabe): MailSpeicherErgebnis {
@@ -51,6 +65,9 @@ export function mailEinstellungenSpeichern(db: Datenbank, rechte: Rechte, e: Mai
   if (e.postfach && !EMAIL.test(e.postfach)) felder.postfach = 'Diese E-Mail-Adresse sieht nicht richtig aus.'
   if ((e.absenderName ?? '').length > 100) felder.absenderName = 'Bitte kürzer fassen (höchstens 100 Zeichen).'
   if ((e.passwort ?? '').length > 500) felder.passwort = 'Das Passwort ist zu lang.'
+  const imapHost = (e.imapHost ?? '').toLowerCase()
+  if (e.abrufen && !HOST.test(imapHost)) felder.imapHost = 'Bitte den Posteingangsserver eintragen, z. B. imap.strato.de.'
+  if (e.imapPort == null || e.imapPort < 1 || e.imapPort > 65535) felder.imapPort = 'Bitte einen Port eintragen (Strato: 993).'
 
   let neuesPasswort: string | null | undefined // undefined = unverändert
   if (e.passwortLoeschen) neuesPasswort = null
@@ -73,6 +90,9 @@ export function mailEinstellungenSpeichern(db: Datenbank, rechte: Rechte, e: Mai
         passwort: neuesPasswort === undefined ? alt.passwort : neuesPasswort,
         absenderName: e.absenderName ?? '',
         postfach: (e.postfach ?? '').toLowerCase(),
+        abrufen: e.abrufen,
+        imapHost,
+        imapPort: e.imapPort as number,
       }
       const zeile = tx
         .insert(schema.einstellungen)

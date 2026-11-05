@@ -8,12 +8,14 @@ import {
   amTag,
   datumMitTag,
   heute,
+  istMonat,
   MONATE,
+  monatPlus,
+  monatsRaster,
   ORT_NAMEN,
   orteUeberschneiden,
   tagPlus,
   uhrzeitAmTag,
-  wochentag,
   WOCHENTAGE_KURZ,
   type BuchungOrt,
 } from '@/lib/buchungen/zeit'
@@ -29,12 +31,6 @@ const ORT_FILTER = { alle: 'Alles', vereinsheim: 'Vereinsheim', gelaende: 'Gelä
 type OrtFilter = keyof typeof ORT_FILTER
 const MAX_IN_ZELLE = 4
 
-function monatPlus(monat: string, n: number): string {
-  const [j, m] = monat.split('-').map(Number)
-  const d = new Date(Date.UTC(j, m - 1 + n, 1))
-  return d.toISOString().slice(0, 7)
-}
-
 function farbe(e: BelegungsEintrag): string {
   return e.typ === 'regel' ? REGEL_FARBE : STATUS_FARBEN[e.status]
 }
@@ -46,21 +42,17 @@ export default async function KalenderSeite(props: { searchParams: Promise<{ mon
   const db = datenbank()
 
   const heuteDatum = heute()
-  const monat = /^\d{4}-(0[1-9]|1[0-2])$/.test(searchParams.monat ?? '') ? (searchParams.monat as string) : heuteDatum.slice(0, 7)
+  const monat = istMonat(searchParams.monat) ? searchParams.monat : heuteDatum.slice(0, 7)
   const ort: OrtFilter = searchParams.ort === 'vereinsheim' || searchParams.ort === 'gelaende' ? searchParams.ort : 'alle'
-  const ersterTag = `${monat}-01`
-  const naechsterMonat = `${monatPlus(monat, 1)}-01`
-  const rasterStart = tagPlus(ersterTag, 1 - wochentag(ersterTag))
-  const letzterTag = tagPlus(naechsterMonat, -1)
-  const rasterEnde = tagPlus(letzterTag, 7 - wochentag(letzterTag)) // Sonntag der letzten Woche
+  const tage = monatsRaster(monat)
+  const rasterStart = tage[0]
+  const rasterEnde = tage[tage.length - 1] // Sonntag der letzten Woche
   const tag = searchParams.tag && searchParams.tag >= rasterStart && searchParams.tag <= rasterEnde ? searchParams.tag : null
 
   const alle = belegung(db, rasterStart, tagPlus(rasterEnde, 1)).filter(e => ort === 'alle' || orteUeberschneiden(e.ort, ort as BuchungOrt))
   // Überschneidungen immer über alle Orte prüfen, damit "beides" auch im gefilterten Kalender auffällt
   const konflikte = ueberschneidungenInListe(belegung(db, rasterStart, tagPlus(rasterEnde, 1)))
 
-  const tage: string[] = []
-  for (let d = rasterStart; d <= rasterEnde; d = tagPlus(d, 1)) tage.push(d)
   const amDatum = (d: string) => alle.filter(e => amTag(e, d))
 
   const link = (werte: { monat?: string; ort?: OrtFilter; tag?: string | null }) => {

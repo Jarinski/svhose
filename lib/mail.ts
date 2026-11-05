@@ -12,6 +12,9 @@
  *      stattdessen diese (dazu SMTP_PORT, SMTP_ABSENDER, BUCHUNGEN_POSTFACH) – als Ausweg, falls
  *      die Verwaltung einmal nicht erreichbar ist.
  *
+ * Eingehende Mails holt lib/buchungen/postfach.ts per IMAP aus demselben Postfach (imap.strato.de:993,
+ * gleiche Zugangsdaten) – siehe imapZugang().
+ *
  * Ohne vollständigen Zugang ist der Versand aus: mailSenden() liefert dann false, alles andere läuft
  * weiter. Ein Fehler beim Versand bricht nie eine Anfrage oder ein Speichern ab – er landet im Log.
  */
@@ -39,6 +42,11 @@ export interface MailEinstellungen {
   absenderName: string
   /** Empfänger der Meldung „neue Anfrage“; leer = benutzer */
   postfach: string
+  /** Eingehende Mails per IMAP abrufen und den Buchungen zuordnen */
+  abrufen: boolean
+  imapHost: string
+  /** 993 = SSL/TLS */
+  imapPort: number
 }
 
 /** Vorbelegung: Strato, Postfach der Buchungen. */
@@ -50,6 +58,9 @@ export const MAIL_STANDARD: MailEinstellungen = {
   passwort: null,
   absenderName: 'SV Holm-Seppensen · Vereinsheim',
   postfach: '',
+  abrufen: true,
+  imapHost: 'imap.strato.de',
+  imapPort: 993,
 }
 
 /** Gespeicherte Einstellungen, fehlende Werte aus MAIL_STANDARD. */
@@ -64,6 +75,9 @@ export function mailEinstellungenLesen(db: Pick<ReturnType<typeof datenbank>, 's
     passwort: typeof w.passwort === 'string' ? w.passwort : null,
     absenderName: typeof w.absenderName === 'string' ? w.absenderName : MAIL_STANDARD.absenderName,
     postfach: typeof w.postfach === 'string' ? w.postfach : MAIL_STANDARD.postfach,
+    abrufen: typeof w.abrufen === 'boolean' ? w.abrufen : MAIL_STANDARD.abrufen,
+    imapHost: typeof w.imapHost === 'string' ? w.imapHost : MAIL_STANDARD.imapHost,
+    imapPort: typeof w.imapPort === 'number' ? w.imapPort : MAIL_STANDARD.imapPort,
     geaendertAm: zeile?.geaendertAm ?? null,
   }
 }
@@ -113,6 +127,14 @@ export function mailZugang(): MailZugang | null {
   }
 }
 
+/** Zugang zum Posteingang (IMAP): Server aus den Einstellungen, Anmeldung wie beim Versand. null = Abruf aus. */
+export function imapZugang(): { host: string; port: number; benutzer: string; passwort: string } | null {
+  const versand = mailZugang()
+  const e = mailEinstellungenLesen()
+  if (!versand || !e.abrufen || !e.imapHost) return null
+  return { host: e.imapHost, port: e.imapPort, benutzer: versand.benutzer, passwort: versand.passwort }
+}
+
 export function mailEingerichtet(): boolean {
   return mailZugang() !== null
 }
@@ -156,6 +178,10 @@ export interface Mail {
   text: string
   /** Wohin Antworten gehen sollen (z. B. an die buchende Person, wenn der Verein auf die Meldung antwortet). */
   antwortAn?: string | null
+  /** Message-ID der Mail, auf die geantwortet wird (In-Reply-To) */
+  antwortAuf?: string | null
+  /** Bisherige Message-IDs des Gesprächs (References) */
+  verweise?: string[]
 }
 
 /** Verständliche Meldung zu einem SMTP-Fehler (für die Testmail in der Verwaltung). */
@@ -173,17 +199,22 @@ function fehlerText(e: unknown, port: number): string {
 }
 
 /** Schickt eine Text-Mail und meldet, ob es geklappt hat – mit Fehlertext für die Verwaltung. */
-export async function mailVersuchen(mail: Mail, zugang: MailZugang | null = mailZugang()): Promise<{ ok: true } | { ok: false; fehler: string }> {
+export async function mailVersuchen(
+  mail: Mail,
+  zugang: MailZugang | null = mailZugang(),
+): Promise<{ ok: true; messageId: string | null; von: string } | { ok: false; fehler: string }> {
   if (!zugang) return { ok: false, fehler: 'Der E-Mail-Versand ist nicht eingerichtet oder ausgeschaltet.' }
   try {
-    await transporter(zugang).sendMail({
+    const info = await transporter(zugang).sendMail({
       from: zugang.absender,
       to: mail.an,
       subject: mail.betreff,
       text: mail.text,
       ...(mail.antwortAn ? { replyTo: mail.antwortAn } : {}),
+      ...(mail.antwortAuf ? { inReplyTo: mail.antwortAuf } : {}),
+      ...(mail.verweise?.length ? { references: mail.verweise } : {}),
     })
-    return { ok: true }
+    return { ok: true, messageId: typeof info.messageId === 'string' ? info.messageId : null, von: zugang.benutzer }
   } catch (e) {
     console.error('[mail] Versand fehlgeschlagen:', e instanceof Error ? e.message : e)
     return { ok: false, fehler: fehlerText(e, zugang.port) }

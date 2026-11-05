@@ -27,7 +27,15 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
 // Relativ statt "@/…": drizzle-kit liest diese Datei ohne die Pfad-Aliasse aus tsconfig.
-import { BUCHUNG_ARTEN, BUCHUNG_ORTE, BUCHUNG_QUELLEN, BUCHUNG_STATUS } from '../buchungen/werte'
+import {
+  BUCHUNG_ARTEN,
+  BUCHUNG_ORTE,
+  BUCHUNG_QUELLEN,
+  BUCHUNG_STATUS,
+  NACHRICHT_KANAELE,
+  NACHRICHT_RICHTUNGEN,
+  NACHRICHT_ZUORDNUNGEN,
+} from '../buchungen/werte'
 
 // ─── Wertelisten ─────────────────────────────────────────────────────────────
 
@@ -389,7 +397,7 @@ export const seiten = sqliteTable('seiten', {
 
 // ─── Vereinsheim: Buchungen und Regelbelegung ───────────────────────────────
 
-export { BUCHUNG_ARTEN, BUCHUNG_ORTE, BUCHUNG_QUELLEN, BUCHUNG_STATUS }
+export { BUCHUNG_ARTEN, BUCHUNG_ORTE, BUCHUNG_QUELLEN, BUCHUNG_STATUS, NACHRICHT_KANAELE, NACHRICHT_RICHTUNGEN, NACHRICHT_ZUORDNUNGEN }
 
 const ORTSZEIT_GLOB = '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]'
 
@@ -477,6 +485,50 @@ export const belegungRegeln = sqliteTable(
     check('belegung_regeln_beginn_check', sql`${t.beginn} GLOB '[0-2][0-9]:[0-5][0-9]'`),
     check('belegung_regeln_ende_check', sql`${t.ende} GLOB '[0-2][0-9]:[0-5][0-9]'`),
     check('belegung_regeln_gueltig_check', sql`${t.gueltigAb} IS NULL OR ${t.gueltigBis} IS NULL OR ${t.gueltigBis} >= ${t.gueltigAb}`),
+  ],
+)
+
+/**
+ * Kontaktverlauf einer Buchung: E-Mails (ein- und ausgehend), Telefonate, Gespräche und Notizen.
+ * Eingehende Mails holt lib/buchungen/postfach.ts per IMAP aus dem Buchungs-Postfach und ordnet sie
+ * zu; ohne Treffer bleibt buchungId leer (Eingang „nicht zugeordnet“). Inhalte sind personenbezogen:
+ * Sie werden mit den Kontaktdaten der Buchung gelöscht, nicht zugeordnete Mails nach 90 Tagen.
+ */
+export const buchungNachrichten = sqliteTable(
+  'buchung_nachrichten',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    /** null = eingegangen, aber noch keiner Buchung zugeordnet */
+    buchungId: integer('buchung_id').references(() => buchungen.id, { onDelete: 'cascade' }),
+    kanal: text('kanal', { enum: NACHRICHT_KANAELE }).notNull(),
+    richtung: text('richtung', { enum: NACHRICHT_RICHTUNGEN }).notNull(),
+    /** ISO-Zeitstempel (UTC) – bei Mails das Datum der Mail */
+    zeitpunkt: text('zeitpunkt').notNull(),
+    von: text('von'),
+    an: text('an'),
+    betreff: text('betreff'),
+    text: text('text').notNull().default(''),
+    /** Anzahl der Anhänge – die Anhänge selbst bleiben im Postfach */
+    anhaenge: integer('anhaenge').notNull().default(0),
+    /** Message-ID der Mail (ein- und ausgehend) – für Antworten und gegen doppelten Abruf */
+    messageId: text('message_id').unique(),
+    /** In-Reply-To und References der Mail, Leerzeichen-getrennt */
+    verweise: text('verweise'),
+    /** UID im IMAP-Postfach (nur eingehend) */
+    imapUid: integer('imap_uid'),
+    zuordnung: text('zuordnung', { enum: NACHRICHT_ZUORDNUNGEN }),
+    /** Wann jemand die eingegangene Mail in der Verwaltung gesehen hat */
+    gelesenAm: text('gelesen_am'),
+    /** Wer geschrieben oder eingetragen hat (ohne Fremdschlüssel, damit Löschen nie blockiert) */
+    zugangId: integer('zugang_id'),
+    zugangName: text('zugang_name'),
+    erstelltAm: text('erstellt_am').notNull().default(jetzt),
+  },
+  t => [
+    index('buchung_nachrichten_buchung_idx').on(t.buchungId, t.zeitpunkt),
+    check('buchung_nachrichten_kanal_check', sql`${t.kanal} IN (${liste(NACHRICHT_KANAELE)})`),
+    check('buchung_nachrichten_richtung_check', sql`${t.richtung} IN (${liste(NACHRICHT_RICHTUNGEN)})`),
+    check('buchung_nachrichten_zuordnung_check', sql`${t.zuordnung} IS NULL OR ${t.zuordnung} IN (${liste(NACHRICHT_ZUORDNUNGEN)})`),
   ],
 )
 

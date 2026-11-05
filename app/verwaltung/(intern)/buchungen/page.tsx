@@ -2,12 +2,15 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { and, asc, desc, gte, inArray, like, lt, or, type SQL } from 'drizzle-orm'
-import { AlertTriangle, CalendarDays, ChevronRight, Plus, Repeat, Search } from 'lucide-react'
+import { after } from 'next/server'
+import { AlertTriangle, CalendarDays, ChevronRight, Inbox, Mail, Plus, Repeat, Search } from 'lucide-react'
 import { datenbank, schema } from '@/lib/db'
 import { personendatenLoeschen } from '@/lib/buchungen/anfrage'
 import { ueberschneidungen } from '@/lib/buchungen/belegung'
 import { ART_NAMEN, jetztOrtszeit, OFFENE_STATUS, ORT_NAMEN, zeitraumText, type BuchungStatus } from '@/lib/buchungen/zeit'
-import { mailEingerichtet } from '@/lib/mail'
+import { nichtZugeordnet, ungeleseneMails } from '@/lib/buchungen/nachrichten'
+import { abrufFaellig, postfachAbrufen } from '@/lib/buchungen/postfach'
+import { imapZugang, mailEingerichtet } from '@/lib/mail'
 import { darfBuchungen } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 import { StatusMarke } from '@/components/verwaltung/buchungen/Anzeige'
@@ -29,7 +32,7 @@ function einzeln(wert: string | string[] | undefined): string {
   return (Array.isArray(wert) ? wert[0] : wert)?.trim() ?? ''
 }
 
-function Zeile({ b, ueberschneidung, jetzt }: { b: Buchung; ueberschneidung: boolean; jetzt: string }) {
+function Zeile({ b, ueberschneidung, jetzt, neueMails = 0 }: { b: Buchung; ueberschneidung: boolean; jetzt: string; neueMails?: number }) {
   const vorbei = b.bis <= jetzt
   return (
     <li>
@@ -44,6 +47,11 @@ function Zeile({ b, ueberschneidung, jetzt }: { b: Buchung; ueberschneidung: boo
               </span>
             )}
             {vorbei && (OFFENE_STATUS as string[]).indexOf(b.status) >= 0 && <span className="text-[11px] text-[#6b6b6b]">Termin ist vorbei</span>}
+            {neueMails > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-sm bg-sky-600 px-1.5 py-0.5 text-[11px] font-medium text-white">
+                <Mail size={11} /> {neueMails} neue Mail{neueMails === 1 ? '' : 's'}
+              </span>
+            )}
           </span>
           <span className="block text-xs text-[#6b6b6b] mt-1">
             {zeitraumText(b)} · {ORT_NAMEN[b.ort]}
@@ -64,6 +72,10 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
   if (!darfBuchungen(rechte)) redirect('/verwaltung')
   const db = datenbank()
   personendatenLoeschen(db)
+  // Neue Mails im Hintergrund abrufen (höchstens alle 5 Minuten) – sie erscheinen beim nächsten Laden
+  if (imapZugang() && abrufFaellig(db, 5)) after(() => postfachAbrufen(db).then(() => undefined))
+  const neueMails = ungeleseneMails(db)
+  const ohneBuchung = nichtZugeordnet(db)
 
   const jetzt = jetztOrtszeit()
   const suche = einzeln(searchParams.suche)
@@ -139,6 +151,9 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
             <Link href="/verwaltung/buchungen/kalender" className={knopfKlassen.sekundaer}>
               <CalendarDays size={15} /> Kalender
             </Link>
+            <Link href="/verwaltung/buchungen/eingang" className={knopfKlassen.sekundaer}>
+              <Inbox size={15} /> Eingang{ohneBuchung > 0 ? ` (${ohneBuchung})` : ''}
+            </Link>
             <Link href="/verwaltung/buchungen/regeln" className={knopfKlassen.sekundaer}>
               <Repeat size={15} /> Regelbelegung
             </Link>
@@ -151,6 +166,14 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
 
       <div className="space-y-6">
         {searchParams.geloescht && <Meldung art="erfolg">Die Buchung wurde gelöscht.</Meldung>}
+        {ohneBuchung > 0 && (
+          <Meldung art="hinweis">
+            {ohneBuchung} Mail{ohneBuchung === 1 ? '' : 's'} an das Buchungs-Postfach {ohneBuchung === 1 ? 'passt' : 'passen'} zu keiner Buchung.{' '}
+            <Link href="/verwaltung/buchungen/eingang" className="underline underline-offset-2">
+              Im Eingang zuordnen oder beantworten
+            </Link>
+          </Meldung>
+        )}
         {!mailEingerichtet() && (
           <Meldung art="hinweis">
             Der E-Mail-Versand ist nicht eingerichtet oder ausgeschaltet: Es gehen keine Bestätigungen an Buchende und keine Meldungen über neue Anfragen raus.
@@ -187,7 +210,7 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
             ) : (
               <ul className="divide-y divide-[#0a0a0a]/[0.07] -my-2">
                 {liste.map(b => (
-                  <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} />
+                  <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} neueMails={neueMails.get(b.id) ?? 0} />
                 ))}
               </ul>
             )}
@@ -200,7 +223,7 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
               ) : (
                 <ul className="divide-y divide-[#0a0a0a]/[0.07] -my-2">
                   {offen.map(b => (
-                    <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} />
+                    <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} neueMails={neueMails.get(b.id) ?? 0} />
                   ))}
                 </ul>
               )}
@@ -218,7 +241,7 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
               ) : (
                 <ul className="divide-y divide-[#0a0a0a]/[0.07] -my-2">
                   {demnaechst.map(b => (
-                    <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} />
+                    <Zeile key={b.id} b={b} ueberschneidung={mitUeberschneidung(b)} jetzt={jetzt} neueMails={neueMails.get(b.id) ?? 0} />
                   ))}
                 </ul>
               )}

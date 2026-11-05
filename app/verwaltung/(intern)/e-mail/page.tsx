@@ -57,6 +57,9 @@ export default async function MailSeite() {
             benutzer: e.benutzer,
             absenderName: e.absenderName,
             postfach: e.postfach,
+            abrufen: e.abrufen,
+            imapHost: e.imapHost,
+            imapPort: e.imapPort,
             passwortGespeichert: passwortLesbar,
             geaendertAm: e.geaendertAm,
           }}

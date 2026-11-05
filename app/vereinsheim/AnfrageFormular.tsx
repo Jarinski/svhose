@@ -10,8 +10,10 @@ import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
 import { AlertTriangle, ArrowRight, Check, Copy, Loader2 } from 'lucide-react'
 import type { FreiBelegt } from '@/lib/buchungen/belegung'
-import { datumMitTag, ORT_NAMEN, tagPlus, uhrzeitAmTag, zeitenUeberschneiden, zeitraumAus, type BuchungOrt } from '@/lib/buchungen/zeit'
+import { datumMitTag, ORT_NAMEN, uhrzeitAmTag, zeitenUeberschneiden, zeitraumAus, type BuchungOrt } from '@/lib/buchungen/zeit'
 import { anfrageSenden, belegungAbfragen, type AnfrageZustand } from './aktionen'
+import { ART_MARKE, ART_TEXT } from './belegungsarten'
+import Captcha from './Captcha'
 import { SPEICHER_SCHLUESSEL } from './speicher'
 
 
@@ -89,13 +91,6 @@ function AbsendenKnopf() {
   )
 }
 
-const ART_TEXT: Record<FreiBelegt['art'], string> = { regel: 'regelmäßig belegt', belegt: 'belegt', angefragt: 'angefragt' }
-const ART_FARBE: Record<FreiBelegt['art'], string> = {
-  regel: 'bg-[#0a0a0a]/[0.06]',
-  belegt: 'bg-[#0a0a0a] text-[#f5f5f0]',
-  angefragt: 'bg-amber-100 text-amber-950',
-}
-
 function Belegung({ datum, ort, wunsch }: { datum: string; ort: BuchungOrt; wunsch: { von: string; bis: string } | null }) {
   const [daten, setDaten] = useState<{ schluessel: string; liste: FreiBelegt[] | null } | null>(null)
   const schluessel = `${datum}|${ort}`
@@ -123,7 +118,7 @@ function Belegung({ datum, ort, wunsch }: { datum: string; ort: BuchungOrt; wuns
         <ul className="space-y-1.5 text-sm">
           {daten.liste.map(b => (
             <li key={`${b.von}-${b.art}`} className="flex items-center gap-3">
-              <span className={`inline-block px-2 py-0.5 text-xs tabular-nums ${ART_FARBE[b.art]}`}>{uhrzeitAmTag(b, datum)}</span>
+              <span className={`inline-block px-2 py-0.5 text-xs tabular-nums ${ART_MARKE[b.art]}`}>{uhrzeitAmTag(b, datum)}</span>
               <span className="text-[#6b6b6b]">{ART_TEXT[b.art]}</span>
             </li>
           ))}
@@ -178,12 +173,32 @@ function Erfolg({ zustand }: { zustand: AnfrageZustand }) {
   )
 }
 
-/** heute: Datum vom Server (Europe/Berlin), damit Server- und Browser-Darstellung übereinstimmen. */
-export default function AnfrageFormular({ heute }: { heute: string }) {
+/**
+ * heute: Datum vom Server (Europe/Berlin), damit Server- und Browser-Darstellung übereinstimmen.
+ * max: spätester Tag, den man anfragen kann. Datum und Ort hält Buchungsbereich, weil der Kalender sie setzt.
+ */
+export default function AnfrageFormular({
+  heute,
+  max,
+  datum,
+  setDatum,
+  ort,
+  setOrt,
+}: {
+  heute: string
+  max: string
+  datum: string
+  setDatum: (datum: string) => void
+  ort: string | null
+  setOrt: (ort: string) => void
+}) {
   const [zustand, absenden] = useActionState(anfrageSenden, {} as AnfrageZustand)
+  // Jede Captcha-Lösung gilt nur einmal: nach jedem nicht erfolgreichen Absenden neu rechnen
+  const [captchaRunde, setCaptchaRunde] = useState(0)
+  useEffect(() => {
+    if (zustand.ok === false) setCaptchaRunde(r => r + 1)
+  }, [zustand])
   const [art, setArt] = useState<string | null>(null)
-  const [ort, setOrt] = useState<string | null>('vereinsheim')
-  const [datum, setDatum] = useState('')
   const [ganztaegig, setGanztaegig] = useState(false)
   const [mehrtaegig, setMehrtaegig] = useState(false)
   const [beginn, setBeginn] = useState('')
@@ -243,7 +258,7 @@ export default function AnfrageFormular({ heute }: { heute: string }) {
               type="date"
               required
               min={heute}
-              max={tagPlus(heute, 2 * 366)}
+              max={max}
               value={datum}
               onChange={e => setDatum(e.target.value)}
               className={eingabe}
@@ -331,6 +346,7 @@ export default function AnfrageFormular({ heute }: { heute: string }) {
 
       <div className="border-t border-[#0a0a0a]/10 pt-8 flex flex-wrap items-center gap-6 md:pl-[15rem]">
         <AbsendenKnopf />
+        <Captcha runde={captchaRunde} />
         {zustand.meldung && !zustand.ok && (
           <p role="alert" className="text-sm text-red-700 max-w-md">
             {zustand.meldung}

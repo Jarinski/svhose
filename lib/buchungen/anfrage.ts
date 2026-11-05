@@ -14,11 +14,12 @@
  */
 
 import { createHash, randomInt } from 'node:crypto'
-import { and, count, eq, gt, isNull, lt, or } from 'drizzle-orm'
+import { and, count, eq, gt, inArray, isNull, lt, or } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
 import { protokollieren } from '@/lib/verwaltung/verlauf'
 import { ueberschneidungen } from './belegung'
+import { alteEingaengeLoeschen } from './nachrichten'
 import { buchungSchnappschuss } from './schnappschuss'
 import {
   heute,
@@ -231,11 +232,15 @@ export function standAbrufen(db: Datenbank, nummerEingabe: string | null, datum:
 
 /**
  * Löscht Name, E-Mail, Telefon und Nachricht von Buchungen, deren Ende mehr als AUFBEWAHREN_TAGE
- * zurückliegt. Anlass, Zeit und Status bleiben für die Belegungsübersicht stehen.
+ * zurückliegt, dazu ihren Kontaktverlauf (Mails, Telefonnotizen). Anlass, Zeit und Status bleiben
+ * für die Belegungsübersicht stehen. Nicht zugeordnete Mails verschwinden nach 90 Tagen.
  * Läuft bei jeder neuen Anfrage und beim Öffnen der Buchungsübersicht in der Verwaltung.
  */
-export function personendatenLoeschen(db: Pick<Datenbank, 'update'>, jetzt: Date = new Date()): number {
+export function personendatenLoeschen(db: Pick<Datenbank, 'update' | 'delete' | 'select'>, jetzt: Date = new Date()): number {
   const grenze = `${tagPlus(heute(jetzt), -AUFBEWAHREN_TAGE)}T00:00`
+  const alte = db.select({ id: schema.buchungen.id }).from(schema.buchungen).where(lt(schema.buchungen.bis, grenze)).all().map(b => b.id)
+  if (alte.length > 0) db.delete(schema.buchungNachrichten).where(inArray(schema.buchungNachrichten.buchungId, alte)).run()
+  alteEingaengeLoeschen(db, jetzt)
   const ergebnis = db
     .update(schema.buchungen)
     .set({ name: null, email: null, telefon: null, nachricht: null, anonymisiertAm: jetzt.toISOString() })

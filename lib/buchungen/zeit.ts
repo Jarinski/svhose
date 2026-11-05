@@ -140,6 +140,27 @@ export function datumMitTag(datum: string): string {
   return `${WOCHENTAGE_KURZ[wochentag(datum) - 1]}, ${datumText(datum)}`
 }
 
+/** true für einen Monat "YYYY-MM". */
+export function istMonat(wert: unknown): wert is string {
+  return typeof wert === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(wert)
+}
+
+/** Monat "YYYY-MM" um n Monate verschieben. */
+export function monatPlus(monat: string, n: number): string {
+  const [j, m] = monat.split('-').map(Number)
+  return new Date(Date.UTC(j, m - 1 + n, 1)).toISOString().slice(0, 7)
+}
+
+/** Alle Tage des Kalenderblatts eines Monats: vom Montag der ersten bis zum Sonntag der letzten Woche. */
+export function monatsRaster(monat: string): string[] {
+  const erster = `${monat}-01`
+  const letzter = tagPlus(`${monatPlus(monat, 1)}-01`, -1)
+  const ende = tagPlus(letzter, 7 - wochentag(letzter))
+  const tage: string[] = []
+  for (let d = tagPlus(erster, 1 - wochentag(erster)); d <= ende; d = tagPlus(d, 1)) tage.push(d)
+  return tage
+}
+
 // ─── Zeiträume ───────────────────────────────────────────────────────────────
 
 export interface Zeitraum {

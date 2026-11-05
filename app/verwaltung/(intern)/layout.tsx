@@ -1,7 +1,7 @@
 import { abmelden } from '../aktionen'
 import Navigation, { type NavPunkt } from '@/components/verwaltung/Navigation'
 import { datenbank } from '@/lib/db'
-import { offeneAnfragen } from '@/lib/verwaltung/inhalte/buchungen'
+import { buchungenZuTun } from '@/lib/verwaltung/inhalte/buchungen'
 import { bearbeitbareTeams, darfBuchungen, darfFoerdervereinSeiten, darfDownloads, darfFoerdervereinVorstand } from '@/lib/verwaltung/rechte'
 import { sitzungErzwingen } from '@/lib/verwaltung/sitzung'
 
@@ -25,7 +25,7 @@ export default async function InternLayout({ children }: { children: React.React
     ...(darfDownloads(rechte) ? [{ href: '/verwaltung/downloads', text: 'Downloads' }] : []),
     ...(darfFoerdervereinSeiten(rechte) ? [{ href: '/verwaltung/foerderverein-seiten', text: 'Förderverein-Seiten' }] : []),
     ...(darfFoerdervereinVorstand(rechte) ? [{ href: '/verwaltung/foerderverein-vorstand', text: 'Vorstand (Förderverein)' }] : []),
-    ...(darfBuchungen(rechte) ? [{ href: '/verwaltung/buchungen', text: 'Buchungen', zahl: offeneAnfragen(datenbank()) }] : []),
+    ...(darfBuchungen(rechte) ? [{ href: '/verwaltung/buchungen', text: 'Buchungen', zahl: buchungenZuTun(datenbank()) }] : []),
     ...(admin
       ? [
           { href: '/verwaltung/kontakte', text: 'Kontaktseite' },

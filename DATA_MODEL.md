@@ -30,7 +30,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 | **Stammdaten** | `personen`, `sparten`, `mannschaften`, `gruppen` | Menschen im Verein und die Struktur aus Sparten, Mannschaften und Gruppen |
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten des Fördervereins) |
-| **Vereinsheim** | `buchungen`, `belegung_regeln`, `belegung_ausfaelle` | Buchungen von Vereinsheim und Gelände (Anfragen über `/vereinsheim` und eigene Belegungen) und die wöchentliche Regelbelegung |
+| **Vereinsheim** | `buchungen`, `belegung_regeln`, `belegung_ausfaelle`, `buchung_nachrichten` | Buchungen von Vereinsheim und Gelände (Anfragen über `/vereinsheim` und eigene Belegungen) und die wöchentliche Regelbelegung |
 | **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf`, `einstellungen` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
@@ -640,12 +640,50 @@ So lassen sie sich direkt vergleichen; gerechnet wird nur mit Kalendertagen, nie
 - **Zweck**: Tage, an denen eine Regelbelegung ausfällt. Primärschlüssel (`regel_id`, `datum`);
   `regel_id` → `belegung_regeln` mit **ON DELETE CASCADE**.
 
+### buchung_nachrichten (Kontaktverlauf)
+
+- **Zweck**: Kontaktverlauf einer Buchung (Migration `0008_kontaktverlauf`): ein- und ausgehende
+  E-Mails, Telefonate, Gespräche und Notizen. Eingehende Mails holt `lib/buchungen/postfach.ts` per
+  IMAP aus dem Buchungs-Postfach (nur lesend) und ordnet sie zu (`lib/buchungen/nachrichten.ts`).
+- **Beziehungen**: optional → `buchungen` mit **ON DELETE CASCADE**; ohne Buchung = Eingang
+  „nicht zugeordnet“.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `id` | integer | ja | automatisch | Primärschlüssel |
+| `buchung_id` | integer | nein | – | Buchung; leer = nicht zugeordnet |
+| `kanal` | text | ja | – | `email`, `telefon`, `persoenlich`, `notiz` |
+| `richtung` | text | ja | – | `eingang` (an den Verein), `ausgang` (vom Verein), `intern` (Eintrag von Hand) |
+| `zeitpunkt` | text | ja | – | ISO-Zeitstempel (UTC), bei Mails das Datum der Mail |
+| `von`, `an`, `betreff` | text | nein | – | Kopfdaten der Mail |
+| `text` | text | ja | `''` | Text (bei HTML-Mails in Text umgewandelt, höchstens 100 000 Zeichen) |
+| `anhaenge` | integer | ja | `0` | Anzahl der Anhänge – die bleiben im Postfach |
+| `message_id` | text | nein, **eindeutig** | – | Message-ID der Mail; verhindert doppelten Abruf und erkennt Antworten |
+| `verweise` | text | nein | – | In-Reply-To/References (Message-IDs, Leerzeichen-getrennt) |
+| `imap_uid` | integer | nein | – | UID im Postfach |
+| `zuordnung` | text | nein | – | `antwort`, `nummer`, `absender` oder `hand` |
+| `gelesen_am` | text | nein | – | wann jemand die eingegangene Mail in der Verwaltung gesehen hat |
+| `zugang_id`, `zugang_name` | – | nein | – | wer geschrieben oder eingetragen hat (leer = automatisch) |
+| `erstellt_am` | text | ja | jetzt | Zeitstempel |
+
+- **Besonderheiten**:
+  - Zuordnung eingehender Mails: erst über In-Reply-To/References auf eine Mail aus dem Verlauf,
+    dann über eine Buchungsnummer in Betreff oder Text, dann über die Absenderadresse (genau eine
+    passende bzw. genau eine noch nicht vergangene Buchung).
+  - Der Abrufstand (UIDVALIDITY, letzte UID, letzter Fehler) steht in `einstellungen`, Schlüssel
+    `mail-abruf`. Erster Abruf: nur die letzten 30 Tage.
+  - Gelöschte eingegangene Mails bleiben als leerer Platzhalter mit ihrer Message-ID stehen, damit
+    ein späterer Abruf sie nicht wieder einträgt.
+  - Löschfristen: mit den Kontaktdaten der Buchung (ein Jahr nach dem Termin), nicht zugeordnete
+    nach 90 Tagen (`personendatenLoeschen` in `lib/buchungen/anfrage.ts`).
+
 ## 3.11c einstellungen
 
 - **Zweck**: Einstellungen, die Admins in der Verwaltung pflegen – ein JSON-Dokument je
-  Schlüssel (Migration `0007_einstellungen`). Bisher nur `mail`: der SMTP-Zugang für die Mails der
-  Buchungen (`aktiv`, `host`, `port`, `benutzer`, `passwort`, `absenderName`, `postfach`), gepflegt
-  unter `/verwaltung/e-mail`, gelesen von `lib/mail.ts`.
+  Schlüssel (Migration `0007_einstellungen`). `mail`: SMTP- und IMAP-Zugang für die Mails der
+  Buchungen (`aktiv`, `host`, `port`, `benutzer`, `passwort`, `absenderName`, `postfach`, `abrufen`,
+  `imapHost`, `imapPort`), gepflegt unter `/verwaltung/e-mail`, gelesen von `lib/mail.ts`.
+  `mail-abruf`: Stand des IMAP-Abrufs (`lib/buchungen/postfach.ts`).
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|
@@ -782,6 +820,8 @@ einlösen.
 | `zeitpunkt` | text | ja | jetzt | Zeitpunkt des Fehlversuchs |
 
 - **Besonderheiten**:
+  - Für das Captcha des Anfrageformulars merkt sich die Tabelle außerdem verbrauchte Aufgaben
+    (`lib/buchungen/captcha.ts`), damit jede Lösung nur einmal gilt.
   - Gezählt wird in einem Fenster von 15 Minuten: ab **20** Fehlversuchen pro IP-Adresse oder
     **5** pro Kombination aus Benutzername und IP-Adresse ist eine Viertelstunde Pause. Einen
     Benutzernamen allein sperrt die Anwendung bewusst nicht, damit niemand fremde Zugänge

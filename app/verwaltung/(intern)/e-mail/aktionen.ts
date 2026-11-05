@@ -26,6 +26,9 @@ export async function mailEinstellungenSichern(_vorher: AktionsErgebnis, formDat
     passwortLoeschen: formData.get('passwortLoeschen') === '1',
     absenderName: text('absenderName'),
     postfach: text('postfach'),
+    abrufen: formData.get('abrufen') === '1',
+    imapHost: text('imapHost'),
+    imapPort: zahlFeld(formData, 'imapPort'),
     stand,
   })
   if (!ergebnis.ok) return { ...fehler(ergebnis.meldung, ergebnis.felder), stand: stand ?? undefined }

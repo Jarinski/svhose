@@ -66,10 +66,13 @@ export default function DatenschutzPage() {
             Anlass, Zeitraum und ungefähre Personenzahl. Diese Angaben sehen nur die Personen im Verein, die Buchungen bearbeiten. Sie
             erhalten eine Bestätigung per E-Mail; die Anfrage wird zusätzlich an das Postfach des Vereins für Buchungen gemeldet.
             Rechtsgrundlage ist die Anbahnung und Durchführung der Buchung (Art. 6 Abs. 1 lit. b DSGVO) und Ihre Einwilligung (Art. 6 Abs.
-            1 lit. a DSGVO). Name, E-Mail-Adresse, Telefonnummer und Nachricht löschen wir automatisch spätestens ein Jahr nach dem
-            gebuchten Termin. Mit Buchungsnummer und Datum lässt sich der Stand der Anfrage abrufen; dabei werden keine
+            1 lit. a DSGVO). E-Mails, die Sie uns zu Ihrer Buchung schreiben oder die wir Ihnen schicken, sowie Notizen zu Telefonaten
+            speichern wir zusammen mit der Buchung, damit alle Zuständigen den Stand kennen. Name, E-Mail-Adresse, Telefonnummer,
+            Nachricht und dieser Schriftverkehr werden automatisch spätestens ein Jahr nach dem gebuchten Termin gelöscht; E-Mails, die
+            keiner Buchung zugeordnet werden können, nach 90 Tagen. Mit Buchungsnummer und Datum lässt sich der Stand der Anfrage abrufen; dabei werden keine
             personenbezogenen Daten angezeigt. Zum Schutz vor Missbrauch speichern wir für höchstens einen Tag einen nicht
-            umkehrbaren Prüfwert (Hash) Ihrer IP-Adresse.
+            umkehrbaren Prüfwert (Hash) Ihrer IP-Adresse. Außerdem löst Ihr Browser vor dem Absenden eine kleine Rechenaufgabe
+            (Sicherheitsprüfung gegen automatisierte Anfragen); dafür nutzen wir keinen Drittanbieter und setzen keine Cookies.
           </p>
         </div>
 

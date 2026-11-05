@@ -127,6 +127,7 @@ Die Cron-Endpunkte werden lokal per `curl` aufgerufen. Beispiel für die crontab
 CRON_SECRET=hier-das-secret-aus-der-env-datei
 0 4 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-fussball
 0 5 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-tischtennis
+*/5 * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/postfach >/dev/null
 30 3 * * * /usr/local/bin/svhs-backup.sh
 ```
 
@@ -423,6 +424,11 @@ sudo systemctl restart svhs
 
 - Sanity wird nicht mehr genutzt. Die Website braucht zur Laufzeit außer fussball.de und click-tt
   keinen externen Dienst.
+- **Posteingang der Buchungen:** `lib/buchungen/postfach.ts` holt Antworten per IMAP
+  (`imap.strato.de:993`, gleiche Zugangsdaten wie der Versand) nur lesend ab und ordnet sie den
+  Buchungen zu – beim Öffnen der Buchungen in der Verwaltung (höchstens alle 5 Minuten), über
+  „Jetzt abrufen“ und per Cron `/api/cron/postfach` (Abschnitt 3.1). Fehler stehen im Log als
+  `[postfach] Abruf fehlgeschlagen` und unter Buchungen → Eingang.
 - **Mailversand** gibt es nur für die Buchungen des Vereinsheims (`lib/mail.ts`, Paket `nodemailer`):
   über das SMTP-Postfach, das Admins unter `/verwaltung/e-mail` eintragen (vorbelegt: Strato,
   `smtp.strato.de:587` mit STARTTLS; Testmail-Knopf dort). **Port 465 geht nicht:** Hetzner sperrt

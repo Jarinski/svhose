@@ -10,7 +10,7 @@ import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { datenbank, schema } from '@/lib/db'
 import { rueckmeldungsMail } from '@/lib/buchungen/mails'
-import { mailVersuchen } from '@/lib/mail'
+import { buchungsMailSenden } from '@/lib/buchungen/nachrichten'
 import { fehler, zahlFeld, type FormErgebnis } from '@/lib/verwaltung/formular'
 import { ausfallSetzen, buchungLoeschen, buchungSpeichern, regelLoeschen, regelSpeichern, type BuchungEingabe, type RegelEingabe } from '@/lib/verwaltung/inhalte/buchungen'
 import { mehrzeilig } from '@/lib/verwaltung/inhalte/gemeinsam'
@@ -62,7 +62,7 @@ export async function buchungSichern(_vorher: AktionsErgebnis, formData: FormDat
     const b = db.select().from(schema.buchungen).where(eq(schema.buchungen.id, ergebnis.id)).get()
     if (b?.email) {
       const mail = rueckmeldungsMail(b, rechte.name, `${await basisUrl()}/vereinsheim/status`)
-      const gesendet = await mailVersuchen({ an: b.email, ...mail })
+      const gesendet = await buchungsMailSenden(db, b, mail, { zugangId: rechte.zugangId, name: rechte.name })
       mailText = gesendet.ok
         ? ` E-Mail an ${b.email} ist raus.`
         : ` Die E-Mail ging nicht raus (${gesendet.fehler}) – bitte über „E-Mail schreiben“ selbst Bescheid geben.`

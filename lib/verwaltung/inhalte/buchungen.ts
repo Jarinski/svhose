@@ -9,7 +9,7 @@
  * weist aber darauf hin. Im Verlauf landen nie Name, E-Mail, Telefon oder Nachricht.
  */
 
-import { and, count, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, inArray, isNull, or } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
 import { neueNummer } from '@/lib/buchungen/anfrage'
@@ -72,6 +72,21 @@ export function offeneAnfragen(db: Pick<Datenbank, 'select'>): number {
       .where(inArray(schema.buchungen.status, OFFENE_STATUS as BuchungStatus[]))
       .get()?.n ?? 0
   )
+}
+
+/** Für die Zahl im Menü: offene Anfragen, ungelesene Mails zu Buchungen und Mails ohne Buchung. */
+export function buchungenZuTun(db: Pick<Datenbank, 'select'>): number {
+  const ungelesen = db
+    .select({ n: count() })
+    .from(schema.buchungNachrichten)
+    .where(
+      and(
+        eq(schema.buchungNachrichten.richtung, 'eingang'),
+        or(isNull(schema.buchungNachrichten.buchungId), isNull(schema.buchungNachrichten.gelesenAm)),
+      ),
+    )
+    .get()?.n ?? 0
+  return offeneAnfragen(db) + ungelesen
 }
 
 export interface BuchungEingabe {

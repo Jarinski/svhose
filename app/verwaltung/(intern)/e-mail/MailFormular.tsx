@@ -17,6 +17,9 @@ export interface MailFormDaten {
   benutzer: string
   absenderName: string
   postfach: string
+  abrufen: boolean
+  imapHost: string
+  imapPort: number
   /** Ist ein Passwort gespeichert (und lesbar)? */
   passwortGespeichert: boolean
   geaendertAm: string | null
@@ -97,6 +100,27 @@ export default function MailFormular({ daten }: { daten: MailFormDaten }) {
             </Feld>
             <Feld label="Neue Anfragen melden an" htmlFor="postfach" fehler={f.postfach} hinweis="Leer = an das Postfach oben.">
               <input id="postfach" name="postfach" type="email" defaultValue={daten.postfach} placeholder={daten.benutzer} className={eingabeKlasse} />
+            </Feld>
+          </div>
+        </Karte>
+
+        <Karte
+          titel="Posteingang (IMAP)"
+          beschreibung="Antworten an das Postfach werden abgerufen und den Buchungen zugeordnet. Anmeldung wie beim Postausgang. Im Postfach selbst wird nichts gelöscht oder als gelesen markiert."
+        >
+          <div className="grid gap-5 sm:grid-cols-2">
+            <label className="sm:col-span-2 flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" name="abrufen" value="1" defaultChecked={daten.abrufen} className="mt-0.5 w-5 h-5" />
+              <span className="text-sm">
+                <span className="block font-medium">Eingehende Mails abrufen</span>
+                <span className="block text-xs text-[#6b6b6b]">Sie erscheinen im Kontaktverlauf der Buchung – oder unter Buchungen → Eingang, wenn keine passt.</span>
+              </span>
+            </label>
+            <Feld label="Server" htmlFor="imapHost" fehler={f.imapHost}>
+              <input id="imapHost" name="imapHost" defaultValue={daten.imapHost} autoComplete="off" spellCheck={false} className={eingabeKlasse} />
+            </Feld>
+            <Feld label="Port" htmlFor="imapPort" fehler={f.imapPort} hinweis="Strato: 993 (SSL/TLS).">
+              <input id="imapPort" name="imapPort" type="number" min={1} max={65535} defaultValue={daten.imapPort} className={eingabeKlasse} />
             </Feld>
           </div>
         </Karte>

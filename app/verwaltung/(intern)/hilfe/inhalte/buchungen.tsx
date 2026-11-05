@@ -64,6 +64,39 @@ export const buchungen: Thema = {
         </p>
       </Abschnitt>
 
+      <Abschnitt titel="Kontaktverlauf: E-Mails, Telefonate, Notizen">
+        <p>
+          Unten auf jeder Buchung steht der <Begriff>Kontaktverlauf</Begriff>: alle Mails mit der buchenden Person, dazu Telefonate, Gespräche und
+          Notizen – das Neueste oben.
+        </p>
+        <Schritte>
+          <>
+            Zum Schreiben nimm den Reiter <Begriff>E-Mail schreiben</Begriff>. Betreff und Anrede sind vorbereitet, Absender ist das Postfach
+            buchungen@sv-holm-seppensen.de. Klick auf <Taste>E-Mail senden</Taste>.
+          </>
+          <>
+            Auf eine eingegangene Mail antwortest du mit <Taste>Antworten</Taste> direkt an der Mail – dann steht ihr Text als Zitat darunter.
+          </>
+          <>
+            Ein Telefonat oder Gespräch trägst du unter <Begriff>Telefonat oder Notiz</Begriff> ein, zum Beispiel „Schlüsselübergabe Freitag 17 Uhr“.
+          </>
+        </Schritte>
+        <p>
+          Antworten an das Postfach holt das System alle paar Minuten ab und ordnet sie zu: als Antwort auf eine unserer Mails, über die
+          Buchungsnummer im Betreff oder Text, oder über die Absenderadresse. Neue Mails sind blau mit <Begriff>neu</Begriff> markiert und
+          zählen in der Zahl neben <Begriff>Buchungen</Begriff> im Menü mit.
+        </p>
+        <p>
+          Was zu keiner Buchung passt, landet unter <Begriff>Buchungen → Eingang</Begriff>. Dort ordnest du die Mail über die Buchungsnummer zu,
+          antwortest direkt oder löschst sie (im Postfach bleibt sie erhalten). Mit <Taste>Jetzt abrufen</Taste> holst du neue Mails sofort.
+          Landet eine Mail bei der falschen Buchung, klick an der Mail auf <Taste>Zuordnung lösen</Taste> – dann steht sie wieder im Eingang.
+        </p>
+        <Tipp titel="Das Postfach bleibt, wie es ist">
+          Das System liest das Postfach nur. Es löscht nichts und markiert nichts als gelesen – wer es zusätzlich im Webmail von Strato liest,
+          merkt davon nichts.
+        </Tipp>
+      </Abschnitt>
+
       <Abschnitt titel="Was bedeuten die Status?">
         <Punkte>
           <li>
@@ -120,6 +153,7 @@ export const buchungen: Thema = {
 
       <Abschnitt titel="Was sieht die buchende Person?">
         <Punkte>
+          <li>Vor dem Absenden eine kurze Sicherheitsprüfung gegen Spam-Bots, die der Browser selbst rechnet (ohne Bilderrätsel).</li>
           <li>Nach dem Absenden ihre Buchungsnummer, dazu eine Bestätigung per E-Mail.</li>
           <li>Beim Anfragen nur, zu welchen Zeiten schon etwas belegt oder angefragt ist – nie Anlass oder Namen.</li>
           <li>
@@ -128,8 +162,8 @@ export const buchungen: Thema = {
           </li>
         </Punkte>
         <Tipp titel="Datenschutz">
-          Name, E-Mail, Telefon und Nachricht werden ein Jahr nach dem Termin automatisch gelöscht. Anlass, Zeit und Status bleiben für die Übersicht
-          stehen. Im Verlauf stehen Kontaktdaten nie.
+          Name, E-Mail, Telefon, Nachricht und der Kontaktverlauf werden ein Jahr nach dem Termin automatisch gelöscht, Mails im Eingang nach 90
+          Tagen. Anlass, Zeit und Status bleiben für die Übersicht stehen. Im Verlauf stehen Kontaktdaten nie.
         </Tipp>
       </Abschnitt>
     </>

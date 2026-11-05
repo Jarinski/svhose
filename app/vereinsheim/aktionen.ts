@@ -2,17 +2,19 @@
 
 /**
  * Öffentliche Server-Aktionen rund um das Vereinsheim: Anfrage stellen, Stand abrufen und die
- * Belegung eines Tages anzeigen (nur Zeiten, keine Namen oder Anlässe). Logik und Schutz gegen
- * Spam und Raten stehen in lib/buchungen/anfrage.ts.
+ * Belegung eines Tages oder Monats anzeigen (nur Zeiten, keine Namen oder Anlässe). Logik und
+ * Schutz gegen Spam und Raten stehen in lib/buchungen/anfrage.ts.
  */
 
 import { eq } from 'drizzle-orm'
 import { after } from 'next/server'
 import { datenbank, schema } from '@/lib/db'
-import { anfrageEinreichen, standAbrufen, type AnfrageEingabe, type OeffentlicherStand } from '@/lib/buchungen/anfrage'
-import { belegungOeffentlich, type FreiBelegt } from '@/lib/buchungen/belegung'
+import { anfrageEinreichen, anfragePruefen, standAbrufen, VORLAUF_MAX_TAGE, type AnfrageEingabe, type OeffentlicherStand } from '@/lib/buchungen/anfrage'
+import { belegungOeffentlich, belegungOeffentlichMonat, type FreiBelegt, type TagesBelegung } from '@/lib/buchungen/belegung'
 import { eingangsMail, vereinsMail } from '@/lib/buchungen/mails'
-import { heute, istDatum, istOrt } from '@/lib/buchungen/zeit'
+import { heute, istDatum, istMonat, istOrt, tagPlus } from '@/lib/buchungen/zeit'
+import { buchungsMailSenden } from '@/lib/buchungen/nachrichten'
+import { captchaPruefen } from '@/lib/buchungen/captcha'
 import { buchungsPostfach, mailEingerichtet, mailSenden } from '@/lib/mail'
 import { anfrageIp, basisUrl } from '@/lib/verwaltung/sitzung'
 
@@ -54,6 +56,12 @@ export async function anfrageSenden(_vorher: AnfrageZustand, formData: FormData)
     falle: text(formData, 'webseite'),
   }
   const db = datenbank()
+  // Erst die Felder, dann das Captcha – so verbraucht ein Tippfehler keine Lösung.
+  const geprueft = anfragePruefen(eingabe)
+  if ('felder' in geprueft) return { ok: false, meldung: 'Bitte die markierten Felder prüfen.', felder: geprueft.felder }
+  if (!eingabe.falle && !captchaPruefen(db, text(formData, 'captcha'))) {
+    return { ok: false, meldung: 'Die Sicherheitsprüfung ist noch nicht durch oder abgelaufen. Bitte warten, bis „Sicherheitsprüfung abgeschlossen“ dasteht, und noch einmal senden.' }
+  }
   const ergebnis = anfrageEinreichen(db, eingabe, await anfrageIp())
   if (!ergebnis.ok) return { ok: false, meldung: ergebnis.meldung, felder: ergebnis.felder }
 
@@ -63,7 +71,8 @@ export async function anfrageSenden(_vorher: AnfrageZustand, formData: FormData)
   if (b && mailEingerichtet()) {
     const basis = await basisUrl()
     after(async () => {
-      if (b.email) await mailSenden({ an: b.email, ...eingangsMail(b, `${basis}/vereinsheim/status`), antwortAn: buchungsPostfach() })
+      // Die Eingangsbestätigung steht danach im Kontaktverlauf der Buchung; Antworten darauf werden ihr zugeordnet.
+      if (b.email) await buchungsMailSenden(db, b, eingangsMail(b, `${basis}/vereinsheim/status`), null)
       const postfach = buchungsPostfach()
       if (postfach) await mailSenden({ an: postfach, ...vereinsMail(b, `${basis}/verwaltung/buchungen/${b.id}`), antwortAn: b.email })
     })
@@ -86,4 +95,11 @@ export async function standAbfragen(_vorher: StandZustand, formData: FormData): 
 export async function belegungAbfragen(datum: string, ort: string): Promise<FreiBelegt[] | null> {
   if (!istDatum(datum) || !istOrt(ort) || datum < heute()) return null
   return belegungOeffentlich(datenbank(), datum, ort)
+}
+
+/** Belegung eines Monats für den Kalender – ab heute und höchstens so weit im Voraus, wie man anfragen kann. */
+export async function belegungMonatAbfragen(monat: string): Promise<Record<string, TagesBelegung> | null> {
+  const h = heute()
+  if (!istMonat(monat) || monat < h.slice(0, 7) || monat > tagPlus(h, VORLAUF_MAX_TAGE).slice(0, 7)) return null
+  return belegungOeffentlichMonat(datenbank(), monat, h)
 }
