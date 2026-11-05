@@ -153,8 +153,15 @@ export default async function BuchungenSeite(props: { searchParams: Promise<{ an
         {searchParams.geloescht && <Meldung art="erfolg">Die Buchung wurde gelöscht.</Meldung>}
         {!mailEingerichtet() && (
           <Meldung art="hinweis">
-            Der E-Mail-Versand ist noch nicht eingerichtet: Es gehen keine Bestätigungen an Buchende und keine Benachrichtigungen über neue Anfragen raus. Neue
-            Anfragen siehst du hier und an der Zahl im Menü.
+            Der E-Mail-Versand ist nicht eingerichtet oder ausgeschaltet: Es gehen keine Bestätigungen an Buchende und keine Meldungen über neue Anfragen raus.
+            Neue Anfragen siehst du hier und an der Zahl im Menü.{' '}
+            {rechte.istAdmin ? (
+              <Link href="/verwaltung/e-mail" className="underline underline-offset-2">
+                Postfach einrichten
+              </Link>
+            ) : (
+              'Einrichten können das Admins unter „E-Mail-Versand“.'
+            )}
           </Meldung>
         )}
 

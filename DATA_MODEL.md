@@ -31,7 +31,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten des Fördervereins) |
 | **Vereinsheim** | `buchungen`, `belegung_regeln`, `belegung_ausfaelle` | Buchungen von Vereinsheim und Gelände (Anfragen über `/vereinsheim` und eigene Belegungen) und die wöchentliche Regelbelegung |
-| **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
+| **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf`, `einstellungen` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
 und Gruppen hängen **Trainingszeiten** und ein **Trainerteam** aus **Personen**. Personen können
@@ -640,6 +640,22 @@ So lassen sie sich direkt vergleichen; gerechnet wird nur mit Kalendertagen, nie
 - **Zweck**: Tage, an denen eine Regelbelegung ausfällt. Primärschlüssel (`regel_id`, `datum`);
   `regel_id` → `belegung_regeln` mit **ON DELETE CASCADE**.
 
+## 3.11c einstellungen
+
+- **Zweck**: Einstellungen, die Admins in der Verwaltung pflegen – ein JSON-Dokument je
+  Schlüssel (Migration `0007_einstellungen`). Bisher nur `mail`: der SMTP-Zugang für die Mails der
+  Buchungen (`aktiv`, `host`, `port`, `benutzer`, `passwort`, `absenderName`, `postfach`), gepflegt
+  unter `/verwaltung/e-mail`, gelesen von `lib/mail.ts`.
+
+| Feld | Typ | Pflicht | Standard | Bedeutung |
+|---|---|---|---|---|
+| `schluessel` | text | ja, **Primärschlüssel** | – | z. B. `mail` |
+| `wert` | text (JSON) | ja | – | das Dokument |
+| `erstellt_am`, `geaendert_am` | text | ja | jetzt | Zeitstempel; `geaendert_am` ist die optimistische Sperre |
+
+- **Besonderheiten**: Das Postfach-Passwort steht nur verschlüsselt drin (siehe 3.18) und landet
+  nie im Verlauf; dort steht nur `gespeichert` bzw. `keins`.
+
 **Verwaltungstabellen (seit 20.10.2026):** Die folgenden Tabellen gehören zur Verwaltung unter `/verwaltung` (Migration `0001_verwaltung`).
 Die Website liest sie nie. Wie Anmeldung und Rechte fachlich ablaufen,
 beschreibt `CMS_KONZEPT.md` (Abschnitte 5 und 6); der Code steht in `lib/verwaltung/`.
@@ -816,6 +832,7 @@ einlösen.
 | Passwort | scrypt-Hash mit Salt (N = 16384, r = 8, p = 1) | `zugaenge.passwort_hash` |
 | IP-Adresse bzw. Benutzername + IP-Adresse bei Fehlversuchen | SHA-256-Hash | `fehlversuche.schluessel` |
 | Geheimnis der Authenticator-App | **Klartext** (Base32) | `zugaenge.totp_geheimnis`, während der Einrichtung `anmelde_codes.totp_geheimnis` |
+| Passwort des SMTP-Postfachs | **verschlüsselt** (AES-256-GCM, Schlüssel aus `CRON_SECRET`, nicht in der Datenbank) | `einstellungen.wert` (Schlüssel `mail`, Feld `passwort`) |
 
 Das App-Geheimnis lässt sich nicht hashen: Der Server braucht es, um die erwarteten Codes zu
 berechnen. Wer die Datenbankdatei oder ein Backup in die Hände bekommt, kann damit App-Codes

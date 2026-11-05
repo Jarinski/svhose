@@ -57,6 +57,11 @@ export const buchungen: Thema = {
           Mit <Taste>E-Mail schreiben</Taste> oben auf der Seite öffnest du dein eigenes Mailprogramm mit einem fertigen Text – praktisch für längere
           Absprachen. Antworten auf die automatischen E-Mails landen im Postfach buchungen@sv-holm-seppensen.de.
         </p>
+        <p>
+          Das Häkchen für die E-Mail erscheint nur, wenn der E-Mail-Versand eingerichtet ist. Das machen Admins im Menü unter{' '}
+          <Begriff>E-Mail-Versand</Begriff>: Server und Port von Strato sind vorbelegt, dazu kommt das Passwort des Postfachs. Mit{' '}
+          <Taste>Testmail senden</Taste> prüfst du danach, ob alles klappt. Das Passwort wird verschlüsselt gespeichert und nie wieder angezeigt.
+        </p>
       </Abschnitt>
 
       <Abschnitt titel="Was bedeuten die Status?">

@@ -29,6 +29,7 @@ const TYP_NAMEN: Record<string, string> = {
   seiten: 'Förderverein-Seiten',
   buchungen: 'Buchungen',
   belegung_regeln: 'Regelbelegung',
+  einstellungen: 'Einstellungen',
   zugaenge: 'Zugänge',
   geraete: 'Anmeldungen & Geräte',
   anmelde_codes: 'Anmelde-Codes',

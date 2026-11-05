@@ -30,6 +30,7 @@ export default async function InternLayout({ children }: { children: React.React
       ? [
           { href: '/verwaltung/kontakte', text: 'Kontaktseite' },
           { href: '/verwaltung/zugaenge', text: 'Zugänge' },
+          { href: '/verwaltung/e-mail', text: 'E-Mail-Versand' },
           { href: '/verwaltung/verlauf', text: 'Verlauf' },
         ]
       : []),

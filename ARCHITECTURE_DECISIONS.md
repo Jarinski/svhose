@@ -120,7 +120,9 @@ Gruppe). Jede Änderung landet mit Stand vorher und nachher im Verlauf.
 - **Keine Fremddienste:** kein Mailversand, kein Login-Anbieter, kein Fremdkonto für die
   Redaktion. QR-Codes, Hashes und App-Codes berechnet der Server selbst.
   (Seit November 2026 verschickt die Website E-Mails nur für die Buchungen des Vereinsheims, über
-  das SMTP-Postfach `buchungen@sv-holm-seppensen.de` – nie für die Anmeldung.)
+  das SMTP-Postfach `buchungen@sv-holm-seppensen.de` – nie für die Anmeldung. Den Zugang tragen
+  Admins in der Verwaltung ein; das Passwort liegt mit AES-256-GCM verschlüsselt in der Datenbank,
+  der Schlüssel kommt aus `CRON_SECRET` in der Env-Datei.)
 
 ### Betrachtete Alternativen
 

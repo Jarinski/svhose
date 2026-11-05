@@ -84,11 +84,11 @@ flowchart LR
 
 | Variable | Pflicht | Standard | Zweck | Sensibilität |
 |---|---|---|---|---|
-| `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>` | **hoch** |
+| `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>`. Außerdem Schlüssel für das in der Verwaltung gespeicherte SMTP-Passwort (`lib/verwaltung/geheimnis.ts`): Nach einem Wechsel muss es unter `/verwaltung/e-mail` neu eingetragen werden | **hoch** |
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
-| `SMTP_HOST`, `SMTP_PORT` | für Buchungs-Mails | Port `465` | SMTP-Server des Buchungs-Postfachs; `465` = TLS, sonst STARTTLS (Pflicht) | niedrig |
-| `SMTP_BENUTZER`, `SMTP_PASSWORT` | für Buchungs-Mails | – | Zugang des Postfachs `buchungen@sv-holm-seppensen.de`. Fehlt etwas davon (oder `SMTP_HOST`), ist der Versand aus; Anfragen gehen trotzdem | **hoch** (Passwort) |
+| `SMTP_HOST`, `SMTP_PORT` | nein | Port `465` | nur als Ausweg: SMTP-Server des Buchungs-Postfachs; `465` = TLS, sonst STARTTLS (Pflicht). Normalerweise tragen Admins den Zugang unter `/verwaltung/e-mail` ein | niedrig |
+| `SMTP_BENUTZER`, `SMTP_PASSWORT` | nein | – | nur als Ausweg: Zugang des Postfachs. Sind `SMTP_HOST`, `SMTP_BENUTZER` und `SMTP_PASSWORT` gesetzt, gelten sie vorrangig vor den Einstellungen der Verwaltung | **hoch** (Passwort) |
 | `SMTP_ABSENDER` | nein | `"SV Holm-Seppensen · Vereinsheim" <SMTP_BENUTZER>` | Absender der Buchungs-Mails | niedrig |
 | `BUCHUNGEN_POSTFACH` | nein | `SMTP_BENUTZER` | Empfänger der Meldung „neue Anfrage“ | niedrig |
 | `SEITEN_URL` | **ja (Produktion)** | – | öffentliche Adresse der Website (z. B. `https://www.<vereinsdomain>.de`); daraus werden absolute Vorschaubild-URLs (`og:image`) beim Teilen von News gebaut. Ohne sie zeigen sie auf `http://localhost:<port>`. Außerdem die Adresse in den Einladungs-Links und -QR-Codes der Verwaltung: Ohne sie nimmt die Verwaltung die Adresse der aktuellen Anfrage, das Skript `npm run verwaltung:admin` dagegen `http://localhost:3000` | niedrig |
@@ -424,7 +424,8 @@ sudo systemctl restart svhs
 - Sanity wird nicht mehr genutzt. Die Website braucht zur Laufzeit außer fussball.de und click-tt
   keinen externen Dienst.
 - **Mailversand** gibt es nur für die Buchungen des Vereinsheims (`lib/mail.ts`, Paket `nodemailer`):
-  über das SMTP-Postfach aus `SMTP_*`. Ist es nicht eingerichtet oder nicht erreichbar, gehen
+  über das SMTP-Postfach, das Admins unter `/verwaltung/e-mail` eintragen (vorbelegt: Strato,
+  `smtp.strato.de:465`; Testmail-Knopf dort) – oder aus `SMTP_*`. Ist es nicht eingerichtet oder nicht erreichbar, gehen
   Anfragen trotzdem ein; der Fehler steht im Server-Log (`[mail] Versand fehlgeschlagen`).
 - Sonst kommt die Verwaltung ohne externen Dienst aus: kein Login-Anbieter.
   QR-Codes (Paket `qrcode`), Passwort-Hashes (scrypt) und App-Codes (TOTP) berechnet der Server

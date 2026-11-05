@@ -494,6 +494,18 @@ export const belegungAusfaelle = sqliteTable(
   t => [primaryKey({ columns: [t.regelId, t.datum] })],
 )
 
+// ─── Einstellungen ───────────────────────────────────────────────────────────
+
+/**
+ * Einstellungen, die Admins in der Verwaltung pflegen – ein JSON-Dokument je Schlüssel, z. B. "mail"
+ * für den SMTP-Zugang (lib/mail.ts). Passwörter stehen darin nur verschlüsselt (lib/verwaltung/geheimnis.ts).
+ */
+export const einstellungen = sqliteTable('einstellungen', {
+  schluessel: text('schluessel').primaryKey(),
+  wert: text('wert', { mode: 'json' }).notNull(),
+  ...zeitstempel(),
+})
+
 // ─── Verwaltung: Zugänge, Anmeldung, Verlauf ────────────────────────────────
 
 export const CODE_ZWECKE = ['einladung'] as const
