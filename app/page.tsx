@@ -9,6 +9,7 @@ import SpartenBand from '@/components/startseite/SpartenBand'
 import StartseiteA from '@/components/vorschau/a/StartseiteA'
 import StartseiteB from '@/components/vorschau/b/StartseiteB'
 import { heuteInBerlin } from '@/lib/vorschau'
+import { buendeleSpieltermine, gegnerText, uhrzeitText } from '@/lib/spieltermine'
 import { vorschauDesign } from '@/lib/vorschau-server'
 import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
 
@@ -24,11 +25,6 @@ const AUF_EINEN_BLICK = [
   { titel: 'Sportplätze', text: 'Plätze und Hallen in Holm-Seppensen – mit Adresse und Anfahrt.', knopf: 'Zu den Plätzen', href: '/sportplaetze' },
   { titel: 'Förderverein', text: 'Der Förderverein unterstützt Projekte, Ausstattung und Nachwuchs im Verein.', knopf: 'Mehr erfahren', href: '/foerderverein' },
 ]
-
-/** "18:30" → "18:30 Uhr"; Freitext wie "ganztägig" bleibt unverändert. */
-function uhrzeitLabel(uhrzeit: string) {
-  return /^\d/.test(uhrzeit) && !/uhr/i.test(uhrzeit) ? `${uhrzeit} Uhr` : uhrzeit
-}
 
 export default async function HomePage() {
   const [newsAll, termine, sparten, design] = await Promise.all([
@@ -54,7 +50,8 @@ export default async function HomePage() {
   const news = newsAll.slice(0, 6)
   const fvNews = newsAll.find(n => istFoerderverein(n.category))
   const heuteStr = new Date().toISOString().slice(0, 10)
-  const termineSliced = termine.filter(t => t.datum >= heuteStr).slice(0, 3)
+  // Erst bündeln, dann kürzen: ein Festival mit fünf Spielen belegt nur einen der drei Plätze
+  const termineSliced = buendeleSpieltermine(termine.filter(t => t.datum >= heuteStr)).slice(0, 3)
 
   return (
     <>
@@ -140,8 +137,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TERMINE */}
-      <section className="py-24 px-6 bg-[#0a0a0a] text-[#f5f5f0]">
+      {/* TERMINE – md:px-20 wie bei den News, sonst verdeckt die feste Seitenleiste die Uhrzeiten */}
+      <section className="py-24 px-6 md:px-20 bg-[#0a0a0a] text-[#f5f5f0]">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -154,30 +151,37 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-px">
-            {termineSliced.map(t => (
-              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-6 border-b border-[#f5f5f0]/10 group">
+            {termineSliced.map(e => (
+              <div key={e.termin.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 py-6 border-b border-[#f5f5f0]/10 group">
                 <div className="shrink-0 w-16">
                   <div className="font-display text-3xl leading-none">
-                    {format(new Date(t.datum), 'd', { locale: de })}
+                    {format(new Date(e.termin.datum), 'd', { locale: de })}
                   </div>
                   <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mt-1">
-                    {format(new Date(t.datum), 'MMM', { locale: de })}
+                    {format(new Date(e.termin.datum), 'MMM', { locale: de })}
                   </div>
                 </div>
                 <div className="w-px h-10 bg-[#f5f5f0]/10 hidden sm:block shrink-0" />
-                <div className="flex-1">
-                  <h3 className="font-medium text-[#f5f5f0] mb-1">{t.titel}</h3>
-                  {t.ort && (
+                <div className="flex-1 min-w-0">
+                  {/* Bei Spielen: welche Sportart, welches Team – sonst sehen zwei Jugendspiele gegen denselben Verein gleich aus */}
+                  {e.sportart && (
+                    <div className="text-[11px] tracking-[0.2em] uppercase text-[#f5f5f0]/60 mb-1.5">
+                      {e.sportart} · {e.mannschaft}
+                    </div>
+                  )}
+                  <h3 className="font-medium text-[#f5f5f0] mb-1">{e.titel}</h3>
+                  {e.spiele.length > 1 && <p className="text-sm text-[#6b6b6b] mb-1">{gegnerText(e)}</p>}
+                  {e.ort && (
                     <div className="flex items-center gap-1 text-xs text-[#6b6b6b]">
                       <MapPin size={11} />
-                      {t.ort}
+                      {e.ort}
                     </div>
                   )}
                 </div>
-                {t.uhrzeit && (
+                {e.uhrzeit && (
                   <div className="shrink-0">
                     <span className="text-xs tracking-[0.15em] uppercase border border-[#f5f5f0]/20 px-3 py-1 text-[#6b6b6b]">
-                      {uhrzeitLabel(t.uhrzeit)}
+                      {uhrzeitText(e)}
                     </span>
                   </div>
                 )}
