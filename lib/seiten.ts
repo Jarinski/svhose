@@ -4,7 +4,7 @@
  * Aufbau der frei gestalteten Seiten (heute die Förderverein-Seiten Chronik, Aktuelles und
  * Mitglied werden, siehe lib/foerderverein-seiten.ts): eine Einleitung und eine Folge von
  * Bausteinen, jeder mit eigener Darstellung. Die meisten Bausteine tragen ihren Inhalt selbst
- * (Zeitleiste, Text, Foto, Karten …); "Meldungen" und "Unterlagen" zeigen automatisch die News und
+ * (Zeitleiste, Text, Foto, Bildergalerie, Karten …); "Meldungen" und "Unterlagen" zeigen automatisch die News und
  * Downloads des Fördervereins. Gespeichert als JSON-Dokument in der Tabelle seiten, bearbeitet unter
  * /verwaltung/foerderverein-seiten von Admins und Zugängen mit Förderverein-Recht.
  *
@@ -32,6 +32,8 @@ export const HINTERGRUENDE = ['hell', 'dunkel'] as const
 export const BILD_POSITIONEN = ['rechts', 'links'] as const
 export const BILD_BREITEN = ['normal', 'breit'] as const
 export const MELDUNGEN_DARSTELLUNGEN = ['kacheln', 'zeilen'] as const
+/** kacheln: gleich große Fotos im Raster; mosaik: jedes Foto in seinem Format, in Spalten. */
+export const GALERIE_DARSTELLUNGEN = ['kacheln', 'mosaik'] as const
 /** Wie viele Meldungen höchstens – 0 = alle. */
 export const MELDUNGEN_ANZAHLEN = [0, 3, 6] as const
 /** "uebrige": ohne die Downloads, die schon in einem Kasten mit Knopf stehen. */
@@ -43,6 +45,7 @@ export type Hintergrund = (typeof HINTERGRUENDE)[number]
 export type BildPosition = (typeof BILD_POSITIONEN)[number]
 export type BildBreite = (typeof BILD_BREITEN)[number]
 export type MeldungenDarstellung = (typeof MELDUNGEN_DARSTELLUNGEN)[number]
+export type GalerieDarstellung = (typeof GALERIE_DARSTELLUNGEN)[number]
 export type UnterlagenAuswahl = (typeof UNTERLAGEN_AUSWAHL)[number]
 
 export interface ZeitEintrag<B = GespeichertesBild> {
@@ -59,6 +62,12 @@ export interface ZahlEintrag {
   schluessel?: string
   zahl: string
   text: string
+}
+
+export interface GalerieFoto<B = GespeichertesBild> {
+  schluessel?: string
+  bild: B | null
+  unterschrift: string
 }
 
 export interface KartenEintrag {
@@ -78,6 +87,8 @@ export type Baustein<B = GespeichertesBild> =
   | (Basis & { art: 'zeitleiste'; ueberschrift: string; darstellung: ZeitleistenDarstellung; eintraege: ZeitEintrag<B>[] })
   | (Basis & { art: 'text'; ueberschrift: string; text: string; bild: B | null; bildPosition: BildPosition; hintergrund: Hintergrund })
   | (Basis & { art: 'bild'; bild: B | null; unterschrift: string; breite: BildBreite })
+  /** Viele Fotos; auf der Website öffnet ein Klick die Großansicht zum Durchblättern. */
+  | (Basis & { art: 'galerie'; ueberschrift: string; text: string; darstellung: GalerieDarstellung; fotos: GalerieFoto<B>[] })
   | (Basis & { art: 'liste'; ueberschrift: string; text: string; punkte: string[]; darstellung: ListenDarstellung })
   | (Basis & { art: 'zahlen'; ueberschrift: string; eintraege: ZahlEintrag[]; hintergrund: Hintergrund })
   | (Basis & { art: 'zitat'; text: string; quelle: string })
@@ -106,6 +117,7 @@ export const BAUSTEIN_ARTEN: { art: BausteinArt; name: string; beschreibung: str
   { art: 'aufruf', name: 'Kasten mit Knopf', beschreibung: 'Hervorgehoben, mit Knopf zum Herunterladen oder Mailen' },
   { art: 'zeitleiste', name: 'Zeitleiste', beschreibung: 'Stationen mit Jahr, Titel, Text und Foto' },
   { art: 'bild', name: 'Foto', beschreibung: 'Ein großes Foto mit Bildunterschrift' },
+  { art: 'galerie', name: 'Bildergalerie', beschreibung: 'Viele Fotos; ein Klick zeigt sie groß zum Durchblättern' },
   { art: 'liste', name: 'Stichpunkte', beschreibung: 'Kurze Punkte, z. B. Ideen oder Unterstützer' },
   { art: 'zahlen', name: 'Zahlen & Fakten', beschreibung: 'Große Zahlen mit kurzer Erklärung' },
   { art: 'zitat', name: 'Zitat', beschreibung: 'Ein hervorgehobener Satz mit Quelle' },
@@ -118,7 +130,7 @@ export function bausteinName(art: BausteinArt): string {
 }
 
 export const DARSTELLUNG_NAMEN: Record<
-  ZeitleistenDarstellung | ListenDarstellung | Hintergrund | BildPosition | BildBreite | MeldungenDarstellung | UnterlagenAuswahl,
+  ZeitleistenDarstellung | ListenDarstellung | Hintergrund | BildPosition | BildBreite | MeldungenDarstellung | UnterlagenAuswahl | GalerieDarstellung,
   string
 > = {
   kacheln: 'Kacheln',
@@ -133,6 +145,7 @@ export const DARSTELLUNG_NAMEN: Record<
   normal: 'Normal',
   breit: 'Volle Breite',
   zeilen: 'Zeilen',
+  mosaik: 'Mosaik',
   uebrige: 'Nur die übrigen',
   alle: 'Alle',
 }
@@ -147,6 +160,8 @@ export function neuerBaustein(art: BausteinArt): Baustein<never> {
       return { art, sichtbar: true, ueberschrift: '', text: '', bild: null, bildPosition: 'rechts', hintergrund: 'hell' }
     case 'bild':
       return { art, sichtbar: true, bild: null, unterschrift: '', breite: 'normal' }
+    case 'galerie':
+      return { art, sichtbar: true, ueberschrift: '', text: '', darstellung: 'kacheln', fotos: [] }
     case 'liste':
       return { art, sichtbar: true, ueberschrift: '', text: '', punkte: [''], darstellung: 'kaestchen' }
     case 'zahlen':
@@ -184,6 +199,7 @@ const GRENZEN = {
   quelle: 160,
   karten: 12,
   downloads: 20,
+  fotos: 80,
 }
 
 /** Ränder abschneiden und leere Einträge weglassen – so, wie die Seite gespeichert wird. */
@@ -205,6 +221,9 @@ export function seiteBereinigen<B>(inhalt: SeitenInhalt<B>): SeitenInhalt<B> {
           return { ...b, ueberschrift: t(b.ueberschrift), text: t(b.text) }
         case 'bild':
           return { ...b, unterschrift: t(b.unterschrift) }
+        case 'galerie':
+          // Ein Platz ohne Foto (z. B. nach "Foto entfernen") fällt weg – die Unterschrift allein zeigt nichts
+          return { ...b, ueberschrift: t(b.ueberschrift), text: t(b.text), fotos: b.fotos.map(f => ({ ...f, unterschrift: t(f.unterschrift) })).filter(f => f.bild) }
         case 'liste':
           return { ...b, ueberschrift: t(b.ueberschrift), text: t(b.text), punkte: b.punkte.map(t).filter(Boolean) }
         case 'zahlen':
@@ -262,6 +281,12 @@ export function seitePruefen<B>(inhalt: SeitenInhalt<B>): string | null {
       case 'bild':
         if (!b.bild) return `${wo}: Bitte ein Foto auswählen – oder den Baustein entfernen.`
         meldung = laenge('Die Bildunterschrift', b.unterschrift, GRENZEN.unterschrift)
+        break
+      case 'galerie':
+        if (b.fotos.length === 0) return `${wo}: Bitte mindestens ein Foto hinzufügen – oder den Baustein entfernen.`
+        if (b.fotos.length > GRENZEN.fotos) return `${wo}: zu viele Fotos (höchstens ${GRENZEN.fotos}). Für mehr Fotos einfach eine zweite Galerie anlegen.`
+        meldung = laenge('Die Überschrift', b.ueberschrift, GRENZEN.ueberschrift) ?? laenge('Der Text', b.text, GRENZEN.kurztext)
+        for (let j = 0; !meldung && j < b.fotos.length; j++) meldung = laenge(`Bei Foto ${j + 1} die Bildunterschrift`, b.fotos[j].unterschrift, GRENZEN.unterschrift)
         break
       case 'liste':
         if (b.punkte.length === 0) return `${wo}: Bitte mindestens einen Punkt eintragen – oder den Baustein entfernen.`
@@ -371,6 +396,18 @@ function bausteinLesen(roh: unknown): Baustein | null {
       }
     case 'bild':
       return { ...basis, art: 'bild', bild: bildLesen(b.bild), unterschrift: text(b.unterschrift), breite: wahl(b.breite, BILD_BREITEN) }
+    case 'galerie':
+      return {
+        ...basis,
+        art: 'galerie',
+        ueberschrift: text(b.ueberschrift),
+        text: text(b.text),
+        darstellung: wahl(b.darstellung, GALERIE_DARSTELLUNGEN),
+        fotos: liste(b.fotos).map(roh => {
+          const f = objekt(roh)
+          return { ...schluesselLesen(f.schluessel), bild: bildLesen(f.bild), unterschrift: text(f.unterschrift) }
+        }),
+      }
     case 'liste':
       return {
         ...basis,
@@ -452,6 +489,7 @@ export function bilderUmwandeln<A, B>(inhalt: SeitenInhalt<A>, f: (bild: A | nul
     bausteine: inhalt.bausteine.map((b): Baustein<B> => {
       if (b.art === 'zeitleiste') return { ...b, eintraege: b.eintraege.map(e => ({ ...e, bild: f(e.bild, e.schluessel) })) }
       if (b.art === 'text' || b.art === 'bild') return { ...b, bild: f(b.bild, b.schluessel) }
+      if (b.art === 'galerie') return { ...b, fotos: b.fotos.map(foto => ({ ...foto, bild: f(foto.bild, foto.schluessel) })) }
       return b
     }),
   }

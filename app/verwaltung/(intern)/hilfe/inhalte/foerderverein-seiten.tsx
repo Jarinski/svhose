@@ -45,6 +45,10 @@ export const foerdervereinSeiten: Thema = {
             <Begriff>Zeitleiste</Begriff>: Stationen mit Zeit („2017“, „Heute“), Titel, kurzem Text und auf Wunsch einem Foto.
           </li>
           <li>
+            <Begriff>Bildergalerie</Begriff>: viele Fotos auf einmal, zum Beispiel vom Bau oder vom Sommerfest. Auf der Website öffnet ein Klick auf ein
+            Foto die Großansicht, in der man durch alle Fotos blättert.
+          </li>
+          <li>
             <Begriff>Foto</Begriff>, <Begriff>Stichpunkte</Begriff>, <Begriff>Zahlen & Fakten</Begriff> und <Begriff>Zitat</Begriff>.
           </li>
         </Punkte>
@@ -103,6 +107,11 @@ export const foerdervereinSeiten: Thema = {
             Foto, <Begriff>Breite</Begriff>: <Begriff>Normal</Begriff> (mittig, etwas schmaler) oder <Begriff>Volle Breite</Begriff>.
           </li>
           <li>
+            Bildergalerie, <Begriff>Darstellung</Begriff>: <Begriff>Kacheln</Begriff> (gleich große Fotos, bis zu vier nebeneinander) oder{' '}
+            <Begriff>Mosaik</Begriff> (jedes Foto in seinem Format, die Bildunterschrift steht darunter). Bei mehr als 16 Fotos zeigt die Website
+            erst zwölf und darunter einen Knopf für alle.
+          </li>
+          <li>
             Stichpunkte, <Begriff>Darstellung</Begriff>: <Begriff>Kästchen</Begriff> für kurze Begriffe oder <Begriff>Aufzählung</Begriff> in zwei
             Spalten.
           </li>
@@ -151,6 +160,18 @@ export const foerdervereinSeiten: Thema = {
             Mitte bleibt stehen. Sonst zeigt die Website das ganze Bild.
           </li>
         </Punkte>
+        <p>
+          In der <Begriff>Bildergalerie</Begriff> geht es schneller: Tipp auf <Taste>Fotos hinzufügen</Taste> und wähl gleich mehrere Fotos aus – am
+          Computer kannst du sie auch einfach in das Feld ziehen. Jedes Foto bekommt eine eigene Karte mit Bildunterschrift; mit den Pfeilen schiebst du
+          es nach vorn oder hinten, das Kreuz nimmt es heraus.
+        </p>
+        <Punkte>
+          <li>Die Galerie verkleinert die Fotos schon beim Auswählen auf Webgröße – auch große Handyfotos gehen also.</li>
+          <li>
+            Pro Speichern gehen neue Fotos bis zusammen 15 MB, das sind meist 20 bis 40 Fotos. Steht unter dem Feld eine rote Zahl, speicher erst
+            einen Teil und füg den Rest danach hinzu.
+          </li>
+        </Punkte>
         <Tipp art="achtung">
           Personen auf Fotos müssen mit der Veröffentlichung einverstanden sein. Bei Kindern und Jugendlichen gilt das für die Eltern – im Zweifel lieber
           ein Foto vom Platz als eines mit erkennbaren Gesichtern.
@@ -162,7 +183,7 @@ export const foerdervereinSeiten: Thema = {
         <Punkte>
           <li>bei jeder Station und jeder Karte ein Titel,</li>
           <li>beim Textabschnitt und beim Kasten mit Knopf eine Überschrift oder ein Text,</li>
-          <li>beim Baustein Foto ein Foto,</li>
+          <li>beim Baustein Foto ein Foto, bei der Bildergalerie mindestens eins,</li>
           <li>bei Stichpunkten mindestens ein Punkt, bei Zahlen & Fakten zu jedem Eintrag eine Zahl,</li>
           <li>beim Zitat der Text.</li>
         </Punkte>

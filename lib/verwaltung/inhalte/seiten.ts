@@ -96,6 +96,14 @@ function bausteinVerlauf(b: Baustein): Record<string, unknown> {
       }
     case 'bild':
       return { ...basis, Foto: fotoName(b.bild), Bildunterschrift: b.unterschrift, Breite: DARSTELLUNG_NAMEN[b.breite] }
+    case 'galerie':
+      return {
+        ...basis,
+        Überschrift: b.ueberschrift,
+        Text: b.text,
+        Darstellung: DARSTELLUNG_NAMEN[b.darstellung],
+        Fotos: b.fotos.map(f => fotoName(f.bild) + (f.unterschrift ? `: ${f.unterschrift}` : '')),
+      }
     case 'liste':
       return { ...basis, Überschrift: b.ueberschrift, Text: b.text, Darstellung: DARSTELLUNG_NAMEN[b.darstellung], Punkte: b.punkte }
     case 'zahlen':

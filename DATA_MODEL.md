@@ -558,6 +558,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
   - `zeitleiste`: `ueberschrift`, `darstellung` (`kacheln` | `zeitstrahl` | `gross`), `eintraege` mit `zeit`, `titel`, `text`, `bild`
   - `text`: `ueberschrift`, `text` (Markdown), `bild`, `bildPosition` (`rechts` | `links`), `hintergrund` (`hell` | `dunkel`)
   - `bild`: `bild`, `unterschrift`, `breite` (`normal` | `breit`)
+  - `galerie` (Bildergalerie): `ueberschrift`, `text`, `darstellung` (`kacheln` | `mosaik`), `fotos` mit `bild` und `unterschrift` (höchstens 80)
   - `liste`: `ueberschrift`, `text`, `punkte` (Strings), `darstellung` (`kaestchen` | `punkte`)
   - `zahlen`: `ueberschrift`, `eintraege` mit `zahl` und `text`, `hintergrund`
   - `zitat`: `text`, `quelle`

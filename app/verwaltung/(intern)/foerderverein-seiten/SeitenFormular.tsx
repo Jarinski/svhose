@@ -6,7 +6,9 @@
  * Website (components/foerderverein/SeitenBausteine), auch mit den aktuellen News und Downloads.
  *
  * Der Inhalt geht als JSON im Feld "daten" an die Server-Aktion, neue Fotos als Dateifelder
- * "bild:<schlüssel>" (BildFeld). Gespeichert wird alles auf einmal.
+ * "bild:<schlüssel>" (BildFeld; in der Bildergalerie ein verstecktes Dateifeld je Foto). Gespeichert
+ * wird alles auf einmal – deshalb prüft das Formular vor dem Absenden, ob alle neuen Fotos zusammen
+ * unter die Grenze für eine Anfrage passen.
  *
  * SeitenEditor ist der Editor ohne Formular – die Übung in der Hilfe nutzt ihn ebenfalls
  * (hilfe/uebung/lektionen/foerderverein-seiten.tsx), damit sie genau so aussieht und sich so bedient.
@@ -16,6 +18,8 @@ import { createContext, useActionState, useContext, useEffect, useRef, useState 
 import Link from 'next/link'
 import {
   AlignLeft,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   Files,
   FlaskConical,
@@ -23,6 +27,7 @@ import {
   History,
   Image as ImageIcon,
   ImagePlus,
+  Images,
   LayoutGrid,
   List,
   Megaphone,
@@ -30,11 +35,13 @@ import {
   Pencil,
   Plus,
   Quote,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import SeitenBausteine, { SeitenKopf, type SeitenDaten } from '@/components/foerderverein/SeitenBausteine'
 import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
+import { fotoVerkleinern } from '@/components/verwaltung/inhalte/fotoVerkleinern'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import { auswahlKlasse, Badge, eingabeKlasse, Feld, knopfKlassen, Karte, LeerHinweis } from '@/components/verwaltung/ui'
@@ -54,6 +61,7 @@ import {
 } from '@/lib/seiten'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
 import { LEER } from '@/lib/verwaltung/formular'
+import { MAX_UPLOAD_BYTES } from '@/lib/verwaltung/upload-grenze'
 import { seiteSpeichernAktion } from './aktionen'
 
 /** Gespeichertes Bild mit fertiger Adresse (die Seite rechnet sie aus – lib/medien.ts läuft nur auf dem Server). */
@@ -66,6 +74,7 @@ const ICONS: Record<BausteinArt, LucideIcon> = {
   zeitleiste: History,
   text: AlignLeft,
   bild: ImageIcon,
+  galerie: Images,
   liste: List,
   zahlen: Hash,
   zitat: Quote,
@@ -99,6 +108,7 @@ function mitSchluesseln(inhalt: EInhalt): EInhalt {
       if (b.art === 'zeitleiste') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
       if (b.art === 'zahlen') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
       if (b.art === 'karten') return { ...b, schluessel: `b${i}`, eintraege: b.eintraege.map(e => ({ ...e, schluessel: `e${n++}` })) }
+      if (b.art === 'galerie') return { ...b, schluessel: `b${i}`, fotos: b.fotos.map(f => ({ ...f, schluessel: `e${n++}` })) }
       return { ...b, schluessel: `b${i}` }
     }),
   }
@@ -114,10 +124,40 @@ function bildAdressen(inhalt: EInhalt): Record<string, string | null> {
   return adressen
 }
 
+/** Megabyte mit einer Nachkommastelle, z. B. "12,4 MB". */
+export function megabyte(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`
+}
+
+/** Alle Dateien, die das Formular gerade mitschicken würde, zusammen. */
+function neueDateienBytes(formular: HTMLFormElement): number {
+  let summe = 0
+  new FormData(formular).forEach(wert => {
+    if (typeof wert === 'object' && wert !== null) summe += wert.size
+  })
+  return summe
+}
+
 export default function SeitenFormular({ seite, kopf, stand, inhalt, daten }: Props) {
   const [ergebnis, aktion] = useActionState(seiteSpeichernAktion, LEER)
+  const [zuGross, setZuGross] = useState<string | null>(null)
+
+  // Next.js nimmt eine Anfrage nur bis 16 MB an – größer bricht die Seite ab, ohne dass eine Meldung käme.
+  function absenden(e: React.FormEvent<HTMLFormElement>) {
+    const bytes = neueDateienBytes(e.currentTarget)
+    if (bytes > MAX_UPLOAD_BYTES) {
+      e.preventDefault()
+      setZuGross(
+        `Die neuen Fotos sind zusammen ${megabyte(bytes)} groß – auf einmal gehen höchstens ${megabyte(MAX_UPLOAD_BYTES)}. ` +
+          'Bitte einige neue Fotos wieder entfernen, speichern und sie danach in einem zweiten Schritt hinzufügen.',
+      )
+    } else {
+      setZuGross(null)
+    }
+  }
+
   return (
-    <form action={aktion} onReset={eingabenBehalten}>
+    <form action={aktion} onSubmit={absenden} onReset={eingabenBehalten}>
       {/* Nach dem Speichern ändert sich der Stand → der Editor startet mit dem frisch gespeicherten Inhalt. */}
       <SeitenEditor
         key={stand}
@@ -136,7 +176,12 @@ export default function SeitenFormular({ seite, kopf, stand, inhalt, daten }: Pr
               name="daten"
               value={JSON.stringify(bilderUmwandeln(aktuell, bild => (bild ? { pfad: bild.pfad, breite: bild.breite, hoehe: bild.hoehe } : null)))}
             />
-            <SpeicherLeiste geaendert={geaendert} ergebnis={ergebnis} knopfText="Seite speichern" />
+            <SpeicherLeiste
+              geaendert={geaendert}
+              ergebnis={ergebnis}
+              knopfText="Seite speichern"
+              zusatz={zuGross && <p className="text-sm text-red-700" role="alert">{zuGross}</p>}
+            />
           </>
         )}
       />
@@ -319,6 +364,7 @@ export function SeitenEditor({
                   {b.art === 'zeitleiste' && <ZeitleisteEditor b={b} setzen={setzen} neuerSchluessel={neuerSchluessel} fotoMelden={fotoMelden} />}
                   {b.art === 'text' && <TextEditor b={b} setzen={setzen} fotoMelden={fotoMelden} hatFoto={!!fotoAdresse(b.bild, schluessel)} />}
                   {b.art === 'bild' && <FotoEditor b={b} setzen={setzen} fotoMelden={fotoMelden} />}
+                  {b.art === 'galerie' && <GalerieEditor b={b} setzen={setzen} neuerSchluessel={neuerSchluessel} fotoMelden={fotoMelden} />}
                   {b.art === 'liste' && <ListeEditor b={b} setzen={setzen} />}
                   {b.art === 'zahlen' && <ZahlenEditor b={b} setzen={setzen} neuerSchluessel={neuerSchluessel} />}
                   {b.art === 'zitat' && <ZitatEditor b={b} setzen={setzen} />}
@@ -582,6 +628,22 @@ function Skizze({ art }: { art: keyof typeof DARSTELLUNG_NAMEN }) {
           {zeilen(3)}
         </span>
       )
+    case 'mosaik':
+      return (
+        <span aria-hidden className={`${rahmen} gap-0.5`}>
+          {[
+            ['h-[55%]', 'h-[45%]'],
+            ['h-[35%]', 'h-[65%]'],
+            ['h-[60%]', 'h-[40%]'],
+          ].map((spalte, i) => (
+            <span key={i} className="flex-1 flex flex-col gap-0.5">
+              {spalte.map((h, j) => (
+                <span key={j} className={`${h} ${flaeche}`} />
+              ))}
+            </span>
+          ))}
+        </span>
+      )
     case 'normal':
       return (
         <span aria-hidden className={`${rahmen} justify-center`}>
@@ -836,6 +898,230 @@ function FotoEditor({ b, setzen, fotoMelden }: { b: Art<'bild'>; setzen: (b: Art
         ]}
       />
     </>
+  )
+}
+
+// ─── Bildergalerie ──────────────────────────────────────────────────────────
+
+const KLEINER_KNOPF =
+  'inline-flex items-center justify-center w-9 h-9 rounded-sm border border-[#0a0a0a]/15 bg-white text-[#4a4a4a] hover:border-[#0a0a0a]/50 hover:text-[#0a0a0a] disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]'
+
+function GalerieEditor({
+  b,
+  setzen,
+  neuerSchluessel,
+  fotoMelden,
+}: {
+  b: Art<'galerie'>
+  setzen: (b: Art<'galerie'>) => void
+  neuerSchluessel: (praefix: 'e') => string
+  fotoMelden: FotoMelden
+}) {
+  const k = b.schluessel as string
+  /** Neu gewählte (schon verkleinerte) Dateien je Foto-Schlüssel – das Foto legt sie in sein Dateifeld. */
+  const neueDateien = useRef(new Map<string, File>())
+  const [vorbereiten, setVorbereiten] = useState<{ fertig: number; von: number } | null>(null)
+  const [hinweis, setHinweis] = useState<string | null>(null)
+  const [ziehen, setZiehen] = useState(false)
+  // Das Verkleinern dauert – danach mit dem dann aktuellen Stand weitermachen (Unterschriften könnten inzwischen getippt sein)
+  const aktuell = useRef({ b, setzen })
+  aktuell.current = { b, setzen }
+
+  const fotos = (neu: Art<'galerie'>['fotos']) => setzen({ ...b, fotos: neu })
+  const aendern = (j: number, unterschrift: string) => fotos(b.fotos.map((f, x) => (x === j ? { ...f, unterschrift } : f)))
+  const entfernen = (j: number) => {
+    neueDateien.current.delete(b.fotos[j].schluessel as string)
+    fotos(b.fotos.filter((_, x) => x !== j))
+  }
+
+  async function hinzufuegen(liste: File[]) {
+    if (liste.length === 0 || vorbereiten) return
+    setHinweis(null)
+    const neu: Art<'galerie'>['fotos'] = []
+    const abgelehnt: string[] = []
+    for (let i = 0; i < liste.length; i++) {
+      setVorbereiten({ fertig: i, von: liste.length })
+      const datei = liste[i]
+      if (!datei.type.startsWith('image/')) {
+        abgelehnt.push(`„${datei.name}“ ist kein Foto`)
+        continue
+      }
+      const klein = await fotoVerkleinern(datei)
+      if (klein.size > MAX_UPLOAD_BYTES) {
+        abgelehnt.push(`„${datei.name}“ ist größer als ${megabyte(MAX_UPLOAD_BYTES)}`)
+        continue
+      }
+      const schluessel = neuerSchluessel('e')
+      neueDateien.current.set(schluessel, klein)
+      neu.push({ schluessel, bild: null, unterschrift: '' })
+    }
+    setVorbereiten(null)
+    if (abgelehnt.length > 0) setHinweis(`Nicht übernommen: ${abgelehnt.join(', ')}.`)
+    if (neu.length > 0) aktuell.current.setzen({ ...aktuell.current.b, fotos: aktuell.current.b.fotos.concat(neu) })
+  }
+
+  const neueBytes = b.fotos.reduce((summe, f) => summe + (neueDateien.current.get(f.schluessel as string)?.size ?? 0), 0)
+  const neueAnzahl = b.fotos.filter(f => neueDateien.current.has(f.schluessel as string)).length
+
+  return (
+    <>
+      <Textfeld id={`${k}-ueberschrift`} label="Überschrift (optional)" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} platzhalter="z. B. Bilder vom Bau" />
+      <Textfeld id={`${k}-text`} label="Kurzer Text (optional)" zeilen={2} wert={b.text} onAendern={v => setzen({ ...b, text: v })} />
+      <Wahl
+        name={`${k}-darstellung`}
+        label="Darstellung"
+        wert={b.darstellung}
+        onWahl={d => setzen({ ...b, darstellung: d })}
+        optionen={[
+          { wert: 'kacheln', text: 'Gleich große Kacheln, bis zu vier nebeneinander – ruhig und ordentlich' },
+          { wert: 'mosaik', text: 'Jedes Foto in seinem Format, Hoch- und Querformat gemischt, mit Bildunterschrift' },
+        ]}
+      />
+      <div>
+        <div className="text-sm font-medium mb-1.5">Fotos{b.fotos.length > 0 && <span className="font-normal text-[#6b6b6b]"> ({b.fotos.length})</span>}</div>
+        {b.fotos.length > 0 && (
+          <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-3">
+            {b.fotos.map((f, j) => {
+              const fk = f.schluessel as string
+              return (
+                <GalerieFotoKarte
+                  key={fk}
+                  schluessel={fk}
+                  nummer={j + 1}
+                  bild={f.bild}
+                  datei={neueDateien.current.get(fk) ?? null}
+                  unterschrift={f.unterschrift}
+                  onUnterschrift={v => aendern(j, v)}
+                  onAnzeige={fotoMelden(fk)}
+                  knoepfe={
+                    <div className="flex gap-1 shrink-0">
+                      <button type="button" className={KLEINER_KNOPF} disabled={j === 0} onClick={() => fotos(verschieben(b.fotos, j, -1))} aria-label={`Foto ${j + 1} nach vorn`} title="Nach vorn">
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className={KLEINER_KNOPF}
+                        disabled={j === b.fotos.length - 1}
+                        onClick={() => fotos(verschieben(b.fotos, j, 1))}
+                        aria-label={`Foto ${j + 1} nach hinten`}
+                        title="Nach hinten"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                      <button type="button" className={`${KLEINER_KNOPF} hover:!text-red-700 hover:!border-red-300`} onClick={() => entfernen(j)} aria-label={`Foto ${j + 1} entfernen`} title="Entfernen">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  }
+                />
+              )
+            })}
+          </ol>
+        )}
+
+        <label
+          htmlFor={`${k}-dateien`}
+          onDragOver={e => {
+            e.preventDefault()
+            setZiehen(true)
+          }}
+          onDragLeave={() => setZiehen(false)}
+          onDrop={e => {
+            e.preventDefault()
+            setZiehen(false)
+            hinzufuegen(Array.from(e.dataTransfer.files))
+          }}
+          className={`flex flex-col items-center justify-center gap-2 rounded-sm border border-dashed px-4 py-6 text-center cursor-pointer focus-within:ring-2 focus-within:ring-[#0a0a0a] ${
+            ziehen ? 'border-[#0a0a0a] bg-[#0a0a0a]/[0.04]' : 'border-[#0a0a0a]/25 hover:border-[#0a0a0a]/50'
+          }`}
+        >
+          <ImagePlus size={22} className="text-[#6b6b6b]" />
+          <span className="text-sm font-medium">{vorbereiten ? `Fotos werden vorbereitet … (${vorbereiten.fertig + 1} von ${vorbereiten.von})` : 'Fotos hinzufügen'}</span>
+          <span className="text-xs text-[#6b6b6b]">Mehrere auf einmal auswählen oder hierher ziehen. Sie werden dabei auf Webgröße verkleinert.</span>
+          {/* Ohne name: Die Dateien gehen über die Dateifelder der einzelnen Fotos mit, nicht über dieses */}
+          <input
+            id={`${k}-dateien`}
+            type="file"
+            accept="image/*"
+            multiple
+            disabled={!!vorbereiten}
+            className="sr-only"
+            onChange={e => {
+              const liste = Array.from(e.target.files ?? [])
+              e.target.value = ''
+              hinzufuegen(liste)
+            }}
+          />
+        </label>
+        {neueAnzahl > 0 && (
+          <p className={`mt-2 text-xs ${neueBytes > MAX_UPLOAD_BYTES ? 'text-red-700' : 'text-[#6b6b6b]'}`}>
+            {neueAnzahl === 1 ? '1 neues Foto' : `${neueAnzahl} neue Fotos`} ({megabyte(neueBytes)}) – {neueAnzahl === 1 ? 'wird' : 'werden'} beim Speichern hochgeladen.
+            {neueBytes > MAX_UPLOAD_BYTES && ` Auf einmal gehen höchstens ${megabyte(MAX_UPLOAD_BYTES)} – bitte in mehreren Schritten speichern.`}
+          </p>
+        )}
+        {hinweis && <p className="mt-2 text-sm text-red-700">{hinweis}</p>}
+      </div>
+    </>
+  )
+}
+
+/**
+ * Ein Foto der Galerie im Editor. Ein neues Foto legt seine Datei beim Erscheinen in ein eigenes,
+ * verstecktes Dateifeld "bild:<schlüssel>" – so geht es beim Speichern mit wie die Fotos aus BildFeld.
+ */
+function GalerieFotoKarte({
+  schluessel,
+  nummer,
+  bild,
+  datei,
+  unterschrift,
+  onUnterschrift,
+  onAnzeige,
+  knoepfe,
+}: {
+  schluessel: string
+  nummer: number
+  bild: EditorBild | null
+  datei: File | null
+  unterschrift: string
+  onUnterschrift: (wert: string) => void
+  onAnzeige: (url: string | null) => void
+  knoepfe: React.ReactNode
+}) {
+  const feld = useRef<HTMLInputElement>(null)
+  const [vorschau, setVorschau] = useState<string | null>(null)
+  const melden = useRef(onAnzeige)
+  melden.current = onAnzeige
+
+  useEffect(() => {
+    const el = feld.current
+    if (!datei || !el) return
+    const liste = new DataTransfer()
+    liste.items.add(datei)
+    el.files = liste.files
+    const url = URL.createObjectURL(datei)
+    setVorschau(url)
+    melden.current(url)
+    return () => URL.revokeObjectURL(url)
+  }, [datei])
+
+  const src = vorschau ?? bild?.url ?? null
+  return (
+    <li className="border border-[#0a0a0a]/10 rounded-sm bg-[#fafaf7] overflow-hidden flex flex-col">
+      <div className="relative aspect-[4/3] bg-[#0a0a0a]/[0.04]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {src && <img src={src} alt={`Foto ${nummer}`} className="absolute inset-0 h-full w-full object-cover" />}
+        <span className="absolute left-2 top-2 inline-flex items-center gap-1.5">
+          <span className="rounded-sm bg-[#0a0a0a]/70 px-1.5 py-0.5 text-[11px] font-medium text-[#f5f5f0]">{nummer}</span>
+          {datei && <Badge ton="erfolg">neu</Badge>}
+        </span>
+      </div>
+      <input ref={feld} type="file" name={`bild:${schluessel}`} tabIndex={-1} aria-hidden="true" className="hidden" />
+      <div className="p-3 space-y-3 flex-1 flex flex-col">
+        <Textfeld id={`${schluessel}-unterschrift`} label="Bildunterschrift (optional)" wert={unterschrift} onAendern={onUnterschrift} />
+        <div className="mt-auto flex justify-end">{knoepfe}</div>
+      </div>
+    </li>
   )
 }
 

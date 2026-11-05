@@ -6,7 +6,8 @@
  * genau so aussieht wie später auf der Website. "Meldungen" und "Unterlagen" zeigen die News und
  * Downloads des Fördervereins, die als `daten` hereinkommen.
  *
- * Ohne Hooks und ohne 'use client': funktioniert in Server- und Client-Komponenten.
+ * Ohne Hooks und ohne 'use client': funktioniert in Server- und Client-Komponenten. Nur die
+ * Bildergalerie (Großansicht zum Durchblättern) ist eine eigene Client-Komponente.
  */
 
 import Link from 'next/link'
@@ -14,6 +15,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { ArrowRight, Download as DownloadSymbol, FileText, Mail } from 'lucide-react'
 import MarkdownText from '@/components/MarkdownText'
+import Galerie from '@/components/foerderverein/Galerie'
 import NewsKarten from '@/components/foerderverein/NewsKarten'
 import type { Download, NewsPost } from '@/lib/content'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
@@ -67,6 +69,8 @@ function BausteinAnzeige({ baustein: b, daten, inKaesten }: { baustein: B; daten
           </figure>
         </Rahmen>
       ) : null
+    case 'galerie':
+      return <Bildergalerie b={b} />
     case 'liste':
       return <Stichpunkte b={b} />
     case 'zahlen':
@@ -224,6 +228,20 @@ function Textabschnitt({ b }: { b: Extract<B, { art: 'text' }> }) {
       ) : (
         <div className="max-w-3xl">{text}</div>
       )}
+    </Rahmen>
+  )
+}
+
+// ─── Bildergalerie ──────────────────────────────────────────────────────────
+
+function Bildergalerie({ b }: { b: Extract<B, { art: 'galerie' }> }) {
+  const fotos = b.fotos.flatMap(f => (f.bild ? [{ bild: f.bild, unterschrift: f.unterschrift.trim() }] : []))
+  if (fotos.length === 0) return null
+  return (
+    <Rahmen>
+      <Ueberschrift text={b.ueberschrift} className={b.text.trim() ? 'mb-4' : 'mb-10'} />
+      {b.text.trim() && <p className="max-w-2xl mb-10 text-[#6b6b6b] leading-relaxed whitespace-pre-line">{b.text}</p>}
+      <Galerie fotos={fotos} darstellung={b.darstellung} />
     </Rahmen>
   )
 }
