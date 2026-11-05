@@ -21,28 +21,31 @@ export default async function NewsPage() {
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">NEWS</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#0a0a0a]/10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14">
         {news.map(post => (
-          <Link
-            key={post.slug}
-            href={`/news/${post.slug}`}
-            className="bg-[#f5f5f0] group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-300 flex flex-col"
-          >
-            <NewsThumbnail
-              bild={post.image}
-              alt={post.title}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-            <div className="p-8 flex flex-col flex-1">
-              <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
-                {post.category} — {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
-              </div>
-              <h2 className="font-display text-2xl tracking-tight leading-tight mb-4">{post.title}</h2>
-              <p className="text-sm text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 leading-relaxed flex-1">{post.excerpt}</p>
-              <div className="mt-6 flex items-center gap-2 text-xs tracking-[0.1em] uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                Weiterlesen <ArrowRight size={12} />
-              </div>
+          <Link key={post.slug} href={`/news/${post.slug}`} className="group flex flex-col">
+            <div className="relative">
+              <NewsThumbnail
+                bild={post.image}
+                alt={post.title}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+              <span className="absolute left-3 bottom-3 bg-[#0a0a0a]/80 text-[#f5f5f0] text-[10px] tracking-[0.15em] uppercase px-2.5 py-1">
+                {post.sparte}
+              </span>
             </div>
+            <div className="mt-5 text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b]">
+              {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
+            </div>
+            <h2 className="mt-2 font-display text-2xl md:text-[1.75rem] tracking-tight leading-[1.05] group-hover:underline decoration-1 underline-offset-4">
+              {post.title}
+            </h2>
+            {post.excerpt && (
+              <p className="mt-3 text-sm text-[#6b6b6b] leading-relaxed line-clamp-4">{post.excerpt}</p>
+            )}
+            <span className="mt-5 self-start inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-4 py-2 text-[11px] tracking-[0.15em] uppercase transition-colors group-hover:bg-[#333]">
+              Weiterlesen <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-0.5" />
+            </span>
           </Link>
         ))}
       </div>
