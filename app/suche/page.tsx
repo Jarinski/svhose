@@ -5,6 +5,7 @@ import { de } from 'date-fns/locale'
 import { ArrowRight, Search } from 'lucide-react'
 import { getAllNews, getAnsprechpartner, getDownloads, getSparten, getTermine } from '@/lib/content'
 import { passtZurSuche, suchtext } from '@/lib/verwaltung/suche'
+import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 export const metadata: Metadata = { title: 'Suche' }
 
@@ -22,7 +23,7 @@ const SEITEN: (Treffer & { stichworte: string })[] = [
   { href: '/termine', titel: 'Termine', stichworte: 'veranstaltungen kalender' },
   { href: '/downloads', titel: 'Downloads', stichworte: 'aufnahmeantrag formulare mitglied werden' },
   { href: '/ansprechpartner', titel: 'Kontakt & Ansprechpartner', stichworte: 'vorstand email telefon' },
-  { href: '/foerderverein', titel: 'Förderverein', stichworte: 'unterstuetzen sportplatz' },
+  { href: FOERDERVEREIN_START, titel: 'Förderverein', stichworte: 'unterstuetzen sportplatz' },
   { href: '/foerderverein/spenden', titel: 'Spenden an den Förderverein', stichworte: 'spenden konto iban bankverbindung kontoverbindung' },
   { href: '/fussball', titel: 'Fußball-Spielpläne', stichworte: 'spiele ergebnisse tabelle' },
   { href: '/tischtennis', titel: 'Tischtennis-Spielpläne', stichworte: 'spiele ergebnisse tabelle' },

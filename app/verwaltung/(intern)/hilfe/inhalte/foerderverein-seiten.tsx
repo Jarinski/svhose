@@ -1,6 +1,7 @@
 import { LayoutTemplate } from 'lucide-react'
 import { Abschnitt, Begriff, Punkte, Schritte, Taste, Tipp } from '../bausteine'
 import type { Thema } from '../typen'
+import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 export const foerdervereinSeiten: Thema = {
   slug: 'foerderverein-seiten',
@@ -10,14 +11,14 @@ export const foerdervereinSeiten: Thema = {
   zielgruppe: 'foerderverein',
   bereich: 'inhalte',
   ziel: { href: '/verwaltung/foerderverein-seiten', text: 'Förderverein-Seiten öffnen' },
-  website: { href: '/foerderverein', text: 'Förderverein ansehen' },
+  website: { href: FOERDERVEREIN_START, text: 'Förderverein ansehen' },
   inhalt: (
     <>
       <Abschnitt titel="Wofür und wer darf?">
         <p>
           Drei Seiten unter Förderverein auf der Website gestaltest du selbst, Inhalt und Aussehen: <Begriff>Chronik</Begriff>,{' '}
-          <Begriff>Aktuelles</Begriff> und <Begriff>Mitglied werden</Begriff>. Die Übersichtsseite des Fördervereins und den Vorstand pflegst du
-          nicht hier – den Vorstand trägst du unter <Begriff>Vorstand (Förderverein)</Begriff> ein.
+          <Begriff>Aktuelles</Begriff> und <Begriff>Mitglied werden</Begriff>. <Begriff>Aktuelles</Begriff> ist dabei der Einstieg: Wer auf der
+          Website auf „Förderverein“ klickt, landet dort. Den Vorstand pflegst du nicht hier, sondern unter <Begriff>Vorstand (Förderverein)</Begriff>.
         </p>
         <p>
           Die Seiten bearbeiten Admins und Zugänge mit dem Recht <Begriff>Förderverein</Begriff>. Nur sie sehen im Menü den Punkt{' '}

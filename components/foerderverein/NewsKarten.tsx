@@ -4,7 +4,7 @@ import { de } from 'date-fns/locale'
 import NewsThumbnail from '@/components/NewsThumbnail'
 import type { NewsPost } from '@/lib/content'
 
-// News-Kacheln des Fördervereins (Übersicht und Aktuelles).
+// News-Kacheln des Fördervereins (Seite "Aktuelles").
 export default function NewsKarten({ news }: { news: NewsPost[] }) {
   // Bei 1–2 News keine leeren Rasterzellen
   const spalten = news.length === 1 ? 'max-w-md' : news.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'

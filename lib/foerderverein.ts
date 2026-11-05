@@ -22,6 +22,12 @@ export function kategorieVereinheitlichen(kategorie: string | null): string | nu
   return istFoerderverein(kategorie) ? FOERDERVEREIN_KATEGORIE : kategorie
 }
 
+/**
+ * Einstieg in den Förderverein: Links auf "den Förderverein" (Startseite, Footer, Suche) führen
+ * direkt zu "Aktuelles". Eine eigene Übersichtsseite gibt es nicht mehr; /foerderverein leitet hierher um.
+ */
+export const FOERDERVEREIN_START = '/foerderverein/aktuelles'
+
 /** Menüpunkt "Förderverein" in der Navigation: Name der Gruppe und ihre Unterpunkte (text: Kurzbeschreibung für Kacheln). */
 export const FOERDERVEREIN_MENUE = {
   label: 'Förderverein',

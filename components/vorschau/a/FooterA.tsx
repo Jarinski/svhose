@@ -3,6 +3,7 @@ import Image from 'next/image'
 import CookieSettingsButton from '@/components/CookieSettingsButton'
 import basis from './basisA.module.css'
 import s from './FooterA.module.css'
+import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 // ─── Footer Design A (Matchday) ──────────────────────────────────────────────
 // Dunkel mit großem Outline-Schriftzug. Wird immer mitgerendert, aber nur im
@@ -19,7 +20,7 @@ const SPORT = [
 const VEREIN = [
   { href: '/ueber-uns', label: 'Über uns' },
   { href: '/sportplaetze', label: 'Sportplätze' },
-  { href: '/foerderverein', label: 'Förderverein' },
+  { href: FOERDERVEREIN_START, label: 'Förderverein' },
   { href: '/news', label: 'News' },
   { href: '/ansprechpartner', label: 'Ansprechpartner*innen' },
   { href: '/downloads', label: 'Downloads' },

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import CookieSettingsButton from '@/components/CookieSettingsButton'
 import b from './bento.module.css'
 import s from './FooterB.module.css'
+import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 // ─── Footer von Design B (Bento) ─────────────────────────────────────────────
 // Schwarzer, abgerundeter Block. Wird für alle Besucher*innen mitgerendert, aber nur im
@@ -23,7 +24,7 @@ const SPALTEN: { titel: string; links: { href: string; label: string; extern?: b
     links: [
       { href: '/ueber-uns', label: 'Über uns' },
       { href: '/sportplaetze', label: 'Sportplätze' },
-      { href: '/foerderverein', label: 'Förderverein' },
+      { href: FOERDERVEREIN_START, label: 'Förderverein' },
       { href: '/news', label: 'News' },
       { href: '/downloads', label: 'Downloads' },
       { href: '/kinderschutz', label: 'Kinderschutz' },

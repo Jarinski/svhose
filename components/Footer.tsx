@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import CookieSettingsButton from '@/components/CookieSettingsButton'
+import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 export default function Footer() {
   return (
@@ -27,7 +28,7 @@ export default function Footer() {
                 { href: '/vereinsheim', label: 'Vereinsheim buchen' },
                 { href: '/downloads', label: 'Downloads' },
                 { href: '/ansprechpartner', label: 'Kontakt' },
-                { href: '/foerderverein', label: 'Förderverein' },
+                { href: FOERDERVEREIN_START, label: 'Förderverein' },
                 { href: '/kinderschutz', label: 'Kinderschutz' },
               ].map(link => (
                 <li key={link.href}>

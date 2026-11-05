@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import type { StartseitenDaten } from '@/lib/vorschau'
-import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
+import { FOERDERVEREIN_MENUE, FOERDERVEREIN_START, istFoerderverein } from '@/lib/foerderverein'
 import {
   aufzaehlung,
   datumLang,
@@ -234,7 +234,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
               </p>
             )}
           </div>
-          <Link href="/foerderverein" className={b.link}>Zum Förderverein →</Link>
+          <Link href={FOERDERVEREIN_START} className={b.link}>Zum Förderverein →</Link>
         </div>
         <div className={`${s.sparten} ${s.foerder}`}>
           {FOERDERVEREIN_MENUE.kinder.map((kind, i) => (

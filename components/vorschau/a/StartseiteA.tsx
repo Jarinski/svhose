@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { NewsPost } from '@/lib/content'
 import { spielInfo, type StartseitenDaten } from '@/lib/vorschau'
-import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
+import { FOERDERVEREIN_MENUE, FOERDERVEREIN_START, istFoerderverein } from '@/lib/foerderverein'
 import basis from './basisA.module.css'
 import s from './StartseiteA.module.css'
 import HeroVideoA from './HeroVideoA'
@@ -214,7 +214,7 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
                 Förderverein
               </h2>
             </div>
-            <Link href="/foerderverein" className={basis.more}>
+            <Link href={FOERDERVEREIN_START} className={basis.more}>
               Zum Förderverein →
             </Link>
           </div>

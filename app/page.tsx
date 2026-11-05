@@ -11,7 +11,7 @@ import StartseiteB from '@/components/vorschau/b/StartseiteB'
 import { heuteInBerlin } from '@/lib/vorschau'
 import { buendeleSpieltermine, gegnerText, uhrzeitText } from '@/lib/spieltermine'
 import { vorschauDesign } from '@/lib/vorschau-server'
-import { FOERDERVEREIN_MENUE, istFoerderverein } from '@/lib/foerderverein'
+import { FOERDERVEREIN_MENUE, FOERDERVEREIN_START, istFoerderverein } from '@/lib/foerderverein'
 
 // Liest bei jedem Aufruf direkt aus der Datenbank – neue News und Termine sind sofort sichtbar.
 export const dynamic = 'force-dynamic'
@@ -23,7 +23,7 @@ const AUF_EINEN_BLICK = [
   { titel: 'Trainingszeiten', text: 'Wann und wo trainiert wird – alle Gruppen auf einen Blick.', knopf: 'Zu den Zeiten', href: '/trainingszeiten' },
   { titel: 'Ansprechpartner', text: 'Für jede Sparte und jede Frage gibt es bei uns die richtige Person.', knopf: 'Zum Kontakt', href: '/ansprechpartner' },
   { titel: 'Sportplätze', text: 'Plätze und Hallen in Holm-Seppensen – mit Adresse und Anfahrt.', knopf: 'Zu den Plätzen', href: '/sportplaetze' },
-  { titel: 'Förderverein', text: 'Der Förderverein unterstützt Projekte, Ausstattung und Nachwuchs im Verein.', knopf: 'Mehr erfahren', href: '/foerderverein' },
+  { titel: 'Förderverein', text: 'Der Förderverein unterstützt Projekte, Ausstattung und Nachwuchs im Verein.', knopf: 'Mehr erfahren', href: FOERDERVEREIN_START },
 ]
 
 export default async function HomePage() {
@@ -227,7 +227,7 @@ export default async function HomePage() {
               <Link href="/foerderverein/mitglied-werden" className="inline-flex items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:bg-[#1a1a1a] transition-colors">
                 Mitglied werden <ArrowRight size={16} className="shrink-0" />
               </Link>
-              <Link href="/foerderverein" className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:border-[#0a0a0a] transition-colors">
+              <Link href={FOERDERVEREIN_START} className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-8 py-4 text-sm tracking-[0.1em] uppercase font-medium hover:border-[#0a0a0a] transition-colors">
                 Mehr erfahren
               </Link>
             </div>

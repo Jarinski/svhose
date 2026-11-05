@@ -1,10 +1,9 @@
 import Link from 'next/link'
 import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 
-// Leiste mit den Unterseiten des Fördervereins, oben auf jeder Seite unter /foerderverein.
-// Die Übersichtsseite ist im Menü nicht aufgeführt, hat hier aber einen eigenen Eintrag,
-// damit man von jeder Unterseite zurückfindet.
-const EINTRAEGE = [{ href: '/foerderverein', label: 'Übersicht' }, ...FOERDERVEREIN_MENUE.kinder]
+// Leiste mit den Unterseiten des Fördervereins, oben auf jeder Seite unter /foerderverein –
+// dieselben Einträge wie im Menü, "Aktuelles" ist der Einstieg.
+const EINTRAEGE = FOERDERVEREIN_MENUE.kinder
 
 export default function Unternavigation({ aktiv }: { aktiv: string }) {
   return (
