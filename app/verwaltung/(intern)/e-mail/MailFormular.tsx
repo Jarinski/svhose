@@ -22,9 +22,10 @@ export interface MailFormDaten {
   geaendertAm: string | null
 }
 
+// 465 ist auf dem Server (Hetzner) ausgehend gesperrt – deshalb 587 zuerst.
 const PORTS = [
-  { wert: 465, text: '465 – SSL/TLS (Strato, empfohlen)' },
-  { wert: 587, text: '587 – STARTTLS' },
+  { wert: 587, text: '587 – STARTTLS (empfohlen)' },
+  { wert: 465, text: '465 – SSL/TLS (auf unserem Server gesperrt)' },
 ]
 
 const LEER_ERGEBNIS: AktionsErgebnis = {}
@@ -48,7 +49,7 @@ export default function MailFormular({ daten }: { daten: MailFormDaten }) {
             <Feld label="Server" htmlFor="host" fehler={f.host}>
               <input id="host" name="host" required defaultValue={daten.host} autoComplete="off" spellCheck={false} className={eingabeKlasse} />
             </Feld>
-            <Feld label="Port" htmlFor="port" fehler={f.port}>
+            <Feld label="Port" htmlFor="port" fehler={f.port} hinweis="Unser Server darf Port 465 nicht nach außen benutzen – mit 587 klappt es.">
               <select id="port" name="port" defaultValue={String(daten.port)} className={auswahlKlasse}>
                 {ports.map(p => (
                   <option key={p.wert} value={p.wert}>

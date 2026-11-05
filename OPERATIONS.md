@@ -87,7 +87,7 @@ flowchart LR
 | `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>`. Außerdem Schlüssel für das in der Verwaltung gespeicherte SMTP-Passwort (`lib/verwaltung/geheimnis.ts`): Nach einem Wechsel muss es unter `/verwaltung/e-mail` neu eingetragen werden | **hoch** |
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
-| `SMTP_HOST`, `SMTP_PORT` | nein | Port `465` | nur als Ausweg: SMTP-Server des Buchungs-Postfachs; `465` = TLS, sonst STARTTLS (Pflicht). Normalerweise tragen Admins den Zugang unter `/verwaltung/e-mail` ein | niedrig |
+| `SMTP_HOST`, `SMTP_PORT` | nein | Port `587` | nur als Ausweg: SMTP-Server des Buchungs-Postfachs; `587` = STARTTLS (Pflicht), `465` = TLS (von Hetzner ausgehend gesperrt). Normalerweise tragen Admins den Zugang unter `/verwaltung/e-mail` ein | niedrig |
 | `SMTP_BENUTZER`, `SMTP_PASSWORT` | nein | – | nur als Ausweg: Zugang des Postfachs. Sind `SMTP_HOST`, `SMTP_BENUTZER` und `SMTP_PASSWORT` gesetzt, gelten sie vorrangig vor den Einstellungen der Verwaltung | **hoch** (Passwort) |
 | `SMTP_ABSENDER` | nein | `"SV Holm-Seppensen · Vereinsheim" <SMTP_BENUTZER>` | Absender der Buchungs-Mails | niedrig |
 | `BUCHUNGEN_POSTFACH` | nein | `SMTP_BENUTZER` | Empfänger der Meldung „neue Anfrage“ | niedrig |
@@ -425,7 +425,8 @@ sudo systemctl restart svhs
   keinen externen Dienst.
 - **Mailversand** gibt es nur für die Buchungen des Vereinsheims (`lib/mail.ts`, Paket `nodemailer`):
   über das SMTP-Postfach, das Admins unter `/verwaltung/e-mail` eintragen (vorbelegt: Strato,
-  `smtp.strato.de:465`; Testmail-Knopf dort) – oder aus `SMTP_*`. Ist es nicht eingerichtet oder nicht erreichbar, gehen
+  `smtp.strato.de:587` mit STARTTLS; Testmail-Knopf dort). **Port 465 geht nicht:** Hetzner sperrt
+  auf Cloud-Servern ausgehend die Ports 25 und 465 (Verbindung läuft in einen Timeout) – oder aus `SMTP_*`. Ist es nicht eingerichtet oder nicht erreichbar, gehen
   Anfragen trotzdem ein; der Fehler steht im Server-Log (`[mail] Versand fehlgeschlagen`).
 - Sonst kommt die Verwaltung ohne externen Dienst aus: kein Login-Anbieter.
   QR-Codes (Paket `qrcode`), Passwort-Hashes (scrypt) und App-Codes (TOTP) berechnet der Server

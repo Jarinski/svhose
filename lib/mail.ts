@@ -5,7 +5,8 @@
  *
  * Woher der Zugang kommt:
  *   1. Admins tragen ihn in der Verwaltung ein (/verwaltung/e-mail, Tabelle einstellungen,
- *      Schlüssel "mail"). Vorbelegt ist Strato (smtp.strato.de, Port 465). Das Passwort steht nur
+ *      Schlüssel "mail"). Vorbelegt ist Strato (smtp.strato.de, Port 587 mit STARTTLS – Hetzner
+ *      sperrt auf Cloud-Servern ausgehend Port 465, dort läuft nur 587). Das Passwort steht nur
  *      verschlüsselt in der Datenbank (lib/verwaltung/geheimnis.ts, Schlüssel aus CRON_SECRET).
  *   2. Sind SMTP_HOST, SMTP_BENUTZER und SMTP_PASSWORT als Umgebungsvariablen gesetzt, gelten
  *      stattdessen diese (dazu SMTP_PORT, SMTP_ABSENDER, BUCHUNGEN_POSTFACH) – als Ausweg, falls
@@ -30,7 +31,7 @@ export interface MailEinstellungen {
   /** Versand an/aus – zum Pausieren, ohne den Zugang zu löschen */
   aktiv: boolean
   host: string
-  /** 465 = SSL/TLS, 587 = STARTTLS */
+  /** 587 = STARTTLS (Standard), 465 = SSL/TLS (von Hetzner ausgehend gesperrt) */
   port: number
   benutzer: string
   /** verschlüsselt (geheimnis.ts) oder null */
@@ -44,7 +45,7 @@ export interface MailEinstellungen {
 export const MAIL_STANDARD: MailEinstellungen = {
   aktiv: true,
   host: 'smtp.strato.de',
-  port: 465,
+  port: 587,
   benutzer: 'buchungen@sv-holm-seppensen.de',
   passwort: null,
   absenderName: 'SV Holm-Seppensen · Vereinsheim',
@@ -90,7 +91,7 @@ export function mailZugang(): MailZugang | null {
     const benutzer = process.env.SMTP_BENUTZER!.trim()
     return {
       host: process.env.SMTP_HOST!.trim(),
-      port: Number(process.env.SMTP_PORT) || 465,
+      port: Number(process.env.SMTP_PORT) || 587,
       benutzer,
       passwort: process.env.SMTP_PASSWORT!,
       absender: process.env.SMTP_ABSENDER?.trim() || { name: MAIL_STANDARD.absenderName, address: benutzer },
@@ -158,9 +159,12 @@ export interface Mail {
 }
 
 /** Verständliche Meldung zu einem SMTP-Fehler (für die Testmail in der Verwaltung). */
-function fehlerText(e: unknown): string {
+function fehlerText(e: unknown, port: number): string {
   const code = (e as { code?: string }).code
   const roh = e instanceof Error ? e.message : String(e)
+  // Hetzner (und andere Hoster) sperren ausgehend Port 465 – die Verbindung läuft dann ins Leere.
+  if (port === 465 && (code === 'ETIMEDOUT' || /timeout/i.test(roh)))
+    return `Keine Verbindung über Port 465 – der Server sperrt diesen Port vermutlich. Bitte Port 587 (STARTTLS) wählen. (${roh})`
   if (code === 'EAUTH') return `Der Server hat die Anmeldung abgelehnt – Benutzer oder Passwort stimmen nicht. (${roh})`
   if (code === 'ECONNECTION' || code === 'ETIMEDOUT' || code === 'ESOCKET' || code === 'EDNS')
     return `Der Server ist so nicht erreichbar – bitte Server und Port prüfen. (${roh})`
@@ -182,7 +186,7 @@ export async function mailVersuchen(mail: Mail, zugang: MailZugang | null = mail
     return { ok: true }
   } catch (e) {
     console.error('[mail] Versand fehlgeschlagen:', e instanceof Error ? e.message : e)
-    return { ok: false, fehler: fehlerText(e) }
+    return { ok: false, fehler: fehlerText(e, zugang.port) }
   }
 }
 
