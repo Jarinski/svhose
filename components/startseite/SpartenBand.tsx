@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import type { SparteUebersicht } from '@/lib/content'
 
 /**
- * Startseite: alle Sparten als geschlossenes Band über die volle Breite.
+ * Startseite: alle Sparten als geschlossenes Band.
  * Auf großen Bildschirmen genau zwei Reihen (Spaltenzahl = halbe Spartenzahl), damit keine
  * einzelnen Kacheln in einer angefangenen Reihe hängen bleiben.
  */

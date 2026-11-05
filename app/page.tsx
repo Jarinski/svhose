@@ -72,8 +72,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* NEWS – über die volle Breite; md:px-20 hält rechts Abstand zur festen Seitenleiste */}
-      <section className="py-24 px-6 md:px-20">
+      {/* NEWS */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="mb-12">
           <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Aktuelles</div>
           <h2 className="font-display text-5xl md:text-7xl tracking-tight">NEWS</h2>
@@ -118,25 +118,27 @@ export default async function HomePage() {
 
       {/* AUF EINEN BLICK */}
       {/* Geht ohne eigenen unteren Abstand in die ebenfalls schwarzen Termine über */}
-      <section className="pt-24 pb-4 px-6 md:px-20 bg-[#0a0a0a] text-[#f5f5f0]">
-        <div className="mb-12">
-          <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Service</div>
-          <h2 className="font-display text-5xl md:text-7xl tracking-tight">WICHTIGES AUF EINEN BLICK</h2>
-        </div>
-        {/* Auf dem Handy nur Titel mit Pfeil, sonst werden sechs Kacheln untereinander sehr lang */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
-          {AUF_EINEN_BLICK.map(k => (
-            <Link key={k.href} href={k.href} className="group flex flex-col bg-[#f5f5f0] text-[#0a0a0a] px-5 py-4 sm:p-7 md:p-9">
-              <h3 className="flex items-center justify-between gap-4 font-display text-2xl sm:text-3xl md:text-4xl tracking-tight">
-                {k.titel}
-                <ArrowRight size={18} aria-hidden="true" className="sm:hidden shrink-0" />
-              </h3>
-              <p className="hidden sm:block mt-3 mb-8 text-sm text-[#6b6b6b] leading-relaxed">{k.text}</p>
-              <span className="hidden sm:inline-flex mt-auto self-start items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-2.5 text-[11px] tracking-[0.15em] uppercase transition-colors group-hover:bg-[#333]">
-                {k.knopf} <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          ))}
+      <section className="pt-24 pb-4 px-6 bg-[#0a0a0a] text-[#f5f5f0]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12">
+            <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Service</div>
+            <h2 className="font-display text-5xl md:text-7xl tracking-tight">WICHTIGES AUF EINEN BLICK</h2>
+          </div>
+          {/* Auf dem Handy nur Titel mit Pfeil, sonst werden sechs Kacheln untereinander sehr lang */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+            {AUF_EINEN_BLICK.map(k => (
+              <Link key={k.href} href={k.href} className="group flex flex-col bg-[#f5f5f0] text-[#0a0a0a] px-5 py-4 sm:p-7 md:p-9">
+                <h3 className="flex items-center justify-between gap-4 font-display text-2xl sm:text-3xl md:text-4xl tracking-tight">
+                  {k.titel}
+                  <ArrowRight size={18} aria-hidden="true" className="sm:hidden shrink-0" />
+                </h3>
+                <p className="hidden sm:block mt-3 mb-8 text-sm text-[#6b6b6b] leading-relaxed">{k.text}</p>
+                <span className="hidden sm:inline-flex mt-auto self-start items-center gap-2 bg-[#0a0a0a] text-[#f5f5f0] px-5 py-2.5 text-[11px] tracking-[0.15em] uppercase transition-colors group-hover:bg-[#333]">
+                  {k.knopf} <ArrowRight size={12} aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -187,8 +189,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* SPARTEN – geschlossenes Band über die volle Breite */}
-      <section className="py-24 px-6 md:px-20">
+      {/* SPARTEN – geschlossenes Band */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="mb-12">
           <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Was wir bieten</div>
           <h2 className="font-display text-5xl md:text-7xl tracking-tight">SPARTEN</h2>
