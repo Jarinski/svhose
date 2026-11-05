@@ -38,15 +38,6 @@ export default async function TrainingszeitenPage() {
 
       {/* Interactive filter + list */}
       <TrainingszeitenClient data={data} />
-
-      {/* Footer note */}
-      <div className="mt-16 border border-[#0a0a0a]/10 p-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="w-1 h-8 bg-[#0a0a0a]/10 shrink-0 hidden sm:block" />
-        <p className="text-sm text-[#6b6b6b]">
-          Änderungen und Ausfälle werden kurzfristig über unsere Social-Media-Kanäle bekannt gegeben.
-          Bei Fragen wende dich direkt an das jeweilige Trainerteam.
-        </p>
-      </div>
     </div>
   )
 }
