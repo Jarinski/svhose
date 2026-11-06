@@ -17,6 +17,12 @@ import { datenbank, schema } from '@/lib/db'
 import { FUNKTIONS_GRUPPEN } from '@/lib/db/schema'
 import { ausschnittLesen, type Ausschnitt } from '@/lib/bild-ausschnitt'
 import { medienUrl } from '@/lib/medien'
+import {
+  getFussballKommendeSpiele,
+  getFussballVergangeneSpiele,
+  spielToTermin,
+  type FussballSpiel,
+} from '@/lib/fussball-de'
 import { spartenBild } from '@/lib/sparten-bilder'
 
 // ─── Typen ───────────────────────────────────────────────────────────────────
@@ -570,33 +576,92 @@ export async function getFoerdervereinGruppenfoto(): Promise<{ src: string; auss
 
 // ─── Termine ────────────────────────────────────────────────────────────────
 
+/**
+ * Fußballspiele live von fussball.de, damit sie auch ohne nächtlichen Abgleich auf der
+ * Seite stehen (der Abgleich braucht einen Cronjob, den es nicht überall gibt). Fehlt
+ * fussball.de, bleibt die Liste leer und die Seite zeigt, was in der Datenbank steht.
+ */
+async function ladeLiveSpiele(): Promise<{ kommende: FussballSpiel[]; vergangene: FussballSpiel[] }> {
+  const [kommende, vergangene] = await Promise.all([
+    getFussballKommendeSpiele(),
+    getFussballVergangeneSpiele(),
+  ])
+  return { kommende, vergangene }
+}
+
 export async function getTermine(): Promise<Termin[]> {
-  const termine = await datenbank().query.termine.findMany({
-    with: {
-      sparte: { columns: { name: true } },
-      mannschaft: { columns: { id: true }, with: { sparte: { columns: { name: true } } } },
-    },
+  const [termine, live] = await Promise.all([
+    datenbank().query.termine.findMany({
+      with: {
+        sparte: { columns: { name: true } },
+        mannschaft: { columns: { id: true }, with: { sparte: { columns: { name: true } } } },
+      },
+    }),
+    ladeLiveSpiele(),
+  ])
+
+  // Live-Spiele gewinnen gegen gleiche Spiele aus der Datenbank (frischer). Außerdem
+  // fallen Datenbank-Spiele weg, die zwischen den Rändern der beiden Listen liegen und
+  // fussball.de nicht mehr kennt (verlegt/abgesagt) – derselbe Bereich, den der
+  // nächtliche Abgleich bereinigt. Die Ränder selbst sind von der Zehnerkappung
+  // angeschnitten und bleiben unangetastet. Manuelle Termine bleiben immer.
+  const liveSpiele = new Map<string, FussballSpiel>()
+  for (const s of [...live.kommende, ...live.vergangene]) liveSpiele.set(s.id, s)
+
+  let von: string | null = null
+  let bis: string | null = null
+  if (live.kommende.length > 0 && live.vergangene.length > 0) {
+    von = live.vergangene.reduce((m, s) => (s.datum < m ? s.datum : m), live.vergangene[0].datum)
+    bis = live.kommende.reduce((m, s) => (s.datum > m ? s.datum : m), live.kommende[0].datum)
+  }
+
+  const ausDatenbank = termine.filter(t => {
+    if (t.quelle !== 'fussball-de') return true
+    if (t.externeId && liveSpiele.has(t.externeId)) return false
+    if (von && bis && von < bis && t.datum > von && t.datum < bis) return false
+    return true
   })
 
-  return termine
+  const alsTermin = ausDatenbank.map(t => ({
+    id: String(t.id),
+    titel: t.titel,
+    datum: t.datum,
+    uhrzeit: wert(t.uhrzeit) ?? '',
+    ort: wert(t.ort) ?? '',
+    sparte: wert(t.bereich) ?? t.sparte?.name ?? t.mannschaft?.sparte.name ?? 'Allgemein',
+    beschreibung: wert(t.beschreibung) ?? '',
+    bild: medienUrl(t.bild) ?? undefined,
+    tags: Array.isArray(t.tags) ? t.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+    sortId: t.id,
+  }))
+
+  const alsLive = [...liveSpiele.values()].map(spiel => {
+    const t = spielToTermin(spiel)
+    return {
+      id: `fussball-de-${spiel.id}`,
+      titel: t.titel,
+      datum: t.datum,
+      uhrzeit: t.uhrzeit,
+      ort: t.ort,
+      sparte: t.bereich,
+      beschreibung: t.beschreibung,
+      bild: undefined,
+      tags: t.tags,
+      // Live-Spiele hinter alle Datenbank-Termine desselben Tages und derselben Uhrzeit
+      sortId: Number.MAX_SAFE_INTEGER,
+    }
+  })
+
+  return [...alsTermin, ...alsLive]
     .sort(
       (a, b) =>
         a.datum.localeCompare(b.datum) ||
         // Uhrzeit ist Freitext ("9:00", "18:30", "ganztägig") – numerisch vergleichen, damit 9 vor 18 kommt
-        (a.uhrzeit ?? '').localeCompare(b.uhrzeit ?? '', 'de', { numeric: true }) ||
-        a.id - b.id,
+        a.uhrzeit.localeCompare(b.uhrzeit, 'de', { numeric: true }) ||
+        a.sortId - b.sortId ||
+        a.titel.localeCompare(b.titel, 'de'),
     )
-    .map(t => ({
-      id: String(t.id),
-      titel: t.titel,
-      datum: t.datum,
-      uhrzeit: wert(t.uhrzeit) ?? '',
-      ort: wert(t.ort) ?? '',
-      sparte: wert(t.bereich) ?? t.sparte?.name ?? t.mannschaft?.sparte.name ?? 'Allgemein',
-      beschreibung: wert(t.beschreibung) ?? '',
-      bild: medienUrl(t.bild) ?? undefined,
-      tags: Array.isArray(t.tags) ? t.tags.filter((tag): tag is string => typeof tag === 'string') : [],
-    }))
+    .map(({ sortId: _sortId, ...termin }): Termin => termin)
 }
 
 // ─── Downloads ──────────────────────────────────────────────────────────────

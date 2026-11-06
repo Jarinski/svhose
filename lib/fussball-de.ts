@@ -205,3 +205,35 @@ export async function getFussballVergangeneSpiele(): Promise<FussballSpiel[]> {
     return []
   }
 }
+
+/**
+ * Konvertiert ein Spiel in die Felder eines Termins (ohne quelle/externe_id).
+ * Gemeinsam genutzt vom nächtlichen Abgleich (Cron) und von der Live-Anzeige
+ * auf der Termine-Seite, damit beide dieselbe Darstellung liefern.
+ */
+export function spielToTermin(spiel: FussballSpiel) {
+  const gegner = spiel.heimspiel ? spiel.gast : spiel.heim
+  const prefix = spiel.heimspiel ? 'Heimspiel' : 'Auswärtsspiel'
+  const titel = `${prefix}: SV Holm-Seppensen – ${gegner}`
+
+  // Der eigene Teamname („U12 SV Holm-Seppensen II“) unterscheidet Teams derselben
+  // Mannschaftsart – „D-Junioren“ umfasst U12 und U13. lib/spieltermine.ts liest ihn aus.
+  const eigenesTeam = spiel.heimspiel ? spiel.heim : spiel.gast
+  const beschreibungsZeilen: string[] = [`Liga: ${spiel.liga}`, `Mannschaft: ${eigenesTeam}`]
+  if (spiel.url) beschreibungsZeilen.push(`Details: ${spiel.url}`)
+  const beschreibung = beschreibungsZeilen.join('\n')
+
+  return {
+    titel,
+    datum: spiel.datum, // ISO-8601 "YYYY-MM-DD"
+    uhrzeit: spiel.uhrzeit,
+    ort: spiel.heimspiel ? 'Sportplatz Holm-Seppensen' : 'Auswärtsspiel',
+    beschreibung,
+    bereich: spiel.mannschaftsart,
+    tags: [
+      'Fußball',
+      spiel.mannschaftsart,
+      spiel.heimspiel ? 'Heimspiel' : 'Auswärtsspiel',
+    ],
+  }
+}
