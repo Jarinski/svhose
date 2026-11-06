@@ -88,9 +88,7 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative w-10 h-10 shrink-0">
-            {/* Subtle glow ring on hover */}
-            <div className="absolute inset-0 rounded-full bg-[#0a0a0a]/0 group-hover:bg-[#0a0a0a]/5 transition-all duration-300 scale-110" />
+          <div className="w-10 h-10 shrink-0">
             <img
               src="/SV_Holm_Seppensen_Logo.svg"
               alt="SV Holm-Seppensen Logo"
