@@ -236,9 +236,15 @@ export default function AnfrageFormular({
 
       <Abschnitt nummer="01" titel="WER BUCHT?">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Auswahl name="art" wert="mitglied" aktuell={art} setzen={setArt} pflicht titel="Ich bin im Verein" text="Für deine Mannschaft, Sparte oder eine eigene Feier reservieren." />
+          <Auswahl name="art" wert="mitglied" aktuell={art} setzen={setArt} pflicht titel="Ich bin im Verein" text="Für deine Mannschaft oder Sparte reservieren." />
           <Auswahl name="art" wert="extern" aktuell={art} setzen={setArt} titel="Ich bin nicht im Verein" text="Als Privatperson, Verein, Schule oder Firma mieten." />
         </div>
+        {art === 'extern' && (
+          <p className="border-l-2 border-[#0a0a0a] pl-4 text-sm leading-relaxed text-[#3a3a3a]">
+            <strong className="font-medium text-[#0a0a0a]">Hinweis zu den Kosten:</strong> Die Nutzung des Vereinsheims ist für Gäste
+            kostenpflichtig. Wie viel sie kostet, hängt von Art, Dauer und Umfang der Nutzung ab – wir teilen dir den Betrag nach deiner Anfrage mit.
+          </p>
+        )}
         {f.art && <p className="text-sm text-red-700">{f.art}</p>}
       </Abschnitt>
 
