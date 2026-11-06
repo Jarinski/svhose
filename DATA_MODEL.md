@@ -347,6 +347,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `altersklasse` | text | nein | – | Jahrgang oder Altersklasse als Freitext, z. B. „Jg. 2013“ |
 | `beschreibung` | text | nein | – | Text auf der Spartenseite |
 | `foto` | text | nein | – | relativer Medienpfad (Mannschaftsfoto) |
+| `foto_ausschnitt` | text | nein | – | sichtbarer Ausschnitt des Fotos auf der Spartenkarte (16:10) als JSON `{x, y, b, h}` in Anteilen des Bildes (`lib/bild-ausschnitt.ts`); leer = mittig. Das Foto selbst bleibt ganz (Großansicht) |
 | `sichtbar` | boolean | ja | `true` | ausgeblendete Mannschaften erscheinen nirgends auf der Website |
 | `reihenfolge` | integer | ja | `0` | Sortierung innerhalb der Sparte |
 
@@ -365,6 +366,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `altersklasse` | text | nein | – | für wen die Gruppe gedacht ist, z. B. „5–7 Jahre“ oder „Erwachsene“ |
 | `beschreibung` | text | nein | – | Text auf der Spartenseite |
 | `foto` | text | nein | – | relativer Medienpfad |
+| `foto_ausschnitt` | text | nein | – | sichtbarer Ausschnitt des Fotos auf der Spartenkarte (16:10) als JSON `{x, y, b, h}` in Anteilen des Bildes (`lib/bild-ausschnitt.ts`); leer = mittig. Das Foto selbst bleibt ganz (Großansicht) |
 | `sichtbar` | boolean | ja | `true` | ausgeblendete Gruppen erscheinen nirgends auf der Website |
 | `reihenfolge` | integer | ja | `0` | Sortierung innerhalb der Sparte |
 

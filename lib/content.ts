@@ -14,6 +14,7 @@ import type { FoerdervereinSeite } from '@/lib/foerderverein-seiten'
 import { type AnzeigeBild, bilderUmwandeln, type SeitenInhalt, seiteLesen } from '@/lib/seiten'
 import { datenbank, schema } from '@/lib/db'
 import { FUNKTIONS_GRUPPEN } from '@/lib/db/schema'
+import { ausschnittLesen, type Ausschnitt } from '@/lib/bild-ausschnitt'
 import { medienUrl } from '@/lib/medien'
 import { spartenBild } from '@/lib/sparten-bilder'
 
@@ -55,6 +56,8 @@ export interface TeamKarte {
   /** '' wenn leer */
   beschreibung: string
   foto: string | null
+  /** Ausschnitt des Fotos auf der Karte (lib/bild-ausschnitt.ts); null = mittig */
+  fotoAusschnitt: Ausschnitt | null
   /** Trainerteam in der gepflegten Reihenfolge; rolle aus mannschaft_personen bzw. gruppe_personen */
   trainer: Kontakt[]
   /** Sortiert nach Wochentag, dann Beginn */
@@ -218,6 +221,7 @@ interface TeamDaten {
   altersklasse: string | null
   beschreibung: string | null
   foto: string | null
+  fotoAusschnitt: string | null
   personen: Zuordnung[]
   trainingszeiten: TrainingszeitDaten[]
 }
@@ -299,6 +303,7 @@ function teamKarte(art: TeamKarte['art'], team: TeamDaten): TeamKarte {
     altersklasse: wert(team.altersklasse),
     beschreibung: wert(team.beschreibung) ?? '',
     foto: medienUrl(team.foto),
+    fotoAusschnitt: team.foto ? ausschnittLesen(team.fotoAusschnitt) : null,
     trainer: kontakte(team.personen),
     trainingszeiten: [...team.trainingszeiten].sort(nachTrainingsbeginn).map(trainingseinheit),
   }

@@ -392,7 +392,7 @@ function MannschaftCard({
           style={{ background: `${farbe}12` }}
         >
           {team.foto
-            ? <TeamFoto src={team.foto} name={team.name} unterschrift={[team.name, team.altersklasse].filter(Boolean).join(' · ')} />
+            ? <TeamFoto src={team.foto} ausschnitt={team.fotoAusschnitt} name={team.name} unterschrift={[team.name, team.altersklasse].filter(Boolean).join(' · ')} />
             : sparteIcon
               ? <span>{sparteIcon}</span>
               : /* eslint-disable-next-line @next/next/no-img-element */

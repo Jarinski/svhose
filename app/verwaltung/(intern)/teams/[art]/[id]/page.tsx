@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { datenbank } from '@/lib/db'
 import { MANNSCHAFT_BEREICHE, RHYTHMEN, SAISONS, TRAINER_ROLLEN } from '@/lib/db/schema'
+import { ausschnittLesen } from '@/lib/bild-ausschnitt'
 import { medienUrl } from '@/lib/medien'
 import { personenFuerAuswahl } from '@/lib/verwaltung/person-bearbeiten'
 import { kannSparte } from '@/lib/verwaltung/rechte'
@@ -69,6 +70,7 @@ export default async function TeamSeite(props: { params: Promise<{ art: string; 
           trainer: stand.trainer.map(t => ({ personId: t.personId, rolle: t.rolle })),
         }}
         fotoUrl={medienUrl(team.foto)}
+        fotoAusschnitt={ausschnittLesen(team.fotoAusschnitt)}
         personen={personenFuerAuswahl(db, rechte, stand.trainer.map(t => t.personId))}
         orte={alleOrte(db)}
         optionen={{

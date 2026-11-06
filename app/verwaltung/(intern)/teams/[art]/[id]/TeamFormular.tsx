@@ -15,6 +15,7 @@ import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import type { TeamArt, TeamEingabe } from '@/lib/verwaltung/team-bearbeiten'
 import { WOCHENTAGE } from '@/lib/verwaltung/text'
 import FotoFeld from '@/components/verwaltung/FotoFeld'
+import { TEAM_FOTO_VERHAELTNIS, type Ausschnitt } from '@/lib/bild-ausschnitt'
 import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
 import PersonAuswahl, { type NeuePersonDaten } from '@/components/verwaltung/PersonAuswahl'
@@ -54,6 +55,8 @@ interface Props {
   stand: string
   start: TeamStart
   fotoUrl: string | null
+  /** Gespeicherter Ausschnitt des Fotos auf der Spartenseite (null = mittig) */
+  fotoAusschnitt: Ausschnitt | null
   personen: AuswahlPerson[]
   orte: string[]
   optionen: { bereiche: string[]; saisons: string[]; rhythmen: string[]; rollen: string[] }
@@ -128,6 +131,7 @@ function TeamFormular({
   stand,
   start,
   fotoUrl,
+  fotoAusschnitt,
   personen,
   orte,
   optionen,
@@ -302,7 +306,16 @@ function TeamFormular({
           </Feld>
           <div className="md:col-span-2">
             <span className="block text-sm font-medium text-[#0a0a0a] mb-1.5">Foto</span>
-            <FotoFeld aktuell={fotoUrl} fehler={felder.foto} onAenderung={setFotoGeaendert} />
+            <FotoFeld
+              aktuell={fotoUrl}
+              fehler={felder.foto}
+              onAenderung={setFotoGeaendert}
+              ausschnitt={{
+                verhaeltnis: TEAM_FOTO_VERHAELTNIS,
+                aktuell: fotoAusschnitt,
+                hinweis: 'So erscheint das Foto auf der Spartenseite. Ein Klick dort zeigt weiterhin das ganze Foto.',
+              }}
+            />
           </div>
           <label className="md:col-span-2 flex items-start gap-3 cursor-pointer rounded-sm border border-[#0a0a0a]/15 p-4 hover:border-[#0a0a0a]/40">
             <input type="checkbox" checked={f.sichtbar} onChange={e => setze('sichtbar', e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#0a0a0a]" />

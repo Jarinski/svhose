@@ -7,12 +7,17 @@
  * der Punkt in der Rahmenmitte, `zoom` 1 bedeutet "Bild füllt den Rahmen gerade aus". So bleibt der
  * Ausschnitt auch bei geänderter Rahmengröße (Handy drehen) derselbe. Das Ergebnis entsteht im
  * Browser auf einem Canvas – der Server bekommt nur die fertig zugeschnittene Datei.
+ *
+ * Mit `onAusschnitt` statt `onUebernehmen` wird nichts zugeschnitten: Der Dialog meldet nur den
+ * gewählten Ausschnitt (lib/bild-ausschnitt.ts), das Bild selbst bleibt ganz (z. B. Mannschaftsfotos,
+ * die in der Großansicht vollständig zu sehen sein sollen).
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, Minus, Plus } from 'lucide-react'
 import { knopfKlassen } from '@/components/verwaltung/ui'
+import type { Ausschnitt } from '@/lib/bild-ausschnitt'
 
 const MAX_ZOOM = 4
 /** Wie MAX_KANTE in lib/verwaltung/medien-upload.ts: Der Server verkleinert größere Bilder ohnehin. */
@@ -59,6 +64,9 @@ export default function BildZuschnitt({
   quelle,
   verhaeltnis,
   onUebernehmen,
+  onAusschnitt,
+  start,
+  hinweis = 'Der Rahmen zeigt, was in der News-Übersicht zu sehen ist.',
   onOriginal,
   onAbbrechen,
 }: {
@@ -66,7 +74,14 @@ export default function BildZuschnitt({
   quelle: string
   /** Breite / Höhe */
   verhaeltnis: number
-  onUebernehmen: (datei: File) => void
+  /** Liefert das fertig zugeschnittene Bild als Datei. */
+  onUebernehmen?: (datei: File) => void
+  /** Liefert nur den gewählten Ausschnitt – das Bild bleibt unverändert. */
+  onAusschnitt?: (ausschnitt: Ausschnitt) => void
+  /** Bisheriger Ausschnitt, mit dem der Dialog startet (sonst: ganzes Bild, mittig) */
+  start?: Ausschnitt | null
+  /** Erklärung unter der Überschrift: wo der Ausschnitt zu sehen ist */
+  hinweis?: string
   /** Nur beim frisch gewählten Bild: ohne Zuschnitt weiterverwenden */
   onOriginal?: () => void
   onAbbrechen: () => void
@@ -83,7 +98,16 @@ export default function BildZuschnitt({
   useEffect(() => {
     const img = new Image()
     img.onload = () => {
-      setMitte({ x: img.naturalWidth / 2, y: img.naturalHeight / 2 })
+      const b = img.naturalWidth
+      const h = img.naturalHeight
+      if (start) {
+        // Breite des Ausschnitts bei zoom 1 (Bild füllt den Rahmen gerade aus) ÷ gespeicherte Breite
+        const breiteBeiEins = Math.min(b, h * verhaeltnis)
+        setZoom(Math.min(MAX_ZOOM, Math.max(1, breiteBeiEins / (start.b * b))))
+        setMitte({ x: (start.x + start.b / 2) * b, y: (start.y + start.h / 2) * h })
+      } else {
+        setMitte({ x: b / 2, y: h / 2 })
+      }
       setBild(img)
     }
     img.onerror = () => setFehler('Dieses Bild lässt sich hier nicht anzeigen.')
@@ -92,6 +116,8 @@ export default function BildZuschnitt({
       img.onload = null
       img.onerror = null
     }
+    // Startwert nur beim Öffnen übernehmen – nicht bei jedem Neuzeichnen der Eltern-Komponente
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quelle])
 
   useLayoutEffect(() => {
@@ -165,9 +191,21 @@ export default function BildZuschnitt({
 
   async function uebernehmen() {
     if (!bild || !bereit) return
-    setArbeitet(true)
     const sichtB = rahmen.b / s
     const sichtH = rahmen.h / s
+    if (onAusschnitt) {
+      const links = Math.max(0, Math.min(m.x - sichtB / 2, groesse.b - sichtB))
+      const oben = Math.max(0, Math.min(m.y - sichtH / 2, groesse.h - sichtH))
+      onAusschnitt({
+        x: links / groesse.b,
+        y: oben / groesse.h,
+        b: Math.min(1, sichtB / groesse.b),
+        h: Math.min(1, sichtH / groesse.h),
+      })
+      return
+    }
+    if (!onUebernehmen) return
+    setArbeitet(true)
     const breite = Math.max(1, Math.round(Math.min(sichtB, MAX_BREITE)))
     const hoehe = Math.max(1, Math.round(breite / verhaeltnis))
     const leinwand = document.createElement('canvas')
@@ -207,10 +245,10 @@ export default function BildZuschnitt({
       >
         <div>
           <h2 id="zuschnitt-titel" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0a0a0a]">
-            Bild zuschneiden
+            {onAusschnitt ? 'Ausschnitt wählen' : 'Bild zuschneiden'}
           </h2>
           <p className="mt-1 text-sm text-[#6b6b6b]">
-            Verschieb das Bild im Rahmen und vergrößere es mit dem Regler. Der Rahmen zeigt, was in der News-Übersicht zu sehen ist.
+            Verschieb das Bild im Rahmen und vergrößere es mit dem Regler. {hinweis}
           </p>
         </div>
 
@@ -279,7 +317,7 @@ export default function BildZuschnitt({
 
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={knopfKlassen.primaer} disabled={!bereit || arbeitet} onClick={uebernehmen}>
-            <Check size={15} /> Zuschnitt übernehmen
+            <Check size={15} /> {onAusschnitt ? 'Ausschnitt übernehmen' : 'Zuschnitt übernehmen'}
           </button>
           <button type="button" className={knopfKlassen.sekundaer} onClick={onAbbrechen}>
             Abbrechen

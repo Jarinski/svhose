@@ -18,7 +18,8 @@ const UNGUELTIG = 'Die Anfrage war unvollständig. Bitte die Seite neu laden und
 
 /**
  * Speichert eine Mannschaft oder Gruppe komplett (Stammdaten, Foto, Trainingszeiten, Trainerteam).
- * Felder: art, id, daten (JSON), foto (Datei, optional), fotoEntfernen ("1"), geaendertAm (Stand beim Laden).
+ * Felder: art, id, daten (JSON), foto (Datei, optional), fotoEntfernen ("1"),
+ * fotoAusschnitt (JSON, leer = mittig), geaendertAm (Stand beim Laden).
  */
 export async function teamSpeichernAktion(_vorher: FormErgebnis, formData: FormData): Promise<FormErgebnis> {
   const { rechte } = await sitzungErzwingen()
@@ -34,6 +35,7 @@ export async function teamSpeichernAktion(_vorher: FormErgebnis, formData: FormD
     daten,
     foto: hatDatei(foto) ? foto : null,
     fotoEntfernen: formData.get('fotoEntfernen') === '1',
+    fotoAusschnitt: formData.get('fotoAusschnitt'),
     geaendertAm: textOderNull(formData.get('geaendertAm')),
   })
   if (ergebnis.ok) revalidatePath('/verwaltung', 'layout')

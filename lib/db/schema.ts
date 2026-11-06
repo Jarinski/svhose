@@ -116,6 +116,8 @@ export const mannschaften = sqliteTable(
     altersklasse: text('altersklasse'),
     beschreibung: text('beschreibung'),
     foto: text('foto'),
+    /** Ausschnitt des Fotos auf der Spartenseite als JSON (siehe lib/bild-ausschnitt.ts); null = mittig. */
+    fotoAusschnitt: text('foto_ausschnitt'),
     sichtbar: integer('sichtbar', { mode: 'boolean' }).notNull().default(true),
     reihenfolge: integer('reihenfolge').notNull().default(0),
     ...zeitstempel(),
@@ -140,6 +142,8 @@ export const gruppen = sqliteTable(
     altersklasse: text('altersklasse'),
     beschreibung: text('beschreibung'),
     foto: text('foto'),
+    /** Ausschnitt des Fotos auf der Spartenseite als JSON (siehe lib/bild-ausschnitt.ts); null = mittig. */
+    fotoAusschnitt: text('foto_ausschnitt'),
     sichtbar: integer('sichtbar', { mode: 'boolean' }).notNull().default(true),
     reihenfolge: integer('reihenfolge').notNull().default(0),
     ...zeitstempel(),

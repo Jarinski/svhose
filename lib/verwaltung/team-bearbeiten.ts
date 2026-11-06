@@ -15,6 +15,7 @@ import { and, asc, eq, isNotNull } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
 import { MANNSCHAFT_BEREICHE, RHYTHMEN, SAISONS } from '@/lib/db/schema'
+import { ausschnittLesen, ausschnittText } from '@/lib/bild-ausschnitt'
 import { erfolg, fehler, type FormErgebnis } from './formular'
 import { bildSpeichern, medienFreigeben, UploadFehler } from './medien-upload'
 import { kontaktPruefen, type DbZugriff } from './person-bearbeiten'
@@ -144,6 +145,7 @@ function schnappschuss(s: TeamStand) {
       altersklasse: t.altersklasse,
       beschreibung: t.beschreibung,
       foto: t.foto,
+      fotoAusschnitt: t.fotoAusschnitt,
       sichtbar: t.sichtbar,
       reihenfolge: t.reihenfolge,
     },
@@ -382,6 +384,11 @@ export interface TeamSpeichernEingabe {
   /** Neues Foto (bereits geprüft, dass eine Datei gewählt ist) oder null. */
   foto: File | null
   fotoEntfernen: boolean
+  /**
+   * Feld "fotoAusschnitt": JSON-Text (lib/bild-ausschnitt.ts) oder leer = mittig. Fehlt das Feld ganz
+   * (null, z. B. ältere Formulare oder API), bleibt der gespeicherte Ausschnitt.
+   */
+  fotoAusschnitt?: unknown
   /** "geändert am" beim Laden der Seite – für die Konfliktprüfung. */
   geaendertAm: string | null
 }
@@ -429,6 +436,14 @@ export async function teamSpeichern(db: Datenbank, rechte: Rechte, e: TeamSpeich
     }
   }
   const foto = neuesFoto ?? (e.fotoEntfernen ? null : vorher.team.foto)
+  // Ausschnitt gehört zum Foto: ohne Foto keiner, bei neuem Foto nur der mitgeschickte.
+  const fotoAusschnitt = !foto
+    ? null
+    : e.fotoAusschnitt == null
+      ? neuesFoto
+        ? null
+        : vorher.team.fotoAusschnitt
+      : ausschnittText(ausschnittLesen(e.fotoAusschnitt))
 
   let nachherStand: TeamStand | null = null
   try {
@@ -443,6 +458,7 @@ export async function teamSpeichern(db: Datenbank, rechte: Rechte, e: TeamSpeich
         altersklasse: d.altersklasse,
         beschreibung: d.beschreibung,
         foto,
+        fotoAusschnitt,
         sichtbar: d.sichtbar,
         reihenfolge: d.reihenfolge,
         geaendertAm: new Date().toISOString(),

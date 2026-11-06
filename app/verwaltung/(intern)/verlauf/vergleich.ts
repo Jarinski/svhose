@@ -13,6 +13,7 @@ const FELD_NAMEN: Record<string, string> = {
   kurzbeschreibung: 'Kurzbeschreibung',
   beschreibung: 'Beschreibung',
   foto: 'Foto',
+  fotoAusschnitt: 'Fotoausschnitt',
   bild: 'Bild',
   bildBreite: 'Bildbreite',
   bildHoehe: 'Bildhöhe',
