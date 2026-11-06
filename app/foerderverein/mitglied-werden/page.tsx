@@ -8,7 +8,7 @@ import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 
 export const metadata: Metadata = {
   title: 'Mitglied werden – Förderverein',
-  description: 'Mitglied im Förderverein Sportplatz werden, spenden, Bandenwerbung buchen oder mit anpacken.',
+  description: 'Mitglied im Förderverein Sportanlagen werden, spenden, Bandenwerbung buchen oder mit anpacken.',
 }
 
 // Änderungen aus der Verwaltung sofort zeigen

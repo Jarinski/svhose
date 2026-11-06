@@ -220,7 +220,7 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
           </div>
 
           <p className={s.foerderText}>
-            Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
+            Der Förderverein Sportanlagen hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
             Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
           </p>
           {fvNews && (

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Vorstand – Förderverein',
-  description: 'Vorstand und Kontakt des Fördervereins Sportplatz des SV Holm-Seppensen e.V.',
+  description: 'Vorstand und Kontakt des Fördervereins Sportanlagen des SV Holm-Seppensen e.V.',
 }
 
 export default async function FoerdervereinVorstandPage() {

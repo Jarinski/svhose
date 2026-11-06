@@ -8,7 +8,7 @@ import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 
 export const metadata: Metadata = {
   title: 'Aktuelles – Förderverein',
-  description: 'Aktionen und Neuigkeiten aus dem Förderverein Sportplatz des SV Holm-Seppensen e.V.',
+  description: 'Aktionen und Neuigkeiten aus dem Förderverein Sportanlagen des SV Holm-Seppensen e.V.',
 }
 
 // Änderungen aus der Verwaltung sofort zeigen

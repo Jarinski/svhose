@@ -8,7 +8,7 @@ import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 
 export const metadata: Metadata = {
   title: 'Chronik – Förderverein',
-  description: 'Von der Idee der Eltern bis zum eigenen Rasenplatz am Tostedter Weg: die Geschichte des Fördervereins Sportplatz.',
+  description: 'Von der Idee der Eltern bis zum eigenen Rasenplatz am Tostedter Weg: die Geschichte des Fördervereins Sportanlagen.',
 }
 
 // Änderungen aus der Verwaltung sofort zeigen

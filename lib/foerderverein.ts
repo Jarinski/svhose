@@ -45,7 +45,7 @@ export const FOERDERVEREIN_MENUE = {
 // Förderverein (Christian Junge, 04.11.2026). Beitrag vor der Veröffentlichung mit dem
 // Förderverein abgleichen.
 export const FOERDERVEREIN = {
-  name: 'Förderverein Sportplatz des SV Holm-Seppensen e.V.',
+  name: 'Förderverein Sportanlagen des SV Holm-Seppensen e.V.',
   register: 'Amtsgericht Tostedt, VR 200219',
   email: 'foerderverein@sv-holm-seppensen.de',
   /** Nur noch Rückfall für /foerderverein/vorstand, solange in der Verwaltung kein Vorstand eingetragen ist. */

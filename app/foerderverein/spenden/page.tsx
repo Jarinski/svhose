@@ -13,7 +13,7 @@ import { qrSvg } from '@/lib/verwaltung/qr'
 export const metadata: Metadata = {
   title: 'Spenden – Förderverein',
   description:
-    'Kontoverbindung des Fördervereins Sportplatz des SV Holm-Seppensen e.V. für Spenden an die Sportanlage am Tostedter Weg – mit Spendenbescheinigung.',
+    'Kontoverbindung des Fördervereins Sportanlagen des SV Holm-Seppensen e.V. für Spenden an die Sportanlage am Tostedter Weg – mit Spendenbescheinigung.',
 }
 
 export default async function FoerdervereinSpendenPage() {

@@ -224,7 +224,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
             <span className={b.eyebrow}>Förderverein</span>
             <h2 id="b-foerderverein" className={s.abschnittTitel}>Gemeinsam für unseren Platz</h2>
             <p>
-              Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
+              Der Förderverein Sportanlagen hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
               Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
             </p>
             {fvNews && (

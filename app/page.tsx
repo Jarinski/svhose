@@ -209,7 +209,7 @@ export default async function HomePage() {
             <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Gemeinsam für Holm-Seppensen</div>
             <h2 className="font-display text-5xl md:text-7xl tracking-tight mb-6 break-words">FÖRDERVEREIN</h2>
             <p className="text-[#6b6b6b] leading-relaxed max-w-md mb-8">
-              Der Förderverein Sportplatz hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen Rasenplatz am Tostedter Weg
+              Der Förderverein Sportanlagen hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen Rasenplatz am Tostedter Weg
               bekommt – und der Ausbau geht weiter.
             </p>
             {fvNews && (
