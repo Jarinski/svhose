@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { CSSProperties } from 'react'
 import type { NewsPost } from '@/lib/content'
 import { spielInfo, type StartseitenDaten } from '@/lib/vorschau'
 import { FOERDERVEREIN_MENUE, FOERDERVEREIN_START, istFoerderverein } from '@/lib/foerderverein'
@@ -181,10 +182,23 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
           </div>
 
           {sparten.length > 0 ? (
-            <ul className={s.sparten}>
+            // Breit genau zwei Reihen (Spaltenzahl = halbe Spartenzahl), wie das Band der bisherigen Startseite
+            <ul className={s.spartenBand} style={{ '--spalten': Math.ceil(sparten.length / 2) } as CSSProperties}>
               {sparten.map((sparte, i) => (
                 <li key={sparte.slug}>
-                  <Link href={`/sparten/${sparte.slug}`} className={s.sparte}>
+                  <Link
+                    href={`/sparten/${sparte.slug}`}
+                    className={`${s.sparteFoto} ${sparte.bild ? '' : s.sparteOhneFoto}`}
+                  >
+                    {sparte.bild && (
+                      <Image
+                        src={sparte.bild}
+                        alt=""
+                        fill
+                        sizes="(max-width: 760px) 50vw, (max-width: 1240px) 25vw, 200px"
+                        className={s.sparteBild}
+                      />
+                    )}
                     <span className={s.nr} aria-hidden="true">
                       {String(i + 1).padStart(2, '0')}
                     </span>

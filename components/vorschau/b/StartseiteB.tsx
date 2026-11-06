@@ -198,9 +198,19 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
         </div>
         <div className={s.sparten}>
           {sparten.map(sp => (
-            <Link key={sp.slug} href={`/sparten/${sp.slug}`} className={s.sparte}>
-              <span className={s.ico} aria-hidden="true">
-                {sp.icon ? <i className={b.emo}>{sp.icon}</i> : <span className={s.initiale}>{sp.name.charAt(0)}</span>}
+            <Link key={sp.slug} href={`/sparten/${sp.slug}`} className={`${s.sparte} ${s.sparteFoto}`}>
+              {/* Foto wie bei den News-Karten; das Emoji sitzt als kleines Schild darauf */}
+              <span className={s.sparteBild}>
+                {sp.bild ? (
+                  <Image src={sp.bild} alt="" fill sizes="(max-width: 720px) 50vw, (max-width: 1100px) 33vw, 290px" />
+                ) : (
+                  // Ohne Foto: Vereinswappen als Platzhalter
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className={s.platzhalter} src="/SV_Holm_Seppensen_Logo.svg" alt="" />
+                )}
+                <span className={s.ico} aria-hidden="true">
+                  {sp.icon ? <i className={b.emo}>{sp.icon}</i> : <span className={s.initiale}>{sp.name.charAt(0)}</span>}
+                </span>
               </span>
               <h3>{sp.name}</h3>
               {sp.beschreibung && <p>{sp.beschreibung}</p>}

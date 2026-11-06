@@ -668,7 +668,8 @@
 }
 
 /* Schriftgröße folgt der Kachelbreite, damit lange Namen nicht umbrechen */
-.sparte b {
+.sparte b,
+.sparteFoto b {
   font-stretch: 70%;
   font-weight: 800;
   font-size: min(22px, 13cqi);
@@ -715,6 +716,98 @@
 .sparte:focus-visible .pfeil {
   background: var(--a-ink);
   color: var(--a-paper);
+  transform: rotate(-45deg);
+}
+
+/* ── Sparten mit Foto: geschlossenes Band, Fotos schwarz-weiß wie bei den News, beim Hover in Farbe ── */
+/* --spalten = halbe Spartenzahl (aufgerundet): genau zwei Reihen, keine einzelnen Kacheln am Ende */
+.spartenBand {
+  display: grid;
+  grid-template-columns: repeat(var(--spalten, 8), minmax(0, 1fr));
+  gap: 12px;
+}
+
+.spartenBand > li {
+  display: flex;
+  min-width: 0;
+}
+
+.sparteFoto {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 3 / 4;
+  padding: 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--a-surface-2);
+  border: 1px solid var(--a-line);
+  color: var(--a-text);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  container-type: inline-size;
+  transition: transform .25s, border-color .25s;
+}
+
+/* Ohne Foto: Trikot-Streifen wie beim Aufmacher ohne Bild */
+.sparteOhneFoto {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .04) 0 var(--streifen), transparent var(--streifen) calc(var(--streifen) * 2)),
+    var(--a-surface-2);
+}
+
+.sparteBild {
+  z-index: -2;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+  transition: transform .8s cubic-bezier(.16, 1, .3, 1), filter .7s ease;
+}
+
+/* Abdunklung oben hinter der Nummer und unten hinter dem Namen */
+.sparteFoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(10, 10, 10, .55) 0%, rgba(10, 10, 10, 0) 30%, rgba(10, 10, 10, 0) 45%, rgba(10, 10, 10, .9) 100%);
+  pointer-events: none;
+}
+
+.sparteFoto .nr {
+  -webkit-text-stroke-color: rgba(255, 255, 255, .7);
+}
+
+.sparteFoto .pfeil {
+  top: 14px;
+  right: 14px;
+  background: rgba(10, 10, 10, .55);
+}
+
+.sparteFoto:hover,
+.sparteFoto:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, .3);
+}
+
+.sparteFoto:hover .sparteBild,
+.sparteFoto:focus-visible .sparteBild {
+  transform: scale(1.05);
+  filter: grayscale(0) contrast(1);
+}
+
+.sparteFoto:hover .nr,
+.sparteFoto:focus-visible .nr {
+  color: var(--a-text);
+  -webkit-text-stroke-color: var(--a-text);
+}
+
+.sparteFoto:hover .pfeil,
+.sparteFoto:focus-visible .pfeil {
+  background: var(--a-paper);
+  color: var(--a-ink);
   transform: rotate(-45deg);
 }
 
@@ -855,6 +948,12 @@
 }
 
 /* ── Responsive ── */
+/* Sparten-Band: ab hier vier Spalten, quadratisch, damit die Reihen nicht zu hoch werden */
+@media (max-width: 1240px) {
+  .spartenBand { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sparteFoto { aspect-ratio: 1; }
+}
+
 @media (max-width: 1100px) {
   .heroGrid { grid-template-columns: minmax(0, 1fr); }
   .match { max-width: 440px; }
@@ -893,6 +992,11 @@
   .sparten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sparten > li:last-child:nth-child(odd) { grid-column: span 2; }
   .sparte { min-height: 150px; padding: 16px; }
+  .spartenBand { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  /* Bei ungerader Zahl füllt die letzte Kachel die ganze Reihe */
+  .spartenBand > li:last-child:nth-child(odd) { grid-column: span 2; }
+  .spartenBand > li:last-child:nth-child(odd) .sparteFoto { aspect-ratio: 2 / 1; }
+  .sparteFoto { padding: 14px; }
   .nr { font-size: 52px; }
   .pfeil { top: 16px; right: 16px; }
   .cta { grid-template-columns: minmax(0, 1fr); padding: 44px 24px; border-radius: 24px; }
@@ -909,14 +1013,20 @@
   .thumb img,
   .newsItem,
   .sparte,
+  .sparteFoto,
+  .sparteBild,
   .nr,
   .pfeil,
   .btnDark { transition: none; }
   .feature:hover .featureBild,
   .feature:focus-visible .featureBild,
   .newsItem:hover .thumb img,
-  .newsItem:focus-visible .thumb img { transform: none; }
+  .newsItem:focus-visible .thumb img,
+  .sparteFoto:hover .sparteBild,
+  .sparteFoto:focus-visible .sparteBild { transform: none; }
   .sparte:hover,
   .sparte:focus-visible,
+  .sparteFoto:hover,
+  .sparteFoto:focus-visible,
   .btnDark:hover { transform: none; }
 }
