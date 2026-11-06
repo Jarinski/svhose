@@ -49,7 +49,7 @@ export default function StartseiteA({ daten }: { daten: StartseitenDaten }) {
         <HeroVideoA className={s.video} />
         <div className={`${basis.wrap} ${s.heroGrid}`}>
           <div className={s.heroText}>
-            <span className={basis.eyebrow}>Sportverein in der Lüneburger Heide</span>
+            <span className={basis.eyebrow}>SV Holm-Seppensen e.V.</span>
             <h1 className={`${basis.cond} ${s.h1}`}>
               Gemeinsam
               <br />

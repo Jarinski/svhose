@@ -182,7 +182,7 @@ export default function NavbarB() {
             <img src="/SV_Holm_Seppensen_Logo.svg" alt="" width={44} height={44} loading="lazy" />
             <span>
               <b>SV Holm-Seppensen</b>
-              <small>Sportverein e.V. · Lüneburger Heide</small>
+              <small>Sportverein e.V.</small>
             </span>
           </Link>
 

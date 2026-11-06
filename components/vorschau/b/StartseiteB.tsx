@@ -67,7 +67,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
       <div className={s.bento}>
         <section className={`${b.karte} ${s.intro}`} aria-labelledby="b-titel">
           <div>
-            <span className={b.eyebrow}>Sportverein e.V. · Lüneburger Heide</span>
+            <span className={b.eyebrow}>Sportverein e.V.</span>
             <h1 id="b-titel" className={s.titel}>
               Sport für alle in{' '}
               <span className={s.mark}>
