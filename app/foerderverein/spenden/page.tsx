@@ -12,7 +12,8 @@ import { qrSvg } from '@/lib/verwaltung/qr'
 
 export const metadata: Metadata = {
   title: 'Spenden – Förderverein',
-  description: 'Kontoverbindung des Fördervereins Sportplatz des SV Holm-Seppensen e.V. für Spenden an die Sportanlage am Tostedter Weg.',
+  description:
+    'Kontoverbindung des Fördervereins Sportplatz des SV Holm-Seppensen e.V. für Spenden an die Sportanlage am Tostedter Weg – mit Spendenbescheinigung.',
 }
 
 export default async function FoerdervereinSpendenPage() {
@@ -67,8 +68,11 @@ export default async function FoerdervereinSpendenPage() {
             </p>
           </div>
           <div className="bg-[#f5f5f0] p-8">
-            <h2 className="font-display text-2xl tracking-tight mb-4">Fragen zur Spende?</h2>
-            <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">Der Förderverein antwortet gern per E-Mail.</p>
+            <h2 className="font-display text-2xl tracking-tight mb-4">Spendenbescheinigung</h2>
+            <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
+              Für deine Spende stellt dir der Förderverein eine Spendenbescheinigung aus. Schick ihm dafür einfach deinen Namen und deine
+              Anschrift per E-Mail – auch Fragen zur Spende beantwortet er dort gern.
+            </p>
             <a href={`mailto:${FOERDERVEREIN.email}`} className="inline-flex items-center gap-2 text-sm hover:underline underline-offset-4">
               <Mail size={14} className="shrink-0" />
               {/* Wird es eng, bricht die Adresse nach dem @ um statt mitten im Namen */}

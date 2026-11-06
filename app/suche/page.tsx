@@ -24,7 +24,7 @@ const SEITEN: (Treffer & { stichworte: string })[] = [
   { href: '/downloads', titel: 'Downloads', stichworte: 'aufnahmeantrag formulare mitglied werden' },
   { href: '/ansprechpartner', titel: 'Kontakt & Ansprechpartner', stichworte: 'vorstand email telefon' },
   { href: FOERDERVEREIN_START, titel: 'Förderverein', stichworte: 'unterstuetzen sportplatz' },
-  { href: '/foerderverein/spenden', titel: 'Spenden an den Förderverein', stichworte: 'spenden konto iban bankverbindung kontoverbindung' },
+  { href: '/foerderverein/spenden', titel: 'Spenden an den Förderverein', stichworte: 'spenden konto iban bankverbindung kontoverbindung spendenbescheinigung spendenquittung zuwendungsbestätigung steuer' },
   { href: '/fussball', titel: 'Fußball-Spielpläne', stichworte: 'spiele ergebnisse tabelle' },
   { href: '/tischtennis', titel: 'Tischtennis-Spielpläne', stichworte: 'spiele ergebnisse tabelle' },
   { href: '/impressum', titel: 'Impressum', stichworte: '' },
