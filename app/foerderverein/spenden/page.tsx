@@ -70,8 +70,8 @@ export default async function FoerdervereinSpendenPage() {
           <div className="bg-[#f5f5f0] p-8">
             <h2 className="font-display text-2xl tracking-tight mb-4">Spendenbescheinigung</h2>
             <p className="text-sm text-[#6b6b6b] leading-relaxed mb-4">
-              Für deine Spende stellt dir der Förderverein eine Spendenbescheinigung aus. Schick ihm dafür einfach deinen Namen und deine
-              Anschrift per E-Mail – auch Fragen zur Spende beantwortet er dort gern.
+              Eine Spendenbescheinigung bekommst du schon ab dem ersten Euro. Ab 300&nbsp;€ erhältst du sie automatisch. Für kleinere Beträge
+              schick dem Förderverein einfach deinen Namen und deine Anschrift per E-Mail – auch Fragen zur Spende beantwortet er dort gern.
             </p>
             <a href={`mailto:${FOERDERVEREIN.email}`} className="inline-flex items-center gap-2 text-sm hover:underline underline-offset-4">
               <Mail size={14} className="shrink-0" />
