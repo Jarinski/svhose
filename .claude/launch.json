@@ -1,0 +1,74 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spenden-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /private/tmp/claude-501/-Users-jari-Projekte-svhose/2d97c7a8-b548-4080-8681-208595b3b443/scratchpad/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=/private/tmp/claude-501/-Users-jari-Projekte-svhose/2d97c7a8-b548-4080-8681-208595b3b443/scratchpad/test/svhs.db MEDIEN_PFAD=/private/tmp/claude-501/-Users-jari-Projekte-svhose/2d97c7a8-b548-4080-8681-208595b3b443/scratchpad/test/medien && exec npx next dev -p 3651"
+      ],
+      "port": 3651
+    },
+    {
+      "name": "galerie-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /private/tmp/claude-501/-Users-jari--claude-spares-spare-beXNWd/22acb865-302e-4d60-a17d-21fe934b47e1/scratchpad/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=/private/tmp/claude-501/-Users-jari--claude-spares-spare-beXNWd/22acb865-302e-4d60-a17d-21fe934b47e1/scratchpad/test/svhs.db MEDIEN_PFAD=/private/tmp/claude-501/-Users-jari--claude-spares-spare-beXNWd/22acb865-302e-4d60-a17d-21fe934b47e1/scratchpad/test/medien && exec npx next dev -H 127.0.0.1 -p 3652"
+      ],
+      "port": 3652,
+      "url": "http://127.0.0.1:3652"
+    },
+    {
+      "name": "trainingszeiten-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /private/tmp/claude-501/-Users-jari--claude-spares-spare-1ZyJrT/e5441f0c-96fb-43fd-bf4a-681b1790819d/scratchpad/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=/private/tmp/claude-501/-Users-jari--claude-spares-spare-1ZyJrT/e5441f0c-96fb-43fd-bf4a-681b1790819d/scratchpad/test/svhs.db MEDIEN_PFAD=/private/tmp/claude-501/-Users-jari--claude-spares-spare-1ZyJrT/e5441f0c-96fb-43fd-bf4a-681b1790819d/scratchpad/test/medien && exec npx next dev -H 127.0.0.1 -p 3653"
+      ],
+      "port": 3653,
+      "url": "http://127.0.0.1:3653"
+    },
+    {
+      "name": "buchungen-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-EYUZhR/81066beb-35cd-4b25-a375-aab907d48ade/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien CRON_SECRET=nur-fuer-die-testkopie NODE_TLS_REJECT_UNAUTHORIZED=0 && exec npx next dev -H 127.0.0.1 -p 3654"
+      ],
+      "port": 3654,
+      "url": "http://127.0.0.1:3654"
+    },
+    {
+      "name": "kalender-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari-Projekte-svhose/a5000fb7-35b5-48df-994d-ad6795009eea/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien CRON_SECRET=nur-fuer-die-testkopie && exec npx next dev -H 127.0.0.1 -p 3655"
+      ],
+      "port": 3655,
+      "url": "http://127.0.0.1:3655"
+    },
+    {
+      "name": "foerderverein-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari-Projekte-svhose/ebb60eda-0f15-4631-813d-fa6672f5b0bf/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3656"
+      ],
+      "port": 3656,
+      "url": "http://127.0.0.1:3656"
+    },
+    {
+      "name": "sparten-fotos-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari-Projekte-svhose/3a5b2b63-497a-48e9-9e69-043a96611367/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3658"
+      ],
+      "port": 3658,
+      "url": "http://127.0.0.1:3658"
+    }
+  ]
+}
