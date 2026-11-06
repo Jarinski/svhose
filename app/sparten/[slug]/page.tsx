@@ -6,6 +6,7 @@ import { getSparteBySlug, jahrgaengeAus, kurzName, type Kontakt, type TeamKarte,
 import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
 import { whatsappLink } from '@/lib/whatsapp'
 import MannschaftenListe from './MannschaftenListe'
+import TeamFoto from '@/components/TeamFoto'
 
 /* ── Rendering ─────────────────────────────────────────────── */
 // Die Seite liest bei jedem Aufruf direkt aus der Datenbank –
@@ -368,8 +369,7 @@ function MannschaftCard({
           style={{ background: `${farbe}12` }}
         >
           {team.foto
-            ? /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={team.foto} alt={team.name} className="w-full h-full object-cover" />
+            ? <TeamFoto src={team.foto} name={team.name} unterschrift={[team.name, team.altersklasse].filter(Boolean).join(' · ')} />
             : sparteIcon
               ? <span>{sparteIcon}</span>
               : /* eslint-disable-next-line @next/next/no-img-element */

@@ -395,7 +395,7 @@ html[data-design="b"] .site main .w-\[512px\] > span {
   html[data-design="b"] .site main .flex:has(> .w-\[512px\]) { flex-direction: column; }
   html[data-design="b"] .site main .w-\[512px\].h-\[320px\] { width: 100%; }
   /* Ohne Teamfoto reicht ein flacher Platzhalter */
-  html[data-design="b"] .site main .w-\[512px\].h-\[320px\]:not(:has(> img:not([aria-hidden]))) {
+  html[data-design="b"] .site main .w-\[512px\].h-\[320px\]:not(:has(img:not([aria-hidden]))) {
     aspect-ratio: auto;
     height: 96px;
   }
