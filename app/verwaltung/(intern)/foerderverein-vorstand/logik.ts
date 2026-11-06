@@ -5,12 +5,16 @@
  * Gespeichert wird immer die ganze Liste auf einmal (Abgleich): vorhandene Zeilen werden
  * aktualisiert, neue eingefügt, fehlende gelöscht. Die Reihenfolge ergibt sich aus der Position.
  * Personen, die es noch nicht gibt, werden dabei gleich angelegt (wie im Trainerteam).
+ * Dazu gehört das Gruppenfoto des Vorstands (lib/foerderverein-gruppenfoto.ts), das mit derselben
+ * Speicherung und derselben optimistischen Sperre gepflegt wird.
  */
 
 import { createHash } from 'node:crypto'
 import { asc, eq } from 'drizzle-orm'
 import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
+import { ausschnittLesen, ausschnittText } from '@/lib/bild-ausschnitt'
+import { GRUPPENFOTO_SCHLUESSEL, gruppenfotoLesen } from '@/lib/foerderverein-gruppenfoto'
 import { MeldungsFehler } from '@/lib/verwaltung/fehlermeldung'
 import { kontaktPruefen } from '@/lib/verwaltung/person-bearbeiten'
 import { darfFoerdervereinVorstand, type Rechte } from '@/lib/verwaltung/rechte'
@@ -36,6 +40,15 @@ export interface VorstandEingabe {
   email?: unknown
 }
 
+/** Änderung am Gruppenfoto – das neue Foto ist beim Aufruf schon im Medienordner gespeichert. */
+export interface GruppenfotoEingabe {
+  /** Pfad eines neu hochgeladenen Fotos oder null */
+  neu: string | null
+  entfernen: boolean
+  /** Feld "fotoAusschnitt": JSON-Text oder leer = mittig. null/undefined = unverändert (bei neuem Foto: mittig). */
+  ausschnitt?: unknown
+}
+
 /** Der Vorstand in Anzeige-Reihenfolge, mit Personennamen. */
 export function vorstandLaden(db: Lesend) {
   return db
@@ -58,7 +71,8 @@ export function vorstandLaden(db: Lesend) {
 /** Prüfsumme über den gespeicherten Stand – für die optimistische Sperre (wie bei der Kontaktseite). */
 export function vorstandStand(db: Lesend): string {
   const zeilen = db.select().from(schema.foerdervereinVorstand).orderBy(asc(schema.foerdervereinVorstand.id)).all()
-  const inhalt = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.reihenfolge, z.eigeneKontaktdaten, z.telefon, z.email, z.geaendertAm])
+  const inhalt: unknown[] = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.reihenfolge, z.eigeneKontaktdaten, z.telefon, z.email, z.geaendertAm])
+  inhalt.push(gruppenfotoLesen(db))
   return createHash('sha1').update(JSON.stringify(inhalt)).digest('hex').slice(0, 16)
 }
 
@@ -69,8 +83,10 @@ function eigeneText(z: { telefon: string | null; email: string | null }): string
 /** Lesbarer Stand für den Verlauf, dazu die Rohdaten. */
 function verlaufStand(db: Lesend) {
   const zeilen = vorstandLaden(db)
+  const gruppenfoto = gruppenfotoLesen(db)
   return {
     Vorstand: zeilen.map(z => `${z.bezeichnung}: ${z.person}${z.eigeneKontaktdaten ? ` (für den Förderverein: ${eigeneText(z)})` : ''}`),
+    Gruppenfoto: gruppenfoto ? `${gruppenfoto.foto}${gruppenfoto.ausschnitt ? ' (eigener Ausschnitt)' : ''}` : 'keins',
     // Rohdaten (für ein späteres Wiederherstellen); die Verlaufsansicht blendet "_"-Felder aus.
     _zeilen: zeilen.map(z => ({
       id: z.id,
@@ -81,19 +97,22 @@ function verlaufStand(db: Lesend) {
       telefon: z.telefon,
       email: z.email,
     })),
+    _gruppenfoto: gruppenfoto,
   }
 }
 
 /**
  * Gleicht den Vorstand mit der Eingabe ab. Für Admins und Zugänge mit Förderverein-Recht.
- * Liefert die Anzahl neuer, geänderter und entfernter Einträge.
+ * Liefert die Anzahl neuer, geänderter und entfernter Einträge, ob sich das Gruppenfoto geändert hat
+ * und das ersetzte bzw. entfernte Foto (zum Freigeben nach dem Speichern).
  */
 export function vorstandAbgleichen(
   db: Datenbank,
   wer: Rechte,
   eingabe: VorstandEingabe[],
   stand: string,
-): { neu: number; geaendert: number; entfernt: number } {
+  fotoEingabe: GruppenfotoEingabe = { neu: null, entfernen: false },
+): { neu: number; geaendert: number; entfernt: number; gruppenfoto: boolean; altesFoto: string | null } {
   if (!darfFoerdervereinVorstand(wer)) throw new MeldungsFehler('Den Vorstand des Fördervereins pflegen nur Admins und Zugänge mit Förderverein-Recht.')
   if (!Array.isArray(eingabe)) throw new MeldungsFehler(UNLESBAR)
 
@@ -196,8 +215,39 @@ export function vorstandAbgleichen(
       }
     })
 
-    if (neu + geaendert + entfernt > 0) {
-      const teile = [neu ? `${neu} neu` : '', geaendert ? `${geaendert} geändert` : '', entfernt ? `${entfernt} entfernt` : ''].filter(Boolean).join(', ')
+    // Gruppenfoto: Ausschnitt gehört zum Foto – ohne Foto keiner, bei neuem Foto nur der mitgeschickte.
+    const fotoVorher = gruppenfotoLesen(tx)
+    const foto = fotoEingabe.neu ?? (fotoEingabe.entfernen ? null : (fotoVorher?.foto ?? null))
+    const ausschnitt = !foto
+      ? null
+      : fotoEingabe.ausschnitt == null
+        ? fotoEingabe.neu
+          ? null
+          : (fotoVorher?.ausschnitt ?? null)
+        : ausschnittText(ausschnittLesen(fotoEingabe.ausschnitt))
+    const gruppenfoto = foto !== (fotoVorher?.foto ?? null) || ausschnitt !== (fotoVorher?.ausschnitt ?? null)
+    if (gruppenfoto) {
+      if (foto) {
+        const wert = { foto, ausschnitt }
+        tx.insert(schema.einstellungen)
+          .values({ schluessel: GRUPPENFOTO_SCHLUESSEL, wert })
+          .onConflictDoUpdate({ target: schema.einstellungen.schluessel, set: { wert, geaendertAm: new Date().toISOString() } })
+          .run()
+      } else {
+        tx.delete(schema.einstellungen).where(eq(schema.einstellungen.schluessel, GRUPPENFOTO_SCHLUESSEL)).run()
+      }
+    }
+    const altesFoto = fotoVorher && fotoVorher.foto !== foto ? fotoVorher.foto : null
+
+    if (neu + geaendert + entfernt > 0 || gruppenfoto) {
+      const teile = [
+        neu ? `${neu} neu` : '',
+        geaendert ? `${geaendert} geändert` : '',
+        entfernt ? `${entfernt} entfernt` : '',
+        gruppenfoto ? 'Gruppenfoto geändert' : '',
+      ]
+        .filter(Boolean)
+        .join(', ')
       protokollieren(tx, wer, {
         aktion: 'geaendert',
         objektTyp: 'foerderverein_vorstand',
@@ -206,6 +256,6 @@ export function vorstandAbgleichen(
         nachher: verlaufStand(tx),
       })
     }
-    return { neu, geaendert, entfernt }
+    return { neu, geaendert, entfernt, gruppenfoto, altesFoto }
   })
 }

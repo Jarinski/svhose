@@ -2,9 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { VORSTAND_FOTO_VERHAELTNIS, type Ausschnitt } from '@/lib/bild-ausschnitt'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
 import { LEER, type FormErgebnis } from '@/lib/verwaltung/formular'
 import type { AuswahlPerson } from '@/lib/verwaltung/person-bearbeiten'
+import FotoFeld from '@/components/verwaltung/FotoFeld'
 import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import PersonAuswahl, { type NeuePersonDaten } from '@/components/verwaltung/PersonAuswahl'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
@@ -35,6 +37,8 @@ interface Props {
   bearbeitbar: number[]
   /** Übrige Personen im gespeicherten Vorstand: wo sie sonst noch stehen (darum ändert ihre Kontaktdaten ein Admin). */
   auchEingetragen: Record<number, string[]>
+  /** Gespeichertes Gruppenfoto (URL) und sein Ausschnitt */
+  gruppenfoto: { url: string; ausschnitt: Ausschnitt | null } | null
 }
 
 /** Vergleichbarer Stand – Funktionen ohne Leerzeichen am Rand, so wie sie gespeichert werden. */
@@ -54,8 +58,9 @@ export default function VorstandFormular(props: Props) {
   )
 }
 
-function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, ergebnis }: Props & { ergebnis: FormErgebnis }) {
+function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, gruppenfoto, ergebnis }: Props & { ergebnis: FormErgebnis }) {
   const [zeilen, setZeilen] = useState<VorstandZeile[]>(start)
+  const [fotoGeaendert, setFotoGeaendert] = useState(false)
   const [fokus, setFokus] = useState<string | null>(null)
   const zaehler = useRef(0)
   const personNachId = new Map(personen.map(p => [p.id, p] as const))
@@ -88,7 +93,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
     email: z.eigene ? z.email : '',
   }))
   // Vergleich mit dem Stand beim Laden – nach dem Speichern startet der Editor ohnehin neu (key).
-  const geaendert = vergleichsStand(zeilen) !== vergleichsStand(start)
+  const geaendert = fotoGeaendert || vergleichsStand(zeilen) !== vergleichsStand(start)
   useUngespeichertWarnung(geaendert)
   const ohneFunktion = zeilen.filter(z => !z.bezeichnung.trim()).length
   const gespeichert = start.map(z => z.personId)
@@ -97,6 +102,19 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
     <div className="space-y-6">
       <input type="hidden" name="stand" value={stand} />
       <input type="hidden" name="daten" value={JSON.stringify(daten)} />
+
+      <Karte titel="Gruppenfoto" beschreibung="Ein Foto des ganzen Vorstands – steht auf der Website oben, über den Namen. Freiwillig.">
+        <FotoFeld
+          aktuell={gruppenfoto?.url ?? null}
+          fehler={ergebnis.ok ? undefined : ergebnis.felder?.foto}
+          onAenderung={setFotoGeaendert}
+          ausschnitt={{
+            verhaeltnis: VORSTAND_FOTO_VERHAELTNIS,
+            aktuell: gruppenfoto?.ausschnitt ?? null,
+            hinweis: 'So erscheint das Foto auf der Vorstandsseite. Ein Klick dort zeigt das ganze Foto.',
+          }}
+        />
+      </Karte>
 
       <Karte titel="Vorstand" beschreibung="Diese Personen erscheinen mit Funktion, Foto, Telefon und E-Mail auf der Website – in dieser Reihenfolge.">
         {zeilen.length === 0 ? (

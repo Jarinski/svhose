@@ -2,8 +2,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowRight, Mail, Phone } from 'lucide-react'
+import TeamFoto from '@/components/TeamFoto'
 import Unternavigation from '@/components/foerderverein/Unternavigation'
-import { getFoerdervereinVorstand } from '@/lib/content'
+import { VORSTAND_FOTO_VERHAELTNIS } from '@/lib/bild-ausschnitt'
+import { getFoerdervereinGruppenfoto, getFoerdervereinVorstand } from '@/lib/content'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
 
 // Bei jedem Aufruf frisch aus der Datenbank lesen → Änderungen aus der Verwaltung erscheinen sofort
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function FoerdervereinVorstandPage() {
   // Leer, solange in der Verwaltung niemand eingetragen ist → dann nur der Vorsitz aus lib/foerderverein.ts
-  const vorstand = await getFoerdervereinVorstand()
+  const [vorstand, gruppenfoto] = await Promise.all([getFoerdervereinVorstand(), getFoerdervereinGruppenfoto()])
 
   return (
     <div className="pt-32 pb-24">
@@ -29,6 +31,18 @@ export default async function FoerdervereinVorstandPage() {
       <Unternavigation aktiv="/foerderverein/vorstand" />
 
       <div className="px-6 max-w-7xl mx-auto">
+        {gruppenfoto && (
+          // Seitenverhältnis wie beim Ausschnitt in der Verwaltung; ein Klick zeigt das ganze Foto
+          <div className="mb-12 overflow-hidden bg-[#0a0a0a]/5" style={{ aspectRatio: VORSTAND_FOTO_VERHAELTNIS }}>
+            <TeamFoto
+              src={gruppenfoto.src}
+              ausschnitt={gruppenfoto.ausschnitt}
+              name="Vorstand des Fördervereins"
+              unterschrift={vorstand.length > 0 ? `Vorstand des Fördervereins: ${vorstand.map(p => p.name).join(', ')}` : 'Vorstand des Fördervereins'}
+            />
+          </div>
+        )}
+
         {vorstand.length > 0 && (
           <div className="mb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[#0a0a0a]/10">
             {vorstand.map(p => (

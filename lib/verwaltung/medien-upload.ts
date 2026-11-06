@@ -90,6 +90,8 @@ export function medienFreigeben(pfad: string | null | undefined): void {
   if (sqlite.prepare("SELECT 1 FROM news WHERE instr(inhalt, ?) > 0 LIMIT 1").get('/medien/' + pfad)) return
   // Frei gestaltete Seiten (Förderverein-Seiten) speichern ihre Bilder im JSON-Dokument als "pfad":"<pfad>".
   if (sqlite.prepare('SELECT 1 FROM seiten WHERE instr(inhalt, ?) > 0 LIMIT 1').get(JSON.stringify(pfad))) return
+  // Ebenso Einstellungen (z. B. das Gruppenfoto des Förderverein-Vorstands).
+  if (sqlite.prepare('SELECT 1 FROM einstellungen WHERE instr(wert, ?) > 0 LIMIT 1').get(JSON.stringify(pfad))) return
   const datei = medienDatei(pfad)
   if (datei && fs.existsSync(datei)) fs.unlinkSync(datei)
 }

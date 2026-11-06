@@ -22,6 +22,9 @@ export interface Ausschnitt {
 /** Seitenverhältnis (Breite / Höhe) des Teamfotos auf den Karten der Spartenseite. */
 export const TEAM_FOTO_VERHAELTNIS = 16 / 10
 
+/** Seitenverhältnis des Gruppenfotos oben auf der Vorstandsseite des Fördervereins. */
+export const VORSTAND_FOTO_VERHAELTNIS = 2 / 1
+
 function anteil(wert: unknown): number | null {
   return typeof wert === 'number' && Number.isFinite(wert) && wert >= 0 && wert <= 1 ? wert : null
 }

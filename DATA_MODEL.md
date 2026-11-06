@@ -31,7 +31,7 @@ Beides ist nicht im Git, weil es personenbezogene Daten enthält.
 | **Zuordnungen** | `mannschaft_personen`, `gruppe_personen`, `sparte_ansprechpartner`, `funktionen`, `foerderverein_vorstand` | Wer ist Trainer:in wo, wer ist Ansprechpartner:in einer Sparte, wer hat welche Vereinsfunktion, wer sitzt im Vorstand des Fördervereins |
 | **Inhalte** | `trainingszeiten`, `news`, `termine`, `downloads`, `seiten` | Was auf der Website erscheint (`seiten`: frei gestaltete Seiten des Fördervereins) |
 | **Vereinsheim** | `buchungen`, `belegung_regeln`, `belegung_ausfaelle`, `buchung_nachrichten` | Buchungen von Vereinsheim und Gelände (Anfragen über `/vereinsheim` und eigene Belegungen) und die wöchentliche Regelbelegung |
-| **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf`, `einstellungen` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll. Erscheint nie auf der Website |
+| **Verwaltung** | `zugaenge`, `zugang_bereiche`, `anmelde_codes`, `geraete`, `fehlversuche`, `verlauf`, `einstellungen` | Wer die Verwaltung unter `/verwaltung` benutzen darf, Anmeldung und Sitzungen, Änderungsprotokoll, Einstellungen. Erscheint nicht auf der Website (Ausnahme: das Gruppenfoto des Förderverein-Vorstands in `einstellungen`) |
 
 Kernbeziehungen in einem Satz: Eine **Sparte** hat **Mannschaften** und **Gruppen**. An Mannschaften
 und Gruppen hängen **Trainingszeiten** und ein **Trainerteam** aus **Personen**. Personen können
@@ -423,6 +423,8 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
   (`/verwaltung/foerderverein-vorstand`), die Kontaktseite des SV aber Admin-Sache bleibt.
   Für diese Zugänge zählt der Vorstand als eigener Bereich: Personen, die nur hier stehen, dürfen
   sie bearbeiten (`kannPerson` in `lib/verwaltung/rechte.ts`).
+  Das Gruppenfoto über den Namen steht nicht hier, sondern in `einstellungen`
+  (Schlüssel `foerderverein-gruppenfoto`), und wird mit dem Vorstand zusammen gespeichert.
 - **Beziehungen**: gehört zu genau einer Person.
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
@@ -686,6 +688,11 @@ So lassen sie sich direkt vergleichen; gerechnet wird nur mit Kalendertagen, nie
   Buchungen (`aktiv`, `host`, `port`, `benutzer`, `passwort`, `absenderName`, `postfach`, `abrufen`,
   `imapHost`, `imapPort`), gepflegt unter `/verwaltung/e-mail`, gelesen von `lib/mail.ts`.
   `mail-abruf`: Stand des IMAP-Abrufs (`lib/buchungen/postfach.ts`).
+  `foerderverein-gruppenfoto`: Gruppenfoto des Förderverein-Vorstands (`foto` = Pfad im
+  Medienordner, `ausschnitt` = gewählter Ausschnitt wie bei `mannschaften.foto_ausschnitt` oder
+  null), gepflegt unter `/verwaltung/foerderverein-vorstand` auch von Zugängen mit
+  Förderverein-Recht, gelesen von `lib/foerderverein-gruppenfoto.ts` – der einzige Schlüssel, der
+  auf der Website erscheint.
 
 | Feld | Typ | Pflicht | Standard | Bedeutung |
 |---|---|---|---|---|

@@ -10,6 +10,7 @@
  */
 
 import { istFoerderverein } from '@/lib/foerderverein'
+import { gruppenfotoLesen } from '@/lib/foerderverein-gruppenfoto'
 import type { FoerdervereinSeite } from '@/lib/foerderverein-seiten'
 import { type AnzeigeBild, bilderUmwandeln, type SeitenInhalt, seiteLesen } from '@/lib/seiten'
 import { datenbank, schema } from '@/lib/db'
@@ -558,6 +559,13 @@ export async function getFoerdervereinVorstand(): Promise<Omit<AnsprechpartnerEi
       whatsapp: v.eigeneKontaktdaten ? null : wert(v.person.whatsapp),
       foto: medienUrl(v.person.foto),
     }))
+}
+
+/** Gruppenfoto des Förderverein-Vorstands (oben auf /foerderverein/vorstand) oder null. */
+export async function getFoerdervereinGruppenfoto(): Promise<{ src: string; ausschnitt: Ausschnitt | null } | null> {
+  const g = gruppenfotoLesen(datenbank())
+  const src = medienUrl(g?.foto)
+  return src ? { src, ausschnitt: ausschnittLesen(g?.ausschnitt) } : null
 }
 
 // ─── Termine ────────────────────────────────────────────────────────────────
