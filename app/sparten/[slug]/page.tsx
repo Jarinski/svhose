@@ -7,6 +7,7 @@ import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
 import { whatsappLink } from '@/lib/whatsapp'
 import MannschaftenListe from './MannschaftenListe'
 import TeamFoto from '@/components/TeamFoto'
+import NewsKarten from '@/components/NewsKarten'
 
 /* ── Rendering ─────────────────────────────────────────────── */
 // Die Seite liest bei jedem Aufruf direkt aus der Datenbank –
@@ -46,6 +47,9 @@ const BEREICH_TITEL: Record<Bereich, string> = {
 const OHNE_BEREICH = { key: 'ohne-bereich', title: 'Weitere Mannschaften' }
 
 const LOGO = '/SV_Holm_Seppensen_Logo.svg'
+
+/** So viele News stehen sofort da, ältere lassen sich aufklappen. */
+const NEWS_SICHTBAR = 3
 
 /* ── Hilfen ────────────────────────────────────────────────── */
 function saisonBadge(j: string) {
@@ -101,7 +105,7 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
   const sparte = await getSparteBySlug(params.slug)
   if (!sparte) notFound()
 
-  const { farbe, mannschaften, gruppen, ansprechpartner, downloads } = sparte
+  const { farbe, mannschaften, gruppen, ansprechpartner, downloads, news } = sparte
   const isAkrobatik = sparte.slug === 'akrobatik'
   const beschriftungen = auswahlBeschriftungen(mannschaften)
   const mannschaftenByBereich = mannschaftenNachBereich(mannschaften).map(abschnitt => ({
@@ -223,6 +227,25 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
                 So stellen wir sicher, dass jede Gruppe optimal zusammenpasst und alle Kinder die Chance haben, ihr Können zu zeigen und weiter zu wachsen. 💪🤸‍♀️
               </p>
             </div>
+          )}
+        </section>
+      )}
+
+      {/* ── NEWS DER SPARTE (über die Zuordnung in der News-Verwaltung) ── */}
+      {news.length > 0 && (
+        <section className="mb-16">
+          <SectionHeader title="NEWS" farbe={farbe} count={news.length} />
+          <div className="mt-6">
+            <NewsKarten news={news.slice(0, NEWS_SICHTBAR)} mitZuordnung />
+          </div>
+          {news.length > NEWS_SICHTBAR && (
+            <details className="mt-4 group/mehr">
+              <summary className="cursor-pointer list-none text-xs tracking-[0.15em] uppercase text-[#6b6b6b] hover:text-[#0a0a0a] transition-colors underline underline-offset-4 group-open/mehr:mb-4">
+                <span className="group-open/mehr:hidden">Ältere News anzeigen ({news.length - NEWS_SICHTBAR}) →</span>
+                <span className="hidden group-open/mehr:inline">Ältere News ausblenden</span>
+              </summary>
+              <NewsKarten news={news.slice(NEWS_SICHTBAR)} mitZuordnung />
+            </details>
           )}
         </section>
       )}

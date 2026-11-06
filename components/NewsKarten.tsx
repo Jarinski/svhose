@@ -4,8 +4,9 @@ import { de } from 'date-fns/locale'
 import NewsThumbnail from '@/components/NewsThumbnail'
 import type { NewsPost } from '@/lib/content'
 
-// News-Kacheln des Fördervereins (Seite "Aktuelles").
-export default function NewsKarten({ news }: { news: NewsPost[] }) {
+// News-Kacheln für den Förderverein (Seite "Aktuelles") und die Spartenseiten.
+// mitZuordnung: Mannschaft bzw. Gruppe vor das Datum setzen (auf der Spartenseite steht die Sparte schon oben).
+export default function NewsKarten({ news, mitZuordnung = false }: { news: NewsPost[]; mitZuordnung?: boolean }) {
   // Bei 1–2 News keine leeren Rasterzellen
   const spalten = news.length === 1 ? 'max-w-md' : news.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
 
@@ -20,6 +21,7 @@ export default function NewsKarten({ news }: { news: NewsPost[] }) {
           <NewsThumbnail bild={post.image} alt={post.title} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
           <div className="p-8 flex flex-col flex-1">
             <div className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mb-4">
+              {mitZuordnung && post.team && <>{post.team} · </>}
               {format(new Date(post.date), 'd. MMMM yyyy', { locale: de })}
             </div>
             <h3 className="font-display text-2xl tracking-tight leading-tight mb-4">{post.title}</h3>

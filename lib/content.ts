@@ -84,6 +84,8 @@ export interface SparteDetail extends SparteUebersicht {
   /** Sortiert nach Reihenfolge, dann Name */
   gruppen: TeamKarte[]
   downloads: { titel: string; beschreibung: string; datei: string }[]
+  /** Veröffentlichte News der Sparte samt ihrer Mannschaften und Gruppen, neueste zuerst */
+  news: NewsPost[]
 }
 
 /** Ein Eintrag der flachen Liste für /trainingszeiten. */
@@ -155,6 +157,8 @@ export interface NewsPost {
   category: string
   /** Name der Mannschaft, Gruppe oder Sparte – sonst 'Verein' */
   sparte: string
+  /** Name der Mannschaft bzw. Gruppe, null bei News der ganzen Sparte oder des Vereins */
+  team: string | null
   /** width/height sind 0, wenn die Bildmaße nicht bekannt sind */
   image?: { url: string; width: number; height: number }
   excerpt: string
@@ -346,6 +350,12 @@ export async function getSparteBySlug(slug: string): Promise<SparteDetail | null
       mannschaften: { where: (m, { eq }) => eq(m.sichtbar, true), with: TEAM_BEZUEGE },
       gruppen: { where: (g, { eq }) => eq(g.sichtbar, true), with: TEAM_BEZUEGE },
       downloads: true,
+      // sparte_id ist auch bei News einer Mannschaft oder Gruppe gesetzt (zuordnungAufloesen)
+      news: {
+        where: (n, { eq }) => eq(n.veroeffentlicht, true),
+        with: NEWS_BEZUEGE,
+        orderBy: (n, { desc }) => [desc(n.datum), desc(n.id)],
+      },
     },
   })
   if (!sparte) return null
@@ -360,6 +370,7 @@ export async function getSparteBySlug(slug: string): Promise<SparteDetail | null
     downloads: [...sparte.downloads]
       .sort((a, b) => a.reihenfolge - b.reihenfolge || nachName(a.titel, b.titel))
       .map(d => ({ titel: d.titel, beschreibung: wert(d.beschreibung) ?? '', datei: dateiUrl(d.datei) })),
+    news: sparte.news.map(newsPost),
   }
 }
 
@@ -616,6 +627,7 @@ function newsPost(n: NewsDaten): NewsPost {
     date: n.datum,
     category: wert(n.kategorie) ?? 'News',
     sparte: n.mannschaft?.name ?? n.gruppe?.name ?? n.sparte?.name ?? 'Verein',
+    team: n.mannschaft?.name ?? n.gruppe?.name ?? null,
     image: bild ? { url: bild, width: n.bildBreite ?? 0, height: n.bildHoehe ?? 0 } : undefined,
     excerpt: wert(n.teaser) ?? '',
     body: n.inhalt,
