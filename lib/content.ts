@@ -747,8 +747,9 @@ export async function getFoerdervereinDaten(): Promise<{ news: NewsPost[]; downl
 }
 
 /**
- * Eine Förderverein-Seite, wie sie auf der Website erscheint: nur sichtbare Bausteine, Bilder als
- * fertige URLs – ohne gespeicherten Stand die Vorlage. Dazu die Daten für die automatischen Bausteine.
+ * Eine Förderverein-Seite für die Website: alle Bausteine (SeitenBausteine zeigt nur die sichtbaren,
+ * der Zahlenstrahl nimmt auch Fotos ausgeblendeter Galerien), Bilder als fertige URLs – ohne
+ * gespeicherten Stand die Vorlage. Dazu die Daten für die automatischen Bausteine.
  */
 export async function getFoerdervereinSeite(
   seite: FoerdervereinSeite,
@@ -757,5 +758,5 @@ export async function getFoerdervereinSeite(
   const zeile = await datenbank().query.seiten.findFirst({ where: (s, { eq }) => eq(s.schluessel, seite.schluessel) })
   const inhalt = zeile ? seiteLesen(zeile.inhalt) : seite.vorlage(daten.downloads)
   const anzeige = bilderUmwandeln(inhalt, bild => (bild ? { src: medienUrl(bild.pfad) as string, breite: bild.breite, hoehe: bild.hoehe } : null))
-  return { inhalt: { einleitung: anzeige.einleitung, bausteine: anzeige.bausteine.filter(b => b.sichtbar) }, daten }
+  return { inhalt: anzeige, daten }
 }

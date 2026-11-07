@@ -6,8 +6,14 @@
  * genau so aussieht wie später auf der Website. "Meldungen" und "Unterlagen" zeigen die News und
  * Downloads des Fördervereins, die als `daten` hereinkommen.
  *
+ * Bekommt alle Bausteine der Seite, auch ausgeblendete, und zeigt nur die sichtbaren. Die
+ * ausgeblendeten zählen nur an einer Stelle mit: Der Zahlenstrahl nimmt die Fotos aller
+ * Bildergalerien der Seite – so kann eine Galerie ausgeblendet werden, deren Fotos nur im
+ * Zahlenstrahl stehen sollen.
+ *
  * Ohne Hooks und ohne 'use client': funktioniert in Server- und Client-Komponenten. Nur die
- * Bildergalerie (Großansicht zum Durchblättern) ist eine eigene Client-Komponente.
+ * Bildergalerie (Großansicht zum Durchblättern) und der Zahlenstrahl mit Zoom sind eigene
+ * Client-Komponenten.
  */
 
 import Link from 'next/link'
@@ -16,10 +22,11 @@ import { de } from 'date-fns/locale'
 import { ArrowRight, Download as DownloadSymbol, FileText, Mail } from 'lucide-react'
 import MarkdownText from '@/components/MarkdownText'
 import Galerie from '@/components/foerderverein/Galerie'
+import ZeitZoom from '@/components/foerderverein/ZeitZoom'
 import NewsKarten from '@/components/NewsKarten'
 import type { Download, NewsPost } from '@/lib/content'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
-import type { AnzeigeBild, Baustein, Hintergrund } from '@/lib/seiten'
+import type { AnzeigeBild, Baustein, GalerieFoto, Hintergrund } from '@/lib/seiten'
 
 type B = Baustein<AnzeigeBild>
 
@@ -42,22 +49,35 @@ export function SeitenKopf({ kicker, titel, einleitung }: { kicker: string; tite
   )
 }
 
-export default function SeitenBausteine({ bausteine, daten = OHNE_DATEN }: { bausteine: B[]; daten?: SeitenDaten }) {
+export default function SeitenBausteine({ bausteine: alle, daten = OHNE_DATEN }: { bausteine: B[]; daten?: SeitenDaten }) {
+  const bausteine = alle.filter(b => b.sichtbar)
   // Downloads, die schon als Knopf in einem Kasten stehen – "Unterlagen" zeigt sie auf Wunsch nicht noch einmal
   const inKaesten = bausteine.reduce<number[]>((ids, b) => (b.art === 'aufruf' ? ids.concat(b.downloads) : ids), [])
+  // Fotos aller Bildergalerien, auch ausgeblendeter – für den Zahlenstrahl (ordnet sie nach dem Jahr in der Unterschrift)
+  const galerieFotos = alle.flatMap(b => (b.art === 'galerie' ? b.fotos.filter(f => f.bild) : []))
   return (
     <div className="space-y-16 md:space-y-20">
       {bausteine.map((b, i) => (
-        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} daten={daten} inKaesten={inKaesten} />
+        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} daten={daten} inKaesten={inKaesten} galerieFotos={galerieFotos} />
       ))}
     </div>
   )
 }
 
-function BausteinAnzeige({ baustein: b, daten, inKaesten }: { baustein: B; daten: SeitenDaten; inKaesten: number[] }) {
+function BausteinAnzeige({
+  baustein: b,
+  daten,
+  inKaesten,
+  galerieFotos,
+}: {
+  baustein: B
+  daten: SeitenDaten
+  inKaesten: number[]
+  galerieFotos: GalerieFoto<AnzeigeBild>[]
+}) {
   switch (b.art) {
     case 'zeitleiste':
-      return <Zeitleiste b={b} />
+      return <Zeitleiste b={b} galerieFotos={galerieFotos} />
     case 'text':
       return <Textabschnitt b={b} />
     case 'bild':
@@ -125,33 +145,31 @@ function Ueberschrift({ text, className = 'mb-10' }: { text: string; className?:
 
 // ─── Zeitleiste ─────────────────────────────────────────────────────────────
 
-function Zeitleiste({ b }: { b: Extract<B, { art: 'zeitleiste' }> }) {
+function Zeitleiste({ b, galerieFotos }: { b: Extract<B, { art: 'zeitleiste' }>; galerieFotos: GalerieFoto<AnzeigeBild>[] }) {
   const eintraege = b.eintraege.filter(e => e.titel.trim() || e.text.trim() || e.zeit.trim() || e.bild)
   if (eintraege.length === 0) return null
   // Ohne Überschrift über der Zeitleiste sind die Titel der Stationen die Überschriften der Seite
   const Titel = b.ueberschrift.trim() ? 'h3' : 'h2'
 
-  if (b.darstellung === 'zeitstrahl') {
+  // Zahlenstrahl mit Zoom: eigene Client-Komponente, sortiert auch die Galerie-Fotos nach Jahr ein
+  if (b.darstellung === 'zahlenstrahl') {
     return (
-      <Rahmen>
-        <Ueberschrift text={b.ueberschrift} />
-        <ol className="max-w-4xl">
-          {eintraege.map((e, i) => (
-            <li key={e.schluessel ?? i} className="grid grid-cols-1 md:grid-cols-[10rem_1fr] md:gap-x-10">
-              <div className="hidden md:block text-right pt-2 text-xs tracking-[0.15em] uppercase text-[#6b6b6b]">{e.zeit}</div>
-              <div className={`relative border-l border-[#0a0a0a]/15 pl-8 ${i === eintraege.length - 1 ? '' : 'pb-12'}`}>
-                <span aria-hidden className="absolute -left-[5px] top-3 h-[9px] w-[9px] rounded-full bg-[#0a0a0a]" />
-                {e.zeit.trim() && <div className="md:hidden text-xs tracking-[0.15em] uppercase text-[#6b6b6b] mb-2 pt-1">{e.zeit}</div>}
-                {e.titel.trim() && <Titel className="font-display text-3xl tracking-tight mb-3">{e.titel}</Titel>}
-                {e.text.trim() && <p className="text-[#6b6b6b] leading-relaxed whitespace-pre-line">{e.text}</p>}
-                {e.bild && <Foto bild={e.bild} alt={e.titel} className="mt-6 w-full max-w-xl h-auto" />}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </Rahmen>
+      <ZeitZoom
+        eintraege={eintraege}
+        fotos={galerieFotos}
+        titelTag={Titel}
+        kopf={
+          b.ueberschrift.trim() ? (
+            <Rahmen>
+              <Ueberschrift text={b.ueberschrift} />
+            </Rahmen>
+          ) : null
+        }
+      />
     )
   }
+
+  if (b.darstellung === 'zeitstrahl') return <ZeitstrahlListe ueberschrift={b.ueberschrift} eintraege={eintraege} titelTag={Titel} />
 
   if (b.darstellung === 'gross') {
     let mitBild = 0
@@ -192,6 +210,29 @@ function Zeitleiste({ b }: { b: Extract<B, { art: 'zeitleiste' }> }) {
             {e.zeit.trim() && <div className="text-xs tracking-[0.15em] uppercase text-[#6b6b6b] mb-3">{e.zeit}</div>}
             {e.titel.trim() && <Titel className="font-display text-2xl tracking-tight mb-3">{e.titel}</Titel>}
             {e.text.trim() && <p className="text-sm text-[#6b6b6b] leading-relaxed whitespace-pre-line">{e.text}</p>}
+          </li>
+        ))}
+      </ol>
+    </Rahmen>
+  )
+}
+
+/** Darstellung "Zeitstrahl": untereinander an einer Linie. */
+function ZeitstrahlListe({ ueberschrift, eintraege, titelTag: Titel }: { ueberschrift: string; eintraege: Extract<B, { art: 'zeitleiste' }>['eintraege']; titelTag: 'h2' | 'h3' }) {
+  return (
+    <Rahmen>
+      <Ueberschrift text={ueberschrift} />
+      <ol className="max-w-4xl">
+        {eintraege.map((e, i) => (
+          <li key={e.schluessel ?? i} className="grid grid-cols-1 md:grid-cols-[10rem_1fr] md:gap-x-10">
+            <div className="hidden md:block text-right pt-2 text-xs tracking-[0.15em] uppercase text-[#6b6b6b]">{e.zeit}</div>
+            <div className={`relative border-l border-[#0a0a0a]/15 pl-8 ${i === eintraege.length - 1 ? '' : 'pb-12'}`}>
+              <span aria-hidden className="absolute -left-[5px] top-3 h-[9px] w-[9px] rounded-full bg-[#0a0a0a]" />
+              {e.zeit.trim() && <div className="md:hidden text-xs tracking-[0.15em] uppercase text-[#6b6b6b] mb-2 pt-1">{e.zeit}</div>}
+              {e.titel.trim() && <Titel className="font-display text-3xl tracking-tight mb-3">{e.titel}</Titel>}
+              {e.text.trim() && <p className="text-[#6b6b6b] leading-relaxed whitespace-pre-line">{e.text}</p>}
+              {e.bild && <Foto bild={e.bild} alt={e.titel} className="mt-6 w-full max-w-xl h-auto" />}
+            </div>
           </li>
         ))}
       </ol>

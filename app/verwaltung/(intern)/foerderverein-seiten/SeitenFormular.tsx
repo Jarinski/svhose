@@ -317,14 +317,17 @@ export function SeitenEditor({
         </div>
 
         {vorschau && (
-          <div className="rounded-sm border border-[#0a0a0a]/10 overflow-hidden">
+          // overflow-clip statt -hidden: schneidet die Ecken ab, ohne einen Scroll-Rahmen zu bilden –
+          // sonst bliebe die Bühne des Zahlenstrahls (sticky) in der Vorschau nicht stehen
+          <div className="rounded-sm border border-[#0a0a0a]/10 overflow-clip">
             <p className="bg-white border-b border-[#0a0a0a]/10 px-4 py-2.5 text-xs text-[#6b6b6b]">
               So sieht die Seite nach dem Speichern aus{ausgeblendet > 0 ? ' – ausgeblendete Bausteine fehlen, wie auf der Website' : ''}. Zum Ändern
               zurück zu „Bearbeiten“.
             </p>
             <div className="bg-[#f5f5f0] text-[#0a0a0a] pt-12 pb-16">
               <SeitenKopf kicker={kopf.kicker} titel={kopf.titel} einleitung={anzeige.einleitung} />
-              <SeitenBausteine bausteine={anzeige.bausteine.filter(b => b.sichtbar)} daten={daten} />
+              {/* alle Bausteine – SeitenBausteine zeigt nur die sichtbaren */}
+              <SeitenBausteine bausteine={anzeige.bausteine} daten={daten} />
             </div>
           </div>
         )}
@@ -533,7 +536,7 @@ function Wahl<T extends keyof typeof DARSTELLUNG_NAMEN>({
   return (
     <fieldset>
       <legend className="block text-sm font-medium text-[#0a0a0a] mb-1.5">{label}</legend>
-      <div className={`grid gap-2 ${optionen.length > 2 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+      <div className={`grid gap-2 ${optionen.length % 3 === 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {optionen.map(o => {
           const aktiv = o.wert === wert
           return (
@@ -599,6 +602,18 @@ function Skizze({ art }: { art: keyof typeof DARSTELLUNG_NAMEN }) {
           <span className="flex-1 flex gap-1">
             {zeilen(2)}
             <span className={`w-1/2 ${flaeche}`} />
+          </span>
+        </span>
+      )
+    case 'zahlenstrahl':
+      return (
+        <span aria-hidden className={`${rahmen} flex-col items-center gap-0.5`}>
+          <span className={`w-6 flex-1 ${flaeche}`} />
+          <span className="relative w-full h-[5px] mt-0.5">
+            <span className="absolute inset-x-0 top-[2px] h-px bg-[#0a0a0a]/40" />
+            {[0, 1, 2, 3, 4].map(i => (
+              <span key={i} className={`absolute top-0 w-px h-[5px] ${i === 2 ? 'bg-[#0a0a0a]' : 'bg-[#0a0a0a]/40'}`} style={{ left: `${10 + i * 20}%` }} />
+            ))}
           </span>
         </span>
       )
@@ -793,8 +808,17 @@ function ZeitleisteEditor({
           { wert: 'kacheln', text: 'Kästen nebeneinander – kompakt, gut für viele Stationen' },
           { wert: 'zeitstrahl', text: 'Untereinander an einer Linie – liest sich wie eine Geschichte' },
           { wert: 'gross', text: 'Große Stationen, Fotos abwechselnd links und rechts' },
+          { wert: 'zahlenstrahl', text: 'Jahre auf einem Strahl, beim Scrollen wird in jede Station hineingezoomt. Das Jahr kommt aus „Zeit“' },
         ]}
       />
+      {b.darstellung === 'zahlenstrahl' && (
+        <p className="text-xs text-[#6b6b6b] leading-relaxed -mt-1">
+          Das Jahr jeder Station steht in „Zeit“ („2013“, „Oktober 2017“, „Heute“); Stationen ohne Jahr kommen zwischen ihre Nachbarn. Dazu
+          holt der Zahlenstrahl die Fotos aus den Bildergalerien dieser Seite – jedes zu dem Jahr in seiner Bildunterschrift („2017
+          Bauschild“). Gibt es zu einem Jahr keine Station, wird es ein eigener Halt. Das gilt auch für ausgeblendete Galerien: So stehen die
+          Fotos nur im Zahlenstrahl und nicht noch einmal darunter.
+        </p>
+      )}
       <div>
         <div className="text-sm font-medium mb-1.5">Stationen</div>
         <ol className="space-y-3">
@@ -979,6 +1003,10 @@ function GalerieEditor({
       />
       <div>
         <div className="text-sm font-medium mb-1.5">Fotos{b.fotos.length > 0 && <span className="font-normal text-[#6b6b6b]"> ({b.fotos.length})</span>}</div>
+        <p className="text-xs text-[#6b6b6b] leading-relaxed mb-3">
+          Mit einem Jahr in der Bildunterschrift („2017 Bauschild“) erscheint das Foto auch beim passenden Jahr einer Zeitleiste als
+          „Zahlenstrahl mit Zoom“ auf dieser Seite.
+        </p>
         {b.fotos.length > 0 && (
           <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-3">
             {b.fotos.map((f, j) => {
@@ -1118,7 +1146,7 @@ function GalerieFotoKarte({
       </div>
       <input ref={feld} type="file" name={`bild:${schluessel}`} tabIndex={-1} aria-hidden="true" className="hidden" />
       <div className="p-3 space-y-3 flex-1 flex flex-col">
-        <Textfeld id={`${schluessel}-unterschrift`} label="Bildunterschrift (optional)" wert={unterschrift} onAendern={onUnterschrift} />
+        <Textfeld id={`${schluessel}-unterschrift`} label="Bildunterschrift (optional)" wert={unterschrift} onAendern={onUnterschrift} platzhalter="z. B. 2017 Bauschild" />
         <div className="mt-auto flex justify-end">{knoepfe}</div>
       </div>
     </li>

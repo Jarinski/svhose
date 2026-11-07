@@ -49,7 +49,7 @@ const CHRONIK: SeitenInhalt = {
       art: 'zeitleiste',
       sichtbar: true,
       ueberschrift: '',
-      darstellung: 'kacheln',
+      darstellung: 'zahlenstrahl',
       eintraege: [
         {
           zeit: 'Die Idee',

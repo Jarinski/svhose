@@ -36,8 +36,15 @@ const BEISPIELBILD =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#dbe7ee"/><path d="M0 300c120-40 260-60 400-30s300 10 420-20 260-10 380 20v60H0z" fill="#4f7a45"/><rect y="320" width="1200" height="480" fill="#6f9e5b"/><path d="M180 760l140-400h560l140 400z" fill="none" stroke="#f5f5f0" stroke-width="8"/><path d="M250 560h700" stroke="#f5f5f0" stroke-width="8"/><ellipse cx="600" cy="560" rx="120" ry="40" fill="none" stroke="#f5f5f0" stroke-width="8"/><rect x="520" y="300" width="160" height="60" fill="none" stroke="#f5f5f0" stroke-width="8"/></svg>',
   )
 
-/** Die echte Vorlage der Chronik (Stand vor der Verwaltung) – ohne Fotos. */
-const START = bilderUmwandeln<GespeichertesBild, EditorBild>(CHRONIK_VORLAGE, () => null)
+/**
+ * Die echte Vorlage der Chronik (Stand vor der Verwaltung) – ohne Fotos und mit der Zeitleiste als
+ * Kacheln: Die Übung führt von dort zum Zeitstrahl, und die kleine Vorschau-Box kann den Zahlenstrahl
+ * der Vorlage (Bühne, die beim Scrollen stehen bleibt) nicht zeigen.
+ */
+const START = (() => {
+  const inhalt = bilderUmwandeln<GespeichertesBild, EditorBild>(CHRONIK_VORLAGE, () => null)
+  return { ...inhalt, bausteine: inhalt.bausteine.map(b => (b.art === 'zeitleiste' ? { ...b, darstellung: 'kacheln' as const } : b)) }
+})()
 const START_STATIONEN = START.bausteine.reduce((n, b) => n + (b.art === 'zeitleiste' ? b.eintraege.length : 0), 0)
 
 function alsAnzeige(inhalt: SeitenInhalt<EditorBild>): Gespeichert {
@@ -167,7 +174,7 @@ function ChronikUebung({ aufgabe, geloest, istGeloest }: { aufgabe: (c: Gespeich
             {website.einleitung && <p className="mt-4 max-w-xl text-lg font-light leading-relaxed text-[#6b6b6b]">{website.einleitung}</p>}
           </div>
           <div className="-mx-4">
-            <SeitenBausteine bausteine={website.bausteine.filter(b => b.sichtbar)} />
+            <SeitenBausteine bausteine={website.bausteine} />
           </div>
         </Vorschau>
       </div>

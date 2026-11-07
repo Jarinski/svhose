@@ -26,7 +26,8 @@ export interface AnzeigeBild {
   hoehe?: number
 }
 
-export const ZEITLEISTE_DARSTELLUNGEN = ['kacheln', 'zeitstrahl', 'gross'] as const
+/** zahlenstrahl: Jahre auf einem Zahlenstrahl, beim Scrollen wird in jede Station hineingezoomt (Jahr aus der Zeitangabe). */
+export const ZEITLEISTE_DARSTELLUNGEN = ['kacheln', 'zeitstrahl', 'gross', 'zahlenstrahl'] as const
 export const LISTEN_DARSTELLUNGEN = ['kaestchen', 'punkte'] as const
 export const HINTERGRUENDE = ['hell', 'dunkel'] as const
 export const BILD_POSITIONEN = ['rechts', 'links'] as const
@@ -136,6 +137,7 @@ export const DARSTELLUNG_NAMEN: Record<
   kacheln: 'Kacheln',
   zeitstrahl: 'Zeitstrahl',
   gross: 'Groß mit Fotos',
+  zahlenstrahl: 'Zahlenstrahl mit Zoom',
   kaestchen: 'Kästchen',
   punkte: 'Aufzählung',
   hell: 'Hell',

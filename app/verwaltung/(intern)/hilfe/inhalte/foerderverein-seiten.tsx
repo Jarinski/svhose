@@ -94,7 +94,12 @@ export const foerdervereinSeiten: Thema = {
         <Punkte>
           <li>
             Zeitleiste, <Begriff>Darstellung</Begriff>: <Begriff>Kacheln</Begriff> (kompakte Kästen nebeneinander), <Begriff>Zeitstrahl</Begriff>{' '}
-            (untereinander an einer Linie) oder <Begriff>Groß mit Fotos</Begriff> (Fotos abwechselnd links und rechts).
+            (untereinander an einer Linie), <Begriff>Groß mit Fotos</Begriff> (Fotos abwechselnd links und rechts) oder{' '}
+            <Begriff>Zahlenstrahl mit Zoom</Begriff>: Die Jahre stehen auf einem Strahl, beim Scrollen fährt die Seite von Jahr zu Jahr und zoomt
+            in Foto und Text jeder Station hinein. Das Jahr kommt aus der Zeitangabe („2013“, „Oktober 2017“); „Heute“ ist das laufende Jahr,
+            Stationen ohne Jahr („Die Idee“) liegen zwischen ihren Nachbarn. Fotos holt der Zahlenstrahl auch aus den Bildergalerien der
+            Seite: jedes zu dem Jahr in seiner Bildunterschrift („2017 Bauschild“), Jahre ohne Station werden ein eigener Halt. Das gilt
+            auch für ausgeblendete Galerien – so stehen die Fotos nur im Zahlenstrahl.
           </li>
           <li>
             Meldungen, <Begriff>Darstellung</Begriff>: <Begriff>Kacheln</Begriff> mit Bild oder kompakte <Begriff>Zeilen</Begriff>; dazu, ob alle

@@ -1,0 +1,476 @@
+/*
+ * Zeitleiste als Zahlenstrahl mit Zoom (components/foerderverein/ZeitZoom.tsx).
+ * Lage, Größe und Deckkraft der Stationen, Striche und Markierungen setzt das Skript beim Scrollen;
+ * hier stehen Aufbau und Aussehen. Die --b-*-Farben kommen auf der Website aus app/vorschau-b.css,
+ * in der Vorschau der Verwaltung greifen die Ersatzwerte.
+ */
+
+.zoom {
+  --ink: var(--b-ink, #0a0a0a);
+  --muted: var(--b-muted, #6b6b6b);
+  --karte: var(--b-karte, #ffffff);
+  --schritt: 95vh;
+  --hoehe: 100vh;
+  /* Höhe der Navigation (components/vorschau/b/NavbarB) – darunter rastet die Bühne ein */
+  --oben: 96px;
+  position: relative;
+  height: calc((var(--anzahl) - 1) * var(--schritt) + var(--hoehe) - var(--oben));
+}
+
+@supports (height: 100svh) {
+  .zoom {
+    --schritt: 95svh;
+    --hoehe: 100svh;
+  }
+}
+
+/* Bühne: bleibt unter der Navigation stehen, solange die Zeitleiste durchscrollt. */
+.buehne {
+  position: sticky;
+  top: var(--oben);
+  height: calc(var(--hoehe) - var(--oben));
+  overflow: hidden;
+  display: grid;
+  /* Strahl oben (schließt so direkt an die Unternavigation an), darunter die Stationen */
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+/* ── Stationen ─────────────────────────────────────────────────────────── */
+
+.bereich {
+  grid-row: 2;
+  position: relative;
+  min-height: 0;
+}
+
+.stationen {
+  list-style: none;
+  position: absolute;
+  inset: 0;
+}
+
+.station {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  /* feste Zeile, damit max-height: 100% der Karte greift */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  padding: 12px 24px 20px;
+  transform-origin: 50% 50%;
+}
+
+/* Vor dem ersten Rechnen (Server, ohne JS) nur die erste Station */
+.buehne:not([data-bereit]) .station:not(:first-child) { opacity: 0; pointer-events: none; }
+.buehne:not([data-bereit]) .station:not(:first-child) .zahl { opacity: 0; }
+
+/* Große Jahreszahl im Hintergrund – zoomt kräftiger als die Karte */
+.zahl {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--b-display, var(--font-display));
+  font-size: clamp(7rem, 30vw, 26rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.05em;
+  white-space: nowrap;
+  color: rgba(17, 17, 17, .055);
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 50%;
+}
+
+.zahlLang { font-size: clamp(4rem, 14vw, 12rem); }
+
+/* Mit Foto steht die Zahl hinter der Textspalte, damit das Foto sie nicht halb verdeckt */
+@media (min-width: 861px) {
+  .zahlRechts {
+    justify-items: end;
+    padding-right: max(24px, calc((100% - 72rem) / 2));
+    font-size: clamp(7rem, 17vw, 17rem);
+    transform-origin: 75% 50%;
+  }
+  .zahlRechts.zahlLang { font-size: clamp(4rem, 10vw, 9rem); }
+}
+
+.karte {
+  position: relative;
+  width: min(100%, 72rem);
+  max-height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(28px, 4vw, 64px);
+}
+
+.ohneFoto {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 44rem);
+  text-align: center;
+}
+
+/* Fotos eines Halts als kleines Bento-Raster: eins groß, bis zu zwei daneben */
+.fotos {
+  display: grid;
+  gap: 10px;
+  aspect-ratio: 4 / 3;
+  max-height: 58vh;
+  max-height: 58svh;
+}
+
+.fotos1 { grid-template-columns: minmax(0, 1fr); }
+.fotos2 { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.fotos3 {
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+.fotos3 .kachel:first-child { grid-row: span 2; }
+
+.kachel {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--b-grau, #e9e9e8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .04), 0 18px 40px rgba(0, 0, 0, .09);
+  cursor: zoom-in;
+}
+
+.fotos1 .kachel { border-radius: var(--b-r, 28px); }
+
+.kachel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: 50% 50%;
+}
+
+.kachel:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Bildunterschrift (ohne Jahr) als Schildchen */
+.etikett {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Letzte Kachel, wenn es mehr Fotos gibt als Platz */
+.mehr {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 17, 17, .5);
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.text { min-width: 0; }
+
+.zeit {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.titel {
+  font-family: var(--b-display, var(--font-display));
+  font-size: clamp(1.75rem, 2.9vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.025em;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  margin-bottom: 18px;
+}
+
+.ohneFoto .titel { font-size: clamp(2rem, 4.6vw, 3.75rem); }
+
+.absatz {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.ohneFoto .absatz {
+  font-size: 1.1875rem;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.hinweis {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 5;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.hinweis svg {
+  width: 12px;
+  height: 12px;
+  animation: wippen 1.6s ease-in-out infinite;
+}
+
+@keyframes wippen {
+  50% { transform: translateY(3px); }
+}
+
+/* ── Zahlenstrahl ──────────────────────────────────────────────────────── */
+
+.strahl {
+  grid-row: 1;
+  position: relative;
+  z-index: 4;
+  height: 96px;
+  /* deckt Karten ab, die darunter hindurchfahren (lange Texte, kommende und gehende Halte) */
+  background: var(--b-bg, #f5f5f0);
+}
+
+.strahl::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 28px;
+  background: linear-gradient(var(--b-bg, #f5f5f0), transparent);
+  pointer-events: none;
+}
+
+.skala {
+  /* Höhe der Linie in der Skala – das Skript liest den Wert für den Weg der Karten */
+  --linie: 34px;
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+
+.linie {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--linie);
+  height: 1px;
+  background: rgba(17, 17, 17, .2);
+}
+
+/* Fester Zeiger in der Mitte: hier steht die aktuelle Station */
+.mitte {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--linie) - 22px);
+  width: 2px;
+  height: 14px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+
+.strich {
+  position: absolute;
+  left: 50%;
+  top: var(--linie);
+  width: 1px;
+  margin-left: -.5px;
+  background: rgba(17, 17, 17, .28);
+}
+
+.rang1 { height: 7px; }
+.rang2 { height: 11px; }
+.rang3 { height: 15px; background: rgba(17, 17, 17, .45); }
+
+.strichText {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: rgba(17, 17, 17, .45);
+  white-space: nowrap;
+}
+
+.buehne:not([data-bereit]) .strich,
+.buehne:not([data-bereit]) .marke { opacity: 0; }
+
+.marke {
+  position: absolute;
+  left: 50%;
+  top: var(--linie);
+  width: 0;
+  height: 0;
+}
+
+.markeKnopf {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.punkt {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--karte);
+  border: 2px solid rgba(17, 17, 17, .45);
+  transition: transform .25s ease, background-color .25s ease, border-color .25s ease;
+}
+
+.markeText {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: color .25s ease;
+}
+
+.markeKnopf:hover .markeText { color: var(--ink); }
+.markeKnopf:hover .punkt { border-color: var(--ink); }
+
+.aktiv { color: var(--ink); }
+
+/* über anderen Markierungen im selben Jahr (am äußeren Element – sein transform bildet eine eigene Ebene) */
+.markeAktiv { z-index: 2; }
+.aktiv .punkt {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: scale(1.35);
+}
+
+.markeKnopf:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* links – rechts liegt auf der Website die Seitenleiste (components/SeitenLeiste) */
+.zaehler {
+  position: absolute;
+  left: 24px;
+  bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ── Ohne Bewegung: Halte untereinander ──────────────────────────────────── */
+
+.liste {
+  list-style: none;
+  --ink: var(--b-ink, #0a0a0a);
+  --muted: var(--b-muted, #6b6b6b);
+  display: grid;
+  gap: 72px;
+  max-width: calc(72rem + 48px);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.liste .karte { width: 100%; }
+.liste .ohneFoto { width: min(100%, 44rem); margin: 0 auto; }
+.liste .fotos { max-height: none; }
+
+/* ── Schmale Bildschirme: Foto über dem Text ─────────────────────────────── */
+
+@media (max-width: 860px) {
+  .zoom { --schritt: 85vh; }
+  @supports (height: 100svh) {
+    .zoom { --schritt: 85svh; }
+  }
+
+  .station { padding: 8px 16px 16px; }
+
+  /* Fotos über dem Text; bei langem Text werden die Fotos flacher (bis 22svh) */
+  .karte {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    width: min(100%, 34rem);
+  }
+
+  .fotos {
+    flex: 0 1 auto;
+    gap: 6px;
+    min-height: 22vh;
+    min-height: 22svh;
+    max-height: 36vh;
+    max-height: 36svh;
+  }
+
+  .text { flex: none; }
+
+  .liste .karte { display: grid; }
+
+  .kachel { border-radius: 14px; }
+  .fotos1 .kachel { border-radius: 20px; }
+  .etikett { left: 8px; bottom: 8px; max-width: calc(100% - 16px); font-size: 11px; padding: 4px 9px; }
+  .fotos3 .kachel:not(:first-child) .etikett { display: none; }
+  .mehr { font-size: 1.25rem; }
+
+  .liste { gap: 56px; padding: 0 16px; }
+  .liste .fotos { max-height: none; }
+
+  .zeit { margin-bottom: 8px; }
+  .titel { font-size: 1.6rem; margin-bottom: 10px; }
+  .ohneFoto .titel { font-size: 2rem; }
+  .absatz { font-size: .975rem; line-height: 1.6; }
+  .ohneFoto .absatz { font-size: 1.05rem; }
+
+  .strahl { height: 88px; }
+  .zaehler { left: 16px; }
+}
