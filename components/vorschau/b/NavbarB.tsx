@@ -9,7 +9,6 @@ import s from './NavbarB.module.css'
 
 // ─── Navigation von Design B (Bento) ─────────────────────────────────────────
 // Weiße, abgerundete Leiste; ab 1100 px Breite abwärts als Burger-Menü.
-// Wird für alle Besucher*innen mitgerendert, aber nur im Vorschau-Modus B gezeigt (app/vorschau.css).
 
 type Ziel = { href: string; label: string; hinweis?: string }
 type AusklappId = 'spiele' | 'foerderverein'

@@ -62,7 +62,7 @@ export default function CookieBanner() {
 
   function save(consent: ConsentState) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
-    // Andere Komponenten (z. B. HeroBanner) über Consent-Änderung informieren
+    // Andere Komponenten über Consent-Änderung informieren
     window.dispatchEvent(new CustomEvent('svhose:consent-updated'))
     setVisible(false)
   }

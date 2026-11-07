@@ -6,8 +6,7 @@
 
 .kopf {
   position: sticky;
-  /* unter der Umschaltleiste der Design-Vorschau (app/vorschau.css) */
-  top: var(--du-hoehe, 0px);
+  top: 0;
   z-index: 50;
   padding: 14px 0;
   background: linear-gradient(var(--b-bg) 60%, rgba(243, 243, 242, 0));

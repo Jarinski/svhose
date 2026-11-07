@@ -1,79 +1,15 @@
 /**
  * lib/vorschau.ts
  *
- * Design-Vorschau: Neue Gestaltungen der Website lassen sich über /vorschau/<wahl> einschalten,
- * ohne dass sich für andere Besucher*innen etwas ändert. Die Wahl liegt in einem Cookie.
- *
- * - Ein kleines Skript im <head> (designSkript) setzt daraus data-design am <html>-Element,
- *   bevor die Seite gezeichnet wird, und lädt die Schriften des Designs nach.
- * - Navigation und Footer sind für jedes Design vorgerendert und werden per CSS (app/vorschau.css)
- *   ein- und ausgeblendet; die Unterseiten passen sich über app/vorschau-b.css an.
- * - Die Startseite wählt ihr Design serverseitig (lib/vorschau-server.ts).
+ * Daten und Hilfsfunktionen für die Startseite im Bento-Design (components/vorschau/b).
+ * Der Name stammt noch aus der Zeit, als Bento nur als Design-Vorschau per Cookie lief.
  *
  * Diese Datei enthält nur Typen und reine Hilfsfunktionen – sie darf auch in Client-Komponenten.
  */
 
 import type { NewsPost, SparteUebersicht, Termin } from '@/lib/content'
 
-// ─── Designs ─────────────────────────────────────────────────────────────────
-
-export const DESIGNS = {
-  b: {
-    name: 'Bento',
-    beschreibung: 'Hell und freundlich – abgerundete Kacheln für Familien und Breitensport.',
-    schriften:
-      'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400..800&display=swap',
-  },
-} as const
-
-export type Design = keyof typeof DESIGNS
-
-/** "aktuell" = Vorschau-Modus an, aber mit dem bisherigen Design (zum Vergleichen). */
-export type VorschauWahl = Design | 'aktuell'
-
-export const DESIGN_COOKIE = 'svhs_design_vorschau'
-
-/** Wie lange die Wahl gilt: 30 Tage. */
-export const DESIGN_COOKIE_MAX_ALTER = 60 * 60 * 24 * 30
-
-export function alsDesign(wert: string | null | undefined): Design | null {
-  return wert === 'b' ? wert : null
-}
-
-export function alsVorschauWahl(wert: string | null | undefined): VorschauWahl | null {
-  return wert === 'aktuell' ? 'aktuell' : alsDesign(wert)
-}
-
-/** Wahl aus document.cookie lesen (im Browser). */
-export function wahlAusCookieText(cookieText: string): VorschauWahl | null {
-  const treffer = cookieText.match(new RegExp(`(?:^|; )${DESIGN_COOKIE}=([^;]*)`))
-  return alsVorschauWahl(treffer?.[1])
-}
-
-/** Link zum Umschalten; zurueck ist der Pfad, auf dem man danach landen soll. */
-export function umschaltLink(wahl: VorschauWahl | 'aus', zurueck?: string): string {
-  return zurueck && zurueck !== '/' ? `/vorschau/${wahl}?zurueck=${encodeURIComponent(zurueck)}` : `/vorschau/${wahl}`
-}
-
-/**
- * Inline-Skript für den <head>: Liest das Cookie, setzt data-design und lädt die Schriften.
- * Läuft vor dem ersten Zeichnen, damit nichts aufflackert. In der Verwaltung bleibt alles aus.
- */
-export function designSkript(): string {
-  const schriften = Object.fromEntries(Object.entries(DESIGNS).map(([d, info]) => [d, info.schriften]))
-  return `(function(){try{
-if(location.pathname.indexOf('/verwaltung')===0)return;
-var m=document.cookie.match(/(?:^|; )${DESIGN_COOKIE}=(b|aktuell)(?:;|$)/);
-if(!m)return;
-document.documentElement.setAttribute('data-design',m[1]);
-var s=${JSON.stringify(schriften)}[m[1]];
-if(s){
-var p=document.createElement('link');p.rel='preconnect';p.href='https://fonts.gstatic.com';p.crossOrigin='';document.head.appendChild(p);
-var l=document.createElement('link');l.rel='stylesheet';l.href=s;document.head.appendChild(l);}
-}catch(e){}})()`
-}
-
-// ─── Daten für die Startseiten ───────────────────────────────────────────────
+// ─── Daten für die Startseite ────────────────────────────────────────────────
 
 export interface StartseitenDaten {
   /** Alle veröffentlichten News, neueste zuerst */

@@ -5,8 +5,7 @@ import s from './FooterB.module.css'
 import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 
 // ─── Footer von Design B (Bento) ─────────────────────────────────────────────
-// Schwarzer, abgerundeter Block. Wird für alle Besucher*innen mitgerendert, aber nur im
-// Vorschau-Modus B gezeigt (app/vorschau.css) – Bilder deshalb mit loading="lazy".
+// Schwarzer, abgerundeter Block ganz unten auf jeder Seite – Bilder deshalb mit loading="lazy".
 
 const SPALTEN: { titel: string; links: { href: string; label: string; extern?: boolean }[] }[] = [
   {

@@ -1,7 +1,8 @@
 /*
- * Design-Vorschau B – Anpassung der Unterseiten (siehe lib/vorschau.ts).
- * Alle Regeln gelten nur unter html[data-design="b"] .site, damit weder das bisherige
- * Design noch die Verwaltung betroffen sind.
+ * Design B · Bento – Gestaltung der Unterseiten (die Startseite steht in components/vorschau/b).
+ * Alle Regeln gelten nur unter html[data-design="b"] .site: data-design setzt app/layout.tsx
+ * fest, .site gibt es nur auf der Website (components/SiteChrome.tsx) – die Verwaltung bleibt
+ * so im bisherigen Look.
  *
  * Bento: heller Grund (#f3f3f2), weiße Karten mit großen Radien und weichen Schatten,
  * Bricolage Grotesque für Überschriften, Plus Jakarta Sans für Text.
@@ -24,8 +25,9 @@ html[data-design="b"] .site {
   --b-emoji: grayscale(1) contrast(1.1);
   --b-emoji-stark: grayscale(1) brightness(.55) contrast(1.35);
   --b-r: 28px;
-  --b-schrift: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --b-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  /* Schriften von next/font (app/layout.tsx) */
+  --b-schrift: var(--font-jakarta), system-ui, sans-serif;
+  --b-display: var(--font-bricolage), system-ui, sans-serif;
   /* Bisherige Schriftvariablen umbiegen – damit greifen font-display und font-body überall */
   --font-display: var(--b-display);
   --font-body: var(--b-schrift);
@@ -42,8 +44,8 @@ html[data-design="b"] .site ::selection {
   color: #fff;
 }
 
-/* Rausch-Overlay des bisherigen Designs (globals.css) – der helle Bento-Look kommt ohne aus */
-html[data-design="b"] body::before { display: none; }
+/* Rausch-Overlay aus globals.css – der helle Bento-Look kommt ohne aus (die Verwaltung behält es) */
+html[data-design="b"] body:has(.site)::before { display: none; }
 
 /* Fokusrahmen mit niedriger Spezifität (:where), damit Komponenten ihn anpassen können –
  * z. B. weiß in den schwarzen Kacheln der Startseite (StartseiteB.module.css) */
@@ -54,9 +56,6 @@ html[data-design="b"] body::before { display: none; }
 
 /* In schwarzen Flächen ist der Fokusrahmen weiß */
 :where(html[data-design="b"] .site) .bg-\[\#0a0a0a\] :focus-visible { outline-color: #fff; }
-
-/* Beschriftung "Vorschau" im Umschalter: mehr Kontrast über dem hellen Grund (≥ 4,5 : 1) */
-html[data-design="b"] .design-umschalter .du-titel { color: rgba(255, 255, 255, .62); }
 
 /* Die Navigation läuft im Seitenfluss mit (sticky) – oben genügt ein kleiner Abstand */
 html[data-design="b"] .site main > .pt-32 { padding-top: 24px; }

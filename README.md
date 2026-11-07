@@ -212,10 +212,13 @@ Wiederherstellung: [`OPERATIONS.md`](OPERATIONS.md).
 
 ## 🎨 Design anpassen
 
-- **Farben & Fonts:** `app/globals.css` und `tailwind.config.js`
-- **Navbar:** `components/Navbar.tsx`
-- **Footer:** `components/Footer.tsx`
-- **Startseite:** `app/page.tsx`
+Die Website läuft im Bento-Design (helle Kacheln, Bricolage Grotesque + Plus Jakarta Sans):
+
+- **Schriften:** `app/layout.tsx` (über `next/font`, vom eigenen Server ausgeliefert)
+- **Farben & Unterseiten:** `app/vorschau-b.css` – legt sich über die Tailwind-Klassen der Unterseiten
+- **Navbar / Footer:** `components/vorschau/b/NavbarB.tsx`, `components/vorschau/b/FooterB.tsx`
+- **Startseite:** `components/vorschau/b/StartseiteB.tsx` (Daten aus `app/page.tsx`)
+- **Verwaltung:** behält ihren eigenen Look aus `app/globals.css` und `tailwind.config.js`
 
 ---
 

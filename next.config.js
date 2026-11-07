@@ -12,6 +12,13 @@ const nextConfig = {
       bodySizeLimit: '16mb',
     },
   },
+  async redirects() {
+    return [
+      // Früher schaltete /vorschau/<design> per Cookie das Bento-Design ein. Es ist jetzt das
+      // einzige Design – verschickte Vorschau-Links führen einfach zur Startseite.
+      { source: '/vorschau/:pfad*', destination: '/', permanent: false },
+    ]
+  },
 }
 
 module.exports = nextConfig

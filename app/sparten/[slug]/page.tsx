@@ -386,7 +386,7 @@ function MannschaftCard({
       {/* ── Kartenkopf ── */}
       <div className="p-5 flex flex-col lg:flex-row gap-4">
         {/* Teambild 512×320 px (16:10), unter lg über dem Text und höchstens kartenbreit.
-            w-[512px]/h-[320px] bleiben stehen – die Design-Vorschau (app/vorschau-*.css) knüpft daran an. */}
+            w-[512px]/h-[320px] bleiben stehen – das Bento-Design (app/vorschau-b.css) knüpft daran an. */}
         <div
           className="w-[512px] max-w-full h-[320px] max-lg:h-auto aspect-[16/10] shrink-0 flex items-center justify-center text-2xl overflow-hidden"
           style={{ background: `${farbe}12` }}
