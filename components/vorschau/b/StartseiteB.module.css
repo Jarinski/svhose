@@ -407,7 +407,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Sparten: weiße Karten, beim Hover schwarz */
+/* Kacheln (Förderverein): weiße Karten, beim Hover schwarz */
 .sparten {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -427,7 +427,7 @@
   transition: transform .25s, box-shadow .25s, background .25s, color .25s;
 }
 
-.sparte:not(.alle)::after {
+.sparte::after {
   content: '→';
   position: absolute;
   top: 20px;
@@ -471,12 +471,6 @@
 
 .sparte:hover .ico { background: #fff; }
 
-.initiale {
-  font-family: var(--b-display);
-  font-size: 24px;
-  font-weight: 800;
-}
-
 .sparte h3 {
   font-size: 21px;
   letter-spacing: -.02em;
@@ -499,93 +493,7 @@
 
 .sparte:hover p { color: rgba(255, 255, 255, .65); }
 
-/* Sparten mit Foto: Bild oben wie bei den News-Karten, Emoji als weißes Schild unten links */
-.sparteFoto {
-  padding: 10px 10px 22px;
-  gap: 12px;
-}
-
-.sparteFoto h3,
-.sparteFoto p {
-  padding: 0 12px;
-}
-
-.sparteBild {
-  position: relative;
-  display: block;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  border-radius: 18px;
-  background: var(--b-grau);
-}
-
-.sparteBild img {
-  object-fit: cover;
-  transition: transform .6s;
-}
-
-.sparteFoto:hover .sparteBild img { transform: scale(1.04); }
-
-.sparteBild .platzhalter {
-  position: absolute;
-  inset: 0;
-  width: 64px;
-  height: 64px;
-  margin: auto;
-  object-fit: contain;
-  opacity: .25;
-}
-
-.sparteFoto:hover .sparteBild .platzhalter { transform: none; }
-
-.sparteBild .ico {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  font-size: 22px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
-}
-
-/* Pfeil als weißer Knopf auf dem Foto, damit er auch auf hellen Bildern zu sehen ist */
-.sparten .sparteFoto::after {
-  z-index: 1;
-  top: 20px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  background: #fff;
-  color: var(--b-ink);
-}
-
 .sparten.foerder { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-
-.alle {
-  grid-column: span var(--rest4, 1);
-  justify-content: space-between;
-  background: var(--b-ink);
-  color: #fff;
-}
-
-.alle h3 { font-size: 26px; }
-
-.alle:hover { background: #000; }
-
-.start .alle:focus-visible { outline-color: var(--b-ink); }
-
-.linkHell {
-  color: #fff;
-  text-decoration-color: rgba(255, 255, 255, .35);
-}
-
-.alle:hover .linkHell { text-decoration-color: currentColor; }
 
 /* News */
 .news {
@@ -971,12 +879,6 @@
   .schutz { grid-column: span 5; }
   .mitglied { grid-column: span 7; }
   .sparten { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .alle {
-    grid-column: span var(--rest3, 1);
-    min-height: 0;
-    flex-direction: row;
-    align-items: flex-end;
-  }
   .duo { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -1021,33 +923,11 @@
     padding: 16px;
     min-height: 170px;
   }
-  .sparte:not(.alle)::after {
+  .sparte::after {
     top: 16px;
     right: 16px;
   }
   .sparte h3 { font-size: 18px; }
-  .sparteFoto {
-    padding: 8px 8px 16px;
-    min-height: 0;
-    gap: 10px;
-  }
-  .sparteFoto h3 { padding: 0 8px; }
-  .sparteBild { border-radius: 16px; }
-  .sparteBild .ico {
-    left: 8px;
-    bottom: 8px;
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    font-size: 18px;
-  }
-  .alle {
-    grid-column: span var(--rest2, 1);
-    min-height: 170px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .alle h3 { font-size: 21px; }
   .sparte p { display: none; }
   .news { grid-template-columns: minmax(0, 1fr); }
   .termine { padding: 22px; }
@@ -1079,7 +959,6 @@
   .sparte p,
   .post,
   .bild img,
-  .sparteBild img,
   .tabs button,
   .insta,
   .kontaktLinks a,
@@ -1090,6 +969,5 @@
   .post:hover,
   .insta:hover { transform: none; }
   .mitglied:hover .los,
-  .post:hover .bild img,
-  .sparteFoto:hover .sparteBild img { transform: none; }
+  .post:hover .bild img { transform: none; }
 }

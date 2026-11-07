@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
 import type { StartseitenDaten } from '@/lib/vorschau'
 import { FOERDERVEREIN_MENUE, FOERDERVEREIN_START, istFoerderverein } from '@/lib/foerderverein'
 import {
@@ -13,13 +12,14 @@ import {
   terminZeile,
 } from './hilfen'
 import HeroVideo from './HeroVideo'
+import SpartenBogen from './SpartenBogen'
 import TermineTabs from './TermineTabs'
 import b from './bento.module.css'
 import s from './StartseiteB.module.css'
 
 // ─── Startseite von Design B (Bento) ─────────────────────────────────────────
 // Hell und freundlich: abgerundete Kacheln im Bento-Raster. Server-Komponente –
-// nur der Termin-Filter und der Video-Knopf laufen im Browser.
+// nur der Termin-Filter, der Video-Knopf und der Sparten-Bogen laufen im Browser.
 
 /** Symbole für die Kacheln des Fördervereins, in der Reihenfolge von FOERDERVEREIN_MENUE */
 const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝', '💶']
@@ -29,12 +29,6 @@ const PFEIL = (
     <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 )
-
-/** Freie Plätze in der letzten Reihe – die Karte "Alle Sparten" füllt sie (oder eine ganze Reihe). */
-function rest(anzahl: number, spalten: number): number {
-  const frei = (spalten - (anzahl % spalten)) % spalten
-  return frei === 0 ? spalten : frei
-}
 
 export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
   const { news, termine, sparten, zahlen, heute } = daten
@@ -54,12 +48,6 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
     zahlen.sparten > 0 && `${zahlen.sparten} ${zahlen.sparten === 1 ? 'Sparte' : 'Sparten'}`,
     zahlen.mannschaften > 0 && `${zahlen.mannschaften} ${zahlen.mannschaften === 1 ? 'Mannschaft' : 'Mannschaften'}`,
   ].filter(Boolean) as string[]
-
-  const alleSpan = {
-    '--rest4': rest(sparten.length, 4),
-    '--rest3': rest(sparten.length, 3),
-    '--rest2': rest(sparten.length, 2),
-  } as CSSProperties
 
   return (
     <div className={`${b.wrap} ${s.start}`}>
@@ -186,79 +174,6 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
         </Link>
       </div>
 
-      {/* ── Sparten ── */}
-      <section id="sparten" className={s.abschnitt} aria-labelledby="b-sparten">
-        <div className={s.kopf}>
-          <div>
-            <span className={b.eyebrow}>Sparten</span>
-            <h2 id="b-sparten" className={s.abschnittTitel}>Finde deinen Sport</h2>
-            <p>Jede Sparte hat eigene Trainingszeiten und Ansprechpartner*innen – schnupper einfach mal rein.</p>
-          </div>
-          <Link href="/trainingszeiten" className={b.link}>Alle Trainingszeiten →</Link>
-        </div>
-        <div className={s.sparten}>
-          {sparten.map(sp => (
-            <Link key={sp.slug} href={`/sparten/${sp.slug}`} className={`${s.sparte} ${s.sparteFoto}`}>
-              {/* Foto wie bei den News-Karten; das Emoji sitzt als kleines Schild darauf */}
-              <span className={s.sparteBild}>
-                {sp.bild ? (
-                  <Image src={sp.bild} alt="" fill sizes="(max-width: 720px) 50vw, (max-width: 1100px) 33vw, 290px" />
-                ) : (
-                  // Ohne Foto: Vereinswappen als Platzhalter
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className={s.platzhalter} src="/SV_Holm_Seppensen_Logo.svg" alt="" />
-                )}
-                <span className={s.ico} aria-hidden="true">
-                  {sp.icon ? <i className={b.emo}>{sp.icon}</i> : <span className={s.initiale}>{sp.name.charAt(0)}</span>}
-                </span>
-              </span>
-              <h3>{sp.name}</h3>
-              {sp.beschreibung && <p>{sp.beschreibung}</p>}
-            </Link>
-          ))}
-          <Link href="/sparten" className={`${s.sparte} ${s.alle}`} style={alleSpan}>
-            <h3>
-              Alle Sparten
-              <br />
-              im Überblick
-            </h3>
-            <span className={`${b.link} ${s.linkHell}`}>Ansehen →</span>
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Förderverein ── */}
-      <section className={s.abschnitt} aria-labelledby="b-foerderverein">
-        <div className={s.kopf}>
-          <div>
-            <span className={b.eyebrow}>Förderverein</span>
-            <h2 id="b-foerderverein" className={s.abschnittTitel}>Gemeinsam für unseren Platz</h2>
-            <p>
-              Der Förderverein Sportanlagen hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
-              Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
-            </p>
-            {fvNews && (
-              <p>
-                <b>Neu:</b>{' '}
-                <Link href={`/news/${fvNews.slug}`} className={b.link}>{fvNews.title}</Link>
-              </p>
-            )}
-          </div>
-          <Link href={FOERDERVEREIN_START} className={b.link}>Zum Förderverein →</Link>
-        </div>
-        <div className={`${s.sparten} ${s.foerder}`}>
-          {FOERDERVEREIN_MENUE.kinder.map((kind, i) => (
-            <Link key={kind.href} href={kind.href} className={s.sparte}>
-              <span className={s.ico} aria-hidden="true">
-                <i className={b.emo}>{FOERDER_ICONS[i]}</i>
-              </span>
-              <h3>{kind.label}</h3>
-              <p>{kind.text}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       {/* ── News ── */}
       <section className={s.abschnitt} aria-labelledby="b-news">
         <div className={s.kopf}>
@@ -306,6 +221,51 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
         ) : (
           <div className={`${b.karte} ${s.leerKarte}`}>Noch keine News – schau bald wieder vorbei.</div>
         )}
+      </section>
+
+      {/* ── Sparten ── */}
+      <section id="sparten" className={s.abschnitt} aria-labelledby="b-sparten">
+        <div className={s.kopf}>
+          <div>
+            <span className={b.eyebrow}>Sparten</span>
+            <h2 id="b-sparten" className={s.abschnittTitel}>Finde deinen Sport</h2>
+            <p>Jede Sparte hat eigene Trainingszeiten und Ansprechpartner*innen – schnupper einfach mal rein.</p>
+          </div>
+          <Link href="/trainingszeiten" className={b.link}>Alle Trainingszeiten →</Link>
+        </div>
+        <SpartenBogen sparten={sparten} />
+      </section>
+
+      {/* ── Förderverein ── */}
+      <section className={s.abschnitt} aria-labelledby="b-foerderverein">
+        <div className={s.kopf}>
+          <div>
+            <span className={b.eyebrow}>Förderverein</span>
+            <h2 id="b-foerderverein" className={s.abschnittTitel}>Gemeinsam für unseren Platz</h2>
+            <p>
+              Der Förderverein Sportanlagen hat über Jahre Spenden gesammelt und mit angepackt, damit der SV seinen
+              Rasenplatz am Tostedter Weg bekommt – und der Ausbau geht weiter.
+            </p>
+            {fvNews && (
+              <p>
+                <b>Neu:</b>{' '}
+                <Link href={`/news/${fvNews.slug}`} className={b.link}>{fvNews.title}</Link>
+              </p>
+            )}
+          </div>
+          <Link href={FOERDERVEREIN_START} className={b.link}>Zum Förderverein →</Link>
+        </div>
+        <div className={`${s.sparten} ${s.foerder}`}>
+          {FOERDERVEREIN_MENUE.kinder.map((kind, i) => (
+            <Link key={kind.href} href={kind.href} className={s.sparte}>
+              <span className={s.ico} aria-hidden="true">
+                <i className={b.emo}>{FOERDER_ICONS[i]}</i>
+              </span>
+              <h3>{kind.label}</h3>
+              <p>{kind.text}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* ── Termine + Kontakt ── */}
