@@ -69,6 +69,26 @@
       ],
       "port": 3658,
       "url": "http://127.0.0.1:3658"
+    },
+    {
+      "name": "ohne-matchday-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-vB7GkC/a15d0060-f890-4902-ba23-1feee93636c5/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3662"
+      ],
+      "port": 3662,
+      "url": "http://127.0.0.1:3662"
+    },
+    {
+      "name": "bento-standard-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-xeJI3w/ad9f865b-d84f-4d48-bbad-8f609bbe77ea/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3664"
+      ],
+      "port": 3664,
+      "url": "http://127.0.0.1:3664"
     }
   ]
 }
