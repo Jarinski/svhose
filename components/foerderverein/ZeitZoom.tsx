@@ -200,7 +200,7 @@ export function halteBilden(eintraege: ZoomStation[], fotos: ZoomFoto[], diesesJ
 /** Anteil jedes Scroll-Schritts, in dem ein Halt ruhig stehen bleibt (vorn und hinten). */
 const HALT = 0.2
 /** So viele Fotos zeigt ein Halt als Collage; der Rest steht in der Großansicht. */
-const FOTOS_SICHTBAR = 3
+const FOTOS_SICHTBAR = 4
 
 const zwischen = (x: number, min: number, max: number) => Math.min(max, Math.max(min, x))
 const glatt = (x: number) => {
@@ -239,31 +239,142 @@ function striche(punkte: StrahlPunkt[], diesesJahr: number): Strich[] {
 
 const RANG_ABSTAND = { 1: 1, 2: 5, 3: 10 } as const
 
+// ─── Collage ────────────────────────────────────────────────────────────────
+
+/** Lage eines Fotos in der Collage, in Prozent der Collage. */
+interface Platz {
+  links: number
+  oben: number
+  breite: number
+  hoehe: number
+}
+
+/** Seitenverhältnis, das die Collage ungefähr haben soll (Breite : Höhe). */
+const COLLAGE_ZIEL = 1.25
+/** Abstand zwischen den Fotos, als Anteil der Collage */
+const COLLAGE_LUECKE = 0.05
+/** Leichte Drehung und Versatz je Foto (Versatz in Prozent der eigenen Größe) – wie an die Wand gepinnt */
+const COLLAGE_LAGE = [
+  { dreh: -2.2, x: -3, y: -2 },
+  { dreh: 1.8, x: 3, y: 2 },
+  { dreh: -1.3, x: -2, y: 3 },
+  { dreh: 2.4, x: 2, y: -2 },
+]
+
+/** Alle Aufteilungen von n Fotos (in ihrer Reihenfolge) in aufeinanderfolgende Gruppen, z. B. 3 → [3], [2,1], [1,2], [1,1,1]. */
+function aufteilungen(n: number): number[][] {
+  if (n === 0) return [[]]
+  const liste: number[][] = []
+  for (let erste = 1; erste <= n; erste++) for (const rest of aufteilungen(n - erste)) liste.push([erste, ...rest])
+  return liste
+}
+
+/**
+ * Ordnet Fotos in ihrem eigenen Format an – nichts wird beschnitten. Probiert jede Aufteilung in
+ * Zeilen (Fotos einer Zeile gleich hoch) und in Spalten (Fotos einer Spalte gleich breit) und nimmt
+ * die, deren Gesamtform am nächsten an COLLAGE_ZIEL liegt. Liefert das Seitenverhältnis der Collage
+ * und je Foto seinen Platz.
+ */
+export function collage(verhaeltnisse: number[]): { verhaeltnis: number; plaetze: Platz[] } {
+  const g = COLLAGE_LUECKE
+  const summe = (werte: number[]) => werte.reduce((a, b) => a + b, 0)
+  let beste: { verhaeltnis: number; plaetze: Platz[]; kosten: number } | null = null
+  const pruefen = (verhaeltnis: number, plaetze: Platz[]) => {
+    const kosten = Math.abs(Math.log(verhaeltnis / COLLAGE_ZIEL))
+    if (!beste || kosten < beste.kosten - 1e-9) beste = { verhaeltnis, plaetze, kosten }
+  }
+  for (const gruppen of aufteilungen(verhaeltnisse.length)) {
+    // in Zeilen (Breite der Collage = 1)
+    let i = 0
+    let y = 0
+    const zeilen: { x: number; y: number; b: number; h: number }[] = []
+    for (const anzahl of gruppen) {
+      const teil = verhaeltnisse.slice(i, i + anzahl)
+      const h = (1 - g * (anzahl - 1)) / summe(teil)
+      let x = 0
+      for (const v of teil) {
+        zeilen.push({ x, y, b: v * h, h })
+        x += v * h + g
+      }
+      y += h + g
+      i += anzahl
+    }
+    const hoehe = y - g
+    pruefen(
+      1 / hoehe,
+      zeilen.map(p => ({ links: p.x * 100, oben: (p.y / hoehe) * 100, breite: p.b * 100, hoehe: (p.h / hoehe) * 100 })),
+    )
+
+    // in Spalten (Höhe der Collage = 1)
+    i = 0
+    let x = 0
+    const spalten: { x: number; y: number; b: number; h: number }[] = []
+    for (const anzahl of gruppen) {
+      const teil = verhaeltnisse.slice(i, i + anzahl)
+      const b = (1 - g * (anzahl - 1)) / summe(teil.map(v => 1 / v))
+      let yy = 0
+      for (const v of teil) {
+        spalten.push({ x, y: yy, b, h: b / v })
+        yy += b / v + g
+      }
+      x += b + g
+      i += anzahl
+    }
+    const breite = x - g
+    pruefen(
+      breite,
+      spalten.map(p => ({ links: (p.x / breite) * 100, oben: p.y * 100, breite: (p.b / breite) * 100, hoehe: p.h * 100 })),
+    )
+  }
+  const ergebnis = beste as unknown as { verhaeltnis: number; plaetze: Platz[] }
+  return { verhaeltnis: ergebnis.verhaeltnis, plaetze: ergebnis.plaetze }
+}
+
 // ─── Anzeige ────────────────────────────────────────────────────────────────
 
 /** Fotos und Text eines Halts – auf der Bühne und in der Liste ohne Bewegung. */
 function HaltKarte({ halt, titelTag: Titel, onFoto }: { halt: Halt; titelTag: 'h2' | 'h3'; onFoto: (index: number) => void }) {
   const gezeigt = halt.fotos.slice(0, FOTOS_SICHTBAR)
   const mehr = halt.fotos.length - gezeigt.length
+  // Fotos in ihrem eigenen Format (ohne Maße: 4:3)
+  const anordnung = collage(gezeigt.map(f => (f.bild.breite && f.bild.hoehe ? f.bild.breite / f.bild.hoehe : 4 / 3)))
   return (
     <div className={`${s.karte} ${gezeigt.length ? '' : s.ohneFoto}`}>
       {gezeigt.length > 0 && (
-        <div className={`${s.fotos} ${s[`fotos${gezeigt.length}`]}`}>
+        <div className={s.fotos} style={{ aspectRatio: anordnung.verhaeltnis, '--verhaeltnis': anordnung.verhaeltnis } as CSSProperties}>
           {gezeigt.map((f, j) => {
             const plus = mehr > 0 && j === gezeigt.length - 1
+            const platz = anordnung.plaetze[j]
+            const lage = COLLAGE_LAGE[j % COLLAGE_LAGE.length]
             return (
-              <button
+              // Lage am äußeren Element: Ein <button style> fiele unter die Pillen-Regel in app/vorschau-b.css
+              <div
                 key={j}
-                type="button"
-                className={s.kachel}
-                onClick={() => onFoto(j)}
-                aria-label={plus ? `Alle ${halt.fotos.length} Fotos groß anzeigen` : `${f.unterschrift || halt.titel || 'Foto'} – groß anzeigen`}
+                data-abzug=""
+                className={s.abzug}
+                style={
+                  {
+                    left: `${platz.links}%`,
+                    top: `${platz.oben}%`,
+                    width: `${platz.breite}%`,
+                    height: `${platz.hoehe}%`,
+                    '--dreh': `${lage.dreh}deg`,
+                    '--versatz': `${lage.x}% ${lage.y}%`,
+                  } as CSSProperties
+                }
               >
-                {/* Bilder liegen schon verkleinert im Medienordner – normales <img> wie im übrigen Seitenaufbau */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.bild.src} alt={f.unterschrift} width={f.bild.breite || undefined} height={f.bild.hoehe || undefined} decoding="async" />
-                {plus ? <span className={s.mehr}>+{mehr}</span> : f.etikett && <span className={s.etikett}>{f.etikett}</span>}
-              </button>
+                <button
+                  type="button"
+                  className={s.kachel}
+                  onClick={() => onFoto(j)}
+                  aria-label={plus ? `Alle ${halt.fotos.length} Fotos groß anzeigen` : `${f.unterschrift || halt.titel || 'Foto'} – groß anzeigen`}
+                >
+                  {/* Bilder liegen schon verkleinert im Medienordner – normales <img> wie im übrigen Seitenaufbau */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.bild.src} alt={f.unterschrift} width={f.bild.breite || undefined} height={f.bild.hoehe || undefined} decoding="async" />
+                  {plus ? <span className={s.mehr}>+{mehr}</span> : f.etikett && <span className={s.etikett}>{f.etikett}</span>}
+                </button>
+              </div>
             )
           })}
         </div>
@@ -357,7 +468,7 @@ export default function ZeitZoom({
     // halbe Breite jeder Beschriftung auf dem Strahl – daran hängt, ob sie neben den Nachbarn Platz hat
     let halbeText: number[] = []
     let halbeZahl = 14
-    let bilder: HTMLImageElement[][] = []
+    let abzuege: HTMLElement[][] = []
     // wie weit jede Karte über die Bühne hinausragt (langer Text) – um so viel fährt sie im Halt nach oben
     let ueber: number[] = []
 
@@ -371,7 +482,7 @@ export default function ZeitZoom({
       halbeText = markeTextRefs.current.map(el => (el ? el.offsetWidth / 2 : 0))
       const zahlEl = strichTextRefs.current.find(Boolean)
       if (zahlEl) halbeZahl = zahlEl.offsetWidth / 2
-      bilder = haltRefs.current.map(el => (el ? Array.from(el.querySelectorAll('img')) : []))
+      abzuege = haltRefs.current.map(el => (el ? Array.from(el.querySelectorAll<HTMLElement>('[data-abzug]')) : []))
       ueber = haltRefs.current.map(el => {
         const karte = el?.lastElementChild as HTMLElement | null
         return karte ? Math.max(0, karte.scrollHeight - karte.clientHeight) : 0
@@ -474,10 +585,10 @@ export default function ZeitZoom({
         el.style.transform = transform
         el.style.opacity = deckkraft.toFixed(3)
         el.style.zIndex = t > 0 ? '3' : '2'
-        // die Fotos zoomen die ganze Zeit langsam weiter hinein, jedes etwas versetzt
-        const fotosHier = bilder[i] ?? []
-        fotosHier.forEach((img, j) => {
-          img.style.transform = `scale(${(1.04 + 0.07 * (t + 1) + 0.02 * j).toFixed(4)})`
+        // die Abzüge wachsen leicht weiter, jeder etwas versetzt (scale – Drehung und Versatz setzt das CSS)
+        const hier = abzuege[i] ?? []
+        hier.forEach((abzug, j) => {
+          abzug.style.scale = (0.97 + 0.035 * (t + 1) + 0.008 * j).toFixed(4)
         })
       })
 

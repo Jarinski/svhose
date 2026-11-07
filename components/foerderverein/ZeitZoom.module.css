@@ -111,45 +111,54 @@
   text-align: center;
 }
 
-/* Fotos eines Halts als kleines Bento-Raster: eins groß, bis zu zwei daneben */
+/* Fotos eines Halts als Collage: jedes in seinem Format (nichts beschnitten), als Abzug mit weißem
+ * Rand, leicht gedreht und versetzt wie an die Wand gepinnt. Lage und Seitenverhältnis rechnet
+ * collage() in ZeitZoom.tsx; die Collage ist höchstens 58svh hoch. */
 .fotos {
-  display: grid;
-  gap: 10px;
-  aspect-ratio: 4 / 3;
-  max-height: 58vh;
-  max-height: 58svh;
+  --hoechstens: 58vh;
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc(var(--hoechstens) * var(--verhaeltnis)));
 }
 
-.fotos1 { grid-template-columns: minmax(0, 1fr); }
-.fotos2 { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
-.fotos3 {
-  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+@supports (height: 100svh) {
+  .fotos { --hoechstens: 58svh; }
 }
-.fotos3 .kachel:first-child { grid-row: span 2; }
+
+.abzug {
+  position: absolute;
+  rotate: var(--dreh);
+  translate: var(--versatz);
+  transition: rotate .3s ease, translate .3s ease;
+}
+
+.abzug:hover,
+.abzug:focus-within {
+  z-index: 2;
+  rotate: 0deg;
+}
 
 .kachel {
   position: relative;
   display: block;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
   border: 0;
-  overflow: hidden;
-  border-radius: 20px;
-  background: var(--b-grau, #e9e9e8);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, .04), 0 18px 40px rgba(0, 0, 0, .09);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 14px 32px rgba(0, 0, 0, .14);
   cursor: zoom-in;
 }
-
-.fotos1 .kachel { border-radius: var(--b-r, 28px); }
 
 .kachel img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transform-origin: 50% 50%;
+  /* contain: der Platz hat schon das Format des Fotos – so wird nie etwas abgeschnitten */
+  object-fit: contain;
+  border-radius: 2px;
+  background: #fff;
 }
 
 .kachel:focus-visible {
@@ -160,14 +169,15 @@
 /* Bildunterschrift (ohne Jahr) als Schildchen */
 .etikett {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
-  max-width: calc(100% - 20px);
-  padding: 5px 11px;
+  left: 14px;
+  bottom: 14px;
+  max-width: calc(100% - 28px);
+  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, .9);
+  background: rgba(255, 255, 255, .92);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
   color: var(--ink);
   font-size: 12px;
   font-weight: 600;
@@ -178,12 +188,13 @@
   text-overflow: ellipsis;
 }
 
-/* Letzte Kachel, wenn es mehr Fotos gibt als Platz */
+/* Letztes Foto, wenn es mehr Fotos gibt als Platz */
 .mehr {
   position: absolute;
-  inset: 0;
+  inset: 6px;
   display: grid;
   place-items: center;
+  border-radius: 2px;
   background: rgba(17, 17, 17, .5);
   color: #fff;
   font-size: 1.75rem;
@@ -422,7 +433,7 @@
 
 .liste .karte { width: 100%; }
 .liste .ohneFoto { width: min(100%, 44rem); margin: 0 auto; }
-.liste .fotos { max-height: none; }
+.liste .fotos { --hoechstens: 70vh; }
 
 /* ── Schmale Bildschirme: Foto über dem Text ─────────────────────────────── */
 
@@ -434,36 +445,23 @@
 
   .station { padding: 8px 16px 16px; }
 
-  /* Fotos über dem Text; bei langem Text werden die Fotos flacher (bis 22svh) */
+  /* Fotos über dem Text; lange Texte fahren im Halt nach oben (ZeitZoom.tsx) */
   .karte {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
     width: min(100%, 34rem);
   }
 
-  .fotos {
-    flex: 0 1 auto;
-    gap: 6px;
-    min-height: 22vh;
-    min-height: 22svh;
-    max-height: 36vh;
-    max-height: 36svh;
+  .fotos { --hoechstens: 34vh; }
+  @supports (height: 100svh) {
+    .fotos { --hoechstens: 34svh; }
   }
 
-  .text { flex: none; }
-
-  .liste .karte { display: grid; }
-
-  .kachel { border-radius: 14px; }
-  .fotos1 .kachel { border-radius: 20px; }
-  .etikett { left: 8px; bottom: 8px; max-width: calc(100% - 16px); font-size: 11px; padding: 4px 9px; }
-  .fotos3 .kachel:not(:first-child) .etikett { display: none; }
-  .mehr { font-size: 1.25rem; }
+  .kachel { padding: 4px; border-radius: 4px; }
+  .mehr { inset: 4px; font-size: 1.25rem; }
+  .etikett { left: 9px; bottom: 9px; max-width: calc(100% - 18px); font-size: 10.5px; padding: 3px 8px; }
 
   .liste { gap: 56px; padding: 0 16px; }
-  .liste .fotos { max-height: none; }
 
   .zeit { margin-bottom: 8px; }
   .titel { font-size: 1.6rem; margin-bottom: 10px; }
