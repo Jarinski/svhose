@@ -89,6 +89,16 @@
       ],
       "port": 3664,
       "url": "http://127.0.0.1:3664"
+    },
+    {
+      "name": "zeitzoom-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-FqJQFg/0ac1407a-f257-4150-9491-17e0a059bd03/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3667"
+      ],
+      "port": 3667,
+      "url": "http://127.0.0.1:3667"
     }
   ]
 }
