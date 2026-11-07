@@ -2,7 +2,7 @@
  * app/vorschau/[wahl]/route.ts
  *
  * Schaltet die Design-Vorschau um (siehe lib/vorschau.ts):
- *   /vorschau/a, /vorschau/b  → neues Design A bzw. B
+ *   /vorschau/b               → neues Design B (Bento)
  *   /vorschau/aktuell         → Vorschau-Modus mit dem bisherigen Design (zum Vergleichen)
  *   /vorschau/aus             → Vorschau-Modus beenden
  * Danach geht es zurück auf ?zurueck=<pfad> bzw. zur Startseite.

@@ -2,11 +2,9 @@ import type { Metadata } from 'next'
 import { Bebas_Neue, DM_Sans } from 'next/font/google'
 import './globals.css'
 import './vorschau.css'
-import './vorschau-a.css'
 import './vorschau-b.css'
 import SiteChrome from '@/components/SiteChrome'
 import Footer from '@/components/Footer'
-import FooterA from '@/components/vorschau/a/FooterA'
 import FooterB from '@/components/vorschau/b/FooterB'
 import { designSkript } from '@/lib/vorschau'
 
@@ -62,7 +60,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: designSkript() }} />
       </head>
       <body>
-        <SiteChrome footer={<Footer />} vorschauFooter={{ a: <FooterA />, b: <FooterB /> }}>
+        <SiteChrome footer={<Footer />} vorschauFooter={{ b: <FooterB /> }}>
           {children}
         </SiteChrome>
       </body>

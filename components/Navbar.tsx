@@ -21,7 +21,7 @@ const navLinks: NavLink[] = [
   },
   { href: '/termine', label: 'Termine' },
   { href: '/trainingszeiten', label: 'Training' },
-  // Gruppiert, damit die Leiste auch bei 1024 px in eine Zeile passt (wie in Design A)
+  // Gruppiert, damit die Leiste auch bei 1024 px in eine Zeile passt
   {
     label: 'Verein',
     children: [

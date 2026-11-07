@@ -6,7 +6,6 @@ import { de } from 'date-fns/locale'
 import HeroBanner from '@/components/HeroBanner'
 import NewsThumbnail from '@/components/NewsThumbnail'
 import SpartenBand from '@/components/startseite/SpartenBand'
-import StartseiteA from '@/components/vorschau/a/StartseiteA'
 import StartseiteB from '@/components/vorschau/b/StartseiteB'
 import { heuteInBerlin } from '@/lib/vorschau'
 import { buendeleSpieltermine, gegnerText, uhrzeitText } from '@/lib/spieltermine'
@@ -34,7 +33,7 @@ export default async function HomePage() {
     vorschauDesign(),
   ])
 
-  // Design-Vorschau (lib/vorschau.ts): eigene Startseite für Design A bzw. B
+  // Design-Vorschau (lib/vorschau.ts): eigene Startseite für Design B
   if (design) {
     const heute = heuteInBerlin()
     const daten = {
@@ -44,7 +43,7 @@ export default async function HomePage() {
       zahlen: { sparten: sparten.length, mannschaften: await getMannschaftenAnzahl() },
       heute,
     }
-    return design === 'a' ? <StartseiteA daten={daten} /> : <StartseiteB daten={daten} />
+    return <StartseiteB daten={daten} />
   }
 
   const news = newsAll.slice(0, 6)

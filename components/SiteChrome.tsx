@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import Navbar from './Navbar'
 import CookieBanner from './CookieBanner'
 import SeitenLeiste from './SeitenLeiste'
-import NavbarA from './vorschau/a/NavbarA'
 import NavbarB from './vorschau/b/NavbarB'
 import DesignUmschalter from './vorschau/DesignUmschalter'
 import { wahlAusCookieText, type Design } from '@/lib/vorschau'
@@ -46,11 +45,9 @@ export default function SiteChrome({
     <div className="site">
       <DesignUmschalter pfad={pathname ?? '/'} />
       <div className="chrome-standard"><Navbar /></div>
-      <div className="chrome-a"><NavbarA /></div>
       <div className="chrome-b"><NavbarB /></div>
       <main>{children}</main>
       <div className="chrome-standard">{footer}</div>
-      <div className="chrome-a">{vorschauFooter.a}</div>
       <div className="chrome-b">{vorschauFooter.b}</div>
       <SeitenLeiste />
       <CookieBanner />

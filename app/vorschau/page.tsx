@@ -17,13 +17,13 @@ export default function VorschauPage() {
         <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">Neue Website</div>
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">DESIGN-VORSCHAU</h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#6b6b6b]">
-          Zwei Entwürfe in unseren Vereinsfarben Schwarz-Weiß. Wähle ein Design und klick dich durch die ganze
-          Website – mit allen echten Inhalten. Oben auf jeder Seite kannst du jederzeit zwischen den Entwürfen und
-          dem aktuellen Design wechseln. Für alle anderen Besucher*innen ändert sich nichts.
+          Ein neuer Entwurf für unsere Website. Schalte ihn ein und klick dich durch die ganze Website – mit allen
+          echten Inhalten. Oben auf jeder Seite kannst du jederzeit zwischen dem Entwurf und dem aktuellen Design
+          wechseln. Für alle anderen Besucher*innen ändert sich nichts.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[#0a0a0a]/10">
+      <div className="grid grid-cols-1 gap-px bg-[#0a0a0a]/10">
         {designs.map(([design, info]) => (
           // Normaler Link statt next/link: Das Umschalten braucht einen vollen Seitenaufruf.
           <a

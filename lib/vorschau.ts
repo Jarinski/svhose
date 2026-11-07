@@ -7,7 +7,7 @@
  * - Ein kleines Skript im <head> (designSkript) setzt daraus data-design am <html>-Element,
  *   bevor die Seite gezeichnet wird, und lädt die Schriften des Designs nach.
  * - Navigation und Footer sind für jedes Design vorgerendert und werden per CSS (app/vorschau.css)
- *   ein- und ausgeblendet; die Unterseiten passen sich über app/vorschau-a.css bzw. -b.css an.
+ *   ein- und ausgeblendet; die Unterseiten passen sich über app/vorschau-b.css an.
  * - Die Startseite wählt ihr Design serverseitig (lib/vorschau-server.ts).
  *
  * Diese Datei enthält nur Typen und reine Hilfsfunktionen – sie darf auch in Client-Komponenten.
@@ -18,12 +18,6 @@ import type { NewsPost, SparteUebersicht, Termin } from '@/lib/content'
 // ─── Designs ─────────────────────────────────────────────────────────────────
 
 export const DESIGNS = {
-  a: {
-    name: 'Matchday',
-    beschreibung: 'Dunkel und sportlich – wie die Website eines Profivereins in Schwarz-Weiß.',
-    schriften:
-      'https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..900;1,62..125,300..900&display=swap',
-  },
   b: {
     name: 'Bento',
     beschreibung: 'Hell und freundlich – abgerundete Kacheln für Familien und Breitensport.',
@@ -43,7 +37,7 @@ export const DESIGN_COOKIE = 'svhs_design_vorschau'
 export const DESIGN_COOKIE_MAX_ALTER = 60 * 60 * 24 * 30
 
 export function alsDesign(wert: string | null | undefined): Design | null {
-  return wert === 'a' || wert === 'b' ? wert : null
+  return wert === 'b' ? wert : null
 }
 
 export function alsVorschauWahl(wert: string | null | undefined): VorschauWahl | null {
@@ -69,7 +63,7 @@ export function designSkript(): string {
   const schriften = Object.fromEntries(Object.entries(DESIGNS).map(([d, info]) => [d, info.schriften]))
   return `(function(){try{
 if(location.pathname.indexOf('/verwaltung')===0)return;
-var m=document.cookie.match(/(?:^|; )${DESIGN_COOKIE}=(a|b|aktuell)(?:;|$)/);
+var m=document.cookie.match(/(?:^|; )${DESIGN_COOKIE}=(b|aktuell)(?:;|$)/);
 if(!m)return;
 document.documentElement.setAttribute('data-design',m[1]);
 var s=${JSON.stringify(schriften)}[m[1]];
