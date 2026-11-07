@@ -21,6 +21,7 @@
   display: inline-block;
   font-style: normal;
   filter: var(--b-emoji);
+  transition: filter .25s;
 }
 
 /* kräftiger für helle Emojis wie ✉️ und 💬 */
@@ -28,6 +29,17 @@
   display: inline-block;
   font-style: normal;
   filter: var(--b-emoji-stark);
+  transition: filter .25s;
+}
+
+/* Beim Darüberfahren (oder per Tastatur) werden die Icons einer Karte, eines Links oder Buttons bunt */
+:is(.karte, a, button):is(:hover, :focus-visible) :is(.emo, .emoStark) {
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emo,
+  .emoStark { transition: none; }
 }
 
 /* Nur für Screenreader */

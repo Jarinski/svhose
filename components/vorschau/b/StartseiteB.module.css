@@ -838,15 +838,31 @@
   transition: opacity .2s, transform .2s;
 }
 
-.kontaktLinks a:hover {
+/* Farbe des Icons beim Darüberfahren – sonst bleibt alles schwarz-weiß wie im übrigen Design */
+.whatsapp { --kontakt-farbe: #25d366; }
+.telefon { --kontakt-farbe: #3b82f6; }
+.mail { --kontakt-farbe: #f97316; }
+
+.kontaktLinks a:hover,
+.kontaktLinks a:focus-visible {
   background: var(--b-ink);
   color: #fff;
   box-shadow: inset 0 0 0 1px var(--b-ink);
 }
 
-.kontaktLinks a:hover::after {
+.kontaktLinks a:hover::after,
+.kontaktLinks a:focus-visible::after {
   opacity: 1;
   transform: translateX(3px);
+}
+
+/* Das Icon wird bunt: farbige Kachel, Emoji ohne Graufilter */
+.kontaktLinks a:is(:hover, :focus-visible) > span:first-child {
+  background: var(--kontakt-farbe, var(--b-grau));
+}
+
+.kontaktLinks a:is(:hover, :focus-visible) i {
+  filter: none;
 }
 
 .kontaktLinks a > span:first-child {
@@ -859,6 +875,7 @@
   font-size: 16px;
   line-height: 1;
   background: var(--b-grau);
+  transition: background .2s;
 }
 
 /* ── Responsive ── */

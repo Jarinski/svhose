@@ -390,6 +390,19 @@ html[data-design="b"] .site main .w-\[512px\] > span {
   filter: var(--b-emoji);
 }
 
+/* Beim Darüberfahren werden die grauen Icons bunt: Spartenkarten (ganze Karte), Sparten-Kopf, Platzhalter */
+html[data-design="b"] .site main .pl-6[style*="border-left"] > .text-5xl,
+html[data-design="b"] .site main .w-16.h-16[style*="background"],
+html[data-design="b"] .site main .w-\[512px\] > span {
+  transition: filter .25s;
+}
+
+html[data-design="b"] .site main .pl-6[style*="border-left"] > .text-5xl:hover,
+html[data-design="b"] .site main :is(a, .group):is(:hover, :focus-visible) .w-16.h-16[style*="background"],
+html[data-design="b"] .site main .w-\[512px\]:hover > span {
+  filter: none;
+}
+
 @media (max-width: 640px) {
   html[data-design="b"] .site main .flex:has(> .w-\[512px\]) { flex-direction: column; }
   html[data-design="b"] .site main .w-\[512px\].h-\[320px\] { width: 100%; }
@@ -519,6 +532,11 @@ html[data-design="b"] .site main .space-y-px:is(.opacity-50, .opacity-60) > .bg-
 /* ── Emojis im Text entsättigen (Titel, Teaser, Beiträge) – Absätze mit Bildern bleiben farbig ── */
 html[data-design="b"] .site main :is(h1, h2, h3, h4, p, li, blockquote):not(:has(img, picture, video)) {
   filter: grayscale(1);
+}
+
+/* … in Links (z. B. News-Karten) werden sie beim Darüberfahren bunt */
+html[data-design="b"] .site main a:is(:hover, :focus-visible) :is(h1, h2, h3, h4, p, li, blockquote) {
+  filter: none;
 }
 
 /* ── Textseiten, News-Beitrag, Markdown ─────────────────────────────────── */

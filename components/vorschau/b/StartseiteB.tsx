@@ -304,16 +304,16 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
             <div id="kontakt" className={`${b.karte} ${s.kontakt}`}>
               <h2 className={s.kachelTitel}>Fragen? Schreib uns.</h2>
               <div className={s.kontaktLinks}>
-                <a href="https://wa.me/491722970187" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/491722970187" target="_blank" rel="noopener noreferrer" className={s.whatsapp}>
                   <span aria-hidden="true"><i className={b.emoStark}>💬</i></span>
                   WhatsApp
                   <span className={b.sr}> (öffnet in neuem Tab)</span>
                 </a>
-                <a href="tel:+491722970187">
+                <a href="tel:+491722970187" className={s.telefon}>
                   <span aria-hidden="true"><i className={b.emoStark}>📞</i></span>
                   +49 172 2970187
                 </a>
-                <a href="mailto:info@sv-holm-seppensen.de">
+                <a href="mailto:info@sv-holm-seppensen.de" className={s.mail}>
                   <span aria-hidden="true"><i className={b.emoStark}>✉️</i></span>
                   info@sv-holm-seppensen.de
                 </a>
