@@ -7,8 +7,9 @@
  * beim Scrollen unter der Navigation stehen (sticky), oben liegt ein Zahlenstrahl mit allen Jahren.
  * Von Halt zu Halt fährt die "Kamera" den Strahl entlang, zoomt dabei heraus und am nächsten Jahr
  * wieder hinein: Fotos und Text wachsen aus der Markierung auf dem Strahl in die Mitte, beim
- * Weiterscrollen fliegen sie nach vorn hinaus. Ein Klick auf ein Jahr im Strahl springt dorthin,
- * ein Klick auf ein Foto öffnet die Großansicht mit allen Fotos des Halts.
+ * Weiterscrollen fliegen sie nach vorn hinaus. Bleibt das Scrollen mitten in einem Übergang
+ * stehen, rastet die Seite am nächsten Jahr in Scrollrichtung ein. Ein Klick auf ein Jahr im Strahl
+ * springt dorthin, ein Klick auf ein Foto öffnet die Großansicht mit allen Fotos des Halts.
  *
  * Woher die Jahre kommen – ein eigenes Feld braucht es nicht:
  * - Stationen: aus der Zeitangabe ("2013", "Oktober 2017"). "Heute" ist das laufende Jahr, Stationen
@@ -603,9 +604,59 @@ export default function ZeitZoom({
       messen()
       zeichnen()
     }
+
+    // ── Einrasten: Endet das Scrollen mitten in einem Übergang, fährt die Seite zum nächsten Halt in
+    // Scrollrichtung (ohne Richtung zum nächstgelegenen). In den Ruhezonen der Halte passiert nichts.
+    const fortschritt = () => {
+      const weg = sektion.offsetHeight - buehne.offsetHeight
+      return weg > 0 ? ((oben - sektion.getBoundingClientRect().top) / weg) * (n - 1) : -1
+    }
+    let richtung = 0
+    let zuletzt = fortschritt()
+    let beruehrt = false
+    let ruhe = 0
+    // scrollend kommt erst, wenn Finger, Schwung und weiches Scrollen fertig sind; sonst eine kurze Pause abwarten
+    const mitScrollend = 'onscrollend' in window
+    const einrasten = () => {
+      if (beruehrt) return
+      const roh = fortschritt()
+      if (roh <= 0 || roh >= n - 1) return
+      const i = Math.floor(roh)
+      const f = roh - i
+      if (f <= HALT || f >= 1 - HALT) return
+      const ziel = richtung > 0 ? i + 1 : richtung < 0 ? i : Math.round(roh)
+      const weg = sektion.offsetHeight - buehne.offsetHeight
+      const start = window.scrollY + sektion.getBoundingClientRect().top - oben
+      window.scrollTo({ top: start + (weg * ziel) / (n - 1), behavior: 'smooth' })
+    }
+    const spaeterEinrasten = () => {
+      window.clearTimeout(ruhe)
+      ruhe = window.setTimeout(einrasten, 140)
+    }
+    const beimScrollen = () => {
+      zeichnen()
+      const jetzt = fortschritt()
+      if (Math.abs(jetzt - zuletzt) > 1e-4) richtung = Math.sign(jetzt - zuletzt)
+      zuletzt = jetzt
+      if (!mitScrollend) spaeterEinrasten()
+    }
+    const fingerAuf = () => {
+      beruehrt = true
+      window.clearTimeout(ruhe)
+    }
+    const fingerWeg = () => {
+      beruehrt = false
+      if (!mitScrollend) spaeterEinrasten()
+    }
+
     neuMessen()
+    zuletzt = fortschritt()
     buehne.setAttribute('data-bereit', '')
-    window.addEventListener('scroll', zeichnen, { passive: true })
+    window.addEventListener('scroll', beimScrollen, { passive: true })
+    if (mitScrollend) window.addEventListener('scrollend', einrasten)
+    window.addEventListener('touchstart', fingerAuf, { passive: true })
+    window.addEventListener('touchend', fingerWeg, { passive: true })
+    window.addEventListener('touchcancel', fingerWeg, { passive: true })
     window.addEventListener('resize', neuMessen)
     const beobachter = new ResizeObserver(neuMessen)
     beobachter.observe(buehne)
@@ -615,7 +666,12 @@ export default function ZeitZoom({
       if (text) beobachter.observe(text)
     })
     return () => {
-      window.removeEventListener('scroll', zeichnen)
+      window.removeEventListener('scroll', beimScrollen)
+      window.removeEventListener('scrollend', einrasten)
+      window.removeEventListener('touchstart', fingerAuf)
+      window.removeEventListener('touchend', fingerWeg)
+      window.removeEventListener('touchcancel', fingerWeg)
+      window.clearTimeout(ruhe)
       window.removeEventListener('resize', neuMessen)
       beobachter.disconnect()
       buehne.removeAttribute('data-bereit')
