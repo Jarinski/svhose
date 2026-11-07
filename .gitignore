@@ -36,3 +36,5 @@ next-env.d.ts
 
 # lokale Datenbank, Medien und Importdaten (enthalten personenbezogene Daten – nie committen)
 /data/
+# Export der alten Vereinsheim-Belegung (enthält Namen von Privatpersonen)
+/Vereinsheimbelegung.xlsx
