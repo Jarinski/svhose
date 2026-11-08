@@ -1,4 +1,6 @@
+import { after } from 'next/server'
 import { getAllNews, getTermine, getSparten, getMannschaftenAnzahl } from '@/lib/content'
+import { instagramAbgleichen, instagramAbgleichFaellig, instagramFotos } from '@/lib/instagram'
 import StartseiteB from '@/components/vorschau/b/StartseiteB'
 import { heuteInBerlin } from '@/lib/vorschau'
 
@@ -13,12 +15,17 @@ export default async function HomePage() {
     getMannschaftenAnzahl(),
   ])
 
+  // Neue Instagram-Beiträge holt die Seite im Hintergrund, höchstens stündlich (lib/instagram.ts) –
+  // dieser Aufruf zeigt noch den alten Stand, der nächste den neuen.
+  if (instagramAbgleichFaellig()) after(() => instagramAbgleichen())
+
   const heute = heuteInBerlin()
   const daten = {
     news,
     termine: termine.filter(t => t.datum >= heute),
     sparten,
     zahlen: { sparten: sparten.length, mannschaften },
+    instagram: instagramFotos(),
     heute,
   }
   return <StartseiteB daten={daten} />

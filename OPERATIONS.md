@@ -84,7 +84,7 @@ flowchart LR
 
 | Variable | Pflicht | Standard | Zweck | Sensibilität |
 |---|---|---|---|---|
-| `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>`. Außerdem Schlüssel für das in der Verwaltung gespeicherte SMTP-Passwort (`lib/verwaltung/geheimnis.ts`): Nach einem Wechsel muss es unter `/verwaltung/e-mail` neu eingetragen werden | **hoch** |
+| `CRON_SECRET` | **ja (Produktion)** | – | Absicherung von `/api/cron/*` per `Authorization: Bearer <secret>`. Außerdem Schlüssel für das in der Verwaltung gespeicherte SMTP-Passwort und den Instagram-Zugangsschlüssel (`lib/verwaltung/geheimnis.ts`): Nach einem Wechsel müssen sie unter `/verwaltung/e-mail` bzw. `/verwaltung/instagram` neu eingetragen werden | **hoch** |
 | `DATENBANK_PFAD` | nein | `data/svhs.db` | Pfad der SQLite-Datei; auch von `drizzle.config.ts` genutzt | niedrig |
 | `MEDIEN_PFAD` | nein | `data/medien` | Medienordner | niedrig |
 | `SMTP_HOST`, `SMTP_PORT` | nein | Port `587` | nur als Ausweg: SMTP-Server des Buchungs-Postfachs; `587` = STARTTLS (Pflicht), `465` = TLS (von Hetzner ausgehend gesperrt). Normalerweise tragen Admins den Zugang unter `/verwaltung/e-mail` ein | niedrig |
@@ -128,6 +128,7 @@ CRON_SECRET=hier-das-secret-aus-der-env-datei
 0 4 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-fussball
 0 5 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/sync-tischtennis
 */5 * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/postfach >/dev/null
+23 * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://127.0.0.1:3000/api/cron/instagram >/dev/null
 30 3 * * * /usr/local/bin/svhs-backup.sh
 ```
 
@@ -154,6 +155,15 @@ CRON_SECRET=hier-das-secret-aus-der-env-datei
 Beide Jobs löschen gar nichts, wenn mehr als die Hälfte der Termine im Fenster verschwinden würde.
 Die JSON-Antwort enthält dann `loeschenUebersprungen: true`, und das Log zeigt eine Warnung.
 Details: `CONTENT_FLOW.md`, Abschnitt 2.
+
+3. `GET /api/cron/instagram` (stündlich, optional)
+   - holt die drei neuesten Beiträge von @svholmseppensen über die Instagram API und legt die Bilder
+     quadratisch als WebP unter `<MEDIEN_PFAD>/instagram/` ab (`lib/instagram.ts`); ältere fliegen raus
+   - verlängert dabei den Zugangsschlüssel (gilt 60 Tage), den Admins unter `/verwaltung/instagram`
+     eintragen – verschlüsselt mit `CRON_SECRET` wie das SMTP-Passwort
+   - ohne Cron gleicht die Startseite selbst ab (im Hintergrund, höchstens stündlich); der Cron hält
+     den Schlüssel auch dann frisch, wenn wochenlang niemand die Seite aufruft
+   - nicht verbunden ⇒ `uebersprungen`; Fehler ⇒ HTTP 502, die Startseite zeigt weiter den letzten Stand
 
 ### 3.3 Authentifizierung
 
@@ -721,6 +731,7 @@ SEITEN_URL=https://www.<vereinsdomain>.de npm run verwaltung:admin -- "Vorname N
 - `scripts/verwaltung-admin.ts`
 - `app/api/cron/sync-fussball/route.ts`
 - `app/api/cron/sync-tischtennis/route.ts`
+- `app/api/cron/instagram/route.ts`, `lib/instagram.ts`
 - `lib/fussball-de.ts`
 - `lib/click-tt.ts`
 - `.env.local.example`

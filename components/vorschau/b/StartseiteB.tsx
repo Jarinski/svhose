@@ -24,6 +24,9 @@ import s from './StartseiteB.module.css'
 /** Symbole für die Kacheln des Fördervereins, in der Reihenfolge von FOERDERVEREIN_MENUE */
 const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝', '💶']
 
+/** Solange Instagram nicht verbunden ist (oder nichts abgerufen wurde): Fotos aus dem Verein. */
+const INSTA_PLATZHALTER = ['/images/girls.webp', '/images/U15.jpeg', '/images/kids.webp']
+
 const PFEIL = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -31,7 +34,7 @@ const PFEIL = (
 )
 
 export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
-  const { news, termine, sparten, zahlen, heute } = daten
+  const { news, termine, sparten, zahlen, instagram, heute } = daten
 
   const auswahl = spartenAuswahl(sparten)
   const weitere = sparten.length - auswahl.length
@@ -42,6 +45,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
   const terminZeilen = anstehend.slice(0, 80).map(terminZeile)
   const neueste = news.slice(0, 3)
   const fvNews = news.find(n => istFoerderverein(n.category))
+  const instaFotos = instagram.length >= INSTA_PLATZHALTER.length ? instagram.map(f => f.bild) : INSTA_PLATZHALTER
   const iconZuName = new Map(sparten.filter(sp => sp.icon).map(sp => [sp.name, sp.icon]))
 
   const zahlenText = [
@@ -295,7 +299,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
                 <span className={b.sr}> (öffnet in neuem Tab)</span>
               </p>
               <div className={s.fotos}>
-                {['/images/girls.webp', '/images/U15.jpeg', '/images/kids.webp'].map(src => (
+                {instaFotos.map(src => (
                   <Image key={src} src={src} alt="" width={240} height={240} sizes="(max-width: 720px) 30vw, (max-width: 1100px) 32vw, 140px" />
                 ))}
               </div>

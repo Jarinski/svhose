@@ -8,6 +8,7 @@
  */
 
 import type { NewsPost, SparteUebersicht, Termin } from '@/lib/content'
+import type { InstagramFoto } from '@/lib/instagram'
 
 // ─── Daten für die Startseite ────────────────────────────────────────────────
 
@@ -19,6 +20,8 @@ export interface StartseitenDaten {
   /** Sichtbare Sparten in gepflegter Reihenfolge */
   sparten: SparteUebersicht[]
   zahlen: { sparten: number; mannschaften: number }
+  /** Neueste Instagram-Beiträge (lib/instagram.ts); leer, solange nichts abgerufen ist */
+  instagram: InstagramFoto[]
   /** Heutiges Datum in Europe/Berlin, "YYYY-MM-DD" */
   heute: string
 }
