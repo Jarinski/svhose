@@ -99,6 +99,16 @@
       ],
       "port": 3667,
       "url": "http://127.0.0.1:3667"
+    },
+    {
+      "name": "karten-farbe-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-3lwSke/09f28ed3-da30-4b5f-84e4-1b20c14fdfd2/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" && exec npx next dev -H 127.0.0.1 -p 3668"
+      ],
+      "port": 3668,
+      "url": "http://127.0.0.1:3668"
     }
   ]
 }
