@@ -109,6 +109,16 @@
       ],
       "port": 3668,
       "url": "http://127.0.0.1:3668"
+    },
+    {
+      "name": "instagram-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-FmXJqO/3c9fb096-72dd-4c51-90cd-ef55d771e140/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien CRON_SECRET=nur-fuer-die-testkopie && exec npx next dev -H 127.0.0.1 -p 3671"
+      ],
+      "port": 3671,
+      "url": "http://127.0.0.1:3671"
     }
   ]
 }
