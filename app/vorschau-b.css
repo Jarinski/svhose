@@ -529,8 +529,8 @@ html[data-design="b"] .site main .space-y-px:is(.opacity-50, .opacity-60) > .bg-
   }
 }
 
-/* ── Emojis im Text entsättigen (Titel, Teaser, Beiträge) – Absätze mit Bildern bleiben farbig ── */
-html[data-design="b"] .site main :is(h1, h2, h3, h4, p, li, blockquote):not(:has(img, picture, video)) {
+/* ── Emojis im Text entsättigen (Titel, Teaser, Beiträge) – Absätze mit Bildern oder Karten bleiben farbig ── */
+html[data-design="b"] .site main :is(h1, h2, h3, h4, p, li, blockquote):not(:has(img, picture, video, iframe)) {
   filter: grayscale(1);
 }
 
