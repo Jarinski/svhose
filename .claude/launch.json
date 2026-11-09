@@ -119,6 +119,16 @@
       ],
       "port": 3671,
       "url": "http://127.0.0.1:3671"
+    },
+    {
+      "name": "foerderverein-einstieg-test",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "S=/private/tmp/claude-501/-Users-jari--claude-spares-spare-FEEEmE/4c42f217-3939-4771-ab04-aa74d43baefa/scratchpad && cd $S/svhose-test && export PATH=\"$HOME/.nvm/versions/node/v26.13.0/bin:$PATH\" DATENBANK_PFAD=$S/test/svhs.db MEDIEN_PFAD=$S/test/medien && exec npx next dev -H 127.0.0.1 -p 3661"
+      ],
+      "port": 3661,
+      "url": "http://127.0.0.1:3661"
     }
   ]
 }
