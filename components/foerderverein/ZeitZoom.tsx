@@ -11,13 +11,10 @@
  * stehen, rastet die Seite am nächsten Jahr in Scrollrichtung ein. Ein Klick auf ein Jahr im Strahl
  * springt dorthin, ein Klick auf ein Foto öffnet die Großansicht mit allen Fotos des Halts.
  *
- * Woher die Jahre kommen – ein eigenes Feld braucht es nicht:
- * - Stationen: aus der Zeitangabe ("2013", "Oktober 2017"). "Heute" ist das laufende Jahr, Stationen
- *   ohne Jahr ("Die Idee") liegen zwischen ihren Nachbarn und tragen ihre Zeitangabe auf dem Strahl.
- * - Fotos: aus den Bildergalerien der Seite (`fotos`, auch aus ausgeblendeten), jedes beim Jahr in
- *   seiner Bildunterschrift ("2017 Bauschild", "Stadtfest 2025"). Gibt es zu dem Jahr eine Station,
- *   kommen die Fotos zu ihr (bei mehreren zur am besten passenden), sonst wird das Jahr ein eigener
- *   Halt. Fotos ohne Jahr bleiben draußen.
+ * Jeder Halt ist eine Station der Zeitleiste mit ihrem eigenen Foto – Bildergalerien der Seite sind
+ * eigene Bausteine und kommen hier nicht hinein. Das Jahr steht in der Zeitangabe ("2013",
+ * "Oktober 2017"), ein eigenes Feld braucht es nicht. "Heute" ist das laufende Jahr, Stationen ohne
+ * Jahr ("Die Idee") liegen zwischen ihren Nachbarn und tragen ihre Zeitangabe auf dem Strahl.
  *
  * Gerechnet wird direkt im Scroll-Ereignis und nur über Styles per Ref – React rendert beim Scrollen
  * nicht neu (außer beim Wechsel des aktiven Halts). Wer weniger Bewegung eingestellt hat, auf sehr
@@ -37,12 +34,6 @@ export interface ZoomStation {
   bild: AnzeigeBild | null
 }
 
-/** Foto aus einer Bildergalerie der Seite. */
-export interface ZoomFoto {
-  bild: AnzeigeBild | null
-  unterschrift: string
-}
-
 export interface StrahlPunkt {
   /** Lage auf dem Strahl (bei geschätzten Stationen auch krumm). */
   jahr: number
@@ -54,13 +45,11 @@ export interface StrahlPunkt {
 
 interface HaltFoto {
   bild: AnzeigeBild
-  /** vollständig, für Großansicht und Alternativtext */
+  /** für Großansicht und Alternativtext */
   unterschrift: string
-  /** kurz und ohne Jahr, als Schildchen auf dem Foto ("" = keins) */
-  etikett: string
 }
 
-/** Ein Halt auf dem Strahl: eine Station mit ihren Fotos – oder ein Jahr, zu dem es nur Fotos gibt. */
+/** Ein Halt auf dem Strahl: eine Station mit ihrem Foto. */
 interface Halt {
   schluessel: string
   zeit: string
@@ -75,14 +64,6 @@ const HEUTE = /^\s*(heute|jetzt|aktuell)(?![a-zäöüß])/i
 function jahrIn(text: string): number | null {
   const treffer = JAHR.exec(text)
   return treffer ? Number(treffer[2]) : null
-}
-
-/** Bildunterschrift ohne ihre Jahreszahl: "2024EWE Aktion" → "EWE Aktion", "Stadtfest 2025" → "Stadtfest". */
-export function ohneJahr(text: string): string {
-  return text
-    .replace(JAHR, '$1 ')
-    .replace(/\s+/g, ' ')
-    .replace(/^[\s\-–—:,.]+|[\s\-–—:,.]+$/g, '')
 }
 
 /**
@@ -116,84 +97,15 @@ export function strahlPunkte(zeiten: string[], diesesJahr: number): { punkte: St
   }
 }
 
-/**
- * Wie viele Wörter (ab vier Buchstaben) der Bildunterschrift im Text vorkommen – verglichen über
- * den Wortanfang, damit "entsteht" auch "entstehen" trifft.
- */
-function gemeinsameWoerter(unterschrift: string, text: string): number {
-  const heuhaufen = text.toLowerCase()
-  return (unterschrift.toLowerCase().match(/[a-zäöüß]{4,}/g) ?? []).filter(wort => heuhaufen.includes(wort.slice(0, 6))).length
-}
-
-/** Stationen und Galerie-Fotos zu Halten zusammenführen (siehe Kopf der Datei). */
-export function halteBilden(eintraege: ZoomStation[], fotos: ZoomFoto[], diesesJahr: number): Halt[] {
-  const { punkte, mitJahren } = strahlPunkte(
-    eintraege.map(e => e.zeit),
-    diesesJahr,
-  )
-  const halte = eintraege.map((e, i) => ({
+/** Die Stationen als Halte, jede mit ihrem eigenen Foto. */
+export function halteBilden(eintraege: ZoomStation[]): Halt[] {
+  return eintraege.map((e, i) => ({
     schluessel: e.schluessel ?? `s${i}`,
     zeit: e.zeit,
     titel: e.titel,
     text: e.text,
-    fotos: e.bild ? [{ bild: e.bild, unterschrift: e.titel, etikett: '' }] : ([] as HaltFoto[]),
-    jahr: punkte[i].jahr,
-    genau: !punkte[i].geschaetzt,
+    fotos: e.bild ? [{ bild: e.bild, unterschrift: e.titel }] : [],
   }))
-
-  // Fotos je Jahr, in der Reihenfolge der Galerie
-  const gruppen = new Map<number, HaltFoto[]>()
-  for (const f of fotos) {
-    const jahr = jahrIn(f.unterschrift)
-    if (!f.bild || jahr === null) continue
-    gruppen.set(jahr, [...(gruppen.get(jahr) ?? []), { bild: f.bild, unterschrift: f.unterschrift, etikett: ohneJahr(f.unterschrift) }])
-  }
-
-  for (const jahr of [...gruppen.keys()].sort((a, b) => a - b)) {
-    const liste = gruppen.get(jahr) as HaltFoto[]
-    const passend = halte.filter(h => h.genau && h.jahr === jahr)
-    if (passend.length === 1) {
-      passend[0].fotos.push(...liste)
-      continue
-    }
-    if (passend.length > 1) {
-      // Mehrere Stationen im selben Jahr: jedes Foto zu der, mit der seine Unterschrift die meisten
-      // Wörter teilt ("2018 Baltic Sea Circle" → die Station über den Baltic Sea Circle); sonst zu der
-      // mit den wenigsten Fotos
-      for (const foto of liste) {
-        let beste = passend[0]
-        let besteWertung = -1
-        for (const h of passend) {
-          const wertung = gemeinsameWoerter(foto.etikett, `${h.titel} ${h.text}`) * 100 - h.fotos.length
-          if (wertung > besteWertung) {
-            beste = h
-            besteWertung = wertung
-          }
-        }
-        beste.fotos.push(foto)
-      }
-      continue
-    }
-    // eigener Halt: hinter die letzte Station, die nicht später liegt
-    let stelle = halte.length
-    if (mitJahren) {
-      stelle = 0
-      halte.forEach((h, i) => {
-        if (h.jahr <= jahr) stelle = i + 1
-      })
-    }
-    halte.splice(stelle, 0, {
-      schluessel: `j${jahr}`,
-      zeit: String(jahr),
-      titel: liste[0].etikett,
-      text: '',
-      // die erste Unterschrift steht schon als Titel da
-      fotos: liste.map((f, k) => (k === 0 ? { ...f, etikett: '' } : f)),
-      jahr,
-      genau: true,
-    })
-  }
-  return halte.map(({ schluessel, zeit, titel, text, fotos }) => ({ schluessel, zeit, titel, text, fotos }))
 }
 
 // ─── Bewegung ───────────────────────────────────────────────────────────────
@@ -373,7 +285,7 @@ function HaltKarte({ halt, titelTag: Titel, onFoto }: { halt: Halt; titelTag: 'h
                   {/* Bilder liegen schon verkleinert im Medienordner – normales <img> wie im übrigen Seitenaufbau */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={f.bild.src} alt={f.unterschrift} width={f.bild.breite || undefined} height={f.bild.hoehe || undefined} decoding="async" />
-                  {plus ? <span className={s.mehr}>+{mehr}</span> : f.etikett && <span className={s.etikett}>{f.etikett}</span>}
+                  {plus && <span className={s.mehr}>+{mehr}</span>}
                 </button>
               </div>
             )
@@ -391,20 +303,17 @@ function HaltKarte({ halt, titelTag: Titel, onFoto }: { halt: Halt; titelTag: 'h
 
 export default function ZeitZoom({
   eintraege,
-  fotos,
   titelTag,
   kopf,
 }: {
   eintraege: ZoomStation[]
-  /** Fotos aus den Bildergalerien der Seite – einsortiert nach dem Jahr in der Bildunterschrift */
-  fotos: ZoomFoto[]
   /** h2 ohne Überschrift über der Zeitleiste, sonst h3 */
   titelTag: 'h2' | 'h3'
   /** Überschrift über der Zeitleiste (oder null) */
   kopf: ReactNode
 }) {
   const diesesJahr = new Date().getFullYear()
-  const halte = halteBilden(eintraege, fotos, diesesJahr)
+  const halte = halteBilden(eintraege)
   const n = halte.length
   const { punkte, mitJahren } = strahlPunkte(
     halte.map(h => h.zeit),

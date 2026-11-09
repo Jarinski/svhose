@@ -143,6 +143,7 @@ erDiagram
     int id PK
     int person_id FK
     text bezeichnung
+    text aufgabe
     int reihenfolge
     bool eigene_kontaktdaten
     text telefon
@@ -431,7 +432,8 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 |---|---|---|---|---|
 | `id` | integer | ja | automatisch | Primärschlüssel |
 | `person_id` | integer | ja | – | → `personen.id` |
-| `bezeichnung` | text | ja | – | Funktion, z. B. „1. Vorsitzender“ oder „Kassenwartin“ |
+| `bezeichnung` | text | ja | – | Amt im Vorstand, z. B. „1. Vorsitzender“ oder „Kassenwartin“ |
+| `aufgabe` | text | nein | – | Wofür die Person zuständig ist, z. B. „Festivitäten“ oder „Bandenwerbung“ (in der Verwaltung das Feld „Funktion“; seit 0010) |
 | `reihenfolge` | integer | ja | `0` | Reihenfolge auf der Vorstandsseite |
 | `eigene_kontaktdaten` | boolean | ja | `false` | Statt Telefon und E-Mail der Person die beiden Felder darunter zeigen |
 | `telefon` | text | nein | – | Telefon für die Förderverein-Seite (nur mit `eigene_kontaktdaten`; leer = nicht anzeigen) |
@@ -547,7 +549,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 ## 3.11a seiten (frei gestaltete Seiten)
 
 - **Zweck**: Seiten, deren Inhalt **und** Aufbau komplett in der Verwaltung entstehen: die
-  Förderverein-Seiten Chronik, Aktuelles und Mitglied werden (`/foerderverein/<seite>`, bearbeitet unter
+  Förderverein-Seiten Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden (`/foerderverein/<seite>`, bearbeitet unter
   `/verwaltung/foerderverein-seiten` von Admins und Zugängen mit Förderverein-Recht). Welche Seiten es
   gibt, steht mit Überschrift und Vorlage in `lib/foerderverein-seiten.ts`.
 - **Beziehungen**: keine Fremdschlüssel. Bilder stehen als relative Medienpfade im JSON-Dokument.

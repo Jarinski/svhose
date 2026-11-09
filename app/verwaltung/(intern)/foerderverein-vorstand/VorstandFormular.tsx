@@ -22,7 +22,10 @@ export interface VorstandZeile {
   /** Vorhandene Person – oder null bei einer neuen, die beim Speichern angelegt wird. */
   personId: number | null
   neu: NeuePersonDaten | null
+  /** Amt im Vorstand, z. B. "1. Vorsitzender" */
   bezeichnung: string
+  /** Feld "Funktion": wofür die Person zuständig ist, z. B. "Festivitäten" (leer = keine) */
+  aufgabe: string
   /** Doppelrolle: auf der Förderverein-Seite statt der Personendaten diese Telefonnummer und E-Mail zeigen. */
   eigene: boolean
   telefon: string
@@ -41,10 +44,19 @@ interface Props {
   gruppenfoto: { url: string; ausschnitt: Ausschnitt | null } | null
 }
 
-/** Vergleichbarer Stand – Funktionen ohne Leerzeichen am Rand, so wie sie gespeichert werden. */
+/** Vergleichbarer Stand – Amt und Funktion ohne Leerzeichen am Rand, so wie sie gespeichert werden. */
 function vergleichsStand(zeilen: VorstandZeile[]): string {
   return JSON.stringify(
-    zeilen.map(z => [z.id, z.personId, z.neu?.name ?? null, z.bezeichnung.trim(), z.eigene, z.eigene ? z.telefon.trim() : '', z.eigene ? z.email.trim() : '']),
+    zeilen.map(z => [
+      z.id,
+      z.personId,
+      z.neu?.name ?? null,
+      z.bezeichnung.trim(),
+      z.aufgabe.trim(),
+      z.eigene,
+      z.eigene ? z.telefon.trim() : '',
+      z.eigene ? z.email.trim() : '',
+    ]),
   )
 }
 
@@ -65,7 +77,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
   const zaehler = useRef(0)
   const personNachId = new Map(personen.map(p => [p.id, p] as const))
 
-  // Nach dem Hinzufügen gleich ins Feld "Funktion" – erst im nächsten Takt, weil PersonAuswahl den Fokus
+  // Nach dem Hinzufügen gleich ins Feld "Amt" – erst im nächsten Takt, weil PersonAuswahl den Fokus
   // beim Schließen auf ihren Knopf zurücksetzt.
   useEffect(() => {
     if (!fokus) return
@@ -79,7 +91,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
   function hinzufuegen(personId: number | null, neu: NeuePersonDaten | null) {
     zaehler.current += 1
     const schluessel = `neu${zaehler.current}`
-    setZeilen(zeilen.concat({ schluessel, id: null, personId, neu, bezeichnung: '', eigene: false, telefon: '', email: '' }))
+    setZeilen(zeilen.concat({ schluessel, id: null, personId, neu, bezeichnung: '', aufgabe: '', eigene: false, telefon: '', email: '' }))
     setFokus(schluessel)
   }
 
@@ -88,6 +100,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
     personId: z.personId,
     neu: z.neu,
     bezeichnung: z.bezeichnung,
+    aufgabe: z.aufgabe,
     eigeneKontaktdaten: z.eigene,
     telefon: z.eigene ? z.telefon : '',
     email: z.eigene ? z.email : '',
@@ -95,7 +108,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
   // Vergleich mit dem Stand beim Laden – nach dem Speichern startet der Editor ohnehin neu (key).
   const geaendert = fotoGeaendert || vergleichsStand(zeilen) !== vergleichsStand(start)
   useUngespeichertWarnung(geaendert)
-  const ohneFunktion = zeilen.filter(z => !z.bezeichnung.trim()).length
+  const ohneAmt = zeilen.filter(z => !z.bezeichnung.trim()).length
   const gespeichert = start.map(z => z.personId)
 
   return (
@@ -116,7 +129,7 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
         />
       </Karte>
 
-      <Karte titel="Vorstand" beschreibung="Diese Personen erscheinen mit Funktion, Foto, Telefon und E-Mail auf der Website – in dieser Reihenfolge.">
+      <Karte titel="Vorstand" beschreibung="Diese Personen erscheinen mit Amt, Funktion, Foto, Telefon und E-Mail auf der Website – in dieser Reihenfolge.">
         {zeilen.length === 0 ? (
           <p className="text-sm text-[#6b6b6b] mb-4">Noch niemand eingetragen. Bis dahin nennt die Website nur den Vorsitzenden {FOERDERVEREIN.vorsitz}.</p>
         ) : (
@@ -164,19 +177,34 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
                       onEntfernen={() => setZeilen(zeilen.filter((_, j) => j !== i))}
                     />
                   </div>
-                  <div className="mt-3 sm:max-w-sm">
-                    <label htmlFor={`${z.schluessel}-bez`} className="block text-sm font-medium mb-1.5">
-                      Funktion
-                    </label>
-                    <input
-                      id={`${z.schluessel}-bez`}
-                      required
-                      maxLength={60}
-                      value={z.bezeichnung}
-                      placeholder="z. B. 1. Vorsitzender"
-                      onChange={e => aendern(i, { bezeichnung: e.target.value })}
-                      className={eingabeKlasse}
-                    />
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:max-w-2xl">
+                    <div>
+                      <label htmlFor={`${z.schluessel}-bez`} className="block text-sm font-medium mb-1.5">
+                        Amt
+                      </label>
+                      <input
+                        id={`${z.schluessel}-bez`}
+                        required
+                        maxLength={60}
+                        value={z.bezeichnung}
+                        placeholder="z. B. 1. Vorsitzender"
+                        onChange={e => aendern(i, { bezeichnung: e.target.value })}
+                        className={eingabeKlasse}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`${z.schluessel}-aufgabe`} className="block text-sm font-medium mb-1.5">
+                        Funktion <span className="font-normal text-[#6b6b6b]">(optional)</span>
+                      </label>
+                      <input
+                        id={`${z.schluessel}-aufgabe`}
+                        maxLength={80}
+                        value={z.aufgabe}
+                        placeholder="z. B. Festivitäten, Bandenwerbung"
+                        onChange={e => aendern(i, { aufgabe: e.target.value })}
+                        className={eingabeKlasse}
+                      />
+                    </div>
                   </div>
                   {/* Neue Personen bekommen ihre Kontaktdaten schon beim Anlegen – eigene gibt es erst danach. */}
                   {!z.neu && (
@@ -261,9 +289,9 @@ function Editor({ stand, zeilen: start, personen, bearbeitbar, auchEingetragen, 
         ergebnis={ergebnis}
         knopfText="Vorstand speichern"
         zusatz={
-          ohneFunktion > 0 && (
+          ohneAmt > 0 && (
             <Meldung art="hinweis">
-              {ohneFunktion === 1 ? 'Bei einer Person fehlt noch die Funktion.' : `Bei ${ohneFunktion} Personen fehlt noch die Funktion.`}
+              {ohneAmt === 1 ? 'Bei einer Person fehlt noch das Amt.' : `Bei ${ohneAmt} Personen fehlt noch das Amt.`}
             </Meldung>
           )
         }

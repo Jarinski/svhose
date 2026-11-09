@@ -6,7 +6,7 @@ import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 export const foerdervereinSeiten: Thema = {
   slug: 'foerderverein-seiten',
   titel: 'Seiten des Fördervereins',
-  kurz: 'Chronik, Aktuelles und Mitglied werden selbst gestalten: Texte, Karten, Fotos und Knöpfe zusammenstellen und das Aussehen wählen.',
+  kurz: 'Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden selbst gestalten: Texte, Karten, Fotos und Knöpfe zusammenstellen und das Aussehen wählen.',
   icon: LayoutTemplate,
   zielgruppe: 'foerderverein',
   bereich: 'inhalte',
@@ -16,9 +16,9 @@ export const foerdervereinSeiten: Thema = {
     <>
       <Abschnitt titel="Wofür und wer darf?">
         <p>
-          Drei Seiten unter Förderverein auf der Website gestaltest du selbst, Inhalt und Aussehen: <Begriff>Chronik</Begriff>,{' '}
-          <Begriff>Aktuelles</Begriff> und <Begriff>Mitglied werden</Begriff>. <Begriff>Aktuelles</Begriff> ist dabei der Einstieg: Wer auf der
-          Website auf „Förderverein“ klickt, landet dort. Den Vorstand pflegst du nicht hier, sondern unter <Begriff>Vorstand (Förderverein)</Begriff>.
+          Vier Seiten unter Förderverein auf der Website gestaltest du selbst, Inhalt und Aussehen: <Begriff>Was ist der Förderverein</Begriff>,{' '}
+          <Begriff>Aktuelles</Begriff>, <Begriff>Chronik</Begriff> und <Begriff>Mitglied werden</Begriff>. <Begriff>Was ist der Förderverein</Begriff>{' '}
+          ist dabei der Einstieg: Wer auf der Website auf „Förderverein“ klickt, landet dort. Den Vorstand pflegst du nicht hier, sondern unter <Begriff>Vorstand (Förderverein)</Begriff>.
         </p>
         <p>
           Die Seiten bearbeiten Admins und Zugänge mit dem Recht <Begriff>Förderverein</Begriff>. Nur sie sehen im Menü den Punkt{' '}
@@ -97,9 +97,7 @@ export const foerdervereinSeiten: Thema = {
             (untereinander an einer Linie), <Begriff>Groß mit Fotos</Begriff> (Fotos abwechselnd links und rechts) oder{' '}
             <Begriff>Zahlenstrahl mit Zoom</Begriff>: Die Jahre stehen auf einem Strahl, beim Scrollen fährt die Seite von Jahr zu Jahr und zoomt
             in Foto und Text jeder Station hinein. Das Jahr kommt aus der Zeitangabe („2013“, „Oktober 2017“); „Heute“ ist das laufende Jahr,
-            Stationen ohne Jahr („Die Idee“) liegen zwischen ihren Nachbarn. Fotos holt der Zahlenstrahl auch aus den Bildergalerien der
-            Seite: jedes zu dem Jahr in seiner Bildunterschrift („2017 Bauschild“), Jahre ohne Station werden ein eigener Halt. Das gilt
-            auch für ausgeblendete Galerien – so stehen die Fotos nur im Zahlenstrahl.
+            Stationen ohne Jahr („Die Idee“) liegen zwischen ihren Nachbarn.
           </li>
           <li>
             Meldungen, <Begriff>Darstellung</Begriff>: <Begriff>Kacheln</Begriff> mit Bild oder kompakte <Begriff>Zeilen</Begriff>; dazu, ob alle

@@ -493,7 +493,7 @@
 
 .sparte:hover p { color: rgba(255, 255, 255, .65); }
 
-.sparten.foerder { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.sparten.foerder { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* News */
 .news {
@@ -879,7 +879,7 @@
 }
 
 /* ── Responsive ── */
-/* Förderverein: fünf Kacheln, darunter zwei pro Reihe; die letzte füllt dann die Reihe */
+/* Förderverein: drei Kacheln pro Reihe, darunter zwei; bei ungerader Zahl füllt die letzte die Reihe */
 @media (max-width: 1100px) {
   .sparten.foerder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sparten.foerder > :last-child:nth-child(odd) { grid-column: span 2; }

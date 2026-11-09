@@ -1,0 +1,1 @@
+ALTER TABLE `foerderverein_vorstand` ADD `aufgabe` text;

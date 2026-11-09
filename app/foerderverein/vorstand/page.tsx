@@ -53,6 +53,7 @@ export default async function FoerdervereinVorstandPage() {
                 <div className="min-w-0">
                   <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-2">{p.funktion}</div>
                   <h2 className="font-display text-2xl tracking-tight">{p.name}</h2>
+                  {p.aufgabe && <p className="mt-1 text-sm text-[#6b6b6b] leading-snug">{p.aufgabe}</p>}
                   {(p.email || p.telefon) && (
                     <div className="mt-4 flex flex-col gap-2 text-sm">
                       {p.email && (

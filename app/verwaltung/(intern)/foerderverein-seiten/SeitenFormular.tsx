@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Editor der Förderverein-Seiten (Chronik, Aktuelles, Mitglied werden): Einleitung und Bausteine
+ * Editor der Förderverein-Seiten (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden): Einleitung und Bausteine
  * hinzufügen, verschieben, ausblenden und gestalten. Die Vorschau nutzt dieselbe Darstellung wie die
  * Website (components/foerderverein/SeitenBausteine), auch mit den aktuellen News und Downloads.
  *
@@ -813,10 +813,8 @@ function ZeitleisteEditor({
       />
       {b.darstellung === 'zahlenstrahl' && (
         <p className="text-xs text-[#6b6b6b] leading-relaxed -mt-1">
-          Das Jahr jeder Station steht in „Zeit“ („2013“, „Oktober 2017“, „Heute“); Stationen ohne Jahr kommen zwischen ihre Nachbarn. Dazu
-          holt der Zahlenstrahl die Fotos aus den Bildergalerien dieser Seite – jedes zu dem Jahr in seiner Bildunterschrift („2017
-          Bauschild“). Gibt es zu einem Jahr keine Station, wird es ein eigener Halt. Das gilt auch für ausgeblendete Galerien: So stehen die
-          Fotos nur im Zahlenstrahl und nicht noch einmal darunter.
+          Das Jahr jeder Station steht in „Zeit“ („2013“, „Oktober 2017“, „Heute“); Stationen ohne Jahr kommen zwischen ihre Nachbarn. Zu jeder
+          Station zeigt der Zahlenstrahl ihr eigenes Foto.
         </p>
       )}
       <div>
@@ -1003,10 +1001,6 @@ function GalerieEditor({
       />
       <div>
         <div className="text-sm font-medium mb-1.5">Fotos{b.fotos.length > 0 && <span className="font-normal text-[#6b6b6b]"> ({b.fotos.length})</span>}</div>
-        <p className="text-xs text-[#6b6b6b] leading-relaxed mb-3">
-          Mit einem Jahr in der Bildunterschrift („2017 Bauschild“) erscheint das Foto auch beim passenden Jahr einer Zeitleiste als
-          „Zahlenstrahl mit Zoom“ auf dieser Seite.
-        </p>
         {b.fotos.length > 0 && (
           <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-3">
             {b.fotos.map((f, j) => {

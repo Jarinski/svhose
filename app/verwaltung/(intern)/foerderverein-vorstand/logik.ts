@@ -25,6 +25,7 @@ type Lesend = Pick<Datenbank, 'select'>
 export const VORSTAND_KONFLIKT = 'Inzwischen hat jemand anderes den Vorstand gespeichert. Bitte Seite neu laden.'
 const UNLESBAR = 'Die Eingaben konnten nicht gelesen werden. Bitte die Seite neu laden.'
 const MAX_BEZEICHNUNG = 60
+const MAX_AUFGABE = 80
 
 export interface VorstandEingabe {
   /** Vorhandene Zeile – fehlt bei neuen Einträgen. */
@@ -33,7 +34,10 @@ export interface VorstandEingabe {
   personId?: number | null
   /** … oder eine neue, die beim Speichern angelegt wird. */
   neu?: { name?: unknown; telefon?: unknown; email?: unknown } | null
+  /** Amt im Vorstand, z. B. "1. Vorsitzender" (Pflicht). */
   bezeichnung: string
+  /** Wofür die Person zuständig ist, z. B. "Festivitäten" – in der Verwaltung "Funktion", leer = keine. */
+  aufgabe?: unknown
   /** Statt der Kontaktdaten der Person eigene für die Förderverein-Seite zeigen (leere Felder = nicht anzeigen). */
   eigeneKontaktdaten?: unknown
   telefon?: unknown
@@ -57,6 +61,7 @@ export function vorstandLaden(db: Lesend) {
       personId: schema.foerdervereinVorstand.personId,
       person: schema.personen.name,
       bezeichnung: schema.foerdervereinVorstand.bezeichnung,
+      aufgabe: schema.foerdervereinVorstand.aufgabe,
       reihenfolge: schema.foerdervereinVorstand.reihenfolge,
       eigeneKontaktdaten: schema.foerdervereinVorstand.eigeneKontaktdaten,
       telefon: schema.foerdervereinVorstand.telefon,
@@ -71,7 +76,7 @@ export function vorstandLaden(db: Lesend) {
 /** Prüfsumme über den gespeicherten Stand – für die optimistische Sperre (wie bei der Kontaktseite). */
 export function vorstandStand(db: Lesend): string {
   const zeilen = db.select().from(schema.foerdervereinVorstand).orderBy(asc(schema.foerdervereinVorstand.id)).all()
-  const inhalt: unknown[] = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.reihenfolge, z.eigeneKontaktdaten, z.telefon, z.email, z.geaendertAm])
+  const inhalt: unknown[] = zeilen.map(z => [z.id, z.personId, z.bezeichnung, z.aufgabe, z.reihenfolge, z.eigeneKontaktdaten, z.telefon, z.email, z.geaendertAm])
   inhalt.push(gruppenfotoLesen(db))
   return createHash('sha1').update(JSON.stringify(inhalt)).digest('hex').slice(0, 16)
 }
@@ -85,13 +90,17 @@ function verlaufStand(db: Lesend) {
   const zeilen = vorstandLaden(db)
   const gruppenfoto = gruppenfotoLesen(db)
   return {
-    Vorstand: zeilen.map(z => `${z.bezeichnung}: ${z.person}${z.eigeneKontaktdaten ? ` (für den Förderverein: ${eigeneText(z)})` : ''}`),
+    Vorstand: zeilen.map(
+      z =>
+        `${z.bezeichnung}: ${z.person}${z.aufgabe ? ` – ${z.aufgabe}` : ''}${z.eigeneKontaktdaten ? ` (für den Förderverein: ${eigeneText(z)})` : ''}`,
+    ),
     Gruppenfoto: gruppenfoto ? `${gruppenfoto.foto}${gruppenfoto.ausschnitt ? ' (eigener Ausschnitt)' : ''}` : 'keins',
     // Rohdaten (für ein späteres Wiederherstellen); die Verlaufsansicht blendet "_"-Felder aus.
     _zeilen: zeilen.map(z => ({
       id: z.id,
       personId: z.personId,
       bezeichnung: z.bezeichnung,
+      aufgabe: z.aufgabe,
       reihenfolge: z.reihenfolge,
       eigeneKontaktdaten: z.eigeneKontaktdaten,
       telefon: z.telefon,
@@ -129,6 +138,7 @@ export function vorstandAbgleichen(
       personId: number | null
       neu: { name: string; telefon: string | null; email: string | null } | null
       bezeichnung: string
+      aufgabe: string | null
       eigeneKontaktdaten: boolean
       telefon: string | null
       email: string | null
@@ -138,8 +148,10 @@ export function vorstandAbgleichen(
     eingabe.forEach((z, index) => {
       const zeile = `Zeile ${index + 1}: `
       const bezeichnung = (typeof z.bezeichnung === 'string' ? z.bezeichnung : '').trim()
-      if (!bezeichnung) throw new MeldungsFehler(`${zeile}Bitte die Funktion eintragen (z. B. „1. Vorsitzender“).`)
-      if (bezeichnung.length > MAX_BEZEICHNUNG) throw new MeldungsFehler(`${zeile}Die Funktion ist zu lang (höchstens ${MAX_BEZEICHNUNG} Zeichen).`)
+      if (!bezeichnung) throw new MeldungsFehler(`${zeile}Bitte das Amt eintragen (z. B. „1. Vorsitzender“).`)
+      if (bezeichnung.length > MAX_BEZEICHNUNG) throw new MeldungsFehler(`${zeile}Das Amt ist zu lang (höchstens ${MAX_BEZEICHNUNG} Zeichen).`)
+      const aufgabe = (typeof z.aufgabe === 'string' ? z.aufgabe : '').trim() || null
+      if (aufgabe && aufgabe.length > MAX_AUFGABE) throw new MeldungsFehler(`${zeile}Die Funktion ist zu lang (höchstens ${MAX_AUFGABE} Zeichen).`)
 
       let personId: number | null = null
       let neu: (typeof soll)[number]['neu'] = null
@@ -176,7 +188,7 @@ export function vorstandAbgleichen(
         gesehen.push(z.id)
         id = z.id
       }
-      soll.push({ id, personId, neu, bezeichnung, eigeneKontaktdaten, telefon, email })
+      soll.push({ id, personId, neu, bezeichnung, aufgabe, eigeneKontaktdaten, telefon, email })
     })
 
     let neu = 0
@@ -201,7 +213,15 @@ export function vorstandAbgleichen(
         })
         personId = person.id
       }
-      const werte = { personId, bezeichnung: z.bezeichnung, reihenfolge, eigeneKontaktdaten: z.eigeneKontaktdaten, telefon: z.telefon, email: z.email }
+      const werte = {
+        personId,
+        bezeichnung: z.bezeichnung,
+        aufgabe: z.aufgabe,
+        reihenfolge,
+        eigeneKontaktdaten: z.eigeneKontaktdaten,
+        telefon: z.telefon,
+        email: z.email,
+      }
       if (z.id == null) {
         tx.insert(schema.foerdervereinVorstand).values(werte).run()
         neu++

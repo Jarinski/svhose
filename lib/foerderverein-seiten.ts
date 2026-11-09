@@ -1,9 +1,10 @@
 /**
  * lib/foerderverein-seiten.ts
  *
- * Die Seiten des Fördervereins, die er selbst gestaltet (Aufbau in lib/seiten.ts): Chronik,
- * Aktuelles und Mitglied werden. Je Seite Adresse, Überschrift und die Vorlage – der Stand vor der
- * Verwaltung, den die Website zeigt, solange für die Seite noch nichts gespeichert ist.
+ * Die Seiten des Fördervereins, die er selbst gestaltet (Aufbau in lib/seiten.ts): Was ist der
+ * Förderverein, Aktuelles, Chronik und Mitglied werden. Je Seite Adresse, Überschrift und die
+ * Vorlage – der Stand vor der Verwaltung, den die Website zeigt, solange für die Seite noch nichts
+ * gespeichert ist.
  *
  * Ohne Datenbank: nutzbar auf der Website, im Editor (Client) und in der Speicherlogik.
  */
@@ -11,7 +12,7 @@
 import { FOERDERVEREIN } from '@/lib/foerderverein'
 import type { SeitenInhalt } from '@/lib/seiten'
 
-export const FOERDERVEREIN_SEITEN_SLUGS = ['chronik', 'aktuelles', 'mitglied-werden'] as const
+export const FOERDERVEREIN_SEITEN_SLUGS = ['ueber-uns', 'chronik', 'aktuelles', 'mitglied-werden'] as const
 export type FoerdervereinSeitenSlug = (typeof FOERDERVEREIN_SEITEN_SLUGS)[number]
 
 /** Was eine Vorlage über die Downloads des Fördervereins wissen muss. */
@@ -37,6 +38,27 @@ export interface FoerdervereinSeite {
 const BEITRITT = /beitritt|mitglied|aufnahme/i
 
 // ─── Vorlagen ───────────────────────────────────────────────────────────────
+
+/**
+ * Einstieg "Was ist der Förderverein": nur Text und auf Wunsch ein Foto (Christian Junge,
+ * 09.11.2026). Erster Entwurf aus Chronik und Mitglied werden – der Förderverein schreibt ihn neu.
+ */
+const UEBER_UNS: SeitenInhalt = {
+  einleitung: 'Warum es den Förderverein gibt und was er für den Sport in Holm-Seppensen tut.',
+  bausteine: [
+    {
+      art: 'text',
+      sichtbar: true,
+      ueberschrift: 'Wer wir sind',
+      text: `Der ${FOERDERVEREIN.name} unterstützt den SV Holm-Seppensen bei Bau und Ausbau seiner Sportanlage am Tostedter Weg. Gegründet haben ihn Eltern der damaligen E1-Jugend, die ihren Kindern und den nächsten Jahrgängen einen eigenen Sportplatz im Ort ermöglichen wollten.
+
+Heute hat der SV dort einen Rasenplatz mit Flutlicht und ein Vereinsheim. Der Förderverein sammelt weiter Geld für den Ausbau – über Mitgliedsbeiträge, Spenden, Bandenwerbung und Aktionen im Ort. Und er packt mit an, wenn auf dem Gelände etwas zu tun ist.`,
+      bild: null,
+      bildPosition: 'rechts',
+      hintergrund: 'hell',
+    },
+  ],
+}
 
 /**
  * Chronik vor der Verwaltung.
@@ -160,6 +182,16 @@ const AKTUELLES: SeitenInhalt = {
 }
 
 export const FOERDERVEREIN_SEITEN: FoerdervereinSeite[] = [
+  {
+    slug: 'ueber-uns',
+    schluessel: 'foerderverein-ueber-uns',
+    name: 'Was ist der Förderverein',
+    beschreibung: 'Der Einstieg: warum es den Förderverein gibt und was er tut. Text und auf Wunsch ein Foto.',
+    pfad: '/foerderverein/ueber-uns',
+    kicker: 'Förderverein',
+    titel: 'WAS IST DER FÖRDERVEREIN',
+    vorlage: () => UEBER_UNS,
+  },
   {
     slug: 'aktuelles',
     schluessel: 'foerderverein-aktuelles',

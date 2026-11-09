@@ -6,10 +6,9 @@
  * genau so aussieht wie später auf der Website. "Meldungen" und "Unterlagen" zeigen die News und
  * Downloads des Fördervereins, die als `daten` hereinkommen.
  *
- * Bekommt alle Bausteine der Seite, auch ausgeblendete, und zeigt nur die sichtbaren. Die
- * ausgeblendeten zählen nur an einer Stelle mit: Der Zahlenstrahl nimmt die Fotos aller
- * Bildergalerien der Seite – so kann eine Galerie ausgeblendet werden, deren Fotos nur im
- * Zahlenstrahl stehen sollen.
+ * Bekommt alle Bausteine der Seite, auch ausgeblendete, und zeigt nur die sichtbaren. Jeder
+ * Baustein steht für sich – die Zeitleiste zeigt nur ihre eigenen Stationen und Fotos, die
+ * Bildergalerie nur ihre Fotos.
  *
  * Ohne Hooks und ohne 'use client': funktioniert in Server- und Client-Komponenten. Nur die
  * Bildergalerie (Großansicht zum Durchblättern) und der Zahlenstrahl mit Zoom sind eigene
@@ -26,7 +25,7 @@ import ZeitZoom from '@/components/foerderverein/ZeitZoom'
 import NewsKarten from '@/components/NewsKarten'
 import type { Download, NewsPost } from '@/lib/content'
 import { FOERDERVEREIN } from '@/lib/foerderverein'
-import type { AnzeigeBild, Baustein, GalerieFoto, Hintergrund } from '@/lib/seiten'
+import type { AnzeigeBild, Baustein, Hintergrund } from '@/lib/seiten'
 
 type B = Baustein<AnzeigeBild>
 
@@ -53,31 +52,19 @@ export default function SeitenBausteine({ bausteine: alle, daten = OHNE_DATEN }:
   const bausteine = alle.filter(b => b.sichtbar)
   // Downloads, die schon als Knopf in einem Kasten stehen – "Unterlagen" zeigt sie auf Wunsch nicht noch einmal
   const inKaesten = bausteine.reduce<number[]>((ids, b) => (b.art === 'aufruf' ? ids.concat(b.downloads) : ids), [])
-  // Fotos aller Bildergalerien, auch ausgeblendeter – für den Zahlenstrahl (ordnet sie nach dem Jahr in der Unterschrift)
-  const galerieFotos = alle.flatMap(b => (b.art === 'galerie' ? b.fotos.filter(f => f.bild) : []))
   return (
     <div className="space-y-16 md:space-y-20">
       {bausteine.map((b, i) => (
-        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} daten={daten} inKaesten={inKaesten} galerieFotos={galerieFotos} />
+        <BausteinAnzeige key={b.schluessel ?? i} baustein={b} daten={daten} inKaesten={inKaesten} />
       ))}
     </div>
   )
 }
 
-function BausteinAnzeige({
-  baustein: b,
-  daten,
-  inKaesten,
-  galerieFotos,
-}: {
-  baustein: B
-  daten: SeitenDaten
-  inKaesten: number[]
-  galerieFotos: GalerieFoto<AnzeigeBild>[]
-}) {
+function BausteinAnzeige({ baustein: b, daten, inKaesten }: { baustein: B; daten: SeitenDaten; inKaesten: number[] }) {
   switch (b.art) {
     case 'zeitleiste':
-      return <Zeitleiste b={b} galerieFotos={galerieFotos} />
+      return <Zeitleiste b={b} />
     case 'text':
       return <Textabschnitt b={b} />
     case 'bild':
@@ -145,18 +132,17 @@ function Ueberschrift({ text, className = 'mb-10' }: { text: string; className?:
 
 // ─── Zeitleiste ─────────────────────────────────────────────────────────────
 
-function Zeitleiste({ b, galerieFotos }: { b: Extract<B, { art: 'zeitleiste' }>; galerieFotos: GalerieFoto<AnzeigeBild>[] }) {
+function Zeitleiste({ b }: { b: Extract<B, { art: 'zeitleiste' }> }) {
   const eintraege = b.eintraege.filter(e => e.titel.trim() || e.text.trim() || e.zeit.trim() || e.bild)
   if (eintraege.length === 0) return null
   // Ohne Überschrift über der Zeitleiste sind die Titel der Stationen die Überschriften der Seite
   const Titel = b.ueberschrift.trim() ? 'h3' : 'h2'
 
-  // Zahlenstrahl mit Zoom: eigene Client-Komponente, sortiert auch die Galerie-Fotos nach Jahr ein
+  // Zahlenstrahl mit Zoom: eigene Client-Komponente
   if (b.darstellung === 'zahlenstrahl') {
     return (
       <ZeitZoom
         eintraege={eintraege}
-        fotos={galerieFotos}
         titelTag={Titel}
         kopf={
           b.ueberschrift.trim() ? (

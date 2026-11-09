@@ -123,8 +123,9 @@ export const personen: Thema = {
             <Taste>Hinzufügen</Taste>.
           </>
           <>
-            Trage bei <Begriff>Funktion</Begriff> ein, was die Person im Vorstand macht, z. B. „1. Vorsitzender“ oder „Kassenwartin“. Mit den
-            Pfeilen änderst du die Reihenfolge.
+            Trage bei <Begriff>Amt</Begriff> ein, welchen Posten die Person im Vorstand hat, z. B. „1. Vorsitzender“ oder „Kassenwartin“. Bei{' '}
+            <Begriff>Funktion</Begriff> kannst du ergänzen, wofür sie zuständig ist, z. B. „Festivitäten“, „Mitgliederverwaltung“ oder
+            „Bandenwerbung“ – das steht auf der Website unter dem Namen. Mit den Pfeilen änderst du die Reihenfolge.
           </>
           <>
             Klicke unten auf <Taste>Vorstand speichern</Taste>. Neue Personen werden erst jetzt angelegt.

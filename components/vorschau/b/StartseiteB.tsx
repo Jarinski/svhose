@@ -22,7 +22,7 @@ import s from './StartseiteB.module.css'
 // nur der Termin-Filter, der Video-Knopf und der Sparten-Bogen laufen im Browser.
 
 /** Symbole für die Kacheln des Fördervereins, in der Reihenfolge von FOERDERVEREIN_MENUE */
-const FOERDER_ICONS = ['📰', '📜', '🧑‍💼', '🤝', '💶']
+const FOERDER_ICONS = ['💡', '📰', '📜', '🧑‍💼', '🤝', '💶']
 
 /** Solange Instagram nicht verbunden ist (oder nichts abgerufen wurde): Fotos aus dem Verein. */
 const INSTA_PLATZHALTER = ['/images/girls.webp', '/images/U15.jpeg', '/images/kids.webp']

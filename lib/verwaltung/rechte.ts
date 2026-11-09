@@ -5,7 +5,7 @@
  * (zugang_bereiche): eine Sparte mit allen Mannschaften und Gruppen darin – oder einzelne
  * Mannschaften bzw. Gruppen. Dazu kann ein Zugang das gesonderte Förderverein-Recht haben
  * (zugaenge.foerderverein): News und Downloads der Kategorie "Förderverein" pflegen, die Seiten des
- * Fördervereins (Chronik, Aktuelles, Mitglied werden) gestalten und seinen Vorstand eintragen, sonst nichts.
+ * Fördervereins (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden) gestalten und seinen Vorstand eintragen, sonst nichts.
  * Personen dürfen Nicht-Admins nur bearbeiten, wenn die Person
  * ausschließlich in ihrem eigenen Bereich vorkommt (siehe kannPerson) – und jede:r sich selbst.
  * Für das Förderverein-Recht ist der Vorstand des Fördervereins dieser Bereich.

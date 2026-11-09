@@ -54,6 +54,7 @@ export default async function FoerdervereinVorstandSeite() {
           personId: z.personId,
           neu: null,
           bezeichnung: z.bezeichnung,
+          aufgabe: z.aufgabe ?? '',
           eigene: z.eigeneKontaktdaten,
           telefon: z.telefon ?? '',
           email: z.email ?? '',

@@ -548,7 +548,7 @@ export async function getAnsprechpartner(): Promise<AnsprechpartnerEintrag[]> {
 // ─── Vorstand des Fördervereins ─────────────────────────────────────────────
 
 /** Leer, solange in der Verwaltung niemand eingetragen ist – die Seite zeigt dann die feste Angabe aus lib/foerderverein.ts. */
-export async function getFoerdervereinVorstand(): Promise<Omit<AnsprechpartnerEintrag, 'gruppe'>[]> {
+export async function getFoerdervereinVorstand(): Promise<(Omit<AnsprechpartnerEintrag, 'gruppe'> & { aufgabe: string | null })[]> {
   const vorstand = await datenbank().query.foerdervereinVorstand.findMany({
     with: { person: { columns: KONTAKT_SPALTEN } },
   })
@@ -558,7 +558,9 @@ export async function getFoerdervereinVorstand(): Promise<Omit<AnsprechpartnerEi
     .map(v => ({
       id: v.id,
       name: v.person.name,
+      // Amt im Vorstand ("1. Vorsitzender") und, freiwillig, wofür die Person zuständig ist ("Festivitäten")
       funktion: v.bezeichnung,
+      aufgabe: wert(v.aufgabe),
       // Doppelrolle: eigene Kontaktdaten für den Förderverein ersetzen die der Person (leer = nicht anzeigen)
       email: wert(v.eigeneKontaktdaten ? v.email : v.person.email),
       telefon: wert(v.eigeneKontaktdaten ? v.telefon : v.person.telefon),
@@ -738,7 +740,7 @@ export async function getNewsSlugs(): Promise<{ slug: string }[]> {
   return news.map(n => ({ slug: n.slug }))
 }
 
-// ─── Förderverein-Seiten (Chronik, Aktuelles, Mitglied werden) ─────────────
+// ─── Förderverein-Seiten (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden) ─
 
 /** News und Downloads mit der Kategorie "Förderverein" – für die Bausteine "Meldungen" und "Unterlagen". */
 export async function getFoerdervereinDaten(): Promise<{ news: NewsPost[]; downloads: Download[] }> {
@@ -747,8 +749,8 @@ export async function getFoerdervereinDaten(): Promise<{ news: NewsPost[]; downl
 }
 
 /**
- * Eine Förderverein-Seite für die Website: alle Bausteine (SeitenBausteine zeigt nur die sichtbaren,
- * der Zahlenstrahl nimmt auch Fotos ausgeblendeter Galerien), Bilder als fertige URLs – ohne
+ * Eine Förderverein-Seite für die Website: alle Bausteine (SeitenBausteine zeigt nur die sichtbaren),
+ * Bilder als fertige URLs – ohne
  * gespeicherten Stand die Vorlage. Dazu die Daten für die automatischen Bausteine.
  */
 export async function getFoerdervereinSeite(

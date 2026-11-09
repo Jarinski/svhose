@@ -240,8 +240,13 @@ export const foerdervereinVorstand = sqliteTable(
     personId: integer('person_id')
       .notNull()
       .references(() => personen.id, { onDelete: 'cascade' }),
-    /** Funktion, z. B. "1. Vorsitzender" oder "Kassenwartin". */
+    /** Amt im Vorstand, z. B. "1. Vorsitzender" oder "Kassenwartin". */
     bezeichnung: text('bezeichnung').notNull(),
+    /**
+     * Wofür die Person im Förderverein zuständig ist, z. B. "Festivitäten" oder "Bandenwerbung" –
+     * in der Verwaltung das Feld "Funktion", freiwillig (null = keine).
+     */
+    aufgabe: text('aufgabe'),
     reihenfolge: integer('reihenfolge').notNull().default(0),
     /**
      * Doppelrolle im Verein und im Förderverein: Ist das gesetzt, zeigt die Vorstandsseite statt der
@@ -388,8 +393,9 @@ export const downloads = sqliteTable(
 
 /**
  * Seiten, deren Inhalt und Aufbau komplett in der Verwaltung entsteht – heute die Förderverein-Seiten
- * Chronik, Aktuelles und Mitglied werden (lib/foerderverein-seiten.ts, Aufbau in lib/seiten.ts). Der Inhalt ist ein
- * JSON-Dokument aus Bausteinen; Bilder darin sind relative Pfade im Medienordner.
+ * Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden (lib/foerderverein-seiten.ts,
+ * Aufbau in lib/seiten.ts). Der Inhalt ist ein JSON-Dokument aus Bausteinen; Bilder darin sind
+ * relative Pfade im Medienordner.
  * Fehlt die Zeile, zeigt die Website die Vorlage aus dem Code.
  */
 export const seiten = sqliteTable('seiten', {
