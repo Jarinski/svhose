@@ -5,6 +5,21 @@
  * Ohne JavaScript steht der Bogen still, ohne Scrollbalken in jedem Fall.
  */
 
+/* Schneidet die Karten am Rand ab – mit Luft oben und unten, in der die Schatten weich auslaufen.
+   Die Luft hebt der negative Außenabstand wieder auf, das Layout bleibt gleich; Klicks gehen
+   durch sie hindurch an Überschrift und Knopf. */
+.rahmen {
+  --luft: 56px;
+  /* volle Fensterbreite wie ein Panorama (html/body schneiden seitlich ab, kein Querscrollen) */
+  width: 100vw;
+  margin: calc(var(--luft) * -1) 0 calc(var(--luft) * -1) calc(50% - 50vw);
+  padding-block: var(--luft);
+  /* clip statt hidden: kein Scrollcontainer, den der Tastaturfokus verschieben könnte */
+  overflow: hidden;
+  overflow: clip;
+  pointer-events: none;
+}
+
 .buehne {
   /* Maße als reine Zahlen in px, damit CSS damit rechnen kann */
   --karte-b: 220;
@@ -20,13 +35,10 @@
   --slot: calc(var(--karte-b) + var(--luecke));
   --umfang: calc(var(--anzahl) * var(--slot));
   position: relative;
-  /* volle Fensterbreite wie ein Panorama (html/body schneiden seitlich ab, kein Querscrollen) */
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
   /* Platz für die Karten am Rand, die näher kommen und größer wirken */
   height: calc(var(--karte-h) * 1.3px + 40px);
-  overflow: hidden;
   list-style: none;
+  pointer-events: auto;
   /* Der Betrachter steht weiter weg als der Durchmesser: Karten auf der Vorderseite des Zylinders
      zeigen ihm die Rückseite und verschwinden (backface-visibility) */
   perspective: calc(var(--r) * 2.1px);
@@ -210,11 +222,16 @@
 
 /* Browser ohne sin/cos/mod in CSS: ruhige Reihe zum Wischen statt Bogen */
 @supports not (width: calc(mod(3px, 2px) + sin(1rad) * 1px)) {
+  /* Die Reihe scrollt selbst und schneidet damit auch ab – die Luft für die Schatten liegt in ihr */
+  .rahmen {
+    margin-block: 0;
+    padding-block: 0;
+  }
   .buehne {
     display: flex;
     gap: calc(var(--luecke) * 1px);
     height: auto;
-    padding: 0 20px;
+    padding: 12px 20px 44px;
     overflow-x: auto;
     cursor: auto;
   }

@@ -229,58 +229,61 @@ export default function SpartenBogen({ sparten }: { sparten: SparteUebersicht[] 
 
   return (
     <>
-      <ul
-        ref={buehneRef}
-        id="b-sparten-bogen"
-        className={s.buehne}
-        role="list"
-        style={{ '--anzahl': anzahl } as CSSProperties}
-      >
-        {karten.map(({ sparte, kopie }, i) => (
-          <li
-            key={`${sparte?.slug ?? 'alle'}-${i}`}
-            data-i={i}
-            className={sparte ? s.karte : `${s.karte} ${s.alle}`}
-            style={{ '--i': i } as CSSProperties}
-            aria-hidden={kopie || undefined}
-          >
-            {sparte ? (
-              <Link href={`/sparten/${sparte.slug}`} className={s.link} draggable={false} tabIndex={kopie ? -1 : undefined}>
-                {sparte.bild ? (
-                  <Image
-                    src={sparte.bild}
-                    alt=""
-                    fill
-                    draggable={false}
-                    sizes="(max-width: 720px) 200px, (max-width: 1100px) 250px, 290px"
-                  />
-                ) : (
-                  // Ohne Foto: Vereinswappen als Platzhalter
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className={s.platzhalter} src="/SV_Holm_Seppensen_Logo.svg" alt="" draggable={false} />
-                )}
-                <div className={s.schild}>
-                  <span className={s.ico} aria-hidden="true">
-                    {sparte.icon ? <i className={b.emo}>{sparte.icon}</i> : <span className={s.initiale}>{sparte.name.charAt(0)}</span>}
-                  </span>
-                  <h3>{sparte.name}</h3>
-                </div>
-              </Link>
-            ) : (
-              <Link href="/sparten" className={s.link} draggable={false} tabIndex={kopie ? -1 : undefined}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/SV_Holm_Seppensen_Logo.svg" alt="" width={52} height={52} draggable={false} />
-                <h3>
-                  Alle Sparten
-                  <br />
-                  im Überblick
-                </h3>
-                <span className={`${b.link} ${s.weiter}`}>Ansehen →</span>
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      {/* Rahmen mit Luft oben und unten, damit die Schatten weich auslaufen statt abgeschnitten zu werden */}
+      <div className={s.rahmen}>
+        <ul
+          ref={buehneRef}
+          id="b-sparten-bogen"
+          className={s.buehne}
+          role="list"
+          style={{ '--anzahl': anzahl } as CSSProperties}
+        >
+          {karten.map(({ sparte, kopie }, i) => (
+            <li
+              key={`${sparte?.slug ?? 'alle'}-${i}`}
+              data-i={i}
+              className={sparte ? s.karte : `${s.karte} ${s.alle}`}
+              style={{ '--i': i } as CSSProperties}
+              aria-hidden={kopie || undefined}
+            >
+              {sparte ? (
+                <Link href={`/sparten/${sparte.slug}`} className={s.link} draggable={false} tabIndex={kopie ? -1 : undefined}>
+                  {sparte.bild ? (
+                    <Image
+                      src={sparte.bild}
+                      alt=""
+                      fill
+                      draggable={false}
+                      sizes="(max-width: 720px) 200px, (max-width: 1100px) 250px, 290px"
+                    />
+                  ) : (
+                    // Ohne Foto: Vereinswappen als Platzhalter
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className={s.platzhalter} src="/SV_Holm_Seppensen_Logo.svg" alt="" draggable={false} />
+                  )}
+                  <div className={s.schild}>
+                    <span className={s.ico} aria-hidden="true">
+                      {sparte.icon ? <i className={b.emo}>{sparte.icon}</i> : <span className={s.initiale}>{sparte.name.charAt(0)}</span>}
+                    </span>
+                    <h3>{sparte.name}</h3>
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/sparten" className={s.link} draggable={false} tabIndex={kopie ? -1 : undefined}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/SV_Holm_Seppensen_Logo.svg" alt="" width={52} height={52} draggable={false} />
+                  <h3>
+                    Alle Sparten
+                    <br />
+                    im Überblick
+                  </h3>
+                  <span className={`${b.link} ${s.weiter}`}>Ansehen →</span>
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
       <button type="button" className={s.pause} aria-controls="b-sparten-bogen" onClick={umschalten}>
         {angehalten ? START : PAUSE}
         {angehalten ? 'Weiterlaufen' : 'Anhalten'}
