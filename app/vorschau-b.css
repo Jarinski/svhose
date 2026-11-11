@@ -304,13 +304,6 @@ html[data-design="b"] .site main span.bg-\[\#0a0a0a\]\/5 {
 html[data-design="b"] .site main .bg-\[\#e9e9e2\],
 html[data-design="b"] .site main .bg-\[\#e8e8e3\] { background: var(--b-grau); }
 
-/* News-Vorschaubild mit Rand wie auf der Startseite */
-html[data-design="b"] .site main .aspect-\[16\/9\].bg-\[\#e9e9e2\] {
-  width: auto;
-  margin: 10px 10px 0;
-  border-radius: 20px;
-}
-
 /* Bild im News-Beitrag */
 html[data-design="b"] .site main > .pt-32 > .relative.rounded-sm { border-radius: var(--b-r); }
 

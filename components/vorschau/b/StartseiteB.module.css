@@ -517,12 +517,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, .04), 0 20px 40px rgba(0, 0, 0, .09);
 }
 
+/* Bild randlos über die ganze Kartenbreite, oben rundet die Karte es ab – wie die News auf den
+   Spartenseiten. 16:9 ist auch das Format des Zuschnitts in der Verwaltung (lib/news-bild.ts). */
 .bild {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  margin: 10px 10px 0;
-  border-radius: 20px;
   background: var(--b-grau);
 }
 
