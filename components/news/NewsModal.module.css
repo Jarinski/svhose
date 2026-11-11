@@ -75,7 +75,7 @@
 .schliessen {
   --glas-tint: rgba(255, 255, 255, .4);
   --glas-unschaerfe: 8px;
-  --glas-klar: 7px;
+  --glas-klar: 3px;
   --glas-r: 22px;
   position: absolute;
   top: 14px;

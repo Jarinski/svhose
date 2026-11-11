@@ -88,7 +88,7 @@ export default function CookieBanner() {
   return (
     <div className={s.huelle} role="dialog" aria-modal="true" aria-label="Cookie-Einstellungen">
       <div className={s.panel}>
-        <GlasEbenen band={18} staerke={12} />
+        <GlasEbenen band={9} staerke={10} />
         <div className={s.inhalt}>
           <div className={s.kopf}>
             <span className={`${b.emo} ${s.keks}`} aria-hidden="true">🍪</span>

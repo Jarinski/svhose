@@ -16,7 +16,7 @@
  * nur noch dieses Element statt der Seite dahinter. Anpassen über CSS-Variablen am Element:
  *   --glas-tint       Weißanteil der Fläche (Standard rgba(255, 255, 255, .62))
  *   --glas-unschaerfe Mattierung (Standard 22px)
- *   --glas-klar       wie breit die klare Kante ausläuft (Standard 10px)
+ *   --glas-klar       wie breit die klare Kante ausläuft (Standard 4px)
  *   --glas-r          Eckenradius des Elements, damit die Mattierung rund ausläuft (Standard 30px)
  *
  * Die Ebenen sind Geschwister des Inhalts (Fragment, keine Hülle): So kann ein Fenster sie beim
@@ -26,7 +26,7 @@
 import { useGlasLinse } from './glasLinse'
 import s from './Glas.module.css'
 
-export default function GlasEbenen({ band = 16, staerke = 14 }: { band?: number; staerke?: number }) {
+export default function GlasEbenen({ band = 8, staerke = 8 }: { band?: number; staerke?: number }) {
   const kante = useGlasLinse<HTMLSpanElement>(band, staerke)
   return (
     <>
