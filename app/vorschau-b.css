@@ -4,11 +4,12 @@
  * fest, .site gibt es nur auf der Website (components/SiteChrome.tsx) – die Verwaltung bleibt
  * so im bisherigen Look.
  *
- * Bento: heller Grund wie der Blick über den Sportplatz – oben wolkenloser Himmel (blasses
- * Blaugrau), am Horizont fast weißer Dunst, unten sanftes Rasengrün. Dazu weiße Karten mit großen
- * Radien und weichen Schatten, Bricolage Grotesque für Überschriften, Plus Jakarta Sans für Text.
+ * Bento: heller Grund wie ein wolkenloser Himmel (oben blasses Blaugrau, zum Horizont fast weiß),
+ * weiße Karten mit großen Radien und weichen Schatten,
+ * Bricolage Grotesque für Überschriften, Plus Jakarta Sans für Text.
  * Vereinsfarben: nur Schwarz, Weiß und neutrale Grautöne – Spartenfarben werden entsättigt,
- * Fotos bleiben farbig; einzige Ausnahme ist der ganz leichte Himmel und Rasen im Hintergrund.
+ * Fotos bleiben farbig; einzige Ausnahme ist der ganz leichte Himmel im Hintergrund (kein Rasengrün –
+ * das wurde ausprobiert und wieder verworfen).
  * Die Unterseiten sind mit festen Tailwind-Klassen gebaut; die Regeln hier greifen deshalb gezielt
  * diese Klassen (escaped) und Inline-Styles auf.
  */
@@ -17,21 +18,10 @@
 html[data-design="b"] .site {
   /* Grautöne für Flächen in Karten (Pillen, Tabs, Hover) */
   --b-bg: #f3f3f2;
-  /* Seitenhintergrund: Himmel über Rasen, steht beim Scrollen still (.site::before).
-     Oben bleibt der Himmel ein Stück gleich, damit die Blende hinter der Navbar nahtlos passt;
-     unter dem dunstigen Horizont (gut die Hälfte) beginnt sanft der Rasen. */
+  /* Seitenhintergrund: wolkenloser Himmel, steht beim Scrollen still (.site::before).
+     Oben bleibt er ein Stück gleich, damit die Blende hinter der Navbar nahtlos passt. */
   --b-himmel-oben: #e1e8ee;
-  --b-himmel: linear-gradient(
-    180deg,
-    var(--b-himmel-oben) 0%,
-    var(--b-himmel-oben) 6%,
-    #e8eef2 26%,
-    #f1f4f5 48%,
-    #f5f7f3 58%,
-    #edf2e7 70%,
-    #e3ecda 86%,
-    #dce8d1 100%
-  );
+  --b-himmel: linear-gradient(180deg, var(--b-himmel-oben) 0%, var(--b-himmel-oben) 6%, #e8eef2 28%, #f1f4f6 62%, #fafbfb 100%);
   --b-karte: #ffffff;
   --b-ink: #111111;
   --b-muted: #6b6b6b;
