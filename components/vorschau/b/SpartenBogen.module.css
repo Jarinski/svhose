@@ -93,6 +93,10 @@
     rotateY(calc(var(--winkel) * -1));
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  /* Die Lage ändert sich in jedem Bild. Ohne diesen Hinweis zeichnet Chrome die Karte dabei immer
+     wieder in leicht anderer Größe neu, jeder Buchstabe rastet anders ins Pixelraster ein und die
+     Schrift zittert. So wird die Karte einmal gezeichnet und nur noch als Ganzes bewegt. */
+  will-change: transform;
 }
 
 .link {
@@ -262,6 +266,7 @@
     flex: none;
     margin: 0;
     transform: none;
+    will-change: auto;
   }
   .pause { display: none; }
 }
