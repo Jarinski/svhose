@@ -9,8 +9,33 @@
   top: 0;
   z-index: 50;
   padding: 14px 0;
-  /* Blende in der Himmelsfarbe oben im Fenster (app/vorschau-b.css) */
+}
+
+/*
+ * Blende in der Himmelsfarbe oben im Fenster (app/vorschau-b.css): oben deckend, dann lang und
+ * weich auslaufend (S-Kurve statt gerader Rampe, sonst sieht man Anfang und Ende als Kante).
+ * Sie reicht 56px unter die Leiste, damit der Inhalt sanft verschwindet; Klicks gehen hindurch.
+ */
+.kopf::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -56px;
+  z-index: -1;
+  pointer-events: none;
   background: linear-gradient(var(--b-himmel-oben) 60%, transparent);
+  background: linear-gradient(
+    var(--b-himmel-oben) 25%,
+    color-mix(in srgb, var(--b-himmel-oben) 97%, transparent) 32.5%,
+    color-mix(in srgb, var(--b-himmel-oben) 90%, transparent) 40%,
+    color-mix(in srgb, var(--b-himmel-oben) 78%, transparent) 47.5%,
+    color-mix(in srgb, var(--b-himmel-oben) 65%, transparent) 55%,
+    color-mix(in srgb, var(--b-himmel-oben) 50%, transparent) 62.5%,
+    color-mix(in srgb, var(--b-himmel-oben) 35%, transparent) 70%,
+    color-mix(in srgb, var(--b-himmel-oben) 22%, transparent) 77.5%,
+    color-mix(in srgb, var(--b-himmel-oben) 10%, transparent) 85%,
+    color-mix(in srgb, var(--b-himmel-oben) 3%, transparent) 92.5%,
+    transparent
+  );
 }
 
 .leiste {
