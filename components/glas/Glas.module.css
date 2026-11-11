@@ -1,0 +1,86 @@
+/*
+ * Glas wie bei iOS („Liquid Glass“) – Ebenen aus components/glas/GlasEbenen.tsx.
+ * Kein Rahmen: Die mattierte Fläche läuft zum Rand hin aus, dort scheint das klare, verzogene Glas
+ * durch; obendrauf eine feine Lichtkante.
+ */
+
+.kante,
+.frost,
+.glanz {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Klares Glas: kaum Unschärfe, kräftige Farben, am Rand die Linse (--linse, nur Chromium) */
+.kante {
+  background: rgba(255, 255, 255, .14);
+  -webkit-backdrop-filter: blur(2px) saturate(1.9) brightness(1.08);
+  backdrop-filter: var(--linse,) blur(2px) saturate(1.9) brightness(1.08);
+  /* das Glas wirkt dick: innen am Rand etwas Licht, unten ein Hauch Schatten */
+  box-shadow:
+    inset 0 0 14px rgba(255, 255, 255, .45),
+    inset 0 -10px 18px -14px rgba(0, 0, 0, .12);
+}
+
+/*
+ * Mattierte Fläche, zum Rand hin weich ausgeblendet – auch in den Ecken rund:
+ * vier Viertelkreise in den Ecken (Radius --glas-r) und dazwischen zwei Streifen, die an den
+ * geraden Kanten auslaufen. Zusammen ergibt das ein abgerundetes Rechteck mit weichem Rand.
+ * --glas-r muss zum border-radius des Elements passen.
+ */
+.frost {
+  --k: var(--glas-klar, 10px);
+  --rr: var(--glas-r, 30px);
+  --ecke: #000 calc(var(--rr) - var(--k)), transparent var(--rr);
+  --quer: transparent, #000 var(--k), #000 calc(100% - var(--k)), transparent;
+  background: var(--glas-tint, rgba(255, 255, 255, .62));
+  -webkit-backdrop-filter: blur(var(--glas-unschaerfe, 22px)) saturate(1.8);
+  backdrop-filter: blur(var(--glas-unschaerfe, 22px)) saturate(1.8);
+  -webkit-mask:
+    linear-gradient(to bottom, var(--quer)) center / calc(100% - 2 * var(--rr)) 100% no-repeat,
+    linear-gradient(to right, var(--quer)) center / 100% calc(100% - 2 * var(--rr)) no-repeat,
+    radial-gradient(circle at 100% 100%, var(--ecke)) top left / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 0 100%, var(--ecke)) top right / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 100% 0, var(--ecke)) bottom left / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 0 0, var(--ecke)) bottom right / var(--rr) var(--rr) no-repeat;
+  mask:
+    linear-gradient(to bottom, var(--quer)) center / calc(100% - 2 * var(--rr)) 100% no-repeat,
+    linear-gradient(to right, var(--quer)) center / 100% calc(100% - 2 * var(--rr)) no-repeat,
+    radial-gradient(circle at 100% 100%, var(--ecke)) top left / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 0 100%, var(--ecke)) top right / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 100% 0, var(--ecke)) bottom left / var(--rr) var(--rr) no-repeat,
+    radial-gradient(circle at 0 0, var(--ecke)) bottom right / var(--rr) var(--rr) no-repeat;
+}
+
+/* Lichtkante: heller Verlauf genau auf dem Rand (die Maske lässt nur 1 px stehen) */
+.glanz {
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, .95),
+    rgba(255, 255, 255, .3) 26%,
+    rgba(255, 255, 255, .05) 50%,
+    rgba(255, 255, 255, .25) 74%,
+    rgba(255, 255, 255, .85)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* Transparenz reduzieren: fester heller Grund statt Glas */
+@media (prefers-reduced-transparency: reduce) {
+  .kante,
+  .frost {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .kante { background: #f3f3f2; }
+  .frost {
+    background: #fff;
+    -webkit-mask: none;
+    mask: none;
+  }
+}

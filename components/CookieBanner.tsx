@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import GlasEbenen from './glas/GlasEbenen'
+import b from './vorschau/b/bento.module.css'
+import s from './CookieBanner.module.css'
 
 type ConsentState = {
   essential: true       // immer aktiv, nicht abwählbar
@@ -81,131 +84,98 @@ export default function CookieBanner() {
 
   if (!visible) return null
 
+  // Hinweis als Glasscheibe wie bei iOS (components/glas), unten über der Seite schwebend
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-[10000] p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Cookie-Einstellungen"
-    >
-      <div className="max-w-3xl mx-auto bg-[#0a0a0a] text-[#f5f5f0] rounded-2xl shadow-2xl border border-[#f5f5f0]/10 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-[#f5f5f0]/10">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl select-none" aria-hidden="true">🍪</span>
+    <div className={s.huelle} role="dialog" aria-modal="true" aria-label="Cookie-Einstellungen">
+      <div className={s.panel}>
+        <GlasEbenen band={18} staerke={12} />
+        <div className={s.inhalt}>
+          <div className={s.kopf}>
+            <span className={`${b.emo} ${s.keks}`} aria-hidden="true">🍪</span>
             <div>
-              <h2 className="font-display text-2xl tracking-wider">DATENSCHUTZ & COOKIES</h2>
-              <p className="text-[#6b6b6b] text-sm mt-1 leading-relaxed">
+              <h2 className={s.titel}>Datenschutz & Cookies</h2>
+              <p className={s.text}>
                 Wir verwenden Cookies, um diese Website zu betreiben und dein Erlebnis zu verbessern.
                 Du kannst selbst entscheiden, welche Kategorien du zulässt. Essentielle Cookies sind
                 immer aktiv, da sie für den Betrieb der Website notwendig sind.{' '}
-                <Link href="/datenschutz" className="underline underline-offset-2 hover:text-[#f5f5f0] transition-colors text-[#8b8b8b]">
+                <Link href="/datenschutz" className={s.link}>
                   Mehr erfahren
                 </Link>
               </p>
             </div>
           </div>
-        </div>
 
-        {/* Detail-Einstellungen (aufklappbar) */}
-        {showDetails && (
-          <div className="px-6 py-4 space-y-3 border-b border-[#f5f5f0]/10">
-            {/* Essentielle Cookies */}
-            <label className="flex items-center justify-between gap-4 cursor-not-allowed">
-              <div>
-                <div className="text-sm font-medium text-[#f5f5f0]">Essentielle Cookies</div>
-                <div className="text-xs text-[#6b6b6b] mt-0.5">
-                  Notwendig für die grundlegende Funktion der Website (Session, Sicherheit). Können nicht deaktiviert werden.
+          {/* Detail-Einstellungen (aufklappbar) */}
+          {showDetails && (
+            <div className={s.details}>
+              <div className={`${s.option} ${s.optionFest}`}>
+                <div>
+                  <div className={s.optionTitel}>Essentielle Cookies</div>
+                  <div className={s.optionText}>
+                    Notwendig für die grundlegende Funktion der Website (Session, Sicherheit). Können nicht deaktiviert werden.
+                  </div>
                 </div>
+                {/* immer an */}
+                <span className={s.schalter} aria-hidden="true" data-an="" />
               </div>
-              {/* Toggle – immer an */}
-              <div className="flex-shrink-0">
-                <div className="w-10 h-6 bg-[#f5f5f0] rounded-full flex items-center justify-end px-1 opacity-60">
-                  <div className="w-4 h-4 bg-[#0a0a0a] rounded-full" />
-                </div>
-              </div>
-            </label>
 
-            {/* Funktionale Cookies */}
-            <label className="flex items-center justify-between gap-4 cursor-pointer group">
-              <div>
-                <div className="text-sm font-medium text-[#f5f5f0] group-hover:text-white transition-colors">
-                  Funktionale Cookies
+              <label className={s.option}>
+                <div>
+                  <div className={s.optionTitel}>Funktionale Cookies</div>
+                  <div className={s.optionText}>
+                    Ermöglichen erweiterte Funktionen wie Karten-Einbindungen, Kontaktformulare und externe Medieninhalte (z. B. YouTube-Videos).
+                  </div>
                 </div>
-                <div className="text-xs text-[#6b6b6b] mt-0.5">
-                  Ermöglichen erweiterte Funktionen wie Karten-Einbindungen, Kontaktformulare und externe Medieninhalte (z. B. YouTube-Videos).
-                </div>
-              </div>
-              <button
-                role="switch"
-                aria-checked={functional}
-                onClick={() => setFunctional(v => !v)}
-                className={`flex-shrink-0 w-10 h-6 rounded-full transition-colors duration-200 flex items-center px-1 ${
-                  functional ? 'bg-[#f5f5f0] justify-end' : 'bg-[#2a2a2a] justify-start'
-                }`}
-              >
-                <div className={`w-4 h-4 rounded-full transition-colors duration-200 ${
-                  functional ? 'bg-[#0a0a0a]' : 'bg-[#6b6b6b]'
-                }`} />
-              </button>
-            </label>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={functional}
+                  aria-label="Funktionale Cookies"
+                  onClick={() => setFunctional(v => !v)}
+                  className={s.schalter}
+                  data-an={functional || undefined}
+                />
+              </label>
 
-            {/* Analyse-Cookies */}
-            <label className="flex items-center justify-between gap-4 cursor-pointer group">
-              <div>
-                <div className="text-sm font-medium text-[#f5f5f0] group-hover:text-white transition-colors">
-                  Analyse-Cookies
+              <label className={s.option}>
+                <div>
+                  <div className={s.optionTitel}>Analyse-Cookies</div>
+                  <div className={s.optionText}>
+                    Helfen uns zu verstehen, wie Besucher die Website nutzen (derzeit kein aktiver Dienst).
+                  </div>
                 </div>
-                <div className="text-xs text-[#6b6b6b] mt-0.5">
-                  Helfen uns zu verstehen, wie Besucher die Website nutzen (derzeit kein aktiver Dienst).
-                </div>
-              </div>
-              <button
-                role="switch"
-                aria-checked={analytics}
-                onClick={() => setAnalytics(v => !v)}
-                className={`flex-shrink-0 w-10 h-6 rounded-full transition-colors duration-200 flex items-center px-1 ${
-                  analytics ? 'bg-[#f5f5f0] justify-end' : 'bg-[#2a2a2a] justify-start'
-                }`}
-              >
-                <div className={`w-4 h-4 rounded-full transition-colors duration-200 ${
-                  analytics ? 'bg-[#0a0a0a]' : 'bg-[#6b6b6b]'
-                }`} />
-              </button>
-            </label>
-          </div>
-        )}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={analytics}
+                  aria-label="Analyse-Cookies"
+                  onClick={() => setAnalytics(v => !v)}
+                  className={s.schalter}
+                  data-an={analytics || undefined}
+                />
+              </label>
+            </div>
+          )}
 
-        {/* Buttons */}
-        <div className="px-6 py-4 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between">
-          <button
-            onClick={() => setShowDetails(v => !v)}
-            className="text-xs text-[#6b6b6b] hover:text-[#f5f5f0] transition-colors underline underline-offset-2 text-left sm:text-center"
-          >
-            {showDetails ? 'Einstellungen ausblenden' : 'Einstellungen anpassen'}
-          </button>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={rejectAll}
-              className="px-4 py-2 text-xs border border-[#f5f5f0]/20 text-[#6b6b6b] hover:text-[#f5f5f0] hover:border-[#f5f5f0]/40 rounded-lg transition-colors"
-            >
-              Nur Essentielle
+          {/* Buttons */}
+          <div className={s.leiste}>
+            <button type="button" onClick={() => setShowDetails(v => !v)} className={s.einstellungen}>
+              {showDetails ? 'Einstellungen ausblenden' : 'Einstellungen anpassen'}
             </button>
-            {showDetails ? (
-              <button
-                onClick={acceptSelected}
-                className="px-4 py-2 text-xs bg-[#f5f5f0]/10 text-[#f5f5f0] hover:bg-[#f5f5f0]/20 border border-[#f5f5f0]/20 rounded-lg transition-colors"
-              >
-                Auswahl speichern
+
+            <div className={s.knoepfe}>
+              <button type="button" onClick={rejectAll} className={`${s.knopf} ${s.knopfGlas}`}>
+                Nur Essentielle
               </button>
-            ) : null}
-            <button
-              onClick={acceptAll}
-              className="px-5 py-2 text-xs font-medium bg-[#f5f5f0] text-[#0a0a0a] hover:bg-white rounded-lg transition-colors"
-            >
-              Alle akzeptieren
-            </button>
+              {showDetails ? (
+                <button type="button" onClick={acceptSelected} className={`${s.knopf} ${s.knopfGlas}`}>
+                  Auswahl speichern
+                </button>
+              ) : null}
+              <button type="button" onClick={acceptAll} className={`${s.knopf} ${s.knopfDunkel}`}>
+                Alle akzeptieren
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -4,16 +4,22 @@
  * fest, .site gibt es nur auf der Website (components/SiteChrome.tsx) – die Verwaltung bleibt
  * so im bisherigen Look.
  *
- * Bento: heller Grund (#f3f3f2), weiße Karten mit großen Radien und weichen Schatten,
+ * Bento: heller Grund wie ein wolkenloser Himmel (oben blasses Blaugrau, zum Horizont fast weiß),
+ * weiße Karten mit großen Radien und weichen Schatten,
  * Bricolage Grotesque für Überschriften, Plus Jakarta Sans für Text.
  * Vereinsfarben: nur Schwarz, Weiß und neutrale Grautöne – Spartenfarben werden entsättigt,
- * Fotos bleiben farbig. Die Unterseiten sind mit festen Tailwind-Klassen gebaut; die Regeln
+ * Fotos bleiben farbig; einzige Ausnahme ist der ganz leichte Himmel im Hintergrund. Die Unterseiten sind mit festen Tailwind-Klassen gebaut; die Regeln
  * hier greifen deshalb gezielt diese Klassen (escaped) und Inline-Styles auf.
  */
 
 /* ── Grundlage: Farben, Schriften, Hintergrund ───────────────────────────── */
 html[data-design="b"] .site {
+  /* Grautöne für Flächen in Karten (Pillen, Tabs, Hover) */
   --b-bg: #f3f3f2;
+  /* Seitenhintergrund: wolkenloser Himmel, steht beim Scrollen still (.site::before).
+     Oben bleibt er ein Stück gleich, damit die Blende hinter der Navbar nahtlos passt. */
+  --b-himmel-oben: #e1e8ee;
+  --b-himmel: linear-gradient(180deg, var(--b-himmel-oben) 0%, var(--b-himmel-oben) 6%, #e8eef2 28%, #f1f4f6 62%, #fafbfb 100%);
   --b-karte: #ffffff;
   --b-ink: #111111;
   --b-muted: #6b6b6b;
@@ -33,10 +39,22 @@ html[data-design="b"] .site {
   --font-body: var(--b-schrift);
 
   min-height: 100vh;
-  background: var(--b-bg);
+  background: var(--b-himmel-oben);
   color: var(--b-ink);
   font-family: var(--b-schrift);
   line-height: 1.6;
+  /* eigene Ebene, damit der Himmel (z-index: -1) über dem Grund und unter dem Inhalt liegt */
+  isolation: isolate;
+}
+
+/* Der Himmel füllt immer genau das Fenster – auch auf langen Seiten bleibt der Verlauf sichtbar */
+html[data-design="b"] .site::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--b-himmel);
+  pointer-events: none;
 }
 
 html[data-design="b"] .site ::selection {
@@ -629,42 +647,6 @@ html[data-design="b"] .site main > .min-h-screen h1.font-display[class] {
 
 @media (min-width: 768px) {
   html[data-design="b"] .site main > .min-h-screen { margin-top: 40px; }
-}
-
-/* ── Cookie-Banner: schwarzer, runder Block mit Pillen-Knöpfen ── */
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] {
-  padding-bottom: 84px;
-}
-
-/* Unten 84 px Platz für den Vorschau-Umschalter – damit die Box mit aufgeklappten
- * Einstellungen nicht oben aus dem Bildschirm läuft, scrollt sie in sich */
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] > div {
-  max-height: calc(100vh - 116px);
-  max-height: calc(100dvh - 116px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  border-radius: var(--b-r);
-  border-color: rgba(255, 255, 255, .08);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
-}
-
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] h2.font-display {
-  font-size: 1.35rem;
-  letter-spacing: -.01em;
-}
-
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] .rounded-lg {
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] span[aria-hidden="true"] { filter: var(--b-emoji); }
-
-html[data-design="b"] .site [role="dialog"][aria-label="Cookie-Einstellungen"] :focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

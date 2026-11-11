@@ -192,7 +192,8 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
             {neueste.map(post => {
               const icon = iconZuName.get(post.category) ?? iconZuName.get(post.sparte)
               return (
-                <Link key={post.slug} href={`/news/${post.slug}`} className={`${b.karte} ${s.post}`}>
+                // Öffnet als Glas-Fenster über der Startseite (app/(start)/@modal) – ohne nach oben zu springen
+                <Link key={post.slug} href={`/news/${post.slug}`} scroll={false} className={`${b.karte} ${s.post}`}>
                   <div className={s.bild}>
                     {post.image ? (
                       <Image
@@ -253,7 +254,7 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
             {fvNews && (
               <p>
                 <b>Neu:</b>{' '}
-                <Link href={`/news/${fvNews.slug}`} className={b.link}>{fvNews.title}</Link>
+                <Link href={`/news/${fvNews.slug}`} scroll={false} className={b.link}>{fvNews.title}</Link>
               </p>
             )}
           </div>

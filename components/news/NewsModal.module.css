@@ -1,0 +1,261 @@
+/*
+ * News-Fenster mit Glaseffekt – components/news/GlasModal.tsx
+ *
+ * Das Glas selbst kommt aus components/glas (GlasEbenen): eine Scheibe ohne Rahmen, am Rand klar
+ * und verzogen, sonst mattiert. Hier nur Form, Lage, Bewegung und der Beitrag darin.
+ * .panel bekommt nie opacity oder filter – auch nicht in den Animationen –, sonst sähe das Glas die
+ * Seite dahinter nicht mehr. Beim Ausblenden werden deshalb seine Kinder einzeln durchsichtig.
+ */
+
+.dialog {
+  --r: 34px;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 24px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  color: var(--b-ink);
+}
+
+.dialog[open] {
+  display: grid;
+  place-items: center;
+}
+
+.dialog::backdrop {
+  background: rgba(17, 17, 17, .24);
+  animation: einblenden .35s ease both;
+}
+
+.dialog[data-zu]::backdrop { animation: ausblenden .26s ease-in both; }
+
+.panel {
+  /* Lesefläche: etwas heller als Standardglas, damit langer Text gut lesbar bleibt */
+  --glas-tint: rgba(255, 255, 255, .74);
+  --glas-unschaerfe: 26px;
+  --glas-r: var(--r);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 48px);
+  border-radius: var(--r);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, .24), 0 10px 28px rgba(0, 0, 0, .1);
+  /* federnd herein */
+  animation: hereinSchweben .55s cubic-bezier(.2, .9, .25, 1.12) both;
+}
+
+.dialog[data-zu] .panel { animation: hinausSchweben .26s cubic-bezier(.4, 0, 1, 1) both; }
+.dialog[data-zu] .panel > * { animation: ausblenden .26s ease-in both; }
+
+.scroller {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: inherit;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, .25) transparent;
+}
+
+/* ✕ als Glaskugel, bleibt beim Scrollen oben – der Beitrag zieht darunter durch */
+.leiste {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 0;
+}
+
+.schliessen {
+  --glas-tint: rgba(255, 255, 255, .4);
+  --glas-unschaerfe: 8px;
+  --glas-klar: 7px;
+  --glas-r: 22px;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--b-ink);
+  background: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.2, .9, .25, 1.3);
+}
+
+.schliessen:hover { transform: scale(1.07); }
+.schliessen:active { transform: scale(.93); }
+
+.schliessen:focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: 3px;
+}
+
+.schliessen svg {
+  position: relative;
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Beitrag ── */
+.artikel,
+.laden { position: relative; }
+
+.bild {
+  position: relative;
+  /* feste Breite: sonst machte max-height den Kasten über das Seitenverhältnis schmaler */
+  width: calc(100% - 16px);
+  aspect-ratio: var(--seiten, 16 / 9);
+  max-height: min(56vh, 520px);
+  margin: 8px 8px 0;
+  overflow: hidden;
+  border-radius: calc(var(--r) - 8px);
+  background: var(--b-grau);
+}
+
+.bild img { object-fit: cover; }
+
+/* Ohne Foto: Platz für den ✕-Knopf */
+.ohneBild { height: 56px; }
+
+.text { padding: 28px 44px 40px; }
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #555;
+}
+
+.tag {
+  background: rgba(0, 0, 0, .06);
+  color: var(--b-ink);
+}
+
+.titel {
+  margin-bottom: 18px;
+  font-family: var(--b-display);
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+.teaser {
+  margin-bottom: 22px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+}
+
+.fliesstext { line-height: 1.75; }
+
+.fuss { margin-top: 34px; }
+
+/* ── Ladeanzeige ── */
+.zeile {
+  height: 14px;
+  margin-bottom: 14px;
+  border-radius: 999px;
+}
+
+.zeileGross {
+  height: 30px;
+  margin-bottom: 22px;
+}
+
+.schimmer {
+  background: linear-gradient(90deg, rgba(0, 0, 0, .06) 30%, rgba(0, 0, 0, .1) 50%, rgba(0, 0, 0, .06) 70%) 0 0 / 300% 100%;
+  animation: schimmern 1.4s linear infinite;
+}
+
+/* ── Animationen ── */
+@keyframes einblenden { from { opacity: 0; } }
+@keyframes ausblenden { to { opacity: 0; } }
+
+@keyframes hereinSchweben {
+  from { transform: translateY(30px) scale(.93); }
+}
+
+@keyframes hinausSchweben {
+  to {
+    transform: translateY(24px) scale(.95);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes hereinFahren {
+  from { transform: translateY(calc(100% + 24px)); }
+}
+
+@keyframes hinausFahren {
+  to { transform: translateY(calc(100% + 24px)); }
+}
+
+@keyframes schimmern {
+  to { background-position: -150% 0; }
+}
+
+/* ── Handy: Vollbild, fährt von unten herein ── */
+@media (max-width: 720px) {
+  .dialog {
+    --r: 32px;
+    padding: max(8px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+  }
+
+  /* eine feste Zeile in Bildschirmhöhe – sonst wüchse das Fenster mit dem Beitrag mit */
+  .dialog[open] {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    place-items: stretch;
+  }
+
+  .panel {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    animation: hereinFahren .6s cubic-bezier(.2, 1, .3, 1) both;
+  }
+
+  .dialog[data-zu] .panel { animation: hinausFahren .32s cubic-bezier(.5, 0, .75, 0) both; }
+  .dialog[data-zu] .panel > * { animation: none; }
+
+  .schliessen {
+    top: 10px;
+    right: 10px;
+  }
+
+  .bild {
+    width: calc(100% - 12px);
+    max-height: 48vh;
+    margin: 6px 6px 0;
+    border-radius: calc(var(--r) - 6px);
+  }
+
+  .text { padding: 22px 20px 32px; }
+}
+
+/* Weniger Bewegung: ohne Herein- und Hinausfahren */
+@media (prefers-reduced-motion: reduce) {
+  .dialog::backdrop,
+  .panel,
+  .panel > *,
+  .schimmer { animation: none !important; }
+  .schliessen { transition: none; }
+}
