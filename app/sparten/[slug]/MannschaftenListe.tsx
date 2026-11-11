@@ -23,10 +23,18 @@ const MIN_FUER_AUSWAHL = 4
 /**
  * Mannschaften einer Sparte, nach Bereich gruppiert. Bei vielen Mannschaften (z. B. Fußball)
  * steht oben eine Auswahl, die nur die gewählte Mannschaft zeigt, damit man nicht bis zu ihr
- * scrollen muss.
+ * scrollen muss. `start` wählt eine Mannschaft vorab aus (?mannschaft= in der Adresse, z. B. aus der Suche).
  */
-export default function MannschaftenListe({ abschnitte, farbe }: { abschnitte: MannschaftAbschnitt[]; farbe: string }) {
-  const [aktiv, setAktiv] = useState<number | null>(null)
+export default function MannschaftenListe({
+  abschnitte,
+  farbe,
+  start = null,
+}: {
+  abschnitte: MannschaftAbschnitt[]
+  farbe: string
+  start?: number | null
+}) {
+  const [aktiv, setAktiv] = useState<number | null>(start)
   const anzahl = abschnitte.reduce((summe, a) => summe + a.mannschaften.length, 0)
   const mitAuswahl = anzahl >= MIN_FUER_AUSWAHL
   const gewaehlt = mitAuswahl && aktiv !== null ? abschnitte.flatMap(a => a.mannschaften).find(m => m.id === aktiv) : undefined

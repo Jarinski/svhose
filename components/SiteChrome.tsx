@@ -3,10 +3,11 @@
 import { usePathname } from 'next/navigation'
 import CookieBanner from './CookieBanner'
 import SeitenLeiste from './SeitenLeiste'
+import SuchFenster from './suche/SuchFenster'
 import NavbarB from './vorschau/b/NavbarB'
 
 // ─── Seitenrahmen ────────────────────────────────────────────────────────────
-// Navigation, Inhalt, Footer und Cookie-Banner auf jeder Seite der Website.
+// Navigation, Inhalt, Footer, Suchfenster und Cookie-Banner auf jeder Seite der Website.
 // Die Verwaltung unter /verwaltung hat ihren eigenen Rahmen. Der Footer kommt als
 // fertig gerenderte Server-Komponente aus dem Layout herein.
 // .site ist zugleich der Rahmen, an dem die Bento-Regeln in app/vorschau-b.css hängen.
@@ -30,6 +31,7 @@ export default function SiteChrome({
       <main>{children}</main>
       {footer}
       <SeitenLeiste />
+      <SuchFenster />
       <CookieBanner />
     </div>
   )

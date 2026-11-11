@@ -76,11 +76,13 @@
 
 .links > li { position: relative; }
 
+/* Seitlich 10 px (vorher 14): Seit der Lupe rechts reicht der Platz in der Leiste (innen höchstens
+   1176 px) sonst nicht, und der Vereinsname bräche in zwei Zeilen um */
 .eintrag {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 10px 14px;
+  padding: 10px;
   border: 0;
   border-radius: 999px;
   background: transparent;

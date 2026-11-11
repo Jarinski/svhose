@@ -1,0 +1,367 @@
+/*
+ * Suchfenster mit Glaseffekt – components/suche/SuchFenster.tsx
+ *
+ * Glas aus components/glas (GlasEbenen) wie beim News-Fenster: .panel bekommt nie opacity oder
+ * filter, auch nicht in Animationen – sonst sähe das Glas die Seite dahinter nicht mehr. Am Rechner
+ * schwebt das Fenster im oberen Drittel, am Handy füllt es den Bildschirm.
+ * Die Treffer selbst sind in Suche.module.css (.kompakt).
+ */
+
+.dialog {
+  --r: 30px;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: min(11vh, 110px) 24px 24px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  color: var(--b-ink);
+}
+
+.dialog[open] {
+  display: grid;
+  justify-items: center;
+  align-items: start;
+}
+
+.dialog::backdrop {
+  background: rgba(17, 17, 17, .22);
+  animation: einblenden .3s ease both;
+}
+
+.dialog[data-zu]::backdrop { animation: ausblenden .2s ease-in both; }
+
+.panel {
+  /* Lesefläche: heller als Standardglas, damit die Treffer gut lesbar sind */
+  --glas-tint: rgba(255, 255, 255, .78);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(700px, 100%);
+  max-height: min(680px, calc(100dvh - min(11vh, 110px) - 24px));
+  border-radius: var(--r);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, .22), 0 10px 28px rgba(0, 0, 0, .1);
+  animation: hereinSchweben .45s cubic-bezier(.2, .9, .25, 1.1) both;
+}
+
+.dialog[data-zu] .panel { animation: hinausSchweben .2s cubic-bezier(.4, 0, 1, 1) both; }
+.dialog[data-zu] .panel > * { animation: ausblenden .2s ease-in both; }
+
+/* ── Suchzeile ── */
+.kopf {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 22px;
+  border-bottom: 1px solid rgba(0, 0, 0, .07);
+}
+
+.lupe {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--b-ink);
+}
+
+.eingabe {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: 0;
+  background: transparent;
+  font: 500 19px/1.3 var(--b-schrift);
+  color: var(--b-ink);
+}
+
+.eingabe::placeholder { color: #7a7a7a; font-weight: 400; }
+.eingabe:focus { outline: none; }
+
+/* Dreht sich, solange gesucht wird */
+.laden {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 0, 0, .12);
+  border-top-color: var(--b-ink);
+  border-radius: 50%;
+  animation: drehen .7s linear infinite;
+}
+
+.leeren {
+  flex: none;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .06);
+  font: 600 13px/1 var(--b-schrift);
+  color: #444;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.leeren:hover { background: rgba(0, 0, 0, .1); }
+
+.schliessen {
+  --glas-tint: rgba(255, 255, 255, .45);
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--b-ink);
+  background: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.2, .9, .25, 1.3);
+}
+
+.schliessen:hover { transform: scale(1.07); }
+.schliessen:active { transform: scale(.93); }
+
+.schliessen svg {
+  position: relative;
+  width: 17px;
+  height: 17px;
+}
+
+/* Das Suchfeld selbst ohne Rahmen – der Cursor zeigt, wo man ist */
+.kopf button:focus-visible,
+.koerper :focus-visible,
+.fuss :focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: 2px;
+}
+
+/* ── Treffer ── */
+.koerper {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 10px 12px;
+}
+
+.koerper::-webkit-scrollbar { width: 12px; }
+.koerper::-webkit-scrollbar-track { background: transparent; }
+
+.koerper::-webkit-scrollbar-thumb {
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .2) padding-box;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .koerper {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, .25) transparent;
+  }
+}
+
+.status {
+  padding: 8px 14px 4px;
+  font-size: 13.5px;
+  color: var(--b-muted);
+}
+
+.liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gruppe {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--b-muted);
+}
+
+.gruppe a {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--b-ink);
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, .25);
+  text-underline-offset: 3px;
+}
+
+.gruppe a:hover { text-decoration-color: currentColor; }
+
+/* ── Ohne Suchbegriff ── */
+.leer { padding: 2px 4px 10px; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 14px 4px;
+  list-style: none;
+}
+
+.chip {
+  display: inline-block;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .7);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 4px 12px rgba(0, 0, 0, .05);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--b-ink);
+  transition: background .15s, transform .15s;
+}
+
+.chip:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.tipp {
+  padding: 18px 14px 4px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--b-muted);
+}
+
+/* ── Fußzeile ── */
+.fuss {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px 14px;
+  border-top: 1px solid rgba(0, 0, 0, .07);
+}
+
+.alle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--b-ink);
+  border-radius: 6px;
+}
+
+.alle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform .2s;
+}
+
+.alle:hover svg { transform: translateX(3px); }
+
+.tasten {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--b-muted);
+  white-space: nowrap;
+}
+
+.tasten kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .8);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .12), inset 0 0 0 1px rgba(0, 0, 0, .06);
+  font: 600 11px/1 var(--b-schrift);
+  color: #444;
+}
+
+/* ── Animationen ── */
+@keyframes einblenden { from { opacity: 0; } }
+@keyframes ausblenden { to { opacity: 0; } }
+@keyframes drehen { to { transform: rotate(360deg); } }
+
+@keyframes hereinSchweben {
+  from { transform: translateY(-14px) scale(.96); }
+}
+
+@keyframes hinausSchweben {
+  to {
+    transform: translateY(-10px) scale(.97);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes hereinFahren {
+  from { transform: translateY(calc(100% + 24px)); }
+}
+
+@keyframes hinausFahren {
+  to { transform: translateY(calc(100% + 24px)); }
+}
+
+/* ── Handy: Vollbild ── */
+@media (max-width: 720px) {
+  .dialog {
+    --r: 28px;
+    padding: max(8px, env(safe-area-inset-top)) 6px max(6px, env(safe-area-inset-bottom));
+  }
+
+  .dialog[open] {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    align-items: stretch;
+    justify-items: stretch;
+  }
+
+  .panel {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    animation: hereinFahren .5s cubic-bezier(.2, 1, .3, 1) both;
+  }
+
+  .dialog[data-zu] .panel { animation: hinausFahren .28s cubic-bezier(.5, 0, .75, 0) both; }
+  .dialog[data-zu] .panel > * { animation: none; }
+
+  .kopf {
+    gap: 8px;
+    padding: 8px 8px 8px 16px;
+  }
+
+  .eingabe {
+    height: 48px;
+    /* 16px und mehr: iOS zoomt beim Antippen sonst ins Feld */
+    font-size: 17px;
+  }
+
+  .koerper { padding: 6px 4px 12px; }
+  .tasten { display: none; }
+}
+
+/* Weniger Bewegung */
+@media (prefers-reduced-motion: reduce) {
+  .dialog::backdrop,
+  .panel,
+  .panel > * { animation: none !important; }
+  .laden { animation-duration: 1.6s; }
+  .schliessen,
+  .chip,
+  .alle svg { transition: none; }
+}

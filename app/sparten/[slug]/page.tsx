@@ -100,10 +100,15 @@ function auswahlBeschriftungen(mannschaften: TeamKarte[]): Map<number, string> {
 }
 
 /* ── Seite ─────────────────────────────────────────────────── */
-export default async function SparteDetailPage(props: { params: Promise<{ slug: string }> }) {
+export default async function SparteDetailPage(props: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ mannschaft?: string }>
+}) {
   const params = await props.params
   const sparte = await getSparteBySlug(params.slug)
   if (!sparte) notFound()
+  // ?mannschaft=<id> (z. B. aus der Suche) wählt die Mannschaft in der Auswahl gleich aus
+  const gewaehlteMannschaft = Number((await props.searchParams).mannschaft) || null
 
   const { farbe, mannschaften, gruppen, ansprechpartner, downloads, news } = sparte
   const isAkrobatik = sparte.slug === 'akrobatik'
@@ -259,7 +264,7 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
             {mannschaften.length > 0 && (
               <section>
                 <SectionHeader title="MANNSCHAFTEN" farbe={farbe} count={mannschaften.length} />
-                <MannschaftenListe abschnitte={mannschaftenByBereich} farbe={farbe} />
+                <MannschaftenListe abschnitte={mannschaftenByBereich} farbe={farbe} start={gewaehlteMannschaft} />
               </section>
             )}
 
@@ -381,7 +386,8 @@ function MannschaftCard({
   const hasDetails = zeiten.length > 0 || trainer.length > 0
 
   return (
-    <div className="border border-[#0a0a0a]/[0.08] bg-[#fafaf8] overflow-hidden">
+    // id: Sprungziel aus der Suche (lib/suche/quellen.ts), scroll-mt hält die Karte unter der Navigation frei
+    <div id={`${team.art}-${team.id}`} className="scroll-mt-28 border border-[#0a0a0a]/[0.08] bg-[#fafaf8] overflow-hidden">
 
       {/* ── Kartenkopf ── */}
       <div className="p-5 flex flex-col lg:flex-row gap-4">

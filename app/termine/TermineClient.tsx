@@ -166,7 +166,8 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
         <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Kommende Termine</div>
         <div className="space-y-px bg-[#0a0a0a]/10">
           {kommend.map(({ termin: t, ...e }) => (
-            <div key={t.id} className="bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+            // id: Sprungziel aus der Suche (lib/suche/quellen.ts)
+            <div key={t.id} id={`termin-${t.id}`} className="scroll-mt-28 bg-[#f5f5f0] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
               {/* Datum Block */}
               <div className="bg-[#0a0a0a] text-[#f5f5f0] p-4 text-center shrink-0 w-20">
                 <div className="font-display text-3xl leading-none">
@@ -251,7 +252,7 @@ export default function TermineClient({ termine }: { termine: Termin[] }) {
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-6">Vergangene Termine</div>
           <div className="space-y-px bg-[#0a0a0a]/10 opacity-50">
             {vergangen.map(({ termin: t, ...e }) => (
-              <div key={t.id} className="bg-[#f5f5f0] p-6 flex flex-wrap items-center gap-2 sm:gap-6">
+              <div key={t.id} id={`termin-${t.id}`} className="scroll-mt-28 bg-[#f5f5f0] p-6 flex flex-wrap items-center gap-2 sm:gap-6">
                 <div className="text-sm text-[#6b6b6b] w-24 shrink-0">
                   {format(new Date(t.datum), 'd. MMM yyyy', { locale: de })}
                 </div>

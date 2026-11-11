@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { Lock, MapPin, MessagesSquare, Search, Send, type LucideIcon } from 'lucide-react'
 import GlasEbenen from './glas/GlasEbenen'
 import MitgliedWerdenLasche from './MitgliedWerdenLasche'
+import { sucheStattLink } from './suche/oeffnen'
 import s from './SeitenLeiste.module.css'
 
 // ─── Seitenleiste ────────────────────────────────────────────────────────────
@@ -36,7 +39,8 @@ export default function SeitenLeiste() {
               {inhalt}
             </a>
           ) : (
-            <Link key={href} href={href} aria-label={label} className={s.knopf}>
+            // Suche: öffnet das Suchfenster statt der Seite /suche (Strg-Klick usw. weiterhin die Seite)
+            <Link key={href} href={href} aria-label={label} className={s.knopf} onClick={href === '/suche' ? sucheStattLink : undefined}>
               {inhalt}
             </Link>
           )

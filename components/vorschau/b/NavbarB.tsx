@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, type FocusEvent } from 'react'
 import b from './bento.module.css'
 import GlasEbenen from '@/components/glas/GlasEbenen'
 import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
+import { sucheOeffnen } from '@/components/suche/oeffnen'
 import s from './NavbarB.module.css'
 
 // ─── Navigation von Design B (Bento) ─────────────────────────────────────────
@@ -200,6 +201,24 @@ export default function NavbarB() {
           </ul>
 
           <div className={s.rechts}>
+            {/* Suchfenster (components/suche/SuchFenster.tsx), auch mit Strg+K / ⌘+K */}
+            <button
+              type="button"
+              className={s.iconBtn}
+              aria-label="Website durchsuchen"
+              aria-haspopup="dialog"
+              title="Suchen (Strg+K)"
+              onClick={() => {
+                setMenuAuf(null)
+                setAusklappAuf(null)
+                sucheOeffnen()
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+            </button>
             <Link href="/downloads" className={`${b.btn} ${b.btnDunkel} ${s.mitglied}`}>
               Mitglied werden
             </Link>

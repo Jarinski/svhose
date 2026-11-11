@@ -57,6 +57,12 @@ flowchart LR
   nächsten Seitenaufruf sichtbar.
 - Ausnahme: `/fussball` und `/tischtennis` laden Spiele direkt bei fussball.de bzw. click-tt und
   werden höchstens stündlich neu erzeugt (`revalidate = 3600`).
+- Die Website-Suche (`/suche`, Schnellsuche über `/api/suche`, Code in `lib/suche/`) liest
+  Datenbankinhalte bei jeder Suche frisch (höchstens 10 Sekunden zwischengespeichert). Den Text der
+  festen Seiten (Kinderschutz, Impressum, Spielpläne …) ruft der Server bei sich selbst ab – über die
+  Adresse, unter der `next start` lauscht (`127.0.0.1:3000`) – und merkt ihn sich 30 Minuten.
+  Codeänderungen an diesen Seiten sind also spätestens eine halbe Stunde nach dem Update
+  auffindbar, sofort nach einem Neustart des Dienstes.
 
 ### 1.4 Arbeitsverzeichnis und persistente Daten
 
@@ -473,6 +479,7 @@ sudo systemctl restart svhs
 | `503` beim Speichern oder Anmelden | `limit_req` in nginx greift | Werte in `limit_req_zone`/`burst` erhöhen (Abschnitt 5.1) |
 | Einladungs-Link zeigt auf `localhost` | `SEITEN_URL` beim Skript nicht gesetzt bzw. nicht in der Env-Datei | Code von Hand auf `/verwaltung/anmelden` eingeben oder Skript mit `SEITEN_URL` neu aufrufen (Abschnitt 9.1) |
 | Niemand kann sich als Admin anmelden | alle Admins ausgesperrt (Handy verloren, Passwort vergessen) | Notfall-Zugang per Skript (Abschnitt 9.4) |
+| Suche findet Kinderschutz, Impressum usw. nur über den Titel, nicht über Wörter im Text; im Log `Suche: /… nicht einlesbar` | Der Server erreicht sich selbst nicht unter seiner eigenen Adresse (Abschnitt 1.3) | Prüfen, ob `curl http://127.0.0.1:3000/impressum` auf dem Server antwortet; die Suche versucht es alle 2 Minuten erneut |
 
 ### 7.2 Inhalte auf dem Server pflegen (Drizzle Studio per SSH-Tunnel)
 
