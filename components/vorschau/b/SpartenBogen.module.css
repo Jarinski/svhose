@@ -5,11 +5,12 @@
  * Ohne JavaScript steht der Bogen still, ohne Scrollbalken in jedem Fall.
  */
 
-/* Schneidet die Karten am Rand ab – mit Luft oben und unten, in der die Schatten weich auslaufen.
-   Die Luft hebt der negative Außenabstand wieder auf, das Layout bleibt gleich; Klicks gehen
-   durch sie hindurch an Überschrift und Knopf. */
+/* Schneidet die Karten am Rand ab – mit Luft oben und unten, in der die Schatten weich auslaufen
+   und in die die Randkarten beim Kippen (siehe unten) wandern. Die Luft hebt der negative
+   Außenabstand wieder auf, das Layout bleibt gleich; Klicks gehen durch sie hindurch an
+   Überschrift und Knopf. */
 .rahmen {
-  --luft: 56px;
+  --luft: 250px;
   /* volle Fensterbreite wie ein Panorama (html/body schneiden seitlich ab, kein Querscrollen) */
   width: 100vw;
   margin: calc(var(--luft) * -1) 0 calc(var(--luft) * -1) calc(50% - 50vw);
@@ -49,6 +50,27 @@
 }
 
 .buehne[data-ziehen] { cursor: grabbing; }
+
+/* Beim Scrollen kippt der Blick auf den Bogen: Steht er unten im Fenster, sieht man von oben auf
+   ihn, steht er oben, von unten. Die nahen Karten am Rand verschieben sich dabei gegen die in der
+   Mitte. Gekippt wird nur, solange der Bogen ganz im Fenster steht (contain), und der Fluchtpunkt
+   wandert höchstens um --hub aus der Mitte – auf breiten Bildschirmen stehen ganz außen Karten
+   fast seitlich und sehr nah, die würden sonst weit nach oben oder unten schwenken.
+   Ohne Scroll-Timeline und bei weniger Bewegung bleibt der Blick gerade. */
+@supports (animation-timeline: view()) {
+  .buehne {
+    /* höchstens 150px, und nie mehr, als der Bogen im Fenster Platz hat */
+    --hub: clamp(0px, 50vh - 50%, 150px);
+    animation: kippen linear both;
+    animation-timeline: view();
+    animation-range: contain;
+  }
+}
+
+@keyframes kippen {
+  from { perspective-origin: 50% calc(50% - var(--hub)); }
+  to { perspective-origin: 50% calc(50% + var(--hub)); }
+}
 
 .karte {
   /* Weg bis zur Mitte entlang des Bogens, gefaltet auf ±Umfang/2 – so läuft das Band endlos */
@@ -290,6 +312,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .buehne { animation: none; }
   .link img,
   .pause { transition: none; }
   .link:hover img { transform: none; }
