@@ -17,11 +17,11 @@
 .panel {
   /* heller als Standardglas: liegt oft über dem dunklen Hero-Video, der Text muss lesbar bleiben */
   --glas-tint: rgba(255, 255, 255, .76);
-  --glas-r: 30px;
+  --r: 30px;
   position: relative;
   max-width: 720px;
   margin: 0 auto;
-  border-radius: var(--glas-r);
+  border-radius: var(--r);
   color: var(--b-ink);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .22), 0 6px 18px rgba(0, 0, 0, .08);
   pointer-events: auto;
@@ -35,7 +35,25 @@
   overscroll-behavior: contain;
   border-radius: inherit;
   padding: 22px 24px 18px;
-  scrollbar-width: thin;
+}
+
+/* Scrollleiste (nur bei aufgeklappten Einstellungen auf kleinen Bildschirmen): schmal und vor den
+   runden Ecken zu Ende, sonst liefe sie durch die Rundung nach außen */
+.inhalt::-webkit-scrollbar { width: 12px; }
+
+.inhalt::-webkit-scrollbar-track {
+  margin: calc(var(--r) - 6px) 0;
+  background: transparent;
+}
+
+.inhalt::-webkit-scrollbar-thumb {
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .22) padding-box;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .inhalt { scrollbar-width: thin; }
 }
 
 .kopf {
@@ -226,7 +244,7 @@
 /* ── Handy: Knöpfe untereinander, volle Breite ── */
 @media (max-width: 640px) {
   .huelle { padding: 8px 8px max(8px, env(safe-area-inset-bottom)); }
-  .panel { --glas-r: 28px; }
+  .panel { --r: 28px; }
   .inhalt { padding: 18px 18px 16px; }
   .kopf { gap: 12px; }
   .keks { font-size: 22px; }
