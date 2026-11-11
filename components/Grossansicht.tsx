@@ -3,15 +3,19 @@
 /**
  * components/Grossansicht.tsx
  *
- * Großansicht für Fotos als modaler Dialog: Blättern mit den Pfeilen, den Pfeiltasten oder per Wischen;
+ * Großansicht für Fotos als modaler Dialog im Glas-Look der übrigen Fenster (Grossansicht.module.css):
+ * Die Seite dahinter wird hell mattiert, das Foto schwebt darüber, Zähler, ✕, Pfeile und Unterschrift
+ * sind kleine Glasflächen (components/glas). Blättern mit den Pfeilen, den Pfeiltasten oder per Wischen;
  * Esc, ✕ oder ein Klick neben das Foto schließt sie. Bei nur einem Foto fallen Zähler und Pfeile weg.
  *
- * Genutzt von der Förderverein-Galerie (components/foerderverein/Galerie.tsx) und den Mannschaftsfotos
- * (components/TeamFoto.tsx).
+ * Genutzt von der Förderverein-Galerie (components/foerderverein/Galerie.tsx), der Zeitleiste
+ * (components/foerderverein/ZeitZoom.tsx) und den Mannschaftsfotos (components/TeamFoto.tsx).
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import GlasEbenen from '@/components/glas/GlasEbenen'
+import s from './Grossansicht.module.css'
 
 export interface GrossansichtFoto {
   bild: { src: string }
@@ -20,6 +24,9 @@ export interface GrossansichtFoto {
 
 /** Ab so vielen Pixeln seitlich zählt eine Wischbewegung als Blättern. */
 const WISCHEN_AB = 50
+
+/** Klickflächen neben dem Foto (data-daneben): Ein Klick dort schließt die Großansicht. */
+const istDaneben = (el: EventTarget | null) => el instanceof HTMLElement && el.dataset.daneben !== undefined
 
 export default function Grossansicht({
   fotos,
@@ -35,10 +42,29 @@ export default function Grossansicht({
   const dialog = useRef<HTMLDialogElement>(null)
   /** Steht die Großansicht gerade? Ereignisse eines schon geschlossenen Dialogs zählen nicht mehr. */
   const aktiv = useRef(false)
+  /** Läuft das Schließen schon (Ausblenden)? */
+  const schliesst = useRef(false)
+  /** Begann der Klick neben dem Foto? (Auf dem Foto drücken und daneben loslassen schließt nicht) */
+  const druckDaneben = useRef(false)
   const wischStart = useRef<number | null>(null)
+  const [zu, setZu] = useState(false)
+  /** Schon geblättert? Dann blendet das nächste Foto nur weich auf, statt wie beim Öffnen hereinzuschweben. */
+  const [geblaettert, setGeblaettert] = useState(false)
   const anzahl = fotos.length
   const foto = fotos[index]
-  const blaettern = (richtung: 1 | -1) => onIndex((index + richtung + anzahl) % anzahl)
+
+  function blaettern(richtung: 1 | -1) {
+    if (schliesst.current) return
+    setGeblaettert(true)
+    onIndex((index + richtung + anzahl) % anzahl)
+  }
+
+  function schliessen() {
+    if (schliesst.current) return
+    schliesst.current = true
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) onSchliessen()
+    else setZu(true) // Ausblenden per CSS, danach onSchliessen (onAnimationEnd am Foto)
+  }
 
   // Als modaler Dialog: Fokus bleibt drin, Esc schließt, die Seite dahinter scrollt nicht mit.
   // Kein close() beim Aufräumen: Der Browser beendet den modalen Zustand, sobald der Dialog aus der
@@ -50,11 +76,14 @@ export default function Grossansicht({
     if (!d.open) d.showModal()
     aktiv.current = true
     const html = document.documentElement
-    const vorher = html.style.overflow
+    const vorher = { overflow: html.style.overflow, gutter: html.style.scrollbarGutter }
     html.style.overflow = 'hidden'
+    // Platz der Scrollleiste behalten, sonst springt die mattierte Seite dahinter zur Seite
+    html.style.scrollbarGutter = 'stable'
     return () => {
       aktiv.current = false
-      html.style.overflow = vorher
+      html.style.overflow = vorher.overflow
+      html.style.scrollbarGutter = vorher.gutter
     }
   }, [])
 
@@ -77,75 +106,92 @@ export default function Grossansicht({
     }
   }
 
-  const pfeil =
-    'absolute top-1/2 -translate-y-1/2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[#0a0a0a]/50 text-[#f5f5f0] transition-colors hover:bg-[#f5f5f0] hover:text-[#0a0a0a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5f5f0]'
-
   return (
     <dialog
       ref={dialog}
+      className={s.dialog}
+      data-zu={zu || undefined}
+      data-daneben=""
       aria-label={anzahl > 1 ? 'Fotos in groß' : 'Foto in groß'}
-      // Esc: sofort schließen. "close" fängt den Fall ab, dass der Browser den Dialog selbst schließt (er
-      // meldet das verzögert – ist der Dialog dann schon wieder offen oder weg, war es ein altes Ereignis).
-      onCancel={onSchliessen}
+      onCancel={e => {
+        e.preventDefault()
+        schliessen()
+      }}
+      // Hat der Browser den Dialog selbst zugemacht (Esc lässt sich nicht immer abfangen), läuft kein
+      // Ausblenden mehr – dann sofort schließen. Er meldet das verzögert: Ist der Dialog dann schon
+      // wieder offen oder weg, war es ein altes Ereignis.
       onClose={() => {
         if (aktiv.current && !dialog.current?.open) onSchliessen()
       }}
       onKeyDown={taste}
-      className="fixed inset-0 m-0 h-[100dvh] max-h-none w-screen max-w-none border-0 bg-transparent p-0 text-[#f5f5f0] backdrop:bg-[#0a0a0a]/95"
+      onPointerDown={e => {
+        druckDaneben.current = istDaneben(e.target)
+      }}
+      onClick={e => {
+        if (druckDaneben.current && istDaneben(e.target)) schliessen()
+      }}
     >
-      <div className="flex h-full flex-col">
-        <div className="flex shrink-0 items-center justify-between gap-4 px-4 py-3 md:px-6">
-          <span className="text-[11px] tracking-[0.25em] uppercase text-[#f5f5f0]/60" aria-live="polite">
-            {anzahl > 1 && `${index + 1} / ${anzahl}`}
+      <div className={s.kopf} data-daneben="">
+        {anzahl > 1 && (
+          <span className={`${s.glas} ${s.zaehler}`} aria-live="polite">
+            <GlasEbenen band={6} staerke={4} unschaerfe="leicht" />
+            <span className={s.inhalt}>
+              {index + 1} / {anzahl}
+            </span>
           </span>
-          <button
-            type="button"
-            onClick={onSchliessen}
-            aria-label="Großansicht schließen"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-[#f5f5f0]/80 transition-colors hover:bg-[#f5f5f0]/10 hover:text-[#f5f5f0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5f5f0]"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        )}
+        <button type="button" onClick={schliessen} aria-label="Großansicht schließen" className={`${s.glas} ${s.knopf} ${s.schliessen}`}>
+          <GlasEbenen band={7} staerke={5} unschaerfe="leicht" />
+          <X size={18} strokeWidth={2.4} aria-hidden="true" />
+        </button>
+      </div>
 
-        <div
-          className="relative min-h-0 flex-1"
-          // Klick neben das Foto schließt
-          onClick={e => {
-            if (e.target === e.currentTarget) onSchliessen()
+      <div
+        className={s.buehne}
+        data-daneben=""
+        onTouchStart={e => {
+          wischStart.current = e.touches[0]?.clientX ?? null
+        }}
+        onTouchEnd={e => {
+          const start = wischStart.current
+          const ende = e.changedTouches[0]?.clientX
+          wischStart.current = null
+          if (start === null || ende === undefined || anzahl < 2) return
+          if (Math.abs(ende - start) >= WISCHEN_AB) blaettern(ende < start ? 1 : -1)
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          key={foto.bild.src}
+          src={foto.bild.src}
+          alt={foto.unterschrift}
+          className={`${s.foto} ${geblaettert ? s.wechsel : s.ankunft}`}
+          draggable={false}
+          onAnimationEnd={() => {
+            if (zu) onSchliessen()
           }}
-          onTouchStart={e => {
-            wischStart.current = e.touches[0]?.clientX ?? null
-          }}
-          onTouchEnd={e => {
-            const start = wischStart.current
-            const ende = e.changedTouches[0]?.clientX
-            wischStart.current = null
-            if (start === null || ende === undefined || anzahl < 2) return
-            if (Math.abs(ende - start) >= WISCHEN_AB) blaettern(ende < start ? 1 : -1)
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={foto.bild.src}
-            src={foto.bild.src}
-            alt={foto.unterschrift}
-            className="absolute inset-0 m-auto h-auto w-auto max-h-full max-w-[calc(100%-2rem)] md:max-w-[calc(100%-10rem)] select-none object-contain"
-            draggable={false}
-          />
-          {anzahl > 1 && (
-            <>
-              <button type="button" onClick={() => blaettern(-1)} aria-label="Vorheriges Foto" className={`${pfeil} left-2 md:left-6`}>
-                <ChevronLeft size={26} />
-              </button>
-              <button type="button" onClick={() => blaettern(1)} aria-label="Nächstes Foto" className={`${pfeil} right-2 md:right-6`}>
-                <ChevronRight size={26} />
-              </button>
-            </>
-          )}
-        </div>
+        />
+        {anzahl > 1 && (
+          <>
+            <button type="button" onClick={() => blaettern(-1)} aria-label="Vorheriges Foto" className={`${s.glas} ${s.knopf} ${s.pfeil} ${s.zurueck}`}>
+              <GlasEbenen band={7} staerke={5} unschaerfe="leicht" />
+              <ChevronLeft size={24} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => blaettern(1)} aria-label="Nächstes Foto" className={`${s.glas} ${s.knopf} ${s.pfeil} ${s.weiter}`}>
+              <GlasEbenen band={7} staerke={5} unschaerfe="leicht" />
+              <ChevronRight size={24} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+          </>
+        )}
+      </div>
 
-        <p className="shrink-0 min-h-[3.75rem] px-6 py-4 text-center text-sm leading-relaxed text-[#f5f5f0]/80 max-w-3xl mx-auto w-full">{foto.unterschrift}</p>
+      <div className={s.fuss} data-daneben="">
+        {foto.unterschrift && (
+          <p className={`${s.glas} ${s.unterschrift}`}>
+            <GlasEbenen band={7} staerke={5} unschaerfe="normal" />
+            <span className={s.inhalt}>{foto.unterschrift}</span>
+          </p>
+        )}
       </div>
     </dialog>
   )
