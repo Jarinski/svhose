@@ -6,7 +6,9 @@
  * Linse für Glasflächen („Liquid Glass“): Am Rand einer Fläche wird der Hintergrund wie durch eine
  * gewölbte Glaskante zur Mitte hin verzogen. Dafür bekommt das Element einen SVG-Filter mit einer
  * Verschiebungskarte (feDisplacementMap), die genau auf seine Größe und Eckenrundung gezeichnet wird.
- * Das CSS bindet ihn über die Variable --linse ein: `backdrop-filter: var(--linse,) blur(…)`.
+ * Das Element bekommt dazu data-linse und die Variable --linse; nur dann bindet das CSS ihn ein:
+ * `.frost[data-linse] { backdrop-filter: var(--linse) blur(…) }`. Ohne Linse steht im CSS kein
+ * var() im backdrop-filter – Safari 18 würde ihn sonst ganz weglassen.
  *
  * Nur Chromium (Chrome, Edge, Android) kann SVG-Filter in backdrop-filter. Safari und Firefox – und
  * wer „Transparenz reduzieren“ eingestellt hat – bekommen das matte Glas ohne Linse.
@@ -136,6 +138,7 @@ export function useGlasLinse<T extends HTMLElement>(band: number, staerke: numbe
       }
       karte.setAttribute('href', verschiebungsKarte(breite, hoehe, radius, band))
       el.style.setProperty('--linse', `url(#${id})`)
+      el.dataset.linse = ''
     }
     zeichnen()
     const beobachter = new ResizeObserver(zeichnen)
@@ -145,6 +148,7 @@ export function useGlasLinse<T extends HTMLElement>(band: number, staerke: numbe
       beobachter.disconnect()
       svg.remove()
       el.style.removeProperty('--linse')
+      delete el.dataset.linse
     }
   }, [band, staerke])
 

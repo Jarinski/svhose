@@ -97,11 +97,11 @@ export default function GlasModal({ children }: { children: React.ReactNode }) {
           if (zu && e.target === panel.current) zurueck()
         }}
       >
-        <GlasEbenen band={9} staerke={10} />
+        <GlasEbenen band={9} staerke={10} unschaerfe="stark" />
         <div className={s.scroller}>
           <div className={s.leiste}>
             <button type="button" className={s.schliessen} onClick={schliessen} aria-label="Schließen">
-              <GlasEbenen band={7} staerke={5} />
+              <GlasEbenen band={7} staerke={5} unschaerfe="leicht" />
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>

@@ -38,7 +38,6 @@
 .panel {
   /* Lesefläche: etwas heller als Standardglas, damit langer Text gut lesbar bleibt */
   --glas-tint: rgba(255, 255, 255, .74);
-  --glas-unschaerfe: 26px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -96,7 +95,6 @@
 
 .schliessen {
   --glas-tint: rgba(255, 255, 255, .4);
-  --glas-unschaerfe: 8px;
   position: absolute;
   top: 14px;
   right: 14px;

@@ -14,14 +14,34 @@
   pointer-events: none;
 }
 
-/* Mattierte Scheibe; am Rand die Linse (--linse, nur Chromium) vor der Unschärfe */
+/*
+ * Mattierte Scheibe in drei Stufen (Prop unschaerfe von GlasEbenen).
+ * backdrop-filter steht hier mit festen Werten, ohne var(): Safari 18 (die letzte Version für
+ * ältere Macs) wendet backdrop-filter gar nicht an, sobald eine CSS-Variable im Wert steckt – dann
+ * bliebe nur die Tönung, und die Seite dahinter wäre klar zu lesen.
+ */
 .frost {
   background: var(--glas-tint, rgba(255, 255, 255, .62));
-  -webkit-backdrop-filter: blur(var(--glas-unschaerfe, 22px)) saturate(1.8);
-  backdrop-filter: var(--linse,) blur(var(--glas-unschaerfe, 22px)) saturate(1.8);
+  -webkit-backdrop-filter: blur(22px) saturate(1.8);
+  backdrop-filter: blur(22px) saturate(1.8);
   /* nur ein Hauch Licht direkt an der Kante */
   box-shadow: inset 0 0 3px rgba(255, 255, 255, .5);
 }
+
+.leicht {
+  -webkit-backdrop-filter: blur(8px) saturate(1.8);
+  backdrop-filter: blur(8px) saturate(1.8);
+}
+
+.stark {
+  -webkit-backdrop-filter: blur(26px) saturate(1.8);
+  backdrop-filter: blur(26px) saturate(1.8);
+}
+
+/* Linse vor der Unschärfe – data-linse und --linse setzt glasLinse.ts, nur in Chromium */
+.frost[data-linse] { backdrop-filter: var(--linse) blur(22px) saturate(1.8); }
+.leicht[data-linse] { backdrop-filter: var(--linse) blur(8px) saturate(1.8); }
+.stark[data-linse] { backdrop-filter: var(--linse) blur(26px) saturate(1.8); }
 
 /*
  * Lichtkante: 1 px genau auf dem Rand (die Maske lässt nur den Rand stehen). Oben links und unten
@@ -47,7 +67,8 @@
 
 /* Transparenz reduzieren: fester heller Grund statt Glas */
 @media (prefers-reduced-transparency: reduce) {
-  .frost {
+  .frost,
+  .frost[data-linse] {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: #fff;
