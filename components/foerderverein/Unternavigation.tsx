@@ -18,9 +18,7 @@ export default function Unternavigation({ aktiv }: { aktiv: string }) {
               <Link
                 href={e.href}
                 aria-current={istAktiv ? 'page' : undefined}
-                className={`inline-block whitespace-nowrap px-4 py-2 text-xs tracking-[0.1em] uppercase font-medium border transition-colors ${
-                  istAktiv ? 'bg-[#0a0a0a] text-[#f5f5f0] border-[#0a0a0a]' : 'border-[#0a0a0a]/20 hover:border-[#0a0a0a]'
-                }`}
+                className={`glas-pille whitespace-nowrap ${istAktiv ? 'glas-pille-aktiv' : ''}`}
               >
                 {e.label}
               </Link>

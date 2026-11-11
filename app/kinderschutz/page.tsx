@@ -425,7 +425,7 @@ export default function KinderschutzPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href="mailto:saad.fidaoui@sv-holm-seppensen.de"
-              className="inline-flex items-center gap-2 border border-[#0a0a0a] px-6 py-3 text-sm tracking-[0.1em] uppercase hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-colors"
+              className="inline-flex items-center gap-2 border border-[#0a0a0a] px-6 py-3 text-sm tracking-[0.1em] uppercase transition-colors"
             >
               <Mail size={14} /> E-Mail schreiben
             </a>

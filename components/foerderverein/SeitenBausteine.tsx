@@ -122,7 +122,7 @@ function Foto({ bild, alt, className }: { bild: AnzeigeBild; alt: string; classN
   return (
     // Bilder liegen im Medienordner und sind schon verkleinert – normales <img> wie im News-Text
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={bild.src} alt={alt} width={bild.breite || undefined} height={bild.hoehe || undefined} loading="lazy" className={className} />
+    <img src={bild.src} alt={alt} width={bild.breite || undefined} height={bild.hoehe || undefined} loading="lazy" className={`rounded-[20px] ${className}`} />
   )
 }
 
@@ -292,7 +292,7 @@ function Stichpunkte({ b }: { b: Extract<B, { art: 'liste' }> }) {
           <ul className={`${mitKopf ? 'md:col-span-2' : 'md:col-span-3'} grid grid-cols-1 sm:grid-cols-2 gap-x-8`}>
             {punkte.map((p, i) => (
               <li key={i} className="flex gap-3 border-t border-[#0a0a0a]/10 py-3 text-sm leading-relaxed">
-                <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#0a0a0a]" />
+                <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0a0a0a]" />
                 {p}
               </li>
             ))}
@@ -300,7 +300,7 @@ function Stichpunkte({ b }: { b: Extract<B, { art: 'liste' }> }) {
         ) : (
           <ul className={`${mitKopf ? 'md:col-span-2' : 'md:col-span-3'} flex flex-wrap gap-2`}>
             {punkte.map((p, i) => (
-              <li key={i} className="border border-[#0a0a0a]/15 px-4 py-2 text-sm">
+              <li key={i} className="glas-pille">
                 {p}
               </li>
             ))}
@@ -370,7 +370,7 @@ function Aufruf({ b, downloads }: { b: Extract<B, { art: 'aufruf' }>; downloads:
     <Rahmen>
       <div
         className={`p-8 md:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8 ${
-          dunkel ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'border border-[#0a0a0a]/15'
+          dunkel ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'glas-karte'
         }`}
       >
         <div className="min-w-0">

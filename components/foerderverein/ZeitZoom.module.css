@@ -8,7 +8,8 @@
 .zoom {
   --ink: var(--b-ink, #0a0a0a);
   --muted: var(--b-muted, #6b6b6b);
-  --karte: var(--b-karte, #ffffff);
+  /* deckend: die Punkte liegen auf dem Strahl (--b-karte ist durchscheinendes Glas) */
+  --karte: #ffffff;
   --schritt: 95vh;
   --hoehe: 100vh;
   /* Höhe der Navigation (components/vorschau/b/NavbarB) – darunter rastet die Bühne ein */

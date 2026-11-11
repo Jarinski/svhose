@@ -19,7 +19,7 @@ export type MonatsDaten = Record<string, TagesBelegung>
 const KALENDER_ORTE: readonly KalenderOrt[] = ['vereinsheim', 'gelaende']
 const MAX_IN_ZELLE = 3
 const marke = 'text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b]'
-const pfeil = 'inline-flex items-center justify-center w-10 h-10 text-[#0a0a0a] hover:bg-[#0a0a0a]/[0.06] disabled:opacity-25 disabled:hover:bg-transparent'
+const pfeil = 'inline-flex items-center justify-center w-10 h-10 rounded-full text-[#0a0a0a] transition-colors hover:bg-[#0a0a0a]/[0.06] disabled:opacity-25 disabled:hover:bg-transparent'
 /** Zeichenreihenfolge: Feste Belegung liegt oben. */
 const EBENE: Record<FreiBelegt['art'], number> = { regel: 0, angefragt: 1, belegt: 2 }
 
@@ -29,7 +29,7 @@ function Zeitleiste({ liste, datum }: { liste: FreiBelegt[]; datum: string }) {
   const ende = `${tagPlus(datum, 1)}T00:00`
   const minuten = (z: string) => (z <= beginn ? 0 : z >= ende ? 1440 : Number(z.slice(11, 13)) * 60 + Number(z.slice(14, 16)))
   return (
-    <span className="relative block h-1.5 w-full bg-[#0a0a0a]/[0.06]" aria-hidden="true">
+    <span className="relative block h-1.5 w-full overflow-hidden rounded-full bg-[#0a0a0a]/[0.06]" aria-hidden="true">
       {[...liste]
         .sort((a, b) => EBENE[a.art] - EBENE[b.art])
         .map(b => {
@@ -99,14 +99,14 @@ export default function BelegungsKalender({
             <ChevronRight size={20} />
           </button>
         </div>
-        <div className="inline-flex border border-[#0a0a0a]/15" role="group" aria-label="Ort">
+        <div className="glas-karte !rounded-full inline-flex gap-1 p-1" role="group" aria-label="Ort">
           {KALENDER_ORTE.map(o => (
             <button
               key={o}
               type="button"
               aria-pressed={ort === o}
               onClick={() => setOrt(o)}
-              className={`px-4 py-2 text-xs tracking-[0.1em] uppercase transition-colors ${ort === o ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'text-[#6b6b6b] hover:text-[#0a0a0a]'}`}
+              className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${ort === o ? 'bg-[#0a0a0a] text-[#f5f5f0]' : 'text-[#6b6b6b] hover:text-[#0a0a0a]'}`}
             >
               {ORT_NAMEN[o]}
             </button>
@@ -114,8 +114,8 @@ export default function BelegungsKalender({
         </div>
       </div>
 
-      <div className="bg-white border border-[#0a0a0a]/10">
-        <div className="grid grid-cols-7 border-b border-[#0a0a0a]/10">
+      <div className="glas-karte overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-[#0a0a0a]/[0.07]">
           {WOCHENTAGE_KURZ.map(w => (
             <div key={w} className="px-1 md:px-2 py-2 text-[10px] md:text-[11px] tracking-[0.15em] uppercase text-[#6b6b6b] text-center md:text-left">
               {w}
@@ -143,7 +143,7 @@ export default function BelegungsKalender({
           <div className={`grid grid-cols-7 transition-opacity ${laedt ? 'opacity-40' : ''}`} aria-busy={laedt}>
             {tage.map((d, i) => {
               const rand = `border-[#0a0a0a]/[0.07] ${i % 7 !== 6 ? 'border-r' : ''} ${i < tage.length - 7 ? 'border-b' : ''}`
-              if (d.slice(0, 7) !== monat) return <div key={d} className={`${rand} bg-[#f5f5f0]/60`} aria-hidden="true" />
+              if (d.slice(0, 7) !== monat) return <div key={d} className={`${rand} bg-[#0a0a0a]/[0.025]`} aria-hidden="true" />
               const waehlbar = d >= heute && d <= max
               const liste = (waehlbar && monatsDaten?.[d]?.[ort]) || []
               const gewaehlt = d === tag
@@ -156,8 +156,8 @@ export default function BelegungsKalender({
                   aria-pressed={gewaehlt}
                   aria-label={waehlbar ? `${datumMitTag(d)}, ${ORT_NAMEN[ort]}: ${beschreibung(liste, d)}` : datumMitTag(d)}
                   className={`${rand} min-h-[3.25rem] md:min-h-[6.75rem] p-1 md:p-2 flex flex-col items-stretch gap-1 text-left transition-colors ${
-                    waehlbar ? 'hover:bg-[#f5f5f0]' : 'cursor-default'
-                  } ${gewaehlt ? 'outline outline-2 -outline-offset-2 outline-[#0a0a0a] bg-[#f5f5f0]' : ''}`}
+                    waehlbar ? 'hover:bg-[#ffffff]/60' : 'cursor-default'
+                  } ${gewaehlt ? 'outline outline-2 -outline-offset-2 outline-[#0a0a0a] bg-[#ffffff]/70' : ''}`}
                 >
                   <span
                     className={`self-center md:self-start inline-flex items-center justify-center w-6 h-6 text-xs tabular-nums ${
@@ -173,7 +173,7 @@ export default function BelegungsKalender({
                       </span>
                       <span className="hidden md:flex flex-col gap-0.5">
                         {liste.slice(0, MAX_IN_ZELLE).map(b => (
-                          <span key={`${b.von}-${b.art}`} className={`block truncate px-1.5 py-0.5 text-[11px] tabular-nums ${ART_MARKE[b.art]}`}>
+                          <span key={`${b.von}-${b.art}`} className={`block truncate rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${ART_MARKE[b.art]}`}>
                             {uhrzeitAmTag(b, d)}
                           </span>
                         ))}
@@ -191,14 +191,14 @@ export default function BelegungsKalender({
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#6b6b6b]">
         {ARTEN.map(a => (
           <span key={a} className="inline-flex items-center gap-2">
-            <span className={`w-3 h-3 shrink-0 ${ART_FUELLUNG[a]}`} aria-hidden="true" />
+            <span className={`w-3 h-3 shrink-0 rounded-[4px] ${ART_FUELLUNG[a]}`} aria-hidden="true" />
             {ART_LEGENDE[a]}
           </span>
         ))}
       </div>
 
       {tag && (
-        <div className="mt-6 border border-[#0a0a0a] bg-white p-5 md:p-8" aria-live="polite">
+        <div className="glas-karte mt-6 p-5 md:p-8" aria-live="polite">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
               <div className={`${marke} mb-2`}>Belegung am</div>
@@ -220,7 +220,7 @@ export default function BelegungsKalender({
                     <ul className="space-y-1.5 text-sm">
                       {liste.map(b => (
                         <li key={`${b.von}-${b.art}`} className="flex items-center gap-3">
-                          <span className={`inline-block px-2 py-0.5 text-xs tabular-nums ${ART_MARKE[b.art]}`}>{uhrzeitAmTag(b, tag)}</span>
+                          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs tabular-nums ${ART_MARKE[b.art]}`}>{uhrzeitAmTag(b, tag)}</span>
                           <span className="text-[#6b6b6b]">{ART_TEXT[b.art]}</span>
                         </li>
                       ))}

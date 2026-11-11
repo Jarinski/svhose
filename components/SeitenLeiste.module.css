@@ -1,0 +1,141 @@
+/*
+ * Seitenleiste am rechten Rand – components/SeitenLeiste.tsx und components/MitgliedWerdenLasche.tsx.
+ * Liegt fest über der Seite, der Inhalt scrollt darunter durch – deshalb echtes Glas aus
+ * components/glas (GlasEbenen als erste Kinder, der Inhalt danach mit position: relative).
+ * Am Bildschirmrand gerade, zur Seite hin rund. Farben aus app/vorschau-b.css.
+ */
+
+/* ── Schnellzugriffe: eine senkrechte Glasleiste ── */
+.schnell {
+  --glas-tint: rgba(255, 255, 255, .66);
+  position: relative;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 24px 0 0 24px;
+  box-shadow: 0 10px 30px rgba(15, 30, 45, .12), 0 2px 6px rgba(15, 30, 45, .06);
+}
+
+@media (min-width: 768px) {
+  .schnell { display: flex; }
+}
+
+.knopf {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--b-ink);
+  transition: background .15s;
+}
+
+.knopf:hover,
+.knopf:focus-visible { background: var(--b-grau-2); }
+
+.knopf:focus-visible,
+.reiter:focus-visible {
+  outline: 2px solid var(--b-ink);
+  outline-offset: 2px;
+}
+
+/* Beschriftung links neben dem Knopf */
+.hinweis {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 14px);
+  translate: 0 -50%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--b-ink);
+  box-shadow: var(--b-glas-kante-dunkel), 0 6px 16px rgba(0, 0, 0, .18);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s;
+}
+
+.knopf:is(:hover, :focus-visible) .hinweis { opacity: 1; }
+
+/* ── „Mitglied werden“-Lasche ── */
+.lasche {
+  display: flex;
+  align-items: flex-start;
+  /* zu: nur der Reiter schaut heraus */
+  transform: translateX(calc(100% - 44px));
+  transition: transform .35s cubic-bezier(.2, .9, .25, 1);
+}
+
+.lasche[data-offen] { transform: none; }
+
+/* Der Reiter bleibt schwarz – der kräftigste Hinweis auf der Seite –, als dunkles Glas mit Lichtkante */
+.reiter {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  padding: 20px 0;
+  border: 0;
+  border-radius: 18px 0 0 18px;
+  background: var(--b-ink);
+  box-shadow: var(--b-glas-kante-dunkel), 0 10px 26px rgba(0, 0, 0, .18);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.reiter:hover { background: #262626; }
+
+.reiterText {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.reiterText svg {
+  flex: none;
+  rotate: 90deg;
+}
+
+.feld {
+  --glas-tint: rgba(255, 255, 255, .78);
+  position: relative;
+  width: min(26rem, calc(100vw - 52px));
+  margin-left: 8px;
+  border-radius: 28px 0 0 28px;
+  color: var(--b-ink);
+  box-shadow: 0 24px 60px rgba(15, 30, 45, .18), 0 6px 18px rgba(15, 30, 45, .08);
+}
+
+.feldInhalt {
+  position: relative;
+  padding: 28px 28px 30px;
+}
+
+.feldInhalt p {
+  margin: 10px 0 22px;
+  color: var(--b-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lasche,
+  .knopf,
+  .hinweis,
+  .reiter { transition: none; }
+}

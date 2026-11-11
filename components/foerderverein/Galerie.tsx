@@ -83,7 +83,7 @@ export default function Galerie({ fotos, darstellung }: { fotos: GalerieBild[]; 
           <button
             type="button"
             onClick={() => setAlle(true)}
-            className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-6 py-3 text-xs tracking-[0.15em] uppercase transition-colors hover:bg-[#0a0a0a] hover:text-[#f5f5f0]"
+            className="inline-flex items-center gap-2 border border-[#0a0a0a]/20 px-6 py-3 text-xs tracking-[0.15em] uppercase transition-colors"
           >
             Alle {fotos.length} Fotos zeigen
           </button>

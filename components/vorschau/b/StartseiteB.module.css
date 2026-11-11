@@ -95,7 +95,8 @@
   place-items: center;
   font-size: 19px;
   line-height: 1;
-  background: var(--b-grau);
+  /* deckend, sonst schiene der überlappte Kreis durch */
+  background: var(--b-grau-fest);
   border: 3px solid #fff;
 }
 
@@ -183,6 +184,7 @@
   justify-content: space-between;
   gap: 18px;
   background: var(--b-ink);
+  box-shadow: var(--b-schatten-dunkel);
   color: #fff;
 }
 
@@ -444,7 +446,7 @@
   transform: translateY(-4px);
   background: var(--b-ink);
   color: #fff;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, .18);
+  box-shadow: var(--b-glas-kante-dunkel), 0 16px 32px rgba(0, 0, 0, .18);
 }
 
 .sparte:hover::after {
@@ -759,7 +761,7 @@
   border-radius: var(--b-r);
   color: #fff;
   background: var(--b-ink);
-  box-shadow: var(--b-schatten);
+  box-shadow: var(--b-schatten-dunkel);
   transition: transform .25s;
 }
 

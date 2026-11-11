@@ -77,14 +77,16 @@
   flex: none;
 }
 
+/* Schwarz als dunkles Glas: mit der feinen Lichtkante wie die hellen Flächen */
 .btnDunkel {
   background: var(--b-ink);
   color: #fff;
+  box-shadow: var(--b-glas-kante-dunkel);
 }
 
 .btnDunkel:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+  box-shadow: var(--b-glas-kante-dunkel), 0 10px 24px rgba(0, 0, 0, .22);
 }
 
 .btnSanft {

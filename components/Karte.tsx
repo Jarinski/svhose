@@ -37,7 +37,7 @@ export default function Karte({ name, lat, lon, zoom = 18 }: { name: string; lat
 
   return (
     <figure className="m-0">
-      <div className="relative aspect-[16/10] border border-[#0a0a0a]/10 bg-[#0a0a0a]/[0.04]">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[20px] bg-[#0a0a0a]/[0.04] ring-1 ring-[#0a0a0a]/[0.06]">
         {erlaubt || geladen ? (
           <iframe
             src={einbettung}

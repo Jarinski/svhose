@@ -43,9 +43,9 @@ export default function VereinsheimSeite() {
       </div>
 
       <div className="px-6 max-w-7xl mx-auto space-y-16 md:space-y-20">
-        <section aria-label="So funktioniert's" className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#0a0a0a]/10">
+        <section aria-label="So funktioniert's" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {SCHRITTE.map((s, i) => (
-            <div key={s.titel} className="bg-[#f5f5f0] p-8">
+            <div key={s.titel} className="glas-karte p-8">
               <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">{String(i + 1).padStart(2, '0')}</div>
               <h2 className="font-display text-2xl tracking-tight mb-3">{s.titel}</h2>
               <p className="text-sm text-[#6b6b6b] leading-relaxed">{s.text}</p>

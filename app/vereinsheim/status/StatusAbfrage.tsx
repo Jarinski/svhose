@@ -88,9 +88,9 @@ export default function StatusAbfrage() {
       </form>
 
       {s && (
-        <section aria-live="polite" className="bg-white border border-[#0a0a0a]/10 p-8 md:p-10">
+        <section aria-live="polite" className="glas-karte p-8 md:p-10">
           <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">Buchung {s.nummer}</div>
-          <div className={`inline-block px-3 py-1.5 text-sm font-medium mb-4 ${FARBE[s.status]}`}>{STATUS_NAMEN[s.status]}</div>
+          <div className={`inline-block rounded-full px-3.5 py-1.5 text-sm font-medium mb-4 ${FARBE[s.status]}`}>{STATUS_NAMEN[s.status]}</div>
           <p className="text-lg leading-relaxed mb-8">{STATUS_ERKLAERUNG[s.status]}</p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
             <dt className="text-[#6b6b6b]">Ort</dt>

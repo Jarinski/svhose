@@ -14,6 +14,7 @@
   padding: 56px;
   border-radius: 36px;
   background: var(--b-ink);
+  box-shadow: var(--b-schatten-dunkel);
   color: #fff;
 }
 

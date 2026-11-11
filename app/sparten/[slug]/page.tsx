@@ -334,16 +334,16 @@ export default async function SparteDetailPage(props: { params: Promise<{ slug: 
                 href={d.datei}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#f5f5f0] p-5 flex items-center gap-4 group hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-all duration-200"
+                className="bg-[#f5f5f0] p-5 flex items-center gap-4 group hover:bg-white transition-all duration-200"
               >
-                <FileText size={18} className="text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 shrink-0" />
+                <FileText size={18} className="text-[#6b6b6b] shrink-0" />
                 <div className="flex-1">
                   <div className="font-medium text-sm">{d.titel}</div>
                   {d.beschreibung && (
-                    <div className="text-xs text-[#6b6b6b] group-hover:text-[#f5f5f0]/50 mt-0.5">{d.beschreibung}</div>
+                    <div className="text-xs text-[#6b6b6b] mt-0.5">{d.beschreibung}</div>
                   )}
                 </div>
-                <Download size={14} className="text-[#6b6b6b] group-hover:text-[#f5f5f0]/60 shrink-0" />
+                <Download size={14} className="text-[#6b6b6b] shrink-0" />
               </a>
             ))}
           </div>

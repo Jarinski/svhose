@@ -32,11 +32,11 @@ export default async function SportplaetzePage() {
 
       {/* Anlagen */}
       <div className="px-6 max-w-7xl mx-auto">
-        <ul className="border-t border-[#0a0a0a]/10">
+        <ul className="space-y-5">
           {SPORTPLAETZE.map((platz, index) => {
             const sparten = spartenAmPlatz(platz, trainingszeiten)
             return (
-              <li key={platz.id} className="border-b border-[#0a0a0a]/10 py-10 grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-16 gap-y-6">
+              <li key={platz.id} className="glas-karte p-6 sm:p-8 md:p-10 grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-16 gap-y-6">
                 <div>
                   <div className="text-[11px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-3">
                     {String(index + 1).padStart(2, '0')} · {platz.standort}
@@ -69,7 +69,7 @@ export default async function SportplaetzePage() {
                           <li key={sparte.slug}>
                             <Link
                               href={`/sparten/${sparte.slug}`}
-                              className="inline-block border border-[#0a0a0a]/15 px-3 py-1 text-xs tracking-[0.08em] text-[#0a0a0a] hover:bg-[#0a0a0a] hover:text-[#f5f5f0] transition-colors"
+                              className="glas-pille"
                             >
                               {sparte.name}
                             </Link>

@@ -36,7 +36,7 @@ function Feld({ label, id, fehler, hinweis, children, className = '' }: { label:
 function Abschnitt({ nummer, titel, children }: { nummer: string; titel: string; children: React.ReactNode }) {
   const id = `abschnitt-${nummer}`
   return (
-    <div role="group" aria-labelledby={id} className="border-t border-[#0a0a0a]/10 pt-8 grid grid-cols-1 md:grid-cols-[12rem_minmax(0,1fr)] gap-x-12 gap-y-6">
+    <div role="group" aria-labelledby={id} className="glas-karte p-6 sm:p-8 md:p-10 grid grid-cols-1 md:grid-cols-[12rem_minmax(0,1fr)] gap-x-12 gap-y-6">
       <div>
         <span className={`${marke} block mb-2`}>{nummer}</span>
         <h2 id={id} className="font-display text-3xl tracking-tight">
@@ -67,7 +67,7 @@ function Auswahl({
 }) {
   const an = aktuell === wert
   return (
-    <label className={`flex items-start gap-3 border p-4 cursor-pointer transition-colors ${an ? 'border-[#0a0a0a] bg-white' : 'border-[#0a0a0a]/15 hover:border-[#0a0a0a]/40'}`}>
+    <label className={`flex items-start gap-3 rounded-2xl border p-4 cursor-pointer transition-colors ${an ? 'border-[#0a0a0a] bg-[#ffffff]/80' : 'border-[#0a0a0a]/10 bg-[#ffffff]/40 hover:border-[#0a0a0a]/30'}`}>
       <input type="radio" name={name} value={wert} checked={an} required={pflicht} onChange={() => setzen(wert)} className="mt-1 w-4 h-4 accent-[#0a0a0a]" />
       <span>
         <span className="block font-medium">{titel}</span>
@@ -108,7 +108,7 @@ function Belegung({ datum, ort, wunsch }: { datum: string; ort: BuchungOrt; wuns
   if (!daten.liste) return null
   const konflikt = !!wunsch && daten.liste.some(b => b.art !== 'angefragt' && zeitenUeberschneiden(b, wunsch))
   return (
-    <div className="border border-[#0a0a0a]/10 bg-white p-4" aria-live="polite">
+    <div className="rounded-2xl bg-[#0a0a0a]/[0.04] p-4" aria-live="polite">
       <div className={`${marke} mb-3`}>
         {ORT_NAMEN[ort]} am {datumMitTag(datum)}
       </div>
@@ -118,7 +118,7 @@ function Belegung({ datum, ort, wunsch }: { datum: string; ort: BuchungOrt; wuns
         <ul className="space-y-1.5 text-sm">
           {daten.liste.map(b => (
             <li key={`${b.von}-${b.art}`} className="flex items-center gap-3">
-              <span className={`inline-block px-2 py-0.5 text-xs tabular-nums ${ART_MARKE[b.art]}`}>{uhrzeitAmTag(b, datum)}</span>
+              <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs tabular-nums ${ART_MARKE[b.art]}`}>{uhrzeitAmTag(b, datum)}</span>
               <span className="text-[#6b6b6b]">{ART_TEXT[b.art]}</span>
             </li>
           ))}
@@ -151,7 +151,7 @@ function Erfolg({ zustand }: { zustand: AnfrageZustand }) {
               .then(() => setKopiert(true))
               .catch(() => {})
           }}
-          className="inline-flex items-center gap-2 border border-[#f5f5f0]/30 px-4 py-2 text-xs tracking-[0.1em] uppercase hover:border-[#f5f5f0]"
+          className="inline-flex items-center gap-2 rounded-full border border-[#f5f5f0]/30 px-4 py-2 text-xs tracking-[0.1em] uppercase hover:border-[#f5f5f0]"
         >
           {kopiert ? <Check size={14} /> : <Copy size={14} />} {kopiert ? 'Kopiert' : 'Kopieren'}
         </button>
@@ -350,7 +350,7 @@ export default function AnfrageFormular({
         {f.datenschutz && <p className="text-sm text-red-700">{f.datenschutz}</p>}
       </Abschnitt>
 
-      <div className="border-t border-[#0a0a0a]/10 pt-8 flex flex-wrap items-center gap-6 md:pl-[15rem]">
+      <div className="flex flex-wrap items-center gap-6 md:pl-[15rem]">
         <AbsendenKnopf />
         <Captcha runde={captchaRunde} />
         {zustand.meldung && !zustand.ok && (

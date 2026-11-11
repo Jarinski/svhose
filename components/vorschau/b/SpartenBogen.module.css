@@ -233,7 +233,7 @@
 
 .pause:hover {
   color: var(--b-ink);
-  background: var(--b-grau);
+  background: var(--b-glas-hell);
 }
 
 .pause svg {

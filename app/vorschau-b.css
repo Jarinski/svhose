@@ -16,20 +16,39 @@
 
 /* ── Grundlage: Farben, Schriften, Hintergrund ───────────────────────────── */
 html[data-design="b"] .site {
-  /* Grautöne für Flächen in Karten (Pillen, Tabs, Hover) */
-  --b-bg: #f3f3f2;
   /* Seitenhintergrund: wolkenloser Himmel, steht beim Scrollen still (.site::before).
      Oben bleibt er ein Stück gleich, damit die Blende hinter der Navbar nahtlos passt. */
   --b-himmel-oben: #e1e8ee;
   --b-himmel: linear-gradient(180deg, var(--b-himmel-oben) 0%, var(--b-himmel-oben) 6%, #e8eef2 28%, #f1f4f6 62%, #fafbfb 100%);
-  --b-karte: #ffffff;
+
+  /*
+   * Liquid Glass: Karten, Pillen und Knöpfe sind helles Glas über dem Himmel – wie die Fenster aus
+   * components/glas. Der Himmel scheint durch (oben bläulicher, unten fast weiß), am Rand sitzt eine
+   * haarfeine Lichtkante, oben am hellsten.
+   * Flächen im Seitenfluss bekommen kein backdrop-filter: Hinter ihnen liegt nur der ruhige Verlauf,
+   * eine Unschärfe sähe man dort nicht, sie kostete aber beim Scrollen auf jeder Karte Rechenzeit.
+   * Echte Mattierung mit Linse (GlasEbenen) haben die Flächen, unter denen Inhalt durchläuft:
+   * Navigation, Menüs, Seitenleiste und Fenster.
+   */
+  --b-glas: rgba(255, 255, 255, .56);
+  --b-glas-hell: rgba(255, 255, 255, .8);
+  --b-glas-kante: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .35), inset 0 0 0 1px rgba(255, 255, 255, .4);
+  --b-glas-kante-dunkel: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 0 0 1px rgba(255, 255, 255, .06);
+  --b-karte: var(--b-glas);
+  --b-schatten: var(--b-glas-kante), 0 0 0 .5px rgba(15, 30, 45, .07), 0 1px 2px rgba(15, 30, 45, .04), 0 10px 28px rgba(15, 30, 45, .06);
+  --b-schatten-hoch: var(--b-glas-kante), 0 0 0 .5px rgba(15, 30, 45, .07), 0 2px 4px rgba(15, 30, 45, .05), 0 22px 44px rgba(15, 30, 45, .11);
+  /* schwarze Kacheln (nächster Termin, Instagram, Footer): dunkles Glas */
+  --b-schatten-dunkel: var(--b-glas-kante-dunkel), 0 1px 2px rgba(0, 0, 0, .06), 0 12px 30px rgba(15, 30, 45, .12);
+
+  /* Grautöne für Flächen auf dem Glas (Pillen, Tabs, Hover): durchscheinend, damit sie mit dem Glas
+     mitgehen; --b-grau-fest dort, wo etwas deckend sein muss */
+  --b-bg: rgba(15, 30, 45, .045);
+  --b-grau: rgba(15, 30, 45, .065);
+  --b-grau-2: rgba(15, 30, 45, .1);
+  --b-grau-fest: #e9eaeb;
   --b-ink: #111111;
   --b-muted: #6b6b6b;
   --b-line: rgba(0, 0, 0, .08);
-  --b-grau: #e9e9e8;
-  --b-grau-2: #dededd;
-  --b-schatten: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .04);
-  --b-schatten-hoch: 0 2px 4px rgba(0, 0, 0, .04), 0 20px 40px rgba(0, 0, 0, .09);
   --b-emoji: grayscale(1) contrast(1.1);
   --b-emoji-stark: grayscale(1) brightness(.55) contrast(1.35);
   --b-r: 28px;
@@ -225,10 +244,49 @@ html[data-design="b"] .site main .bg-white {
   border-radius: 18px;
 }
 
-/* bg-white ist im Projekt #f5f5f0 – beim Hover auf Karten echtes Weiß und etwas Höhe */
+/* bg-white ist im Projekt #f5f5f0 – beim Hover wird das Glas heller und hebt sich etwas ab */
 html[data-design="b"] .site main .hover\:bg-white:hover {
-  background: var(--b-karte);
+  background: var(--b-glas-hell);
   box-shadow: var(--b-schatten-hoch);
+}
+
+html[data-design="b"] .site main a.hover\:bg-white:hover { transform: translateY(-2px); }
+
+/* Glasflächen für neues Markup – statt der umgebogenen Tailwind-Klassen (z. B. /sportplaetze) */
+html[data-design="b"] .site .glas-karte {
+  background: var(--b-glas);
+  border-radius: var(--b-r);
+  box-shadow: var(--b-schatten);
+}
+
+html[data-design="b"] .site .glas-pille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--b-glas);
+  box-shadow: var(--b-schatten);
+  color: var(--b-ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+
+html[data-design="b"] .site a.glas-pille:hover {
+  background: var(--b-glas-hell);
+  box-shadow: var(--b-schatten-hoch);
+  transform: translateY(-1px);
+}
+
+/* gewählt: dunkles Glas */
+html[data-design="b"] .site .glas-pille.glas-pille-aktiv,
+html[data-design="b"] .site a.glas-pille.glas-pille-aktiv:hover {
+  background: var(--b-ink);
+  box-shadow: var(--b-glas-kante-dunkel);
+  color: #fff;
+  transform: none;
 }
 
 html[data-design="b"] .site main .bg-\[\#0a0a0a\]\/5 {
@@ -260,7 +318,17 @@ html[data-design="b"] .site main > .pt-32 > .relative.rounded-sm { border-radius
 html[data-design="b"] .site .bg-\[\#0a0a0a\] { background: var(--b-ink); }
 html[data-design="b"] .site .hover\:bg-\[\#0a0a0a\]:hover { background: var(--b-ink); }
 
-html[data-design="b"] .site main .bg-\[\#0a0a0a\].text-\[\#f5f5f0\] { border-radius: var(--b-r); }
+/* Dunkles Glas: schwarze Flächen bekommen die Lichtkante wie die hellen */
+html[data-design="b"] .site main .bg-\[\#0a0a0a\].text-\[\#f5f5f0\] {
+  border-radius: var(--b-r);
+  box-shadow: var(--b-glas-kante-dunkel);
+}
+
+/* Helle Knöpfe auf Schwarz: deckend weiß – Glas wäre dort grau */
+html[data-design="b"] .site main .bg-\[\#0a0a0a\] a.bg-\[\#f5f5f0\] {
+  background: #fff;
+  box-shadow: none;
+}
 
 /* Datums-Kästchen in Terminen und Spielplänen */
 html[data-design="b"] .site main .bg-\[\#0a0a0a\].w-20 { border-radius: 18px; }
@@ -306,7 +374,37 @@ html[data-design="b"] .site main a.inline-flex:is(.px-5, .px-6, .px-8) { font-si
 
 html[data-design="b"] .site main a.inline-flex:is(.px-5, .px-6, .px-8):hover { transform: translateY(-2px); }
 
-/* Filter-Knöpfe (Termine, Spielpläne): weiße Pillen, aktiv schwarz */
+/* Schwarze Knöpfe: dunkles Glas mit Lichtkante, beim Darüberfahren ein weicher Schatten */
+html[data-design="b"] .site main :is(a, button).bg-\[\#0a0a0a\]:is(.px-5, .px-6, .px-8) {
+  box-shadow: var(--b-glas-kante-dunkel);
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+
+html[data-design="b"] .site main :is(a, button).bg-\[\#0a0a0a\]:is(.px-5, .px-6, .px-8):hover {
+  box-shadow: var(--b-glas-kante-dunkel), 0 10px 24px rgba(0, 0, 0, .2);
+}
+
+/* Umrandete Knöpfe (Kinderschutz, Galerie) werden Glaspillen; die hellen auf Schwarz bleiben umrandet */
+html[data-design="b"] .site main :is(a, button).inline-flex.border:is(.px-5, .px-6, .px-8):not(.text-\[\#f5f5f0\]) {
+  border-color: transparent;
+  border-radius: 999px;
+  background: var(--b-glas);
+  box-shadow: var(--b-schatten);
+  color: var(--b-ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+
+html[data-design="b"] .site main :is(a, button).inline-flex.border:is(.px-5, .px-6, .px-8):not(.text-\[\#f5f5f0\]):hover {
+  background: var(--b-glas-hell);
+  box-shadow: var(--b-schatten-hoch);
+  transform: translateY(-2px);
+}
+
+/* Filter-Knöpfe (Termine, Spielpläne): Glaspillen, aktiv schwarz */
 html[data-design="b"] .site main button.border {
   border-radius: 999px;
   font-size: 13px;
@@ -316,12 +414,18 @@ html[data-design="b"] .site main button.border {
 }
 
 html[data-design="b"] .site main button.border.bg-transparent {
-  background: var(--b-karte);
-  border-color: var(--b-line);
+  background: var(--b-glas);
+  border-color: transparent;
+  box-shadow: var(--b-schatten);
   color: var(--b-ink);
 }
 
-html[data-design="b"] .site main button.border.bg-transparent:hover { border-color: rgba(17, 17, 17, .35); }
+html[data-design="b"] .site main button.border.bg-transparent:hover {
+  background: var(--b-glas-hell);
+  box-shadow: var(--b-schatten-hoch);
+}
+
+html[data-design="b"] .site main button.border.bg-\[\#0a0a0a\] { box-shadow: var(--b-glas-kante-dunkel); }
 
 /* Schlagwort-Gruppen dürfen umbrechen statt rechts aus der Karte zu laufen */
 html[data-design="b"] .site main .flex-wrap.shrink-0 {
@@ -447,18 +551,25 @@ html[data-design="b"] .site main > .pt-32 > a.inline-flex:first-child {
 
 html[data-design="b"] .site main > .pt-32 > a.inline-flex:first-child:hover { box-shadow: var(--b-schatten-hoch); }
 
-/* Filter mit Inline-Farben (Trainingszeiten): weiße Pillen, aktiv schwarz */
+/* Filter mit Inline-Farben (Trainingszeiten): Glaspillen, aktiv schwarz */
 html[data-design="b"] .site main button[style] {
   border-radius: 999px;
-  background: var(--b-karte) !important;
-  border-color: var(--b-line) !important;
+  background: var(--b-glas) !important;
+  border-color: transparent !important;
+  box-shadow: var(--b-schatten);
   color: var(--b-ink) !important;
   font-weight: 600 !important;
+}
+
+html[data-design="b"] .site main button[style][style*="transparent"]:hover {
+  background: var(--b-glas-hell) !important;
+  box-shadow: var(--b-schatten-hoch);
 }
 
 html[data-design="b"] .site main button[style]:not([style*="transparent"]) {
   background: var(--b-ink) !important;
   border-color: var(--b-ink) !important;
+  box-shadow: var(--b-glas-kante-dunkel);
   color: #fff !important;
 }
 
@@ -616,7 +727,8 @@ html[data-design="b"] .site main :is(input:not([type="checkbox"]):not([type="rad
   padding: 10px 14px;
   border: 1px solid rgba(0, 0, 0, .14);
   border-radius: 14px;
-  background: var(--b-karte);
+  /* heller als die Karten, damit Eingaben gut lesbar sind */
+  background: var(--b-glas-hell);
   color: var(--b-ink);
   font: inherit;
 }

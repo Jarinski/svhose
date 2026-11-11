@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useId, useRef, useState, type FocusEvent } from 'react'
 import b from './bento.module.css'
+import GlasEbenen from '@/components/glas/GlasEbenen'
 import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 import s from './NavbarB.module.css'
 
 // ─── Navigation von Design B (Bento) ─────────────────────────────────────────
-// Weiße, abgerundete Leiste; ab 1100 px Breite abwärts als Burger-Menü.
+// Abgerundete Leiste aus Glas (components/glas) – Leiste, Aufklappmenüs und Handy-Menü sind echte
+// mattierte Scheiben, weil beim Scrollen Inhalt darunter durchläuft. Ab 1240 px abwärts als Burger-Menü.
 
 type Ziel = { href: string; label: string; hinweis?: string }
 type AusklappId = 'spiele' | 'foerderverein'
@@ -147,20 +149,23 @@ export default function NavbarB() {
             <path d="m6 9 6 6 6-6" />
           </svg>
         </button>
-        <ul id={listeId} className={s.ausklapp} hidden={!offen}>
-          {ziele.map(ziel => (
-            <li key={ziel.href}>
-              <Link
-                href={ziel.href}
-                aria-current={istAktiv(pfad, ziel.href) ? 'page' : undefined}
-                onClick={() => setAusklappAuf(null)}
-              >
-                {ziel.label}
-                {ziel.hinweis && <small>{ziel.hinweis}</small>}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div id={listeId} className={s.ausklapp} hidden={!offen}>
+          <GlasEbenen band={8} staerke={7} unschaerfe="stark" />
+          <ul>
+            {ziele.map(ziel => (
+              <li key={ziel.href}>
+                <Link
+                  href={ziel.href}
+                  aria-current={istAktiv(pfad, ziel.href) ? 'page' : undefined}
+                  onClick={() => setAusklappAuf(null)}
+                >
+                  {ziel.label}
+                  {ziel.hinweis && <small>{ziel.hinweis}</small>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </li>
     )
   }
@@ -175,6 +180,7 @@ export default function NavbarB() {
     >
       <div className={b.wrap}>
         <nav className={s.leiste} aria-label="Hauptnavigation">
+          <GlasEbenen band={8} staerke={8} />
           <Link href="/" className={`${b.marke} ${s.marke}`} aria-label="SV Holm-Seppensen – zur Startseite">
             {/* Wappen; lazy, weil die Leiste für normale Besucher*innen versteckt mitgerendert wird */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -220,20 +226,23 @@ export default function NavbarB() {
 
           {/* Menü für schmale Bildschirme */}
           <div id={panelId} className={s.panel} hidden={!menuOffen}>
-            <ul>
-              {VOR_SPIELPLAENEN.map(z => panelEintrag(z))}
-              {NACH_SPIELPLAENEN.map(z => panelEintrag(z))}
-              {panelEintrag(KONTAKT)}
-              {NUR_MOBIL.map(z => panelEintrag(z))}
-            </ul>
-            <div className={s.gruppe}>Spielpläne</div>
-            <ul>{SPIELPLAENE.map(z => panelEintrag(z))}</ul>
-            <div className={s.gruppe}>{FOERDERVEREIN_MENUE.label}</div>
-            <ul>{FOERDERVEREIN.map(z => panelEintrag(z))}</ul>
-            <div className={s.panelCta}>
-              <Link href="/downloads" className={`${b.btn} ${b.btnDunkel}`} onClick={() => setMenuAuf(null)}>
-                Mitglied werden
-              </Link>
+            <GlasEbenen band={9} staerke={8} unschaerfe="stark" />
+            <div className={s.panelInhalt}>
+              <ul>
+                {VOR_SPIELPLAENEN.map(z => panelEintrag(z))}
+                {NACH_SPIELPLAENEN.map(z => panelEintrag(z))}
+                {panelEintrag(KONTAKT)}
+                {NUR_MOBIL.map(z => panelEintrag(z))}
+              </ul>
+              <div className={s.gruppe}>Spielpläne</div>
+              <ul>{SPIELPLAENE.map(z => panelEintrag(z))}</ul>
+              <div className={s.gruppe}>{FOERDERVEREIN_MENUE.label}</div>
+              <ul>{FOERDERVEREIN.map(z => panelEintrag(z))}</ul>
+              <div className={s.panelCta}>
+                <Link href="/downloads" className={`${b.btn} ${b.btnDunkel}`} onClick={() => setMenuAuf(null)}>
+                  Mitglied werden
+                </Link>
+              </div>
             </div>
           </div>
         </nav>

@@ -94,7 +94,7 @@ export default async function SuchSeite({ searchParams }: { searchParams: Promis
         <h1 className="font-display text-6xl md:text-8xl tracking-tight">SUCHE</h1>
       </div>
 
-      <form action="/suche" role="search" className="flex mb-12">
+      <form action="/suche" role="search" className="flex gap-2 mb-12">
         <label htmlFor="suche-eingabe" className="sr-only">Suchbegriff</label>
         <input
           id="suche-eingabe"
@@ -103,7 +103,7 @@ export default async function SuchSeite({ searchParams }: { searchParams: Promis
           defaultValue={eingabe}
           placeholder="z. B. Fußball, Aufnahmeantrag, Sommerfest"
           autoFocus
-          className="flex-1 min-w-0 bg-transparent border border-[#0a0a0a]/20 border-r-0 px-4 py-3 text-base focus:outline-none focus:border-[#0a0a0a]"
+          className="flex-1 min-w-0 bg-transparent border border-[#0a0a0a]/20 px-4 py-3 text-base focus:outline-none focus:border-[#0a0a0a]"
         />
         <button
           type="submit"
@@ -127,7 +127,7 @@ export default async function SuchSeite({ searchParams }: { searchParams: Promis
             <h2 className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-4">
               {g.titel} <span className="text-[#0a0a0a]/40">({g.treffer.length})</span>
             </h2>
-            <ul className="divide-y divide-[#0a0a0a]/10 border-y border-[#0a0a0a]/10">
+            <ul className="glas-karte overflow-hidden divide-y divide-[#0a0a0a]/[0.07]">
               {g.treffer.slice(0, MAX_PRO_GRUPPE).map(t => {
                 const inhalt = (
                   <>
@@ -138,7 +138,7 @@ export default async function SuchSeite({ searchParams }: { searchParams: Promis
                     <ArrowRight size={16} className="shrink-0 text-[#6b6b6b] group-hover:text-[#0a0a0a]" aria-hidden />
                   </>
                 )
-                const klasse = 'group flex items-center justify-between gap-4 py-4'
+                const klasse = 'group flex items-center justify-between gap-4 px-5 sm:px-7 py-4 transition-colors hover:bg-[#ffffff]/50'
                 return (
                   <li key={`${t.href}-${t.titel}`}>
                     {t.extern
