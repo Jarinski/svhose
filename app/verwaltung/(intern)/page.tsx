@@ -101,7 +101,7 @@ export default async function Uebersicht() {
         {nurFoerderverein && (
           <Karte
             titel="Förderverein"
-            beschreibung="Du darfst News und Downloads des Fördervereins pflegen, seine Seiten gestalten (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden) und den Vorstand eintragen. Alles erscheint auf der Website unter Förderverein."
+            beschreibung="Du darfst News und Downloads des Fördervereins pflegen, seine Seiten gestalten (Über den Förderverein, Aktuelles, Chronik, Mitglied werden) und den Vorstand eintragen. Alles erscheint auf der Website unter Förderverein."
           >
             <div className="flex flex-wrap gap-2">
               <Link href="/verwaltung/news" className={knopfKlassen.sekundaer}>

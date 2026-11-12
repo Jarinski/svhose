@@ -24,7 +24,7 @@ export function kategorieVereinheitlichen(kategorie: string | null): string | nu
 
 /**
  * Einstieg in den Förderverein: Links auf "den Förderverein" (Startseite, Footer, Suche) führen
- * zum ersten Reiter "Was ist der Förderverein"; /foerderverein leitet hierher um.
+ * zum ersten Reiter "Über den Förderverein"; /foerderverein leitet hierher um.
  */
 export const FOERDERVEREIN_START = '/foerderverein/ueber-uns'
 
@@ -32,7 +32,7 @@ export const FOERDERVEREIN_START = '/foerderverein/ueber-uns'
 export const FOERDERVEREIN_MENUE = {
   label: 'Förderverein',
   kinder: [
-    { href: '/foerderverein/ueber-uns', label: 'Was ist der Förderverein', text: 'Warum es den Förderverein gibt und was er für den Sport im Ort tut.' },
+    { href: '/foerderverein/ueber-uns', label: 'Über den Förderverein', text: 'Warum es den Förderverein gibt und was er für den Sport im Ort tut.' },
     { href: '/foerderverein/aktuelles', label: 'Aktuelles', text: 'Aktionen und Neuigkeiten aus dem Förderverein.' },
     { href: '/foerderverein/chronik', label: 'Chronik', text: 'Von der Idee der Eltern bis zum eigenen Platz am Tostedter Weg.' },
     { href: '/foerderverein/vorstand', label: 'Vorstand', text: 'Wer den Förderverein leitet und wie du ihn erreichst.' },

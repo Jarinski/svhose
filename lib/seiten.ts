@@ -1,7 +1,7 @@
 /**
  * lib/seiten.ts
  *
- * Aufbau der frei gestalteten Seiten (heute die Förderverein-Seiten Was ist der Förderverein,
+ * Aufbau der frei gestalteten Seiten (heute die Förderverein-Seiten Über den Förderverein,
  * Aktuelles, Chronik und Mitglied werden, siehe lib/foerderverein-seiten.ts): eine Einleitung und
  * eine Folge von Bausteinen, jeder mit eigener Darstellung. Die meisten Bausteine tragen ihren Inhalt selbst
  * (Zeitleiste, Text, Foto, Bildergalerie, Karten …); "Meldungen" und "Unterlagen" zeigen automatisch die News und

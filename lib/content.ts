@@ -740,7 +740,7 @@ export async function getNewsSlugs(): Promise<{ slug: string }[]> {
   return news.map(n => ({ slug: n.slug }))
 }
 
-// ─── Förderverein-Seiten (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden) ─
+// ─── Förderverein-Seiten (Über den Förderverein, Aktuelles, Chronik, Mitglied werden) ─
 
 /** News und Downloads mit der Kategorie "Förderverein" – für die Bausteine "Meldungen" und "Unterlagen". */
 export async function getFoerdervereinDaten(): Promise<{ news: NewsPost[]; downloads: Download[] }> {

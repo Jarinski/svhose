@@ -6,7 +6,7 @@ import { FOERDERVEREIN_START } from '@/lib/foerderverein'
 export const foerdervereinSeiten: Thema = {
   slug: 'foerderverein-seiten',
   titel: 'Seiten des Fördervereins',
-  kurz: 'Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden selbst gestalten: Texte, Karten, Fotos und Knöpfe zusammenstellen und das Aussehen wählen.',
+  kurz: 'Über den Förderverein, Aktuelles, Chronik und Mitglied werden selbst gestalten: Texte, Karten, Fotos und Knöpfe zusammenstellen und das Aussehen wählen.',
   icon: LayoutTemplate,
   zielgruppe: 'foerderverein',
   bereich: 'inhalte',
@@ -16,8 +16,8 @@ export const foerdervereinSeiten: Thema = {
     <>
       <Abschnitt titel="Wofür und wer darf?">
         <p>
-          Vier Seiten unter Förderverein auf der Website gestaltest du selbst, Inhalt und Aussehen: <Begriff>Was ist der Förderverein</Begriff>,{' '}
-          <Begriff>Aktuelles</Begriff>, <Begriff>Chronik</Begriff> und <Begriff>Mitglied werden</Begriff>. <Begriff>Was ist der Förderverein</Begriff>{' '}
+          Vier Seiten unter Förderverein auf der Website gestaltest du selbst, Inhalt und Aussehen: <Begriff>Über den Förderverein</Begriff>,{' '}
+          <Begriff>Aktuelles</Begriff>, <Begriff>Chronik</Begriff> und <Begriff>Mitglied werden</Begriff>. <Begriff>Über den Förderverein</Begriff>{' '}
           ist dabei der Einstieg: Wer auf der Website auf „Förderverein“ klickt, landet dort. Den Vorstand pflegst du nicht hier, sondern unter <Begriff>Vorstand (Förderverein)</Begriff>.
         </p>
         <p>

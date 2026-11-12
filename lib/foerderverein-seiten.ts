@@ -1,7 +1,7 @@
 /**
  * lib/foerderverein-seiten.ts
  *
- * Die Seiten des Fördervereins, die er selbst gestaltet (Aufbau in lib/seiten.ts): Was ist der
+ * Die Seiten des Fördervereins, die er selbst gestaltet (Aufbau in lib/seiten.ts): Über den
  * Förderverein, Aktuelles, Chronik und Mitglied werden. Je Seite Adresse, Überschrift und die
  * Vorlage – der Stand vor der Verwaltung, den die Website zeigt, solange für die Seite noch nichts
  * gespeichert ist.
@@ -40,7 +40,7 @@ const BEITRITT = /beitritt|mitglied|aufnahme/i
 // ─── Vorlagen ───────────────────────────────────────────────────────────────
 
 /**
- * Einstieg "Was ist der Förderverein": nur Text und auf Wunsch ein Foto (Christian Junge,
+ * Einstieg "Über den Förderverein": nur Text und auf Wunsch ein Foto (Christian Junge,
  * 09.11.2026). Erster Entwurf aus Chronik und Mitglied werden – der Förderverein schreibt ihn neu.
  */
 const UEBER_UNS: SeitenInhalt = {
@@ -185,11 +185,11 @@ export const FOERDERVEREIN_SEITEN: FoerdervereinSeite[] = [
   {
     slug: 'ueber-uns',
     schluessel: 'foerderverein-ueber-uns',
-    name: 'Was ist der Förderverein',
+    name: 'Über den Förderverein',
     beschreibung: 'Der Einstieg: warum es den Förderverein gibt und was er tut. Text und auf Wunsch ein Foto.',
     pfad: '/foerderverein/ueber-uns',
     kicker: 'Förderverein',
-    titel: 'WAS IST DER FÖRDERVEREIN',
+    titel: 'FÖRDERVEREIN SPORTANLAGEN DES SV HOLM-SEPPENSEN E.V.',
     vorlage: () => UEBER_UNS,
   },
   {

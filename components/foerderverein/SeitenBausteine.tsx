@@ -42,7 +42,8 @@ export function SeitenKopf({ kicker, titel, einleitung }: { kicker: string; tite
   return (
     <div className="px-6 max-w-7xl mx-auto mb-12">
       <div className="text-[11px] tracking-[0.25em] uppercase text-[#6b6b6b] mb-3">{kicker}</div>
-      <h1 className="font-display text-6xl md:text-8xl tracking-tight mb-12 break-words hyphens-auto">{titel}</h1>
+      {/* Lange Überschriften (z. B. der volle Vereinsname) in kleinerer Schrift, damit sie nicht über vier Zeilen laufen */}
+      <h1 className={`font-display tracking-tight mb-12 break-words hyphens-auto ${titel.length > 30 ? 'text-4xl md:text-6xl' : 'text-6xl md:text-8xl'}`}>{titel}</h1>
       {einleitung.trim() && <p className="max-w-2xl text-xl text-[#6b6b6b] font-light leading-relaxed whitespace-pre-line">{einleitung}</p>}
     </div>
   )

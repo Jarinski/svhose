@@ -7,7 +7,7 @@ import { foerdervereinSeite } from '@/lib/foerderverein-seiten'
 // (lib/foerderverein-seiten.ts); solange dort nichts gespeichert ist, steht hier die Vorlage.
 
 export const metadata: Metadata = {
-  title: 'Was ist der Förderverein',
+  title: 'Über den Förderverein',
   description: 'Warum es den Förderverein Sportanlagen des SV Holm-Seppensen e.V. gibt und was er für den Sport im Ort tut.',
 }
 

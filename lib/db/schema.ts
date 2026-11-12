@@ -393,7 +393,7 @@ export const downloads = sqliteTable(
 
 /**
  * Seiten, deren Inhalt und Aufbau komplett in der Verwaltung entsteht – heute die Förderverein-Seiten
- * Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden (lib/foerderverein-seiten.ts,
+ * Über den Förderverein, Aktuelles, Chronik und Mitglied werden (lib/foerderverein-seiten.ts,
  * Aufbau in lib/seiten.ts). Der Inhalt ist ein JSON-Dokument aus Bausteinen; Bilder darin sind
  * relative Pfade im Medienordner.
  * Fehlt die Zeile, zeigt die Website die Vorlage aus dem Code.

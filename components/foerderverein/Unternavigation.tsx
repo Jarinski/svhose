@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { FOERDERVEREIN_MENUE } from '@/lib/foerderverein'
 
 // Leiste mit den Unterseiten des Fördervereins, oben auf jeder Seite unter /foerderverein –
-// dieselben Einträge wie im Menü, "Was ist der Förderverein" ist der Einstieg.
+// dieselben Einträge wie im Menü, "Über den Förderverein" ist der Einstieg.
 const EINTRAEGE = FOERDERVEREIN_MENUE.kinder
 
 export default function Unternavigation({ aktiv }: { aktiv: string }) {
@@ -13,7 +13,7 @@ export default function Unternavigation({ aktiv }: { aktiv: string }) {
           const istAktiv = e.href === aktiv
           return (
             // shrink-0 + nowrap: Mobil ist die Leiste eine waagerecht scrollbare Reihe (app/vorschau-b.css) –
-            // lange Reiter wie "Was ist der Förderverein" sollen dort einzeilig bleiben
+            // lange Reiter wie "Über den Förderverein" sollen dort einzeilig bleiben
             <li key={e.href} className="shrink-0">
               <Link
                 href={e.href}

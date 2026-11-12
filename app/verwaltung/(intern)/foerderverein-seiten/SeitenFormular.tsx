@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Editor der Förderverein-Seiten (Was ist der Förderverein, Aktuelles, Chronik, Mitglied werden): Einleitung und Bausteine
+ * Editor der Förderverein-Seiten (Über den Förderverein, Aktuelles, Chronik, Mitglied werden): Einleitung und Bausteine
  * hinzufügen, verschieben, ausblenden und gestalten. Die Vorschau nutzt dieselbe Darstellung wie die
  * Website (components/foerderverein/SeitenBausteine), auch mit den aktuellen News und Downloads.
  *

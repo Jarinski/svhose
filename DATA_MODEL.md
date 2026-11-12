@@ -549,7 +549,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 ## 3.11a seiten (frei gestaltete Seiten)
 
 - **Zweck**: Seiten, deren Inhalt **und** Aufbau komplett in der Verwaltung entstehen: die
-  Förderverein-Seiten Was ist der Förderverein, Aktuelles, Chronik und Mitglied werden (`/foerderverein/<seite>`, bearbeitet unter
+  Förderverein-Seiten Über den Förderverein, Aktuelles, Chronik und Mitglied werden (`/foerderverein/<seite>`, bearbeitet unter
   `/verwaltung/foerderverein-seiten` von Admins und Zugängen mit Förderverein-Recht). Welche Seiten es
   gibt, steht mit Überschrift und Vorlage in `lib/foerderverein-seiten.ts`.
 - **Beziehungen**: keine Fremdschlüssel. Bilder stehen als relative Medienpfade im JSON-Dokument.
