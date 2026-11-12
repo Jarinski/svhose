@@ -31,21 +31,26 @@ export const MARKDOWN_ELEMENTE: Components = {
   h3: ({ children }) => (
     <h3 className="font-display text-2xl md:text-3xl tracking-tight leading-tight mt-10 mb-3 first:mt-0">{children}</h3>
   ),
-  h4: ({ children }) => <h4 className="font-medium mt-8 mb-2 first:mt-0">{children}</h4>,
+  h4: ({ children }) => <h4 className="text-lg font-semibold mt-8 mb-2 first:mt-0">{children}</h4>,
   h5: ({ children }) => <h5 className="font-medium mt-8 mb-2 first:mt-0">{children}</h5>,
   h6: ({ children }) => <h6 className="font-medium mt-8 mb-2 first:mt-0">{children}</h6>,
   p: ({ children }) => <p className="mb-6 last:mb-0">{children}</p>,
   strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
   em: ({ children }) => <em className="italic">{children}</em>,
-  a: ({ href, children }) => (
-    <a
-      href={href}
-      className="underline underline-offset-4 decoration-[#0a0a0a]/30 hover:decoration-[#0a0a0a] transition-colors break-words"
-      {...(istExternerLink(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-    >
-      {children}
-    </a>
-  ),
+  a: ({ href, children }) => {
+    // Schriftgröße steckt in einem Link auf eine Pseudo-Adresse (siehe GROESSE_GROSS) – kein echter Link
+    if (href === GROESSE_GROSS) return <span className="text-xl md:text-2xl leading-snug">{children}</span>
+    if (href === GROESSE_KLEIN) return <span className="text-sm">{children}</span>
+    return (
+      <a
+        href={href}
+        className="underline underline-offset-4 decoration-[#0a0a0a]/30 hover:decoration-[#0a0a0a] transition-colors break-words"
+        {...(istExternerLink(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
+        {children}
+      </a>
+    )
+  },
   ul: ({ children }) => <ul className={`list-disc ${LISTE}`}>{children}</ul>,
   ol: ({ children }) => <ol className={`list-decimal ${LISTE}`}>{children}</ol>,
   li: ({ children }) => <li className="pl-1">{children}</li>,
@@ -109,7 +114,35 @@ export function teaserWiederholtText(teaser: string, markdown: string): boolean 
   return vergleichstext(markdown).slice(0, kurz.length + 400).includes(kurz)
 }
 
-/** Markdown-Fließtext mit den Stilen der Website. */
-export default function MarkdownText({ text }: { text: string }) {
-  return <Markdown components={MARKDOWN_ELEMENTE}>{linksErgaenzen(text)}</Markdown>
+/**
+ * Ein einfaches Enter wird zur neuen Zeile. Markdown selbst behandelt es nur als Leerzeichen – wer in einem
+ * Textfeld Enter drückt, erwartet aber eine neue Zeile (Adressen, Ansprechpartner, Öffnungszeiten …).
+ * Nur Fließtext ("text"-Knoten) wird aufgeteilt, Code bleibt unberührt.
+ */
+type Knoten = { type: string; value?: string; children?: Knoten[] }
+function zeilenumbrueche() {
+  const durchgehen = (knoten: Knoten) => {
+    if (!knoten.children) return
+    knoten.children = knoten.children.flatMap((kind): Knoten[] => {
+      if (kind.type !== 'text' || !kind.value?.includes('\n')) {
+        durchgehen(kind)
+        return [kind]
+      }
+      return kind.value.split('\n').flatMap((teil, i): Knoten[] => (i === 0 ? [{ type: 'text', value: teil }] : [{ type: 'break' }, { type: 'text', value: teil }]))
+    })
+  }
+  return durchgehen
+}
+
+/** Adressen für Schriftgröße im Text: [Text](#gross) bzw. [Text](#klein) – gesetzt von der Formatierungsleiste (FormatTextfeld). */
+export const GROESSE_GROSS = '#gross'
+export const GROESSE_KLEIN = '#klein'
+
+/** Markdown-Fließtext mit den Stilen der Website. `zeilenumbrueche`: Enter im Text ist eine neue Zeile (Textabschnitte). */
+export default function MarkdownText({ text, zeilenumbrueche: umbrechen = false }: { text: string; zeilenumbrueche?: boolean }) {
+  return (
+    <Markdown components={MARKDOWN_ELEMENTE} remarkPlugins={umbrechen ? [zeilenumbrueche] : []}>
+      {linksErgaenzen(text)}
+    </Markdown>
+  )
 }

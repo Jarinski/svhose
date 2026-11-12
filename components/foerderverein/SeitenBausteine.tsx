@@ -241,7 +241,7 @@ function Textabschnitt({ b }: { b: Extract<B, { art: 'text' }> }) {
             dunkel ? 'text-[#f5f5f0]/70 [&_a]:decoration-[#f5f5f0]/40 [&_a:hover]:decoration-[#f5f5f0] [&_blockquote]:border-[#f5f5f0] [&_blockquote]:text-[#f5f5f0]/60' : 'text-[#4a4a4a]'
           }`}
         >
-          <MarkdownText text={b.text} />
+          <MarkdownText text={b.text} zeilenumbrueche />
         </div>
       )}
     </div>

@@ -41,6 +41,7 @@ import {
 import SeitenBausteine, { SeitenKopf, type SeitenDaten } from '@/components/foerderverein/SeitenBausteine'
 import { eingabenBehalten } from '@/components/verwaltung/FormularTeile'
 import BildFeld from '@/components/verwaltung/inhalte/BildFeld'
+import FormatTextfeld from '@/components/verwaltung/inhalte/FormatTextfeld'
 import { fotoVerkleinern } from '@/components/verwaltung/inhalte/fotoVerkleinern'
 import ReihenfolgeKnoepfe, { verschieben } from '@/components/verwaltung/ReihenfolgeKnoepfe'
 import SpeicherLeiste from '@/components/verwaltung/SpeicherLeiste'
@@ -863,19 +864,15 @@ function TextEditor({ b, setzen, fotoMelden, hatFoto }: { b: Art<'text'>; setzen
   return (
     <>
       <Textfeld id={`${k}-ueberschrift`} label="Überschrift (optional)" wert={b.ueberschrift} onAendern={v => setzen({ ...b, ueberschrift: v })} />
-      <Textfeld
-        id={`${k}-text`}
-        label="Text"
-        zeilen={8}
-        wert={b.text}
-        onAendern={v => setzen({ ...b, text: v })}
-        hinweis={
-          <>
-            So geht’s: <code className="font-mono">**fett**</code>, <code className="font-mono">*kursiv*</code>, <code className="font-mono">- Aufzählung</code>,
-            Leerzeile = neuer Absatz, Links einfach einfügen.
-          </>
-        }
-      />
+      <Feld label="Text" htmlFor={`${k}-text`}>
+        <FormatTextfeld
+          id={`${k}-text`}
+          zeilen={8}
+          wert={b.text}
+          onAendern={v => setzen({ ...b, text: v })}
+          hinweis="Text markieren und auf ein Symbol klicken. Enter = neue Zeile, Leerzeile = neuer Absatz. Links lassen sich einfach einfügen."
+        />
+      </Feld>
       <FotoWahl schluessel={k} bild={b.bild} optional onAnzeige={fotoMelden(k)} />
       <Wahl
         name={`${k}-hintergrund`}
