@@ -55,6 +55,7 @@ export default async function TeamSeite(props: { params: Promise<{ art: string; 
           bereich: team.bereich ?? '',
           altersklasse: team.altersklasse ?? '',
           beschreibung: team.beschreibung ?? '',
+          tabelleUrl: team.tabelleUrl ?? '',
           sichtbar: team.sichtbar,
           reihenfolge: String(team.reihenfolge),
           trainingszeiten: stand.trainingszeiten.map(z => ({

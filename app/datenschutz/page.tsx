@@ -108,6 +108,22 @@ export default function DatenschutzPage() {
             .
           </p>
           <p className="mt-3">
+            Auf der Fußball-Seite zeigen wir die letzten und nächsten Spiele samt Ergebnissen über ein
+            Widget von fussball.de (DFB-Medien GmbH &amp; Co. KG, Frankfurt am Main). Es wird erst
+            geladen, wenn Sie den funktionalen Cookies zugestimmt oder auf „Spiele laden“ geklickt
+            haben. Dabei werden Ihre IP-Adresse und die Adresse unserer Seite an fussball.de
+            übertragen. Mehr dazu finden Sie in der{' '}
+            <a
+              href="https://www.fussball.de/datenschutz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+            >
+              Datenschutzerklärung von fussball.de
+            </a>
+            .
+          </p>
+          <p className="mt-3">
             Wir respektieren Ihre Privatsphäre und verwenden keine Cookies oder eingebetteten
             Inhalte, um personenbezogene Daten ohne Ihre ausdrückliche Zustimmung zu sammeln. Sie
             können die Cookie-Einstellungen in Ihrem Browser anpassen, um Cookies nach Ihren

@@ -1,0 +1,1 @@
+ALTER TABLE `mannschaften` ADD `tabelle_url` text;

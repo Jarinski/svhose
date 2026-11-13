@@ -118,6 +118,8 @@ export const mannschaften = sqliteTable(
     foto: text('foto'),
     /** Ausschnitt des Fotos auf der Spartenseite als JSON (siehe lib/bild-ausschnitt.ts); null = mittig. */
     fotoAusschnitt: text('foto_ausschnitt'),
+    /** Link zur Tabelle: Mannschaftsseite auf fussball.de oder Staffel auf click-tt (lib/tabellen.ts); null = keine Tabelle. */
+    tabelleUrl: text('tabelle_url'),
     sichtbar: integer('sichtbar', { mode: 'boolean' }).notNull().default(true),
     reihenfolge: integer('reihenfolge').notNull().default(0),
     ...zeitstempel(),

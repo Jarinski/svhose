@@ -1,18 +1,25 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Mail, Phone, MessageCircle, Clock, FileText, Download } from 'lucide-react'
 import { getSparteBySlug, jahrgaengeAus, kurzName, type Kontakt, type TeamKarte, type WochentagName } from '@/lib/content'
 import { MANNSCHAFT_BEREICHE } from '@/lib/db/schema'
 import { whatsappLink } from '@/lib/whatsapp'
 import MannschaftenListe from './MannschaftenListe'
+import LigaTabelle from './LigaTabelle'
+import { ladeTabelle, type Tabelle } from '@/lib/tabellen'
 import TeamFoto from '@/components/TeamFoto'
 import NewsKarten from '@/components/NewsKarten'
+import FussballWidget from '@/components/FussballWidget'
 
 /* ── Rendering ─────────────────────────────────────────────── */
 // Die Seite liest bei jedem Aufruf direkt aus der Datenbank –
 // Änderungen in der Verwaltung sind damit sofort sichtbar.
 export const dynamic = 'force-dynamic'
+
+/** Widget „Letzte und nächste Spiele“ von fussball.de – bei fussball.de für www.sv-holm-seppensen.de eingerichtet */
+const FUSSBALL_WIDGET = { id: '3b9eacee-00dc-498a-8edb-ea75736f043b', host: 'www.sv-holm-seppensen.de' }
 
 /* ── Metadaten ─────────────────────────────────────────────── */
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -113,13 +120,24 @@ export default async function SparteDetailPage(props: {
   const { farbe, mannschaften, gruppen, ansprechpartner, downloads, news } = sparte
   const isAkrobatik = sparte.slug === 'akrobatik'
   const beschriftungen = auswahlBeschriftungen(mannschaften)
+  const istFussball = sparte.slug === 'fussball'
+  // Das Widget prüft die Herkunft – auf anderen Adressen (localhost, Testkopie) bliebe es leer
+  const kopf = await headers()
+  const host = (kopf.get('x-forwarded-host') ?? kopf.get('host') ?? '').split(',')[0].trim()
+  const widgetVerfuegbar = istFussball && host === FUSSBALL_WIDGET.host
+  // Ligatabellen von fussball.de / click-tt – parallel, höchstens stündlich neu abgerufen (lib/tabellen.ts)
+  const tabellen = new Map(
+    await Promise.all(
+      mannschaften.filter(m => m.tabelleUrl).map(async m => [m.id, await ladeTabelle(m.tabelleUrl)] as const),
+    ),
+  )
   const mannschaftenByBereich = mannschaftenNachBereich(mannschaften).map(abschnitt => ({
     key: abschnitt.key,
     title: abschnitt.title,
     mannschaften: abschnitt.mannschaften.map(mannschaft => ({
       id: mannschaft.id,
       label: beschriftungen.get(mannschaft.id) ?? mannschaft.name,
-      karte: <MannschaftCard team={mannschaft} farbe={farbe} sparteIcon={sparte.icon} />,
+      karte: <MannschaftCard team={mannschaft} farbe={farbe} sparteIcon={sparte.icon} tabelle={tabellen.get(mannschaft.id) ?? null} />,
     })),
   }))
   const hatTeams = mannschaften.length > 0 || gruppen.length > 0
@@ -260,6 +278,16 @@ export default async function SparteDetailPage(props: {
         <div className="mb-16">
           <div className="space-y-16">
 
+            {/* Fußball: letzte und nächste Spiele mit Ergebnissen (offizielles Widget von fussball.de) */}
+            {istFussball && (
+              <section>
+                <SectionHeader title="ERGEBNISSE & SPIELE" farbe={farbe} />
+                <div className="mt-8">
+                  <FussballWidget widgetId={FUSSBALL_WIDGET.id} verfuegbar={widgetVerfuegbar} />
+                </div>
+              </section>
+            )}
+
             {/* Mannschaften, nach Bereich gruppiert */}
             {mannschaften.length > 0 && (
               <section>
@@ -360,7 +388,7 @@ export default async function SparteDetailPage(props: {
 }
 
 /* ── Abschnittsüberschrift ─────────────────────────────────── */
-function SectionHeader({ title, farbe, count }: { title: string; farbe: string; count: number }) {
+function SectionHeader({ title, farbe, count }: { title: string; farbe: string; count?: number }) {
   return (
     <div className="flex items-center gap-3">
       <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: farbe }} />
@@ -368,22 +396,23 @@ function SectionHeader({ title, farbe, count }: { title: string; farbe: string; 
         {title}
       </div>
       <div className="flex-1 h-px" style={{ background: `${farbe}25` }} />
-      <div className="text-[11px] text-[#6b6b6b] shrink-0">{count}</div>
+      {count !== undefined && <div className="text-[11px] text-[#6b6b6b] shrink-0">{count}</div>}
     </div>
   )
 }
 
 /* ── Karte für Mannschaft oder Gruppe (mit Trainingszeiten und Trainerteam) ── */
 function MannschaftCard({
-  team, farbe, sparteIcon,
+  team, farbe, sparteIcon, tabelle = null,
 }: {
   team: TeamKarte
   farbe: string
   sparteIcon: string
+  tabelle?: Tabelle | null
 }) {
   const zeiten = team.trainingszeiten
   const trainer = team.trainer
-  const hasDetails = zeiten.length > 0 || trainer.length > 0
+  const hasDetails = zeiten.length > 0 || trainer.length > 0 || tabelle !== null
 
   return (
     // id: Sprungziel aus der Suche (lib/suche/quellen.ts), scroll-mt hält die Karte unter der Navigation frei
@@ -493,9 +522,22 @@ function MannschaftCard({
             </div>
           )}
 
+          {/* Ligatabelle */}
+          {tabelle && (
+            <div className={zeiten.length > 0 ? undefined : 'pt-4'}>
+              <div
+                className="text-[11px] tracking-[0.18em] uppercase font-medium mb-3"
+                style={{ color: farbe }}
+              >
+                Tabelle
+              </div>
+              <LigaTabelle tabelle={tabelle} farbe={farbe} />
+            </div>
+          )}
+
           {/* Trainerteam */}
           {trainer.length > 0 && (
-            <div className={zeiten.length > 0 ? undefined : 'pt-4'}>
+            <div className={zeiten.length > 0 || tabelle ? undefined : 'pt-4'}>
               <div
                 className="text-[11px] tracking-[0.18em] uppercase font-medium mb-3"
                 style={{ color: farbe }}

@@ -349,6 +349,7 @@ hat nur `zugaenge` beide; die übrigen haben eigene Zeitspalten, die jeweils dor
 | `beschreibung` | text | nein | – | Text auf der Spartenseite |
 | `foto` | text | nein | – | relativer Medienpfad (Mannschaftsfoto) |
 | `foto_ausschnitt` | text | nein | – | sichtbarer Ausschnitt des Fotos auf der Spartenkarte (16:10) als JSON `{x, y, b, h}` in Anteilen des Bildes (`lib/bild-ausschnitt.ts`); leer = mittig. Das Foto selbst bleibt ganz (Großansicht) |
+| `tabelle_url` | text | nein | – | Link zur Ligatabelle: Mannschaftsseite auf fussball.de (ohne Saison, damit immer die aktuelle erscheint) oder Staffelseite auf click-tt. Die Spartenseite lädt die Tabelle daraus höchstens stündlich (`lib/tabellen.ts`); leer = keine Tabelle |
 | `sichtbar` | boolean | ja | `true` | ausgeblendete Mannschaften erscheinen nirgends auf der Website |
 | `reihenfolge` | integer | ja | `0` | Sortierung innerhalb der Sparte |
 

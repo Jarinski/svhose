@@ -42,6 +42,7 @@ export interface TeamStart {
   bereich: string
   altersklasse: string
   beschreibung: string
+  tabelleUrl: string
   sichtbar: boolean
   reihenfolge: string
   trainingszeiten: ZeitStart[]
@@ -87,6 +88,7 @@ interface Formular {
   bereich: string
   altersklasse: string
   beschreibung: string
+  tabelleUrl: string
   sichtbar: boolean
   reihenfolge: string
   zeiten: ZeitZeile[]
@@ -100,6 +102,7 @@ function fuerServer(f: Formular, art: TeamArt): TeamEingabe {
     bereich: art === 'mannschaft' ? f.bereich || null : null,
     altersklasse: f.altersklasse,
     beschreibung: f.beschreibung,
+    ...(art === 'mannschaft' ? { tabelleUrl: f.tabelleUrl } : {}),
     sichtbar: f.sichtbar,
     reihenfolge: f.reihenfolge,
     trainingszeiten: f.zeiten.map(z => ({
@@ -146,6 +149,7 @@ function TeamFormular({
     bereich: start.bereich,
     altersklasse: start.altersklasse,
     beschreibung: start.beschreibung,
+    tabelleUrl: start.tabelleUrl,
     sichtbar: start.sichtbar,
     reihenfolge: start.reihenfolge,
     zeiten: start.trainingszeiten.map(z => ({ ...z, schluessel: `t${z.id}` })),
@@ -304,6 +308,27 @@ function TeamFormular({
               className={`${eingabeKlasse} leading-relaxed`}
             />
           </Feld>
+          {art === 'mannschaft' && (
+            <Feld
+              label="Link zur Tabelle (optional)"
+              htmlFor="tabelleUrl"
+              fehler={felder.tabelleUrl}
+              hinweis="Fußball: Mannschaft auf fussball.de aufrufen und die Adresse aus dem Browser kopieren. Tischtennis: auf click-tt die Staffel (Tabelle und Spielplan) öffnen und deren Adresse kopieren. Die aktuelle Tabelle erscheint dann in der Mannschaftskarte."
+              className="md:col-span-2"
+            >
+              <input
+                id="tabelleUrl"
+                type="url"
+                inputMode="url"
+                value={f.tabelleUrl}
+                onChange={e => setze('tabelleUrl', e.target.value)}
+                maxLength={500}
+                placeholder="https://www.fussball.de/mannschaft/…"
+                aria-invalid={!!felder.tabelleUrl || undefined}
+                className={eingabeKlasse}
+              />
+            </Feld>
+          )}
           <div className="md:col-span-2">
             <span className="block text-sm font-medium text-[#0a0a0a] mb-1.5">Foto</span>
             <FotoFeld

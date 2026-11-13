@@ -59,6 +59,8 @@ export interface TeamKarte {
   name: string
   /** Nur bei Mannschaften gesetzt, Gruppen: null */
   bereich: string | null
+  /** Link zur Ligatabelle (lib/tabellen.ts) – nur bei Mannschaften, sonst null */
+  tabelleUrl: string | null
   altersklasse: string | null
   /** '' wenn leer */
   beschreibung: string
@@ -225,6 +227,7 @@ interface TeamDaten {
   id: number
   name: string
   bereich?: string | null
+  tabelleUrl?: string | null
   altersklasse: string | null
   beschreibung: string | null
   foto: string | null
@@ -307,6 +310,7 @@ function teamKarte(art: TeamKarte['art'], team: TeamDaten): TeamKarte {
     art,
     name: team.name,
     bereich: art === 'mannschaft' ? (team.bereich ?? null) : null,
+    tabelleUrl: art === 'mannschaft' ? wert(team.tabelleUrl) : null,
     altersklasse: wert(team.altersklasse),
     beschreibung: wert(team.beschreibung) ?? '',
     foto: medienUrl(team.foto),

@@ -16,6 +16,7 @@ import type { Datenbank } from '@/lib/db'
 import { schema } from '@/lib/db'
 import { MANNSCHAFT_BEREICHE, RHYTHMEN, SAISONS } from '@/lib/db/schema'
 import { ausschnittLesen, ausschnittText } from '@/lib/bild-ausschnitt'
+import { tabellenLink } from '@/lib/tabellen'
 import { erfolg, fehler, type FormErgebnis } from './formular'
 import { bildSpeichern, medienFreigeben, UploadFehler } from './medien-upload'
 import { kontaktPruefen, type DbZugriff } from './person-bearbeiten'
@@ -78,7 +79,7 @@ export interface TeamStand {
 function teamZeileLaden(db: DbZugriff, art: TeamArt, id: number): TeamZeile | undefined {
   if (art === 'mannschaft') return db.select().from(schema.mannschaften).where(eq(schema.mannschaften.id, id)).get()
   const g = db.select().from(schema.gruppen).where(eq(schema.gruppen.id, id)).get()
-  return g ? { ...g, bereich: null } : undefined
+  return g ? { ...g, bereich: null, tabelleUrl: null } : undefined
 }
 
 function zeitSpalte(art: TeamArt) {
@@ -141,7 +142,7 @@ function schnappschuss(s: TeamStand) {
       id: t.id,
       sparteId: t.sparteId,
       name: t.name,
-      ...(s.art === 'mannschaft' ? { bereich: t.bereich } : {}),
+      ...(s.art === 'mannschaft' ? { bereich: t.bereich, tabelleUrl: t.tabelleUrl } : {}),
       altersklasse: t.altersklasse,
       beschreibung: t.beschreibung,
       foto: t.foto,
@@ -196,6 +197,8 @@ export interface TeamEingabe {
   bereich: string | null
   altersklasse: string
   beschreibung: string
+  /** Nur Mannschaften: Link zur Tabelle auf fussball.de oder click-tt */
+  tabelleUrl?: string
   sichtbar: boolean
   reihenfolge: number | string | null
   trainingszeiten: TrainingszeitEingabe[]
@@ -224,13 +227,14 @@ interface TeamGeprueft {
   bereich: Bereich | null
   altersklasse: string | null
   beschreibung: string | null
+  tabelleUrl: string | null
   sichtbar: boolean
   reihenfolge: number
   trainingszeiten: ZeitGeprueft[]
   trainer: TrainerGeprueft[]
 }
 
-const GRENZEN = { name: 80, altersklasse: 60, beschreibung: 5000, ort: 100, hinweis: 200, rolle: 60, zeilen: 40 }
+const GRENZEN = { name: 80, altersklasse: 60, beschreibung: 5000, link: 500, ort: 100, hinweis: 200, rolle: 60, zeilen: 40 }
 
 function enthaelt<T extends string>(liste: readonly T[], wert: unknown): wert is T {
   return typeof wert === 'string' && (liste as readonly string[]).indexOf(wert) >= 0
@@ -242,7 +246,7 @@ function langerText(felder: Record<string, string>, schluessel: string, wert: st
 
 /**
  * Prüft das Feld "daten" vollständig. Fehlermeldungen nennen die Zeile ("Trainingszeit 2: …"),
- * Feldschlüssel: name, bereich, altersklasse, beschreibung, reihenfolge, zeiten.<i>.<feld>, trainer.<i>[.<feld>].
+ * Feldschlüssel: name, bereich, altersklasse, beschreibung, tabelleUrl, reihenfolge, zeiten.<i>.<feld>, trainer.<i>[.<feld>].
  */
 export function teamEingabePruefen(art: TeamArt, roh: unknown): { daten: TeamGeprueft } | { fehler: FormErgebnis } {
   const o = objektWert(roh)
@@ -263,6 +267,16 @@ export function teamEingabePruefen(art: TeamArt, roh: unknown): { daten: TeamGep
   langerText(felder, 'altersklasse', altersklasse, GRENZEN.altersklasse, 'Die Altersklasse')
   const beschreibung = textWert(o.beschreibung)
   langerText(felder, 'beschreibung', beschreibung, GRENZEN.beschreibung, 'Die Beschreibung')
+
+  let tabelleUrl: string | null = null
+  const tabelleRoh = art === 'mannschaft' ? textWert(o.tabelleUrl) : null
+  if (tabelleRoh) {
+    const link = tabellenLink(tabelleRoh)
+    if (!link || link.url.length > GRENZEN.link) {
+      felder.tabelleUrl =
+        'Bitte den Link zur Mannschaftsseite auf fussball.de oder zur Staffel auf click-tt einfügen (siehe Hinweis unter dem Feld).'
+    } else tabelleUrl = link.url
+  }
 
   const reihenfolgeRoh = ganzzahlWert(o.reihenfolge)
   if (reihenfolgeRoh === false || (reihenfolgeRoh !== null && (reihenfolgeRoh < 0 || reihenfolgeRoh > 9999))) {
@@ -352,6 +366,7 @@ export function teamEingabePruefen(art: TeamArt, roh: unknown): { daten: TeamGep
       bereich,
       altersklasse,
       beschreibung,
+      tabelleUrl,
       sichtbar: o.sichtbar !== false,
       reihenfolge,
       trainingszeiten,
@@ -464,7 +479,7 @@ export async function teamSpeichern(db: Datenbank, rechte: Rechte, e: TeamSpeich
         geaendertAm: new Date().toISOString(),
       }
       if (e.art === 'mannschaft') {
-        tx.update(schema.mannschaften).set({ ...werte, bereich: d.bereich }).where(eq(schema.mannschaften.id, e.id)).run()
+        tx.update(schema.mannschaften).set({ ...werte, bereich: d.bereich, tabelleUrl: d.tabelleUrl }).where(eq(schema.mannschaften.id, e.id)).run()
       } else {
         tx.update(schema.gruppen).set(werte).where(eq(schema.gruppen.id, e.id)).run()
       }

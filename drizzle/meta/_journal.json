@@ -78,6 +78,13 @@
       "when": 1794243542669,
       "tag": "0010_foerderverein_vorstand_aufgabe",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1794560116520,
+      "tag": "0011_mannschaft_tabelle",
+      "breakpoints": true
     }
   ]
 }
