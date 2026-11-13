@@ -181,6 +181,79 @@ export function naechsterTermin(termin: Termin, heute: string): NaechsterTermin 
   }
 }
 
+// ─── Spiele-Kachel: letzte Ergebnisse und nächste Termine ───────────────────
+
+export interface SpielKarte {
+  id: string
+  emoji: string
+  /** "Sa, 8. Nov · 10:00 Uhr", bei vorbei gegangenen Spielen auch "Gestern" */
+  wann: string
+  vorbei: boolean
+  titel: string
+  unterzeile: string
+  ort: string
+  /** Nur Tischtennis: click-tt nennt das Ergebnis lesbar ("8:2", Heim : Gast). */
+  ergebnis: string | null
+  ausgang: 'Sieg' | 'Niederlage' | 'Unentschieden' | null
+  /** Direkt zum Spiel (fussball.de / click-tt), bei normalen Terminen /termine */
+  link: { href: string; text: string; extern: boolean }
+}
+
+/** "Heute", "Gestern" oder "Sa, 8. Nov" für Tage in der Vergangenheit. */
+function wannVergangen(datum: string, heute: string): string {
+  const tage = Math.round((Date.parse(heute) - Date.parse(datum.slice(0, 10))) / 86_400_000)
+  if (tage <= 0) return 'Heute'
+  if (tage === 1) return 'Gestern'
+  const d = datumTeile(datum)
+  return d ? `${d.wochentag}, ${d.tag}. ${d.monat}` : datum
+}
+
+/** "Sieg" usw. aus Sicht von SV Holm-Seppensen; null, wenn das Ergebnis keine zwei Zahlen sind. */
+function ausgangAus(ergebnis: string, heimspiel: boolean): SpielKarte['ausgang'] {
+  const zahlen = ergebnis.match(/^(\d+):(\d+)$/)
+  if (!zahlen) return null
+  const [eigene, andere] = heimspiel ? [+zahlen[1], +zahlen[2]] : [+zahlen[2], +zahlen[1]]
+  return eigene > andere ? 'Sieg' : eigene < andere ? 'Niederlage' : 'Unentschieden'
+}
+
+export function spielKarte(termin: Termin, heute: string, vorbei: boolean): SpielKarte {
+  const basis = naechsterTermin(termin, heute)
+  const info = spielInfo(termin)
+  const zeit = termin.uhrzeit ? uhrzeitLabel(termin.uhrzeit) : ''
+  const wann = vorbei ? [wannVergangen(termin.datum, heute), zeit].filter(Boolean).join(' · ') : basis.wann
+
+  const spielLink = termin.beschreibung.match(/^Details:\s*(https?:\/\/\S+)/m)?.[1] ?? null
+  const ergebnisText = termin.beschreibung.match(/^Ergebnis:\s*(\S+)\s*$/m)?.[1] ?? null
+  const ergebnis = vorbei && info.art ? ergebnisText : null
+
+  let link: SpielKarte['link'] = { href: '/termine', text: 'Alle Termine →', extern: false }
+  if (info.art && spielLink) {
+    const fussball = info.sportart === 'Fußball'
+    const bericht = /clubMeetingReport/.test(spielLink)
+    const text = fussball
+      ? vorbei
+        ? 'Ergebnis auf fussball.de →'
+        : 'Zum Spiel auf fussball.de →'
+      : bericht
+        ? 'Spielbericht auf click-tt →'
+        : 'Spielplan auf click-tt →'
+    link = { href: spielLink, text, extern: true }
+  }
+
+  return {
+    id: termin.id,
+    emoji: basis.emoji,
+    wann,
+    vorbei,
+    titel: basis.titel,
+    unterzeile: basis.unterzeile,
+    ort: basis.ort,
+    ergebnis,
+    ausgang: ergebnis ? ausgangAus(ergebnis, info.art === 'heim') : null,
+    link,
+  }
+}
+
 // ─── Sparten ─────────────────────────────────────────────────────────────────
 
 /** Diese Sparten zeigen die Bandbreite gut – fehlen sie, kommen andere mit Emoji nach. */

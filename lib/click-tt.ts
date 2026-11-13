@@ -17,7 +17,7 @@ export interface TischtennisSpiel {
   heim: string        // home team name
   gast: string        // away team name
   ergebnis: string    // match score like "8:8", empty for upcoming
-  url: string         // link to click-tt club page
+  url: string         // Spielbericht on click-tt once played, otherwise the club page
   heimspiel: boolean  // true when SV Holm-Seppensen is the home team
 }
 
@@ -75,6 +75,12 @@ function ligazuMannschaft(liga: string, heim: string, gast: string): string {
   return liga || 'Tischtennis'
 }
 
+/** Link „Spielbericht“ in der Ergebnis-Spalte – gibt es erst, wenn die Partie gespielt ist. */
+function spielberichtUrl(zelle: string): string | null {
+  const href = zelle.match(/href="([^"]*clubMeetingReport[^"]*)"/)?.[1]
+  return href ? new URL(href.replace(/&amp;/g, '&'), CLUB_URL).toString() : null
+}
+
 // ── Parser ────────────────────────────────────────────────────────────────
 
 /**
@@ -120,12 +126,13 @@ function parseGamesFromHtml(html: string): TischtennisSpiel[] {
 
     // Extract every <td attrs>content</td>
     const tdRe = /<td([^>]*)>([\s\S]*?)<\/td>/g
-    const rawCells: { attrs: string; text: string }[] = []
+    const rawCells: { attrs: string; text: string; html: string }[] = []
     let td: RegExpExecArray | null
     while ((td = tdRe.exec(rowContent)) !== null) {
       rawCells.push({
         attrs: td[1],
         text: decodeEntities(stripTags(td[2])),
+        html: td[2],
       })
     }
 
@@ -177,7 +184,7 @@ function parseGamesFromHtml(html: string): TischtennisSpiel[] {
       heim,
       gast,
       ergebnis,
-      url: CLUB_URL,
+      url: spielberichtUrl(rawCells[7]?.html ?? '') ?? CLUB_URL,
       heimspiel,
     })
   }

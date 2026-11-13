@@ -273,6 +273,75 @@
   text-underline-offset: 4px;
 }
 
+/* Spiele-Kachel: Kopf mit Datum und Pfeilen, Ergebnis */
+.spielKopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.spielKopf .tagDunkel { min-width: 0; }
+
+.spielPfeile {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.spielPfeile button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background .2s, border-color .2s, opacity .2s;
+}
+
+.spielPfeile button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .22);
+  border-color: rgba(255, 255, 255, .4);
+}
+
+.spielPfeile button:disabled {
+  opacity: .3;
+  cursor: default;
+}
+
+.spielPfeile svg {
+  width: 18px;
+  height: 18px;
+}
+
+.spielInhalt { touch-action: pan-y; }
+
+.ergebnis {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ergebnis b {
+  font-size: 44px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+
+.ergebnis span {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .72);
+}
+
 /* Kinderschutz: Siegel bleibt farbig */
 .schutz {
   grid-column: span 3;
@@ -968,6 +1037,7 @@
 @media (prefers-reduced-motion: reduce) {
   .videoTag::before { animation: none; }
   .videoKnopf,
+  .spielPfeile button,
   .naechster,
   .schutz,
   .mitglied,

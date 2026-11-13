@@ -17,6 +17,8 @@ export interface StartseitenDaten {
   news: NewsPost[]
   /** Termine ab heute, chronologisch */
   termine: Termin[]
+  /** Spiele der letzten 30 Tage bis einschließlich heute, chronologisch – für die Spiele-Kachel */
+  letzteSpiele: Termin[]
   /** Sichtbare Sparten in gepflegter Reihenfolge */
   sparten: SparteUebersicht[]
   zahlen: { sparten: number; mannschaften: number }

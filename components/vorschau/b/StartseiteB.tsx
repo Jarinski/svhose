@@ -6,13 +6,14 @@ import {
   aufzaehlung,
   datumLang,
   minutenInBerlin,
-  naechsterTermin,
   spartenAuswahl,
+  spielKarte,
   stehtNochAn,
   terminZeile,
 } from './hilfen'
 import HeroVideo from './HeroVideo'
 import SpartenBogen from './SpartenBogen'
+import SpieleKachel from './SpieleKachel'
 import TermineTabs from './TermineTabs'
 import b from './bento.module.css'
 import s from './StartseiteB.module.css'
@@ -27,6 +28,10 @@ const FOERDER_ICONS = ['💡', '📰', '📜', '🧑‍💼', '🤝', '💶']
 /** Solange Instagram nicht verbunden ist (oder nichts abgerufen wurde): Fotos aus dem Verein. */
 const INSTA_PLATZHALTER = ['/images/girls.webp', '/images/U15.jpeg', '/images/kids.webp']
 
+/** So viele vergangene Spiele bzw. kommende Termine kann man in der Spiele-Kachel durchblättern */
+const ANZAHL_GESPIELT = 20
+const ANZAHL_ANSTEHEND = 15
+
 const PFEIL = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -34,14 +39,21 @@ const PFEIL = (
 )
 
 export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
-  const { news, termine, sparten, zahlen, instagram, heute } = daten
+  const { news, termine, letzteSpiele, sparten, zahlen, instagram, heute } = daten
 
   const auswahl = spartenAuswahl(sparten)
   const weitere = sparten.length - auswahl.length
   // Termine von heute, die schon vorbei sind, fallen weg (Spiele gelten 2 Std. ab Anpfiff als laufend)
   const minutenJetzt = minutenInBerlin()
   const anstehend = termine.filter(t => stehtNochAn(t, heute, minutenJetzt))
-  const naechster = anstehend[0] ? naechsterTermin(anstehend[0], heute) : null
+  // Spiele-Kachel: die letzten Spiele (mit Ergebnis, soweit bekannt) und die nächsten Termine –
+  // sie startet beim nächsten Termin, mit dem Pfeil nach links geht es zu den letzten Spielen.
+  const gespielt = letzteSpiele.filter(t => !stehtNochAn(t, heute, minutenJetzt)).slice(-ANZAHL_GESPIELT)
+  const spielKarten = [
+    ...gespielt.map(t => spielKarte(t, heute, true)),
+    ...anstehend.slice(0, ANZAHL_ANSTEHEND).map(t => spielKarte(t, heute, false)),
+  ]
+  const spielStart = Math.min(gespielt.length, spielKarten.length - 1)
   const terminZeilen = anstehend.slice(0, 80).map(terminZeile)
   const neueste = news.slice(0, 3)
   const fvNews = news.find(n => istFoerderverein(n.category))
@@ -110,49 +122,23 @@ export default function StartseiteB({ daten }: { daten: StartseitenDaten }) {
           <span className={`${b.tag} ${s.videoTag}`}>Vereinsleben</span>
         </div>
 
-        <section className={`${b.karte} ${s.naechster}`} aria-labelledby="b-naechster">
-          {naechster ? (
-            <>
-              <span className={`${b.tag} ${s.tagDunkel}`}>
-                <span className={b.emo} aria-hidden="true">{naechster.emoji}</span> {naechster.wann}
-              </span>
-              <div>
-                <h2 id="b-naechster" className={s.naechsterTitel}>{naechster.titel}</h2>
-                {naechster.unterzeile && (
-                  <div className={s.vs}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/SV_Holm_Seppensen_Logo.svg" alt="" width={44} height={44} />
-                    <span>{naechster.unterzeile}</span>
-                  </div>
-                )}
-              </div>
-              <div className={s.reihe}>
-                {naechster.ort ? (
-                  <span>
-                    <span className={b.emo} aria-hidden="true">📍</span> {naechster.ort}
-                  </span>
-                ) : (
-                  <span />
-                )}
-                <Link href="/termine">Alle Termine →</Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <span className={`${b.tag} ${s.tagDunkel}`}>
-                <span className={b.emo} aria-hidden="true">📅</span> Termine
-              </span>
-              <div>
-                <h2 id="b-naechster" className={s.naechsterTitel}>Gerade stehen keine Termine an.</h2>
-                <p className={s.naechsterText}>Trainiert wird trotzdem – alle Zeiten findest du im Trainingsplan.</p>
-              </div>
-              <div className={s.reihe}>
-                <Link href="/trainingszeiten">Trainingszeiten →</Link>
-                <Link href="/termine">Kalender →</Link>
-              </div>
-            </>
-          )}
-        </section>
+        {spielKarten.length > 0 ? (
+          <SpieleKachel karten={spielKarten} start={spielStart} />
+        ) : (
+          <section className={`${b.karte} ${s.naechster}`} aria-labelledby="b-naechster">
+            <span className={`${b.tag} ${s.tagDunkel}`}>
+              <span className={b.emo} aria-hidden="true">📅</span> Termine
+            </span>
+            <div>
+              <h2 id="b-naechster" className={s.naechsterTitel}>Gerade stehen keine Termine an.</h2>
+              <p className={s.naechsterText}>Trainiert wird trotzdem – alle Zeiten findest du im Trainingsplan.</p>
+            </div>
+            <div className={s.reihe}>
+              <Link href="/trainingszeiten">Trainingszeiten →</Link>
+              <Link href="/termine">Kalender →</Link>
+            </div>
+          </section>
+        )}
 
         <Link href="/kinderschutz" className={`${b.karte} ${s.schutz}`}>
           <Image
