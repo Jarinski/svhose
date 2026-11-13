@@ -18,8 +18,15 @@ import FussballWidget from '@/components/FussballWidget'
 // Änderungen in der Verwaltung sind damit sofort sichtbar.
 export const dynamic = 'force-dynamic'
 
-/** Widget „Letzte und nächste Spiele“ von fussball.de – bei fussball.de für www.sv-holm-seppensen.de eingerichtet */
-const FUSSBALL_WIDGET = { id: '3b9eacee-00dc-498a-8edb-ea75736f043b', host: 'www.sv-holm-seppensen.de' }
+/**
+ * Widget „Letzte und nächste Spiele“ von fussball.de. Jedes Widget ist bei fussball.de auf eine
+ * Adresse festgelegt und bleibt anderswo leer – deshalb eins pro Adresse. Ohne passendes Widget
+ * (z. B. localhost) fällt der Abschnitt ganz weg.
+ */
+const FUSSBALL_WIDGETS: Record<string, string> = {
+  'www.sv-holm-seppensen.de': '3b9eacee-00dc-498a-8edb-ea75736f043b',
+  'svhose.gonzalesreyes.de': 'fccf74bb-cd6e-48ca-9bf4-474e07773a09',
+}
 
 /* ── Metadaten ─────────────────────────────────────────────── */
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -124,7 +131,7 @@ export default async function SparteDetailPage(props: {
   // Das Widget prüft die Herkunft – auf anderen Adressen (localhost, Testkopie) bliebe es leer
   const kopf = await headers()
   const host = (kopf.get('x-forwarded-host') ?? kopf.get('host') ?? '').split(',')[0].trim()
-  const widgetVerfuegbar = istFussball && host === FUSSBALL_WIDGET.host
+  const fussballWidget = istFussball ? (FUSSBALL_WIDGETS[host] ?? null) : null
   // Ligatabellen von fussball.de / click-tt – parallel, höchstens stündlich neu abgerufen (lib/tabellen.ts)
   const tabellen = new Map(
     await Promise.all(
@@ -279,11 +286,11 @@ export default async function SparteDetailPage(props: {
           <div className="space-y-16">
 
             {/* Fußball: letzte und nächste Spiele mit Ergebnissen (offizielles Widget von fussball.de) */}
-            {istFussball && (
+            {fussballWidget && (
               <section>
                 <SectionHeader title="ERGEBNISSE & SPIELE" farbe={farbe} />
                 <div className="mt-8">
-                  <FussballWidget widgetId={FUSSBALL_WIDGET.id} verfuegbar={widgetVerfuegbar} />
+                  <FussballWidget widgetId={fussballWidget} />
                 </div>
               </section>
             )}

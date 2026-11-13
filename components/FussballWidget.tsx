@@ -12,9 +12,8 @@ import { externeInhalteErlaubt } from '@/components/CookieBanner'
 // ohne Neuladen. Ergebnisse und Namen sind im Widget verschlüsselt und werden nur dort
 // lesbar angezeigt; auslesen lassen sie sich nicht.
 //
-// Das Widget ist bei fussball.de auf www.sv-holm-seppensen.de eingerichtet und prüft die
-// Herkunft: Auf anderen Adressen (localhost, Testkopie) zeigt es nichts an, deshalb steht dort
-// nur der Link (siehe `verfuegbar`). Wie die Karten lädt es erst nach Einwilligung in
+// Jedes Widget ist bei fussball.de auf eine Adresse eingerichtet und prüft die Herkunft – welches
+// wo gilt, steht in app/sparten/[slug]/page.tsx (FUSSBALL_WIDGETS). Wie die Karten lädt es erst nach Einwilligung in
 // „Funktionale Cookies“ oder per Klick – vorher geht keine Anfrage an fussball.de.
 
 const WIDGET_HOST = 'https://next.fussball.de'
@@ -23,12 +22,9 @@ const VEREINSSEITE = 'https://www.fussball.de/verein/sv-holm-seppensen-niedersac
 export default function FussballWidget({
   widgetId,
   typ = 'club-matches',
-  verfuegbar,
 }: {
   widgetId: string
   typ?: string
-  /** false auf Adressen, für die das Widget bei fussball.de nicht eingerichtet ist */
-  verfuegbar: boolean
 }) {
   const [erlaubt, setErlaubt] = useState(false)
   const [geladen, setGeladen] = useState(false)
@@ -69,17 +65,6 @@ export default function FussballWidget({
     </a>
   )
 
-  if (!verfuegbar) {
-    return (
-      <div className="rounded-[20px] bg-[#0a0a0a]/[0.04] ring-1 ring-[#0a0a0a]/[0.06] p-6 text-center text-xs leading-relaxed text-[#6b6b6b]">
-        <p className="mx-auto max-w-sm">
-          Die Ergebnisse von fussball.de erscheinen hier nur auf www.sv-holm-seppensen.de.
-        </p>
-        <p className="mt-3">{link}</p>
-      </div>
-    )
-  }
-
   return (
     <figure className="m-0">
       {erlaubt || geladen ? (
@@ -93,7 +78,7 @@ export default function FussballWidget({
           style={{ height: hoehe }}
         />
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-[20px] bg-[#0a0a0a]/[0.04] ring-1 ring-[#0a0a0a]/[0.06] p-8 text-center">
+        <div className="glas-karte flex flex-col items-center justify-center gap-3 p-8 text-center">
           <p className="max-w-sm text-xs leading-relaxed text-[#6b6b6b]">
             Ergebnisse und Spielplan kommen von fussball.de. Beim Laden wird deine IP-Adresse an den
             Betreiber DFB-Medien übertragen.
